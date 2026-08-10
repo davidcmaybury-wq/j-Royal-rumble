@@ -10,7 +10,7 @@ export const DEFAULT_SETTINGS = {
   ceiling: 11000,
   ceilingDecayPerClue: -40,
   ceilingFloor: 1000,
-  entryInterval: 5,          // null => auto from targetMinutes
+  entryInterval: null,       // null => auto from roster + targetMinutes
   entrantsOnFieldClear: 2,
   stumperFraction: 0.5,      // 0 disables the universal-stumper deduction
   potScoring: true,          // winner collects the value from EACH opponent
@@ -81,7 +81,10 @@ export class RumbleGame {
 
   get ceiling() {
     const c = this.s.ceiling + this.s.ceilingDecayPerClue * this.cluesRevealed;
-    return Math.max(this.s.ceilingFloor, Math.round(c));
+    // A ceiling below the entry stake would clip newcomers on arrival, which
+    // would quietly undo the thing the stake is for.
+    const floor = Math.max(this.s.ceilingFloor, this.s.startScore);
+    return Math.max(floor, Math.round(c));
   }
 
   live() {

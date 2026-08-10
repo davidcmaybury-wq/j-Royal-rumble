@@ -40,7 +40,9 @@ select{font-family:"IBM Plex Sans",sans-serif}
 .mix{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .src{border:1px solid var(--line);border-radius:var(--r);padding:12px;background:var(--ink)}
 .src.on{border-color:var(--brass)}
-.src .t{display:flex;align-items:center;gap:8px;font-size:14px}
+.src .t{display:flex;align-items:baseline;gap:8px;font-size:14px}
+.src .pct{margin-left:auto;color:var(--brass);font-size:15px}
+.src.off .pct{color:var(--slate)}
 .src .n{font-size:11px;color:var(--slate);margin-top:3px}
 .src input[type=range]{width:100%;margin-top:9px}
 .src.off input[type=range]{opacity:.3}
@@ -60,6 +62,13 @@ select{font-family:"IBM Plex Sans",sans-serif}
 .note{font-size:12px;color:var(--slate)}
 .est{font-size:12.5px;color:var(--slate)}
 .est b{color:var(--brass);font-weight:400}
+.wrn{display:flex;gap:12px;align-items:flex-start;margin-top:10px;padding:10px 12px;
+border-radius:var(--r);font-size:12.5px;line-height:1.5;border-left:2px solid var(--line);background:var(--ink)}
+.wrn.warn{border-left-color:var(--brass);color:var(--chalk)}
+.wrn.note{border-left-color:var(--line);color:var(--slate)}
+.wfix{flex:none;align-self:center;border:1px solid var(--brass);color:var(--brass);
+border-radius:var(--r);padding:5px 11px;font-size:12px;white-space:nowrap}
+.wfix:hover{background:#3A2E0C}
 .start{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px}
 </style>
 </head>
@@ -67,10 +76,11 @@ select{font-family:"IBM Plex Sans",sans-serif}
 <div class="wrap" id="root"><p class="note">Loading…</p></div>
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
+import { estimate as estimateFor, warnings as warningsFor } from '/estimate.js';
 const socket = io({ transports: ['websocket'] });
 let code = location.pathname.split('/')[2] || '';
 let hostKey = location.hash.slice(1);
-let S = null, msg = null;
+let S = null, msg = null, mix = { archive: 100, original: 0, upload: 0 };
 const root = document.getElementById('root');
 const fmt = (n) => (n ?? 0).toLocaleString();
 
@@ -90,22 +100,80 @@ async function boot() {
     history.replaceState(null, '', `/setup/${code}#${hostKey}`);
   }
   S = await api(`/api/match/${code}`);
+  mix = toPct(S.blend, S.available);
   socket.emit('watch-setup', { gameId: code, hostKey }, () => {});
   socket.on('state', (s) => { if (s.roster) { S.roster = s.roster; renderRoster(); } });
   render();
 }
 
-// --- estimate -----------------------------------------------------------
-// Mirrors autoEntryInterval so the host sees the consequence of the roster
-// size before committing to it.
-function estimate() {
-  const n = S.roster.length, s = S.settings;
-  if (n < 3) return null;
-  const iv = s.entryInterval ?? Math.min(15, Math.max(2,
-    Math.round((s.targetMinutes * 60 / s.secondsPerClue) * 0.6 / (n - 3))));
-  const clues = (n - 3) * iv / 0.6;
-  return { iv, mins: Math.round(clues * s.secondsPerClue / 60) };
+// Blend weights on the server are relative; the host thinks in percentages.
+function toPct(blend, avail) {
+  const usable = SRC.map(([k]) => k).filter((k) => (avail[k] || 0) > 0);
+  const total = usable.reduce((n, k) => n + (blend[k] || 0), 0);
+  if (!total) {
+    const first = usable[0] || 'archive';
+    return Object.fromEntries(SRC.map(([k]) => [k, k === first ? 100 : 0]));
+  }
+  const out = {}, raw = {};
+  usable.forEach((k) => { raw[k] = (blend[k] || 0) / total * 100; });
+  usable.forEach((k) => { out[k] = Math.round(raw[k] / 5) * 5; });
+  SRC.forEach(([k]) => { if (!(k in out)) out[k] = 0; });
+  return settle(out, usable[0]);
 }
+
+// Rounding to 5% steps can leave the total at 95 or 105; push the slack onto
+// whichever source the host wasn't touching.
+function settle(m, absorb) {
+  const keys = SRC.map(([k]) => k);
+  let diff = 100 - keys.reduce((n, k) => n + m[k], 0);
+  if (!diff) return m;
+  const order = [absorb, ...keys.filter((k) => k !== absorb)]
+    .filter((k) => (S.available[k] || 0) > 0);
+  for (const k of order) {
+    const next = Math.min(100, Math.max(0, m[k] + diff));
+    diff -= next - m[k];
+    m[k] = next;
+    if (!diff) break;
+  }
+  return m;
+}
+
+// Moving one slider takes the difference proportionally from the others, so
+// the host never has to do arithmetic to make the numbers add up.
+function setPct(key, value) {
+  const others = SRC.map(([k]) => k)
+    .filter((k) => k !== key && (S.available[k] || 0) > 0);
+  const v = Math.max(0, Math.min(100, value));
+  const remain = 100 - v;
+  const sum = others.reduce((n, k) => n + mix[k], 0);
+  const next = { ...mix, [key]: v };
+  if (!others.length) { next[key] = 100; }
+  else if (sum === 0) {
+    const each = Math.floor(remain / others.length / 5) * 5;
+    others.forEach((k, i) => { next[k] = i === 0 ? remain - each * (others.length - 1) : each; });
+  } else {
+    others.forEach((k) => { next[k] = Math.round(mix[k] / sum * remain / 5) * 5; });
+  }
+  SRC.forEach(([k]) => { if ((S.available[k] || 0) === 0) next[k] = 0; });
+  mix = settle(next, others[0] || key);
+  paintMix();
+}
+
+function paintMix() {
+  SRC.forEach(([k]) => {
+    const box = document.querySelector(`.src[data-src="${k}"]`);
+    if (!box) return;
+    const pct = mix[k] || 0;
+    box.querySelector(`[data-pct="${k}"]`).textContent = pct + '%';
+    const sl = box.querySelector('input[type=range]');
+    if (Number(sl.value) !== pct) sl.value = pct;
+    box.classList.toggle('on', pct > 0);
+    box.classList.toggle('off', pct === 0);
+  });
+}
+
+const estimate = () => estimateFor(S.roster.length, S.settings);
+const warnings = () => warningsFor(S.roster.length, S.settings);
 
 const SRC = [
   ['archive', 'Jeopardy! archive', 'Seasons 22–41, media clues removed'],
@@ -131,19 +199,21 @@ function render() {
 
   <div class="card"><h2>Signed up <span id="rn" style="color:var(--brass)">${S.roster.length}</span></h2>
     <div class="who" id="who"></div>
-    ${est ? `<p class="est" style="margin:14px 0 0">With ${S.roster.length} players: entry every <b>${est.iv}</b> clues, roughly <b>${est.mins} minutes</b>.</p>`
+    ${est ? `<p class="est" style="margin:14px 0 0">With ${S.roster.length} players: entry every <b>${est.iv}</b> clues${
+        est.auto ? ' (auto)' : ''}, roughly <b>${est.mins} minutes</b>, about ${est.clues} clues.${est.rough ? ' Rough at this size.' : ''}</p>`
       : `<p class="note" style="margin:14px 0 0">Three players minimum.</p>`}
+    <div id="warn"></div>
   </div>
 
   <div class="card"><h2>Clue material</h2>
     <div class="mix">${SRC.map(([k, t, d]) => {
-      const w = S.blend[k] ?? 0, avail = S.available[k] || 0;
-      return `<div class="src ${w > 0 ? 'on' : 'off'}" data-src="${k}">
-        <label class="t"><input type="checkbox" data-k="${k}" ${w > 0 ? 'checked' : ''} ${avail ? '' : 'disabled'}>
-          <span>${t}</span></label>
+      const pct = mix[k] ?? 0, avail = S.available[k] || 0;
+      return `<div class="src ${pct > 0 ? 'on' : 'off'}" data-src="${k}">
+        <div class="t"><span>${t}</span><span class="pct num" data-pct="${k}">${pct}%</span></div>
         <div class="n">${avail ? fmt(avail) + ' categories' : 'none available'} — ${d}</div>
-        <input type="range" min="1" max="10" value="${w || 1}" data-w="${k}" ${w > 0 ? '' : 'disabled'}>
+        <input type="range" min="0" max="100" step="5" value="${pct}" data-w="${k}" ${avail ? '' : 'disabled'}>
       </div>`; }).join('')}</div>
+    <p class="note" style="margin:10px 0 0">The mix always totals 100%. Raise one and the others give way.</p>
     <div class="row" style="margin-top:14px">
       <div class="f"><label>Archive seasons</label>
         <div class="row" style="gap:6px">
@@ -170,10 +240,17 @@ function render() {
       ${num('startScore', 'Starting score', s.startScore, 'what every entrant walks in with')}
       ${num('ceiling', 'Score ceiling', s.ceiling, 'clips every live score')}
       ${num('ceilingDecayPerClue', 'Ceiling change / clue', s.ceilingDecayPerClue, 'negative decays; keeps late draws honest')}
-      ${num('ceilingFloor', 'Ceiling floor', s.ceilingFloor, 'decay stops here')}
+      ${num('ceilingFloor', 'Ceiling floor', s.ceilingFloor, 'never drops below the starting score')}
     </div>
     <div class="row" style="margin-top:14px">
-      ${num('entryInterval', 'Entry every N clues', s.entryInterval ?? '', 'blank = scale from roster')}
+      <div class="f"><label>New entrant</label>
+        <select id="entryMode">
+          <option value="auto" ${s.entryInterval == null ? 'selected' : ''}>Auto</option>
+          <option value="fixed" ${s.entryInterval == null ? '' : 'selected'}>Every N clues</option>
+        </select><span class="hint">auto scales to the roster and target length</span></div>
+      <div class="f" id="ivwrap" style="${s.entryInterval == null ? 'display:none' : ''}">
+        <label>N</label><input type="number" id="entryInterval" value="${s.entryInterval ?? 5}" min="1" max="30" style="width:80px">
+        <span class="hint">clues between entries</span></div>
       ${num('targetMinutes', 'Target length (min)', s.targetMinutes, 'used when entry is automatic')}
       <div class="f"><label>Stumper deduction</label>
         <select id="stumperFraction">
@@ -204,7 +281,7 @@ function render() {
     <span class="note" id="savemsg"></span>
   </div>`;
 
-  renderRoster(); renderFiles(); wire();
+  renderRoster(); renderWarnings(); renderFiles(); wire();
 }
 
 const num = (k, label, val, hint) =>
@@ -216,11 +293,25 @@ function renderRoster() {
   const w = document.getElementById('who'), n = document.getElementById('rn');
   if (!w) return;
   n.textContent = S.roster.length;
+  renderWarnings();
   w.innerHTML = S.roster.length
     ? S.roster.map((p) => `<span class="chip${p.connected ? '' : ' off'}">${p.name}</span>`).join('')
     : '<span class="note">Nobody yet. Read them the code.</span>';
   const b = document.getElementById('start');
   if (b) b.disabled = S.roster.length < 3;
+}
+
+function renderWarnings() {
+  const w = document.getElementById('warn');
+  if (!w) return;
+  const ws = warnings();
+  w.innerHTML = ws.map((x, i) => `<div class="wrn ${x.level}">
+    <span>${x.text}</span>${x.fix ? `<button class="wfix" data-fix="${i}">${x.fix}</button>` : ''}</div>`).join('');
+  w.querySelectorAll('[data-fix]').forEach((b) => b.onclick = async () => {
+    const v = ws[Number(b.dataset.fix)].target;
+    document.getElementById('targetMinutes').value = v;
+    await save(true); render();
+  });
 }
 
 function renderFiles() {
@@ -237,7 +328,8 @@ function renderFiles() {
 
 function collect() {
   const g = (id) => document.getElementById(id);
-  const iv = g('entryInterval').value.trim();
+  const auto = g('entryMode').value === 'auto';
+  const iv = auto ? '' : g('entryInterval').value.trim();
   return {
     settings: {
       startScore: +g('startScore').value, ceiling: +g('ceiling').value,
@@ -247,11 +339,7 @@ function collect() {
       delay: +g('delay').value, lockout: +g('lockout').value, secondsPerClue: +g('secondsPerClue').value,
       seasonRange: [+g('s-lo').value, +g('s-hi').value],
     },
-    blend: Object.fromEntries(SRC.map(([k]) => {
-      const on = document.querySelector(`input[data-k="${k}"]`).checked;
-      const w = +document.querySelector(`input[data-w="${k}"]`).value;
-      return [k, on ? w : 0];
-    })),
+    blend: Object.fromEntries(SRC.map(([k]) => [k, mix[k] || 0])),
   };
 }
 
@@ -268,19 +356,33 @@ async function save(quiet) {
 }
 
 function wire() {
-  document.querySelectorAll('input[data-k]').forEach((cb) => cb.onchange = () => {
-    const box = cb.closest('.src'), slider = box.querySelector('input[type=range]');
-    box.classList.toggle('on', cb.checked); box.classList.toggle('off', !cb.checked);
-    slider.disabled = !cb.checked;
+  document.querySelectorAll('input[data-w]').forEach((sl) => {
+    sl.oninput = () => setPct(sl.dataset.w, Number(sl.value));
+    sl.onchange = () => save(true);
   });
   document.getElementById('mine').onclick = () => {
-    document.querySelector('input[data-k="archive"]').checked = false;
-    document.querySelectorAll('input[data-k="original"],input[data-k="upload"]')
-      .forEach((cb) => { if (!cb.disabled) cb.checked = true; });
-    document.querySelectorAll('input[data-k]').forEach((cb) => cb.onchange());
+    const own = SRC.map(([k]) => k).filter((k) => k !== 'archive' && (S.available[k] || 0) > 0);
+    if (!own.length) return;
+    setPct('archive', 0);
     save();
   };
   document.getElementById('save').onclick = () => save();
+  ['targetMinutes', 'secondsPerClue', 'entryInterval'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.oninput = () => {
+      S.settings[id] = id === 'entryInterval' && el.value === '' ? null : +el.value;
+      const e = estimate();
+      const est = document.querySelector('.est');
+      if (e && est) est.innerHTML = `With ${S.roster.length} players: entry every <b>${e.iv}</b> clues${
+        e.auto ? ' (auto)' : ''}, roughly <b>${e.mins} minutes</b>, about ${e.clues} clues.${e.rough ? ' Rough at this size.' : ''}`;
+      renderWarnings();
+    };
+  });
+  const mode = document.getElementById('entryMode');
+  mode.onchange = () => {
+    document.getElementById('ivwrap').style.display = mode.value === 'auto' ? 'none' : '';
+    save(true).then(() => render());
+  };
 
   const drop = document.getElementById('drop'), file = document.getElementById('file');
   file.onchange = () => upload([...file.files]);

@@ -74,6 +74,64 @@ check('the alert carries the entry interval', ps[0].started && ps[0].started.ent
 const locked = await api(`/api/match/${m.gameId}`, { method: 'PATCH', body: '{"settings":{}}' }, m.hostKey);
 check('settings lock once the match starts', locked.status === 409);
 
+// --- ceiling can never sit below the entry stake -----------------------
+{
+  const m2 = await (await api('/api/match', { method: 'POST', body: JSON.stringify({
+    settings: { startScore: 3000, ceiling: 4000, ceilingDecayPerClue: -500, ceilingFloor: 500 },
+  }) })).json();
+  const ps2 = [];
+  for (const n of ['P1', 'P2', 'P3', 'P4']) {
+    const s = io(U, { transports: ['websocket'] });
+    await once(s, 'connect');
+    await new Promise((r) => s.emit('join', { gameId: m2.gameId, name: n }, r));
+    ps2.push(s);
+  }
+  const h = io(U, { transports: ['websocket'] });
+  await once(h, 'connect');
+  let st = null;
+  h.on('state', (x) => { st = x; });
+  await new Promise((r) => h.emit('host-join', { gameId: m2.gameId, hostKey: m2.hostKey }, (x) => { st = x.state; r(); }));
+  h.emit('start-match');
+  await wait(250);
+  for (let i = 0; i < 12 && st.phase === 'live'; i++) {
+    const open = [];
+    st.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) open.push([si, x.row]); }));
+    h.emit('pick-clue', { slot: open[0][0], row: open[0][1] });
+    await wait(90);
+    h.emit('resolve', { winnerToken: null });
+    await wait(150);
+  }
+  check('ceiling never falls below the entry stake', st.ceiling >= 3000,
+    `ceiling ${st.ceiling} after ${st.clues} clues at −500/clue`);
+  h.close(); ps2.forEach((s) => s.close());
+}
+
+// --- auto entry interval is the default -------------------------------
+{
+  const m3 = await (await api('/api/match', { method: 'POST', body: '{}' })).json();
+  const v = await (await api(`/api/match/${m3.gameId}`, {}, m3.hostKey)).json();
+  check('entry interval defaults to auto', v.settings.entryInterval === null,
+    String(v.settings.entryInterval));
+  const ps3 = [];
+  for (const n of ['A', 'B', 'C', 'D', 'E', 'F']) {
+    const s = io(U, { transports: ['websocket'] });
+    await once(s, 'connect');
+    await new Promise((r) => s.emit('join', { gameId: m3.gameId, name: n }, r));
+    ps3.push(s);
+  }
+  const h = io(U, { transports: ['websocket'] });
+  await once(h, 'connect');
+  let st = null;
+  h.on('state', (x) => { st = x; });
+  await new Promise((r) => h.emit('host-join', { gameId: m3.gameId, hostKey: m3.hostKey }, (x) => { st = x.state; r(); }));
+  h.emit('start-match');
+  await wait(300);
+  check('auto resolves to a real interval at start',
+    st.settings.entryInterval >= 2 && st.settings.entryInterval <= 15,
+    `every ${st.settings.entryInterval} clues for 6 players`);
+  h.close(); ps3.forEach((s) => s.close());
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); ps.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);

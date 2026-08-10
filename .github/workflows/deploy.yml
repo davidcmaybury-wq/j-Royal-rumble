@@ -19,6 +19,8 @@ jobs:
       - run: npm install
       - name: Verify rules engine against tuning targets
         run: node test/harness.js
+      - name: Length estimates and setup warnings
+        run: node test/estimate.mjs
       - name: End-to-end match over sockets
         run: |
           node src/server.js & sleep 10

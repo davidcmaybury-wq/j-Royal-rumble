@@ -28,6 +28,7 @@ The winner is the last one standing. Every other statistic is for fun.
     test/harness.js   Monte Carlo verification of the tuning presets
     test/e2e.mjs      a real match played over sockets
     test/setup.mjs    room codes, uploads, blend, start alert
+    test/estimate.mjs match-length estimates and the setup warnings
 
 ## Running it
 
