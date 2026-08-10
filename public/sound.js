@@ -9,6 +9,7 @@ const FILES = {
   count1: '/audio/countdown-1.mp3',
   count2: '/audio/countdown-2.mp3',
   count3: '/audio/countdown-3.mp3',
+  lock: '/audio/lock.mp3',
 };
 
 const pool = {};
@@ -19,7 +20,7 @@ export function preload() {
   for (const [k, src] of Object.entries(FILES)) {
     const a = new Audio(src);
     a.preload = 'auto';
-    a.volume = k === 'entry' ? 0.85 : k === 'chop' ? 0.9 : 0.55;
+    a.volume = k === 'entry' ? 0.85 : k === 'chop' ? 0.9 : k === 'lock' ? 0.7 : 0.55;
     pool[k] = a;
   }
 }

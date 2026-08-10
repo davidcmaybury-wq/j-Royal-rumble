@@ -85,6 +85,46 @@ another, and adds a short room.
 Browsers block audio until a page has been interacted with, so both the console
 and the buzzer unlock on the first tap or key press.
 
+## Advanced mechanics
+
+Four optional rules, off by default, toggled per match on the setup page. They
+change scoring rather than presentation, so each has arithmetic tests in
+`test/mechanics.mjs` and a length study in `tools/sim-mechanics.mjs`.
+
+**Top rope** — declared between clues, never on one. That clue is worth double
+to the declarer in both directions, and their winnings ignore the ceiling, so a
+leader has a reason to take the risk rather than sit on a capped score.
+
+**Targeting** — aim at one player, visible to the room, with an alert on their
+buzzer. Win and the whole pot comes from them alone; everyone else is spared.
+Lose the clue *to them* and you pay the whole pot yourself.
+
+**Bounties** — a queued player stakes part of their own entry on somebody's
+head, up to half. Whoever eliminates the target collects. Survive to the end and
+you keep it. Eliminate the person who placed it and you keep theirs.
+
+**Revival** — eliminated players return to the queue with a fresh entry number
+at a fraction of the stake, once by default.
+
+### What they do to a match
+
+Measured over 400 simulated 30-player matches each:
+
+| Setting | Length | Back-half win rate |
+|---|---|---|
+| none | 64 min | 53% |
+| top rope | 62 min | 54% |
+| targeting | 63 min | 63% |
+| bounties | 64 min | 48% |
+| revival | **95 min** | 52% |
+| everything | 88 min | 63% |
+
+Three of the four barely move the clock. Revival runs half again as long,
+because nearly every player uses their second life — the setup page says so
+before you start. It is also the *fairest* setting on the list: a second chance
+is worth most to whoever went in first, which counteracts the late-draw
+advantage the ceiling decay exists to fight.
+
 ## Fixing a scoring mistake
 
 **Undo clue** in the console takes back the whole last clue — scores,

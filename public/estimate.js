@@ -10,9 +10,15 @@ export const IV_MAX = 15;
 // nothing and length comes down to how fast they bleed each other out.
 export const ENDGAME_FLOOR = 22;
 
-export function cluesFor(playerCount, interval) {
+export function cluesFor(playerCount, interval, settings = {}) {
   const entry = Math.max(0, playerCount - 3) * interval;
-  return Math.round(entry + Math.max(ENDGAME_FLOOR, entry * 0.67));
+  const base = entry + Math.max(ENDGAME_FLOOR, entry * 0.67);
+  // Revival refills a queue the rest of the model assumes drains once. The
+  // multiplier is fitted to the simulator, not derived — see tools/sim-mechanics.
+  const rev = settings.revival
+    ? 1 + (settings.revivalLimit ?? 1) * (settings.revivalFraction ?? 0.5) * 0.96
+    : 1;
+  return Math.round(base * rev);
 }
 
 export function estimate(playerCount, settings) {
@@ -23,7 +29,7 @@ export function estimate(playerCount, settings) {
     ? Math.round((s.targetMinutes * 60 / s.secondsPerClue) * 0.6 / (n - 3))
     : IV_MAX;
   const iv = auto ? Math.min(IV_MAX, Math.max(IV_MIN, raw)) : s.entryInterval;
-  const clues = cluesFor(n, iv);
+  const clues = cluesFor(n, iv, s);
   return {
     iv, raw, auto, clues,
     mins: Math.round(clues * s.secondsPerClue / 60),
@@ -34,7 +40,7 @@ export function estimate(playerCount, settings) {
 
 // What length this roster can actually reach at the interval limits.
 export function reachable(playerCount, settings) {
-  const at = (iv) => Math.round(cluesFor(playerCount, iv) * settings.secondsPerClue / 60);
+  const at = (iv) => Math.round(cluesFor(playerCount, iv, settings) * settings.secondsPerClue / 60);
   return { min: at(IV_MIN), max: at(IV_MAX) };
 }
 
@@ -88,6 +94,18 @@ export function warnings(playerCount, settings) {
       text: `With ${n} players this plays as a duel more than a Rumble — two or three in the ring most of the `
         + `time, and ${reach.max} minutes is about the ceiling. Lower the starting score to make it bite sooner.`,
     });
+  }
+
+  if (s.revival) {
+    out.push({ level: 'note', text:
+      `Revival stretches a match by roughly half again — most players use their second life, ` +
+      `so the queue fills back up once. It also evens out the draw: a second chance is worth ` +
+      `most to whoever went in first.` });
+  }
+  if (s.targeting && n >= 20) {
+    out.push({ level: 'note', text:
+      `Targeting concentrates damage instead of spreading it. Length barely moves, but ` +
+      `whoever is closest to going out tends to get finished rather than lingering.` });
   }
 
   if (n >= 24 && e.mins < 40) {

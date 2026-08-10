@@ -77,6 +77,8 @@ border-radius:20px;padding:5px 12px;font-size:12.5px}
 .rec{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
 .rec input{margin-top:4px;flex:none}
 .rec b{font-weight:400}
+.adv{padding:11px 0;border-top:1px solid var(--line)}
+.adv:first-of-type{border-top:none;padding-top:0}
 .hint2{display:block;font-size:12px;color:var(--slate);line-height:1.5;margin-top:4px}
 .wrn{display:flex;gap:12px;align-items:flex-start;margin-top:10px;padding:10px 12px;
 border-radius:var(--r);font-size:12.5px;line-height:1.5;border-left:2px solid var(--line);background:var(--ink)}
@@ -305,6 +307,32 @@ function render() {
     </div>
   </div>
 
+  <div class="card"><h2>Advanced mechanics</h2>
+    <p class="note" style="margin:-4px 0 14px">All off by default. They change how the game plays,
+    not just how it looks — and they lean on keyboard controls, so think twice if the field is on phones.</p>
+    ${adv('topRope', 'Top rope', s.topRope,
+      'A player can climb up between clues. That clue is worth double to them in both directions — '
+      + 'and their winnings ignore the ceiling, so the leaders have a reason to risk it too.')}
+    ${adv('targeting', 'Targeting', s.targeting,
+      'Aim at one player. Get it right and the whole pot comes out of them alone, everyone else spared. '
+      + 'Get it wrong and they answer, and you pay the whole pot yourself. Visible to the room.')}
+    ${adv('bounties', 'Bounties', s.bounties,
+      'A player waiting in the queue can put part of their own stake on somebody\'s head. Whoever '
+      + 'knocks them out collects. Survive to the end and you keep it — knock out the person who '
+      + 'placed it and you keep it too.')}
+    ${adv('revival', 'Revival', s.revival,
+      'Eliminated players go back to the queue instead of out. Expect the match to run about half '
+      + 'again as long.')}
+    <div class="row" id="revrow" style="${s.revival ? '' : 'display:none'};margin-top:4px">
+      ${num('revivalLimit', 'Lives each', s.revivalLimit, 'how many times one player can come back')}
+      <div class="f"><label>Return on</label>
+        <select id="revivalFraction">
+          ${[['0.25','a quarter of the stake'],['0.5','half the stake'],['0.75','three quarters'],['1','the full stake']]
+            .map(([v,t]) => `<option value="${v}" ${Number(s.revivalFraction) === Number(v) ? 'selected' : ''}>${t}</option>`).join('')}
+        </select><span class="hint">lower makes a second life shorter</span></div>
+    </div>
+  </div>
+
   <div class="card"><h2>Recording</h2>
     <label class="rec"><input type="checkbox" id="recordMatch" ${s.recordMatch ? 'checked' : ''}>
       <span><b>Record detailed match data</b>
@@ -332,6 +360,10 @@ function render() {
 
   renderRoster(); renderWarnings(); renderFiles(); wire();
 }
+
+const adv = (k, label, on, blurb) =>
+  `<label class="rec adv"><input type="checkbox" id="${k}" ${on ? 'checked' : ''}>
+    <span><b>${label}</b><span class="hint2">${blurb}</span></span></label>`;
 
 const num = (k, label, val, hint) =>
   `<div class="f"><label>${label}</label>
@@ -391,6 +423,10 @@ function collect() {
       stumperFraction: +g('stumperFraction').value, potScoring: g('potScoring').value === 'true',
       delay: +g('delay').value, lockout: +g('lockout').value, secondsPerClue: +g('secondsPerClue').value,
       recordMatch: g('recordMatch').checked,
+      topRope: g('topRope').checked, targeting: g('targeting').checked,
+      bounties: g('bounties').checked, revival: g('revival').checked,
+      revivalLimit: +g('revivalLimit').value || 1,
+      revivalFraction: +g('revivalFraction').value,
       seasonRange: [+g('s-lo').value, +g('s-hi').value],
     },
     blend: Object.fromEntries(SRC.map(([k]) => [k, mix[k] || 0])),
@@ -421,6 +457,17 @@ function wire() {
     save();
   };
   document.getElementById('save').onclick = () => save();
+  const rev = document.getElementById('revival');
+  rev.onchange = () => {
+    document.getElementById('revrow').style.display = rev.checked ? '' : 'none';
+    S.settings.revival = rev.checked;
+    renderWarnings();
+    save(true);
+  };
+  ['topRope', 'targeting', 'bounties'].forEach((k) => {
+    const el = document.getElementById(k);
+    if (el) el.onchange = () => { S.settings[k] = el.checked; renderWarnings(); save(true); };
+  });
   ['s-lo', 's-hi'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.onchange = () => save(true).then(() => render());

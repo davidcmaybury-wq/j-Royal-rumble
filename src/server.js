@@ -171,7 +171,11 @@ class Match {
         live: [...g.players.values()]
           .filter((p) => p.state === 'live' || p.state === 'winner')
           .map(this.playerRow, this),
-        queue: g.queued().map((p) => ({ draw: p.drawNumber, name: p.name })),
+        queue: g.queued().map((p) => ({ draw: p.drawNumber, name: p.name,
+          token: p.id, revivals: p.revivals || 0 })),
+        bounties: this.settings.bounties ? g.bounties.map((b) => ({
+          placer: g.players.get(b.placer)?.name, target: g.players.get(b.target)?.name,
+          targetToken: b.target, amount: b.amount })) : [],
         out: [...g.players.values()].filter((p) => p.state === 'eliminated')
           .map(this.playerRow, this),
         clue: this.clue,
@@ -195,6 +199,12 @@ class Match {
       tenure, connected: this.roster.get(p.id)?.connected ?? false,
       avatar: this.roster.get(p.id)?.avatar || null,
       capped: p.score >= g.ceiling,
+      topRope: !!p.topRope,
+      target: p.target || null,
+      targetedBy: [...g.players.values()].filter((x) => x.target === p.id && x.state === 'live')
+        .map((x) => x.id),
+      bounty: this.settings.bounties ? g.bountyTotal(p.id) : 0,
+      revivals: p.revivals || 0,
     };
   }
 
@@ -270,7 +280,8 @@ class Match {
       const st = this.stat(p.id);
       const times = st.times;
       return {
-        token: p.id, draw: p.drawNumber, name: p.name,
+        token: p.id, draw: p.originalDraw ?? p.drawNumber, name: p.name,
+        revivals: p.revivals || 0,
         avatar: this.roster.get(p.id)?.avatar || null,
         // Only the genuine last-one-standing is crowned. A match ended early
         // by the host has no winner, however many are still in the ring.
@@ -307,10 +318,26 @@ class Match {
         tenure, pins: p.pins, capped: p.score >= g.ceiling,
         lockedOut: this.race?.lockedOut.has(token) ?? false,
         cluesToEntry: p.state === 'queued' ? g.cluesUntilNextEntry() : null,
-        entryStake: Math.min(this.settings.startScore, g.ceiling),
+        entryStake: Math.min(
+          (p.revivals ? Math.round(this.settings.startScore * this.settings.revivalFraction)
+            : this.settings.startScore) - (p.bountyPlaced || 0), g.ceiling),
+        topRope: !!p.topRope,
+        target: p.target || null,
+        targetedBy: [...g.players.values()].filter((x) => x.target === token && x.state === 'live')
+          .map((x) => x.name),
+        bounty: this.settings.bounties ? g.bountyTotal(token) : 0,
+        bountyPlaced: p.bountyPlaced || 0,
+        bountyCap: Math.floor(this.settings.startScore * this.settings.bountyMaxFraction),
+        revivals: p.revivals || 0,
       },
       buzzOpen: !!this.race?.open,
       clueUp: !!this.clue,
+      mechanics: {
+        topRope: !!this.settings.topRope, targeting: !!this.settings.targeting,
+        bounties: !!this.settings.bounties, revival: !!this.settings.revival,
+      },
+      ring: g.live().map((x) => ({ token: x.id, name: x.name, draw: x.drawNumber,
+        score: x.score, bounty: this.settings.bounties ? g.bountyTotal(x.id) : 0 })),
       clueValue: this.clue?.value ?? null,
       lockout: this.settings.lockout,
       roster: this.roster.size,
@@ -590,6 +617,11 @@ io.on('connection', (socket) => {
     match.clue = null; match.race = null;
     pushAll();
     io.to(`${match.id}:host`).emit('resolved', entry);
+    for (const t of entry.revived || []) {
+      const sid = match.roster.get(t)?.socketId;
+      if (sid) io.to(sid).emit('revived', {
+        stake: Math.round(match.settings.startScore * match.settings.revivalFraction) });
+    }
     if (match.game.finished) {
       match.phase = 'over';
       match.finishRecord();
@@ -658,6 +690,37 @@ io.on('connection', (socket) => {
 
   // An early press never enters the race. It costs the player their lockout
   // on their own device and shows up in their stats, nothing more.
+  // --- advanced mechanics ---------------------------------------------
+
+  socket.on('top-rope', ({ on }) => {
+    if (!match?.game || !token) return;
+    if (match.clue) return socket.emit('error-msg', 'declare between clues, not on one');
+    if (match.game.setTopRope(token, on)) {
+      match.note('top-rope', { player: match.roster.get(token)?.name, on: !!on });
+      pushAll();
+    }
+  });
+
+  socket.on('set-target', ({ target }) => {
+    if (!match?.game || !token) return;
+    if (match.game.setTarget(token, target || null)) {
+      const me = match.roster.get(token)?.name;
+      match.note('target', { player: me, target: target ? match.roster.get(target)?.name : null });
+      if (target) io.to(match.roster.get(target)?.socketId || '').emit('targeted', { by: me });
+      pushAll();
+    }
+  });
+
+  socket.on('place-bounty', ({ target, amount }, ack) => {
+    if (!match?.game || !token) return ack?.({ error: 'not in a match' });
+    const r = match.game.placeBounty(token, target, amount);
+    if (r.error) return ack?.(r);
+    match.note('bounty', { placer: match.roster.get(token)?.name,
+      target: match.roster.get(target)?.name, amount: r.amount });
+    ack?.(r);
+    pushAll();
+  });
+
   socket.on('early-buzz', () => {
     if (!match || !token) return;
     match.stat(token).early++;

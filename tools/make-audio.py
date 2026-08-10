@@ -160,11 +160,36 @@ def countdown(step):
     return reverb(body + click, seconds=0.5, mix=0.22)[:int(SR * 0.75)]
 
 
+# ------------------------------------------------------------- missile lock
+# Synthesised on purpose. The horn and the impact are physical events with
+# textures worth sampling; an avionics warning is an electronic signal, so
+# generating one produces the same kind of thing the real one is.
+def lock_tone():
+    beep_hz, gap, reps = 0.055, 0.055, 7
+    out = []
+    for i in range(reps):
+        x = t(beep_hz)
+        # square-ish, two tones a fifth apart, the way cockpit warnings sit
+        tone_a = signal.square(2 * np.pi * 1180 * x, duty=0.42)
+        tone_b = signal.square(2 * np.pi * 1770 * x, duty=0.35) * 0.45
+        env = np.minimum(1, np.linspace(0, 14, len(x))) * np.exp(-np.linspace(0, 2.2, len(x)))
+        out.append((tone_a + tone_b) * env * 0.5)
+        out.append(np.zeros(int(gap * SR)))
+    body = np.concatenate(out)
+    sos = signal.butter(4, [700 / (SR / 2), 4800 / (SR / 2)], btype='band', output='sos')
+    body = signal.sosfilt(sos, body)
+    return reverb(body, seconds=0.35, mix=0.13)[:int(SR * 0.95)]
+
+
 if __name__ == '__main__':
-    print('writing sound cues:')
+    print('writing synthesised cues:')
     np.random.seed(7)
-    write('entry-horn', entry_horn())
-    write('chop', chop())
+    # The horn and the chop ship as processed recordings — see build-audio.py.
+    # Pass --all to regenerate the synthesised fallbacks over the top of them.
+    if '--all' in sys.argv:
+        write('entry-horn', entry_horn())
+        write('chop', chop())
     for i in range(3):
         write(f'countdown-{i + 1}', countdown(i), bitrate='96k')
+    write('lock', lock_tone(), bitrate='96k')
     print('done')

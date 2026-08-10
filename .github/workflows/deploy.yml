@@ -21,6 +21,8 @@ jobs:
         run: node test/harness.js
       - name: Length estimates and setup warnings
         run: node test/estimate.mjs
+      - name: Advanced mechanics arithmetic
+        run: node test/mechanics.mjs
       - name: End-to-end match over sockets
         run: |
           node src/server.js & sleep 10
@@ -29,6 +31,7 @@ jobs:
           node test/buzzer.mjs
           node test/record.mjs
           node test/avatar.mjs
+          node test/mechanics-live.mjs
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

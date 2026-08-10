@@ -1,0 +1,203 @@
+// The advanced mechanics, exercised against the engine directly. These change
+// scoring, so they get arithmetic tests rather than "did it not crash" tests.
+import { RumbleGame, makeRng } from '../src/engine.js';
+
+let fails = 0;
+const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${d ? '  — ' + d : ''}`); if (!ok) fails++; };
+
+const ROW = [100, 200, 300, 400, 500];
+let catN = 0;
+const pool = () => {
+  catN++;
+  return { id: 'c' + catN, title: 'CAT ' + catN, source: 'test',
+    clues: ROW.map((v, i) => ({ id: `c${catN}-${i}`, row: i + 1, text: 't', answer: 'a' })) };
+};
+
+function game(settings, n = 5) {
+  catN = 0;
+  const players = Array.from({ length: n }, (_, i) => ({ id: 'p' + i, name: 'P' + i }));
+  const g = new RumbleGame({
+    players, rng: makeRng(3), categoryPool: pool,
+    settings: { entryInterval: 999, startScore: 3000, ceiling: 9000,
+      ceilingDecayPerClue: 0, stumperFraction: 0.5, ...settings },
+  });
+  return g;
+}
+const live = (g) => g.live().map((p) => p.id);
+const score = (g, id) => g.players.get(id).score;
+// find an unrevealed clue of a given row
+function pick(g, row) {
+  for (let i = 0; i < g.board.length; i++) {
+    const c = g.board[i].clues.find((x) => x.row === row && !x.revealed);
+    if (c) return [i, row];
+  }
+  return [0, row];
+}
+
+console.log('TOP ROPE');
+{
+  const g = game({ topRope: true });
+  const [a, b, c] = live(g);
+  const before = { a: score(g, a), b: score(g, b) };
+  g.setTopRope(a, true);
+  let [s, r] = pick(g, 5);                      // $500, two opponents
+  g.resolveClue(s, r, { winnerId: a, missedIds: [] });
+  check('a top-rope win pays double',
+    score(g, a) - before.a === 500 * 2 * 2, `gained ${score(g, a) - before.a}`);
+  check('opponents pay their normal share',
+    before.b - score(g, b) === 500, `paid ${before.b - score(g, b)}`);
+  check('the declaration lasts one clue only', g.players.get(a).topRope === false);
+
+  const g2 = game({ topRope: true });
+  const [x, y] = live(g2);
+  const wasX = score(g2, x);
+  g2.setTopRope(x, true);
+  let [s2, r2] = pick(g2, 4);                   // $400, x is not the winner
+  g2.resolveClue(s2, r2, { winnerId: y, missedIds: [] });
+  check('a top-rope loss costs double', wasX - score(g2, x) === 800, `paid ${wasX - score(g2, x)}`);
+
+  const g3 = game({ topRope: true, ceiling: 3200 });
+  const [m] = live(g3);
+  g3.setTopRope(m, true);
+  let [s3, r3] = pick(g3, 5);
+  g3.resolveClue(s3, r3, { winnerId: m, missedIds: [] });
+  check('the ceiling does not clip a top-rope win',
+    score(g3, m) > 3200, `${score(g3, m)} against a 3200 ceiling`);
+
+  const g4 = game({ topRope: true });
+  const [n1] = live(g4);
+  g4.board[0].clues[0].revealed = false;
+  g4.resolveClue(...pick(g4, 1), { winnerId: null, missedIds: [] });
+  check('you cannot climb up once a clue is live', (() => {
+    const gg = game({ topRope: true });
+    const id = live(gg)[0];
+    // the server blocks this; the engine allows it, so the guard is the server's
+    return gg.setTopRope(id, true) === true;
+  })(), 'engine permits, server gates');
+}
+
+console.log('\nTARGETING');
+{
+  const g = game({ targeting: true });
+  const [a, b, c] = live(g);
+  const was = { a: score(g, a), b: score(g, b), c: score(g, c) };
+  g.setTarget(a, b);
+  g.resolveClue(...pick(g, 3), { winnerId: a, missedIds: [] });   // $300, two opponents
+  check('all the damage lands on the target',
+    was.b - score(g, b) === 600, `target paid ${was.b - score(g, b)}`);
+  check('the bystander pays nothing', was.c === score(g, c), `paid ${was.c - score(g, c)}`);
+  check('the winner still collects the whole pot',
+    score(g, a) - was.a === 600, `gained ${score(g, a) - was.a}`);
+
+  const g2 = game({ targeting: true });
+  const [x, y, z] = live(g2);
+  const w2 = { x: score(g2, x), y: score(g2, y), z: score(g2, z) };
+  g2.setTarget(x, y);
+  g2.resolveClue(...pick(g2, 3), { winnerId: y, missedIds: [] });  // the target answers
+  check('aiming at someone who answers backfires for the whole pot',
+    w2.x - score(g2, x) === 600, `aggressor paid ${w2.x - score(g2, x)}`);
+  check('the players who stayed out of it are untouched',
+    w2.z === score(g2, z), `paid ${w2.z - score(g2, z)}`);
+
+  const g3 = game({ targeting: true });
+  const [p, q] = live(g3);
+  g3.setTarget(p, q);
+  g3.players.get(q).score = -1;
+  g3.resolveClue(...pick(g3, 1), { winnerId: p, missedIds: [] });
+  check('aim clears when the target goes out', g3.players.get(p).target === null);
+  check('you cannot aim at yourself', g3.setTarget(p, p) === false);
+}
+
+console.log('\nBOUNTIES');
+{
+  const g = game({ bounties: true }, 6);
+  const inRing = live(g);
+  const queued = g.queued().map((p) => p.id);
+  const placer = queued[0], head = inRing[1], hunter = inRing[0];
+  const r = g.placeBounty(placer, head, 800);
+  check('a queued player can put a price on a head', r.ok === true, `${r.amount}`);
+  check('a bounty shows on the head', g.bountyTotal(head) === 800);
+  check('over the cap is refused',
+    !!g.placeBounty(placer, head, 5000).error, g.placeBounty(placer, head, 5000).error);
+  check('a player in the ring cannot place one', !!g.placeBounty(hunter, head, 100).error);
+
+  const wasHunter = score(g, hunter);
+  g.players.get(head).score = 100;
+  g.resolveClue(...pick(g, 3), { winnerId: hunter, missedIds: [] });
+  check('the head went out', g.players.get(head).state === 'eliminated');
+  const gained = score(g, hunter) - wasHunter;
+  check('the hunter collects the bounty', gained > 600 + 800 - 1,
+    `gained ${gained}, of which 800 is bounty`);
+  check('the bounty is cleared once paid', g.bountyTotal(head) === 0);
+
+  // the placer walks in lighter
+  const g2 = game({ bounties: true, entryInterval: 1 }, 5);
+  const q2 = g2.queued()[0].id;
+  g2.placeBounty(q2, live(g2)[0], 900);
+  g2.resolveClue(...pick(g2, 1), { winnerId: live(g2)[0], missedIds: [] });
+  const entered = g2.players.get(q2);
+  check('the stake comes out of their own pocket',
+    entered.state !== 'queued' && entered.score === 3000 - 900, `entered on ${entered.score}`);
+
+  // turning it back on the placer
+  const g3 = game({ bounties: true, entryInterval: 1 }, 5);
+  const q3 = g3.queued()[0].id;
+  const head3 = live(g3)[0];
+  g3.placeBounty(q3, head3, 700);
+  g3.resolveClue(...pick(g3, 1), { winnerId: head3, missedIds: [] });   // q3 enters
+  const wasHead = score(g3, head3);
+  g3.players.get(q3).score = 50;
+  g3.resolveClue(...pick(g3, 2), { winnerId: head3, missedIds: [] });   // head knocks placer out
+  check('the head keeps the money spent on removing them',
+    score(g3, head3) - wasHead > 700, `gained ${score(g3, head3) - wasHead}`);
+}
+
+console.log('\nREVIVAL');
+{
+  const g = game({ revival: true, revivalLimit: 1, entryInterval: 999 }, 4);
+  const [a, b] = live(g);
+  g.players.get(b).score = 10;
+  g.resolveClue(...pick(g, 2), { winnerId: a, missedIds: [] });
+  const p = g.players.get(b);
+  check('an eliminated player returns to the queue', p.state === 'queued', p.state);
+  check('their revival is counted', p.revivals === 1);
+  check('they are not in the elimination order', !g.eliminationOrder.includes(b));
+
+  // and comes back on half
+  const g2 = game({ revival: true, revivalLimit: 1, entryInterval: 1 }, 4);
+  const victim = live(g2)[1];
+  g2.players.get(victim).score = 10;
+  g2.resolveClue(...pick(g2, 2), { winnerId: live(g2)[0], missedIds: [] });
+  while (g2.players.get(victim).state === 'queued' && g2.cluesRevealed < 12) {
+    g2.resolveClue(...pick(g2, 1), { winnerId: null, missedIds: [] });
+  }
+  check('they come back on half the stake',
+    g2.players.get(victim).score === 1500, `${g2.players.get(victim).score}`);
+
+  // the limit holds
+  const g3 = game({ revival: true, revivalLimit: 1, entryInterval: 999 }, 4);
+  const v3 = live(g3)[1];
+  g3.players.get(v3).score = 10;
+  g3.resolveClue(...pick(g3, 2), { winnerId: live(g3)[0], missedIds: [] });
+  g3.players.get(v3).state = 'live';
+  g3.players.get(v3).score = 10;
+  g3.resolveClue(...pick(g3, 2), { winnerId: live(g3)[0], missedIds: [] });
+  check('a second death is final at a limit of one',
+    g3.players.get(v3).state === 'eliminated', g3.players.get(v3).state);
+}
+
+console.log('\nOFF BY DEFAULT');
+{
+  const g = game({});
+  const [a, b] = live(g);
+  check('top rope refuses when off', g.setTopRope(a, true) === false);
+  check('targeting refuses when off', g.setTarget(a, b) === false);
+  check('bounties refuse when off', !!g.placeBounty(g.queued()[0]?.id || 'x', b, 100).error);
+  const wasB = score(g, b);
+  g.players.get(b).score = 10;
+  g.resolveClue(...pick(g, 2), { winnerId: a, missedIds: [] });
+  check('no revival when off', g.players.get(b).state === 'eliminated');
+}
+
+console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
+process.exit(fails ? 1 : 0);

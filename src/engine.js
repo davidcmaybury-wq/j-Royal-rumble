@@ -17,6 +17,14 @@ export const DEFAULT_SETTINGS = {
   secondsPerClue: 17.5,
   targetMinutes: 60,
   recordMatch: false,        // keep a detailed log of the match
+  // --- advanced mechanics, all off unless the host turns them on ---
+  topRope: false,            // double your stakes both ways for one clue
+  targeting: false,          // aim your damage at one player, and theirs at you
+  bounties: false,           // queued players pay to put a price on a head
+  revival: false,            // one more life, at a fraction of the stake
+  revivalLimit: 1,
+  revivalFraction: 0.5,
+  bountyMaxFraction: 0.5,    // most of their stake a queued player may stake
   delay: 200,                // ms held back so buzzers arm with Zoom audio
   lockout: 250,              // ms penalty for buzzing before the lights
   seasonRange: null,         // [lo, hi] archive seasons; null = all
@@ -83,13 +91,16 @@ export class RumbleGame {
     order.forEach((p, i) => {
       this.players.set(p.id, {
         id: p.id, name: p.name, drawNumber: i + 1,
+        originalDraw: i + 1,
         state: 'queued', score: 0, enteredAtClue: null,
         eliminatedAtClue: null, placement: null,
         pins: 0, correct: 0, missed: 0,
+        topRope: false, target: null, revivals: 0, bountyPlaced: 0,
       });
     });
     this.drawOrder = order.map((p) => p.id);
     this.eliminationOrder = [];
+    this.bounties = [];        // { placer, target, amount }
 
     this.board = [];
     for (let i = 0; i < BOARD_CATEGORIES; i++) this.board.push(this.drawCategory());
@@ -111,6 +122,7 @@ export class RumbleGame {
       drawOrder: this.drawOrder,
       eliminationOrder: this.eliminationOrder,
       usedClueIds: [...this.usedClueIds],
+      bounties: this.bounties,
       cluesRevealed: this.cluesRevealed,
       fieldClears: this.fieldClears,
       vetoedThisMatch: this.vetoedThisMatch,
@@ -128,6 +140,7 @@ export class RumbleGame {
     this.drawOrder = d.drawOrder;
     this.eliminationOrder = d.eliminationOrder;
     this.usedClueIds = new Set(d.usedClueIds);
+    this.bounties = d.bounties || [];
     this.cluesRevealed = d.cluesRevealed;
     this.fieldClears = d.fieldClears;
     this.vetoedThisMatch = d.vetoedThisMatch;
@@ -151,6 +164,55 @@ export class RumbleGame {
       this.eliminationOrder = this.eliminationOrder.filter((id) => id !== token);
     }
     return { before, after: p.score };
+  }
+
+  // ---- advanced mechanics ---------------------------------------------
+
+  // Declared between clues, never after one is on the board — otherwise you
+  // would only ever climb up when you already knew the answer.
+  setTopRope(token, on) {
+    if (!this.s.topRope) return false;
+    const p = this.players.get(token);
+    if (!p || p.state !== 'live') return false;
+    p.topRope = !!on;
+    return true;
+  }
+
+  setTarget(token, targetToken) {
+    if (!this.s.targeting) return false;
+    const p = this.players.get(token);
+    if (!p || p.state !== 'live') return false;
+    if (!targetToken) { p.target = null; return true; }
+    const t = this.players.get(targetToken);
+    if (!t || t.state !== 'live' || targetToken === token) return false;
+    p.target = targetToken;
+    return true;
+  }
+
+  // Paid out of a queued player's stake, so they walk in lighter. That cost is
+  // what stops a bounty being a free shot.
+  placeBounty(placerToken, targetToken, amount) {
+    if (!this.s.bounties) return { error: 'bounties are off' };
+    const placer = this.players.get(placerToken);
+    const target = this.players.get(targetToken);
+    if (!placer || placer.state !== 'queued') return { error: 'only queued players can place a bounty' };
+    if (!target || target.state !== 'live') return { error: 'that player is not in the ring' };
+    const cap = Math.floor(this.s.startScore * this.s.bountyMaxFraction);
+    const amt = Math.max(1, Math.floor(amount));
+    if (placer.bountyPlaced + amt > cap) {
+      return { error: `you can stake at most ${cap} in total` };
+    }
+    placer.bountyPlaced += amt;
+    this.bounties.push({ placer: placerToken, target: targetToken, amount: amt });
+    return { ok: true, amount: amt, remaining: cap - placer.bountyPlaced };
+  }
+
+  bountiesOn(token) {
+    return this.bounties.filter((b) => b.target === token);
+  }
+
+  bountyTotal(token) {
+    return this.bountiesOn(token).reduce((n, b) => n + b.amount, 0);
   }
 
   // ---- derived values -------------------------------------------------
@@ -230,35 +292,76 @@ export class RumbleGame {
     const { winnerId = null, missedIds = [] } = outcome;
     const live = this.live();
     const liveIds = new Set(live.map((p) => p.id));
+    const mult = (p) => (p.topRope ? 2 : 1);      // top rope doubles your own stakes, both ways
     const entry = {
       type: 'clue', n: this.cluesRevealed, category: cat.title, row, value,
       winnerId, missedIds: [...missedIds], ceiling: this.ceiling, eliminated: [],
+      topRope: live.filter((p) => p.topRope).map((p) => p.id),
+      targets: Object.fromEntries(live.filter((p) => p.target).map((p) => [p.id, p.target])),
     };
 
     for (const id of missedIds) {
       if (!liveIds.has(id)) continue;
       const p = this.players.get(id);
-      p.score -= value;
+      p.score -= value * mult(p);
       p.missed += 1;
     }
+
+    let ceilingFreeFor = null;
 
     if (winnerId && liveIds.has(winnerId)) {
       const w = this.players.get(winnerId);
       const opponents = live.filter((p) => p.id !== winnerId);
-      const gain = this.s.potScoring ? value * opponents.length : value;
+      const pot = value * opponents.length;
+
+      // Who pays, and how much. Three cases, in order of precedence.
+      const payers = new Map();
+      const aimedAtWinner = opponents.filter((p) => p.target === winnerId);
+      if (aimedAtWinner.length) {
+        // They went for the winner and missed. Each pays the whole pot; the
+        // players who stayed out of it pay nothing.
+        for (const p of aimedAtWinner) payers.set(p.id, pot);
+        entry.backfired = aimedAtWinner.map((p) => p.id);
+      } else if (w.target && liveIds.has(w.target)) {
+        // The winner aimed. All the damage lands on one head.
+        payers.set(w.target, pot);
+        entry.focused = w.target;
+      } else {
+        for (const p of opponents) payers.set(p.id, value);
+      }
+
+      let collected = 0;
+      for (const [id, amount] of payers) {
+        const p = this.players.get(id);
+        const paid = amount * mult(p);
+        p.score -= paid;
+        collected += amount;          // the payer's own multiplier is their problem
+      }
+      // Flat scoring pays the clue value regardless of how many opponents
+      // contributed. Keeping this path is what lets the harness show why the
+      // pot rule exists at all.
+      const gain = (this.s.potScoring ? collected : value) * mult(w);
       w.score += gain;
       w.correct += 1;
-      for (const p of opponents) p.score -= value;
       entry.gain = gain;
+      if (w.topRope) ceilingFreeFor = w.id;   // the point of the risk is the reward
     } else if (this.s.stumperFraction > 0) {
       const d = Math.round(value * this.s.stumperFraction);
-      for (const p of live) p.score -= d;
+      for (const p of live) p.score -= d * mult(p);
       entry.stumperDeduction = d;
     }
 
-    // Ceiling clips every live score, not just the answerer's.
+    // A declaration lasts exactly one clue, however it resolves.
+    for (const p of live) p.topRope = false;
+
+    // Ceiling clips every live score, not just the answerer's — except the
+    // player who went to the top rope, whose whole reason for going was to
+    // reach past it.
     const cap = this.ceiling;
-    for (const p of this.live()) if (p.score > cap) p.score = cap;
+    for (const p of this.live()) {
+      if (p.id === ceilingFreeFor) continue;
+      if (p.score > cap) p.score = cap;
+    }
 
     this.applyEliminations(entry, winnerId);
 
@@ -285,6 +388,15 @@ export class RumbleGame {
       this.winnerId = liveAfter[0]?.id ?? null;
       if (this.winnerId) {
         const w = this.players.get(this.winnerId);
+        // Nobody collected. The money spent trying to remove them is theirs.
+        if (this.s.bounties) {
+          const left = this.bountyTotal(w.id);
+          if (left) {
+            w.score += left;
+            entry.bountyAbsorbed = { by: w.id, amount: left };
+            this.bounties = this.bounties.filter((b) => b.target !== w.id);
+          }
+        }
         w.placement = 1;
         w.state = 'winner';
       }
@@ -313,24 +425,79 @@ export class RumbleGame {
       entry.totalWipe = { survivorId: survivor.id };
     }
 
-    const remaining = this.players.size - this.eliminationOrder.length - doomed.length;
+    const winner = winnerId ? this.players.get(winnerId) : null;
+
     for (const p of doomed) {
       p.state = 'eliminated';
       p.eliminatedAtClue = this.cluesRevealed;
-      p.placement = remaining + doomed.length - doomed.indexOf(p);
       this.eliminationOrder.push(p.id);
       entry.eliminated.push(p.id);
+
+      // --- bounties on the player going out ---
+      if (this.s.bounties) {
+        const on = this.bountiesOn(p.id);
+        if (on.length && winner && winner.state === 'live') {
+          const paid = on.reduce((n, b) => n + b.amount, 0);
+          winner.score += paid;
+          entry.bountyCollected = (entry.bountyCollected || [])
+            .concat([{ by: winner.id, on: p.id, amount: paid }]);
+        }
+        this.bounties = this.bounties.filter((b) => b.target !== p.id);
+      }
+
+      // --- a bounty placer going out at the hands of the head they bought ---
+      // The target keeps the money that was spent trying to remove them.
+      if (this.s.bounties && winner && winner.state === 'live') {
+        const theirs = this.bounties.filter(
+          (b) => b.placer === p.id && b.target === winner.id);
+        if (theirs.length) {
+          const paid = theirs.reduce((n, b) => n + b.amount, 0);
+          winner.score += paid;
+          this.bounties = this.bounties.filter(
+            (b) => !(b.placer === p.id && b.target === winner.id));
+          entry.bountyTurned = (entry.bountyTurned || [])
+            .concat([{ to: winner.id, from: p.id, amount: paid }]);
+        }
+      }
+
+      // --- revival ---
+      if (this.s.revival && p.revivals < this.s.revivalLimit && this.queued().length + 1 > 0) {
+        p.revivals += 1;
+        p.state = 'queued';
+        p.eliminatedAtClue = null;
+        p.enteredAtClue = null;
+        p.target = null;
+        p.topRope = false;
+        this.eliminationOrder = this.eliminationOrder.filter((id) => id !== p.id);
+        this.drawOrder = this.drawOrder.filter((id) => id !== p.id).concat([p.id]);
+        // A fresh number for the queue, but the number they actually drew is
+        // what the standings and every fairness measurement should use.
+        p.drawNumber = this.players.size + this.revivedCount();
+        entry.revived = (entry.revived || []).concat([p.id]);
+      }
     }
-    if (winnerId && this.players.get(winnerId)?.state === 'live') {
-      this.players.get(winnerId).pins += doomed.length;
+
+    // Anyone aiming at a player who has just gone loses their aim.
+    const gone = new Set(doomed.filter((p) => p.state !== 'queued').map((p) => p.id));
+    for (const p of this.players.values()) {
+      if (p.target && gone.has(p.target)) p.target = null;
     }
+
+    if (winner && winner.state === 'live' && doomed.length) winner.pins += doomed.length;
+  }
+
+  revivedCount() {
+    return [...this.players.values()].reduce((n, p) => n + p.revivals, 0);
   }
 
   admit(cause) {
     const next = this.queued()[0];
     if (!next) return null;
     next.state = 'live';
-    next.score = Math.min(this.s.startScore, this.ceiling);
+    const stake = next.revivals > 0
+      ? Math.round(this.s.startScore * this.s.revivalFraction)
+      : this.s.startScore;
+    next.score = Math.min(stake - next.bountyPlaced, this.ceiling);
     next.enteredAtClue = this.cluesRevealed;
     this.log.push({ type: 'entry', playerId: next.id, draw: next.drawNumber, cause });
     return next;

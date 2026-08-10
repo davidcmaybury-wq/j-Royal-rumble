@@ -19,7 +19,7 @@ body{background:var(--ink);color:var(--chalk);font:400 15px/1.5 "IBM Plex Sans",
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.app{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);height:100dvh;max-width:520px;margin:0 auto;position:relative;transition:background .5s}
+.app{display:grid;grid-template-rows:auto auto auto auto minmax(0,1fr);height:100dvh;max-width:520px;margin:0 auto;position:relative;transition:background .5s}
 .app.soon{background:linear-gradient(180deg,#2A1D06 0%,#0A0E1C 46%)}
 .app.soon1{background:linear-gradient(180deg,#4A2E06 0%,#0A0E1C 52%)}
 .callup{background:var(--brass);color:#0A0E1C;text-align:center;padding:9px 12px;
@@ -106,6 +106,31 @@ animation:breathe 1.6s ease-in-out infinite}
 .fb .p{font-size:13px;color:var(--slate);margin-top:2px}
 .fb .p b{color:var(--chalk);font-weight:500}
 .fb .warn{font-size:13px;color:var(--alarm)}
+.mech{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:0 10px}
+.mbtn{padding:8px 14px;border:1px solid var(--line);border-radius:20px;font-size:12.5px;color:var(--slate)}
+.mbtn:hover{color:var(--chalk);border-color:var(--slate)}
+.mbtn.on{border-color:var(--brass);color:var(--brass);background:#3A2E0C}
+.mbtn .k{opacity:.55;margin-left:5px;font-size:10.5px}
+.mbtn:disabled{opacity:.3;cursor:default}
+.lockon{border-color:var(--alarm)!important;color:var(--alarm)!important;background:#3E1A17!important}
+.hunted{background:var(--alarm);color:#0A0E1C;text-align:center;padding:7px 12px;
+font:400 13px/1.2 "Anton",Impact,sans-serif;letter-spacing:.1em;animation:hpulse .9s ease-in-out infinite}
+@keyframes hpulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.hunted{animation:none}}
+.picker{position:fixed;inset:0;background:#0A0E1CEE;z-index:50;display:flex;align-items:center;
+justify-content:center;padding:18px}
+.pbox{background:var(--panel);border:1px solid var(--brass);border-radius:10px;padding:16px;width:100%;max-width:380px}
+.pbox h3{margin:0 0 4px;font:400 17px "IBM Plex Sans",sans-serif}
+.pbox .sub2{font-size:12px;color:var(--slate);margin-bottom:12px}
+.prow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;border-radius:var(--r);
+background:var(--ink);margin-bottom:5px;font-size:14px;border:1px solid transparent}
+.prow:hover{border-color:var(--brass)}
+.prow .n{width:20px;color:var(--brass);font-family:"IBM Plex Mono",monospace}
+.prow .sc2{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--slate)}
+.prow.cur{border-color:var(--alarm)}
+.pbox input{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:var(--r);
+color:var(--chalk);padding:9px 11px;font:400 15px "IBM Plex Mono",monospace;margin-top:8px}
+.pbox .go2{width:100%;margin-top:9px;padding:10px;border:1px solid var(--brass);color:var(--brass);border-radius:var(--r)}
 
 /* out takeover */
 .gone{position:absolute;inset:0;background:#0A0E1CF7;display:flex;flex-direction:column;
@@ -345,7 +370,26 @@ function press() {
   } else if (r === 'sent') { render(); }
 }
 addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && joined && !document.querySelector('.results')) { e.preventDefault(); press(); }
+  if (!joined || document.querySelector('.results') || document.querySelector('.picker')) return;
+  if (e.code === 'Space') { e.preventDefault(); press(); return; }
+  const you = (V && V.you) || {}, M = (V && V.mechanics) || {};
+  const k = (e.key || '').toLowerCase();
+  if (k === 'r' && M.topRope && you.state === 'live' && !V.clueUp) {
+    e.preventDefault(); socket.emit('top-rope', { on: !you.topRope });
+  } else if (k === 't' && M.targeting && you.state === 'live') {
+    e.preventDefault(); pickTarget(you);
+  } else if (k === 'b' && M.bounties && you.state === 'queued') {
+    e.preventDefault(); pickBounty(you);
+  }
+});
+
+socket.on('targeted', ({ by }) => {
+  sfx.play('lock');
+  say(`${by} is aiming at you`);
+});
+socket.on('revived', ({ stake }) => {
+  sfx.play('entry');
+  say(`You are back in the queue with ${stake.toLocaleString()}`);
 });
 
 // ---------------- render ----------------
@@ -362,6 +406,9 @@ renderJoin();
   root.innerHTML = `<div class="app${soon ? (you.cluesToEntry === 1 ? ' soon1' : ' soon') : ''}">
     ${soon ? `<div class="callup${you.cluesToEntry === 1 ? ' p' : ''}">ENTERING THE RING IN ${
       you.cluesToEntry} CLUE${you.cluesToEntry > 1 ? 'S' : ''}</div>` : ''}
+    ${(you.targetedBy || []).length ? `<div class="hunted">${
+      you.targetedBy.length > 1 ? `${you.targetedBy.length} PLAYERS ARE AIMING AT YOU`
+        : `${you.targetedBy[0].toUpperCase()} IS AIMING AT YOU`}</div>` : ''}
     <header class="hd">
       ${st === 'lobby' ? '' : `<span class="dr mq num">${you.draw ?? ''}</span>`}
       <span class="nm">${you.name || ''}</span>
@@ -374,6 +421,7 @@ renderJoin();
     <section class="pad">
       <button class="buzz" id="buzz"><span class="big mq" id="bzbig">WAIT</span><span id="bzsub"></span></button>
       <div class="fb" id="fb"></div>
+      <div class="mech" id="mech"></div>
     </section>
   </div>`;
 
@@ -381,6 +429,7 @@ renderJoin();
   renderBuzz(st, you);
   renderFb(you);
   document.getElementById('buzz').onpointerdown = (e) => { e.preventDefault(); press(); };
+  renderMech(st, you);
   maybeGone(st, you);
 }
 
@@ -449,6 +498,95 @@ function renderFb(you) {
   } else if (you.lockedOut) {
     fb.innerHTML = `<div class="warn">Out of this clue. Your score drops when it resolves.</div>`;
   } else fb.innerHTML = '';
+}
+
+function renderMech(st, you) {
+  const m = document.getElementById('mech');
+  if (!m) return;
+  const M = V.mechanics || {};
+  const parts = [];
+  if (M.topRope && st === 'live') {
+    parts.push(`<button class="mbtn${you.topRope ? ' on' : ''}" id="m-rope" ${V.clueUp ? 'disabled' : ''}>
+      ${you.topRope ? 'ON THE TOP ROPE' : 'Go to the top rope'}<span class="k">R</span></button>`);
+  }
+  if (M.targeting && st === 'live') {
+    const t = (V.ring || []).find((x) => x.token === you.target);
+    parts.push(`<button class="mbtn${you.target ? ' lockon' : ''}" id="m-target">
+      ${t ? 'Aiming at ' + t.name : 'Take aim'}<span class="k">T</span></button>`);
+  }
+  if (M.bounties && st === 'queued' && (you.bountyCap - you.bountyPlaced) > 0) {
+    parts.push(`<button class="mbtn" id="m-bounty">Place a bounty
+      <span class="k">${(you.bountyCap - you.bountyPlaced).toLocaleString()} left</span></button>`);
+  }
+  if (M.bounties && you.bounty > 0) {
+    parts.push(`<span class="mbtn lockon" style="cursor:default">
+      ${you.bounty.toLocaleString()} on your head</span>`);
+  }
+  if (you.revivals > 0) {
+    parts.push(`<span class="mbtn" style="cursor:default">Second life</span>`);
+  }
+  m.innerHTML = parts.join('');
+  const q = (id) => document.getElementById(id);
+  if (q('m-rope')) q('m-rope').onclick = () => socket.emit('top-rope', { on: !you.topRope });
+  if (q('m-target')) q('m-target').onclick = () => pickTarget(you);
+  if (q('m-bounty')) q('m-bounty').onclick = () => pickBounty(you);
+}
+
+// Numbered so it can be driven from the keyboard as well as tapped — the
+// people on laptops will be faster with numbers.
+function pickTarget(you) {
+  const ring = (V.ring || []).filter((x) => x.token !== you.token);
+  const el = document.createElement('div'); el.className = 'picker';
+  el.innerHTML = `<div class="pbox"><h3>Take aim</h3>
+    <div class="sub2">Win a clue and the whole pot comes out of them alone. Lose it to them and
+    you pay the whole pot yourself.</div>
+    ${ring.map((p, i) => `<button class="prow${you.target === p.token ? ' cur' : ''}" data-t="${p.token}">
+      <span class="n">${i + 1}</span><span>${p.name}</span>
+      <span class="sc2">${p.score.toLocaleString()}</span></button>`).join('')}
+    <button class="prow" data-t=""><span class="n">0</span><span>Stop aiming</span></button></div>`;
+  document.body.appendChild(el);
+  const choose = (tok) => { socket.emit('set-target', { target: tok || null }); close(); };
+  const close = () => { el.remove(); removeEventListener('keydown', key); };
+  const key = (e) => {
+    if (e.key === 'Escape') return close();
+    const n = parseInt(e.key, 10);
+    if (!isNaN(n)) { e.preventDefault(); choose(n === 0 ? '' : (ring[n - 1] || {}).token); }
+  };
+  addEventListener('keydown', key);
+  el.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => choose(b.dataset.t));
+  el.onclick = (e) => { if (e.target === el) close(); };
+}
+
+function pickBounty(you) {
+  const ring = V.ring || [];
+  const left = you.bountyCap - you.bountyPlaced;
+  const el = document.createElement('div'); el.className = 'picker';
+  el.innerHTML = `<div class="pbox"><h3>Place a bounty</h3>
+    <div class="sub2">Paid out of your own stake, so you'll walk in lighter. Whoever knocks them
+    out collects it. You have ${left.toLocaleString()} to spend.</div>
+    ${ring.map((p, i) => `<button class="prow" data-t="${p.token}">
+      <span class="n">${i + 1}</span><span>${p.name}</span>
+      <span class="sc2">${p.score.toLocaleString()}${p.bounty ? ' \u00B7 ' + p.bounty.toLocaleString() + ' on' : ''}</span></button>`).join('')}
+    <input type="number" id="bamt" placeholder="amount" value="${Math.min(500, left)}" min="1" max="${left}">
+    <button class="go2" id="bgo">Place it</button></div>`;
+  document.body.appendChild(el);
+  let chosen = null;
+  const close = () => el.remove();
+  el.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => {
+    chosen = b.dataset.t;
+    el.querySelectorAll('.prow').forEach((x) => x.classList.remove('cur'));
+    b.classList.add('cur');
+  });
+  el.querySelector('#bgo').onclick = () => {
+    if (!chosen) return;
+    const amt = Number(el.querySelector('#bamt').value);
+    socket.emit('place-bounty', { target: chosen, amount: amt }, (r) => {
+      if (r && r.error) { el.querySelector('.sub2').textContent = r.error;
+        el.querySelector('.sub2').style.color = 'var(--alarm)'; }
+      else close();
+    });
+  };
+  el.onclick = (e) => { if (e.target === el) close(); };
 }
 
 let goneShown = false;
