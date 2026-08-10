@@ -139,7 +139,7 @@ white-space:nowrap;border-bottom:1px solid var(--line);z-index:2}
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
-         startLatencyReports, fmt, ord } from '/rumble.js';
+         lockoutRemaining, startLatencyReports, fmt, ord } from '/rumble.js';
 
 // /j/CODE prefills the code; /join leaves it blank. Either way the player
 // confirms it, so a stray link can't drop somebody into the wrong room.
@@ -236,9 +236,14 @@ function press() {
   if (!V || !V.you) return;
   const r = attemptBuzz();
   if (r === 'early') {
-    early = true; render(); say('Too early. Locked out 250 milliseconds.');
+    early = true; render();
+    say(`Too early. Locked out ${V.lockout || 250} milliseconds.`);
     clearTimeout(earlyTimer);
-    earlyTimer = setTimeout(() => { early = false; render(); }, V.lockout || 250);
+    earlyTimer = setTimeout(() => {
+      early = false; render();
+      // The lights may have come on while the penalty was running.
+      if (armed && V.buzzOpen) say('Buzzers live');
+    }, lockoutRemaining() || (V.lockout || 250));
   } else if (r === 'sent') { render(); }
 }
 addEventListener('keydown', (e) => {
@@ -319,7 +324,8 @@ function renderBuzz(st, you) {
   if (st === 'lobby') { big.textContent = 'WAIT'; sub.textContent = 'match not started'; b.disabled = true; return; }
   if (you.lockedOut) { b.classList.add('locked'); big.textContent = 'LOCKED OUT';
     sub.textContent = 'you missed this clue'; b.disabled = true; return; }
-  if (early) { b.classList.add('early'); big.textContent = 'TOO EARLY'; sub.textContent = `${V.lockout || 250} ms penalty`; return; }
+  if (early) { b.classList.add('early'); big.textContent = 'TOO EARLY';
+    sub.textContent = `${V.lockout || 250} ms penalty`; return; }
   if (V.myBuzz) { b.classList.add('sent'); big.textContent = spectator ? 'SENT' : 'IN';
     if (spectator) sub.textContent = 'warm-up only'; return; }
   if (armed && V.buzzOpen) { b.classList.add(spectator ? 'spec' : 'armed');

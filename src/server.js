@@ -467,6 +467,13 @@ io.on('connection', (socket) => {
 
   // --- player actions --------------------------------------------------
 
+  // An early press never enters the race. It costs the player their lockout
+  // on their own device and shows up in their stats, nothing more.
+  socket.on('early-buzz', () => {
+    if (!match || !token) return;
+    match.stat(token).early++;
+  });
+
   socket.on('buzz', ({ ms, status }) => {
     if (!match || !token || !match.race) return;
     const g = match.game;
@@ -474,12 +481,14 @@ io.on('connection', (socket) => {
     const spectator = !p || p.state !== 'live';
     if (!spectator && match.race.lockedOut.has(token)) return;
     if (match.race.buzzes.some((b) => b.token === token)) return;
+    // Defensive: a client that reports an early press as a buzz is ignored.
+    if (status === 'early' || !(ms > 0)) return;
     const rec = {
       token, name: match.roster.get(token)?.name || 'Player',
-      ms: Math.round(ms * 10) / 10, early: status === 'early', spectator,
+      ms: Math.round(ms * 10) / 10, early: false, spectator,
     };
     const st = match.stat(token);
-    st.att++; if (rec.early) st.early++; st.times.push(rec.ms);
+    st.att++; st.times.push(rec.ms);
     match.race.buzzes.push(rec);
     match.race.buzzes.sort((a, b) => a.ms - b.ms);
     if (!spectator && match.race.buzzes[0].token === token) st.won++;

@@ -52,15 +52,23 @@ export function isArmed() { return armedAt != null && performance.now() >= armed
 export function attemptBuzz() {
   const now = performance.now();
   if (sent) return 'duplicate';
-  if (now < earlyUntil) return 'locked';
+  if (now < earlyUntil) return 'locked';       // still serving the penalty
   if (armedAt == null || now < armedAt) {
-    earlyUntil = now + lockoutMs;         // jumped the lights
-    socket.emit('buzz', { ms: 0, status: 'early' });
+    // Jumping the lights is a penalty, not an entry. This must NOT go to the
+    // server as a buzz — an early press has no meaningful reaction time, and
+    // sending one would put a zero at the front of the race.
+    earlyUntil = now + lockoutMs;
+    socket.emit('early-buzz');                 // recorded for stats only
     return 'early';
   }
   sent = true;
   socket.emit('buzz', { ms: Math.round((now - armedAt) * 10) / 10, status: 'good' });
   return 'sent';
+}
+
+// How much of the early-buzz penalty is left, in ms. Zero when clear.
+export function lockoutRemaining() {
+  return Math.max(0, Math.round(earlyUntil - performance.now()));
 }
 
 // --- latency calibration ---------------------------------------------

@@ -29,6 +29,7 @@ The winner is the last one standing. Every other statistic is for fun.
     test/e2e.mjs      a real match played over sockets
     test/setup.mjs    room codes, uploads, blend, start alert
     test/estimate.mjs match-length estimates and the setup warnings
+    test/buzzer.mjs   buzz arbitration: early presses, lockouts, ordering
 
 ## Running it
 
