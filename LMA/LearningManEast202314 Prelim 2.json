@@ -1,0 +1,394 @@
+{
+  "title" : "Learning Man 2023 Prelim 2",
+  "author" : "Matt takimoto",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "KID LIT SERIES",
+        "comments" : "Please name the series, not the author",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The Magician's Nephew, and The Voyage of the Dawn Treader",
+            "correctResponse" : "The Chronicles of Narnia"
+          },
+          {
+            "value" : 400,
+            "text" : "Kristy's Great Idea, and Boy-Crazy Stacey",
+            "correctResponse" : "The Baby-sitters Club"
+          },
+          {
+            "value" : 600,
+            "text" : "Welcome to Dead House, and Night of the Living Dummy",
+            "correctResponse" : "Goosebumps"
+          },
+          {
+            "value" : 800,
+            "text" : "Attack of the Talking Toilets, and The Perilous Plot of Professor Poopypants",
+            "correctResponse" : "Captain Underpants"
+          },
+          {
+            "value" : 1000,
+            "text" : "Polar Bears Past Bedtime, and Vacation Under the Volcano",
+            "correctResponse" : "Magic Tree House"
+          }
+        ]
+      },
+      {
+        "category" : "THE PERIODIC TABLE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Named for a continent, it was the first element isolated in the 20th Century",
+            "correctResponse" : "Europium"
+          },
+          {
+            "value" : 400,
+            "text" : "Isolation of this transition metal mainly comes from two minerals: scheelite and wolframite",
+            "correctResponse" : "Tungsten"
+          },
+          {
+            "value" : 600,
+            "text" : "It gets its name from the Greek for \"hidden\" and is the namesake of a fictional planet",
+            "correctResponse" : "Krypton"
+          },
+          {
+            "value" : 800,
+            "text" : "The heaviest of this group of easily-ionized elements is Francium",
+            "correctResponse" : "Alkali metals"
+          },
+          {
+            "value" : 1000,
+            "text" : "This element, atomic number 89, lends its name to the series that includes Curium and Plutonium",
+            "correctResponse" : "Actinium"
+          }
+        ]
+      },
+      {
+        "category" : "EXPLOSIONS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "A gamma bomb explosion gone awry turns Bruce Banner into this green guy",
+            "correctResponse" : "The Incredible Hulk"
+          },
+          {
+            "value" : 400,
+            "text" : "Before establishing his famous prize, he patented an explosive invention in 1867: dynamite",
+            "correctResponse" : "Alfred Nobel"
+          },
+          {
+            "value" : 600,
+            "text" : "In June 2023, scientists captured images of this kind of colossal star explosion that had been warped by the gravity of a galaxy perfectly in the foreground",
+            "correctResponse" : "supernova"
+          },
+          {
+            "value" : 800,
+            "text" : "Copper is added to create this color of firework - perhaps that's something Picasso discovered around 1902",
+            "correctResponse" : "Blue"
+          },
+          {
+            "value" : 1000,
+            "text" : "\"Equal parts gasoline and frozen orange juice concentrate\" is the recipe for homemade napalm given in this 1999 David Fincher film",
+            "correctResponse" : "Fight Club"
+          }
+        ]
+      },
+      {
+        "category" : "\"FRANK\"LY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This Hoboken native's accolades include 11 Grammys, an acting Oscar, and three stars on the Hollywood Walk of Fame, all of which he earned his way",
+            "correctResponse" : "Frank Sinatra"
+          },
+          {
+            "value" : 400,
+            "text" : "Tim Curry attained immortality as this cross-dressing mad scientist in 1975",
+            "correctResponse" : "Dr. Frank-n-furter"
+          },
+          {
+            "value" : 600,
+            "text" : "His 2012 debut album \"Channel Orange\" made waves, leading to a Grammy win in four nominations",
+            "correctResponse" : "Frank Ocean"
+          },
+          {
+            "value" : 800,
+            "text" : "The 2010 Wall Street Reform and Consumer Protection Act is commonly known by this name, for the legislators that introduced the bill",
+            "correctResponse" : "Dodd-Frank"
+          },
+          {
+            "value" : 1000,
+            "text" : "Played by Leslie Nielsen, this fictional character poses as opera singer Enrico Palazzo, then as a baseball umpire, all to thwart would-be assassin Reggie Jackson",
+            "correctResponse" : "Frank Drebin"
+          }
+        ]
+      },
+      {
+        "category" : "MY DEER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Often weighing over 1,000 pounds, it's the largest deer species",
+            "correctResponse" : "Moose"
+          },
+          {
+            "value" : 400,
+            "text" : "This 1923 novel by Austrian author Felix Salten is subtitled \"A Life in the Woods\"",
+            "correctResponse" : "Bambi"
+          },
+          {
+            "value" : 600,
+            "text" : "It's the term for a female fox, or the member of Santa's sleigh team that comes last alphabetically",
+            "correctResponse" : "Vixen"
+          },
+          {
+            "value" : 800,
+            "text" : "It's the term for the deer mating season when males get extra aggressive; Let's hope they don't get stuck there",
+            "correctResponse" : "Rut"
+          },
+          {
+            "value" : 1000,
+            "text" : "This South American deer with an internally rhyming name is the smallest of all deer, standing only 12 to 17 inches tall",
+            "correctResponse" : "Pudu"
+          }
+        ]
+      },
+      {
+        "category" : "I DON'T GIVE A DAMN",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "She probably didn't actually say, \"Let them eat cake\", but she probably didn't care much about the French peasants anyway",
+            "correctResponse" : "Marie Antoinette"
+          },
+          {
+            "value" : 400,
+            "dailyDouble" : true,
+            "text" : "This alliterative phrase for doing the bare minimum at work entered the zeitgeist via Tik Tok in the summer of 2022",
+            "correctResponse" : "Quiet Quitting"
+          },
+          {
+            "value" : 600,
+            "text" : "\"When Keeping it Real Goes Wrong\" was a recurring sketch on this Comedy Central show that aired from 2003-2006",
+            "correctResponse" : "Chappelle's Show"
+          },
+          {
+            "value" : 800,
+            "text" : "At Media Day before Super Bowl XLIX, he responded to every reporter's question with, \"I'm just here so I won't get fined.\"",
+            "correctResponse" : "Marshawn Lynch"
+          },
+          {
+            "value" : 1000,
+            "text" : "In September 2022, 51-year old TikToker Roger Skaer posted an explainer video showing the correlation between these two two-word terms",
+            "correctResponse" : "Fuck Around and Find Out"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "THIS MANY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Trombones leading the big parade in The Music Man",
+            "correctResponse" : "76"
+          },
+          {
+            "value" : 800,
+            "text" : "Minutes in a regulation NBA basketball game",
+            "correctResponse" : "48"
+          },
+          {
+            "value" : 1200,
+            "text" : "Number of different Nobel Prize categories, including the Nobel Memorial Prize in Economic Sciences",
+            "correctResponse" : "6"
+          },
+          {
+            "value" : 1600,
+            "text" : "Number of toothpicks spilled on the diner floor in \"Rain Man\". There are four in the box.",
+            "correctResponse" : "246"
+          },
+          {
+            "value" : 2000,
+            "text" : "Including the okina, the number of letters in the Hawaiian alphabet",
+            "correctResponse" : "13"
+          }
+        ]
+      },
+      {
+        "category" : "WOMEN IN STEM",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Taraji P. Henson played her in 2016's \"Hidden Figures\"",
+            "correctResponse" : "Katherine Johnson"
+          },
+          {
+            "value" : 800,
+            "text" : "The only legitimate child of Lord and Lady Byron, she is credited with writing the first computer program",
+            "correctResponse" : "Ada Lovelace"
+          },
+          {
+            "value" : 1200,
+            "dailyDouble" : true,
+            "text" : "Emmanuelle Charpentier and Jennifer Doudna won the 2020 Nobel Prize in Chemistry for developing a method of genome editing using this genetic engineering technique",
+            "correctResponse" : "CRISPR"
+          },
+          {
+            "value" : 1600,
+            "text" : "While becoming the first Black woman to earn a Master's from the University of Hawaii, she developed a new method for treating leprosy",
+            "correctResponse" : "Alice Ball"
+          },
+          {
+            "value" : 2000,
+            "text" : "She was the subject of Judith Pratt's 2018 play \"MAIZE\"",
+            "correctResponse" : "Barbara McClintock"
+          }
+        ]
+      },
+      {
+        "category" : "ALSO A VOLKSWAGEN",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "A series of horror movies set in Antarctica",
+            "correctResponse" : "The Thing"
+          },
+          {
+            "value" : 800,
+            "text" : "This sport referred to as \"a good walk spoiled\"",
+            "correctResponse" : "Golf"
+          },
+          {
+            "value" : 1200,
+            "text" : "John Updike may have been a fan of this fleet-foot mammal whose teeth never stop growing",
+            "correctResponse" : "Rabbit"
+          },
+          {
+            "value" : 1600,
+            "text" : "Order Coleoptera, more than 25% of all known animal species can be classified as one of these",
+            "correctResponse" : "Beetle"
+          },
+          {
+            "value" : 2000,
+            "text" : "A tribe of semi-nomadic west african Berbers, nearly 3 million of whom live in Niger",
+            "correctResponse" : "Touareg"
+          }
+        ]
+      },
+      {
+        "category" : "FINISH THE LYRIC",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "So we sailed on to the sun 'til we found a sea of green, and we lived beneath the waves in our...",
+            "correctResponse" : "Yellow submarine"
+          },
+          {
+            "value" : 800,
+            "text" : "I got my hands up, they're playing my song, they know it's gonna be okay, yeah it's a...",
+            "correctResponse" : "Party in the USA"
+          },
+          {
+            "value" : 1200,
+            "text" : "Relax, said the night man, we are programmed to receive. You can check out any time you like…",
+            "correctResponse" : "But you can never leave"
+          },
+          {
+            "value" : 1600,
+            "text" : "I'm not big on social graces, think I'll slip on down to the oasis, oh...",
+            "correctResponse" : "I've got friends in low places"
+          },
+          {
+            "value" : 2000,
+            "text" : "We used to fuss when the landlord dissed us, no heat, wonder why Christmas missed us. Birthdays was the worst days, now we...",
+            "correctResponse" : "sip champagne when we thirsty"
+          }
+        ]
+      },
+      {
+        "category" : "OH THANK \"HEAVEN\"",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Warren Beatty directed this 1978 film about overzealous guardian angels and the Rams in the Super Bowl",
+            "correctResponse" : "Heaven Can Wait"
+          },
+          {
+            "value" : 800,
+            "text" : "Just before the group's ritual suicide, leader Marshall Applewhite claimed \"comet Hale-Bopp would bring closure to\" this",
+            "correctResponse" : "Heaven's Gate"
+          },
+          {
+            "value" : 1200,
+            "dailyDouble" : true,
+            "text" : "The title characters of this 2003 Mitch Albom bestseller: The Blue Man, The Captain, Ruby, Marguerite, and Tala",
+            "correctResponse" : "The Five People You Meet in Heaven"
+          },
+          {
+            "value" : 1600,
+            "text" : "With its origins in Gilbert and Sullivan (potentially), this was one of the catchphrases of Snagglepuss",
+            "correctResponse" : "Heavens to Murgatroyd!"
+          },
+          {
+            "value" : 2000,
+            "text" : "Tavares took this track to number one on the Billboard dance charts in 1976",
+            "correctResponse" : "Heaven Must Be Missing an Angel"
+          }
+        ]
+      },
+      {
+        "category" : "7/11",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "7/11/1914: This Sultan of Swat makes his major league debut with the then-curse-free Boston Red Sox",
+            "correctResponse" : "Babe Ruth"
+          },
+          {
+            "value" : 800,
+            "text" : "7/11/1804: a duel between these two combatants takes place in Weehawken, NJ",
+            "correctResponse" : "Alexander Hamilton and Aaron Burr"
+          },
+          {
+            "value" : 1200,
+            "text" : "7/11/1274: He is born. It would be another 40 years before he frees Scotland from the English",
+            "correctResponse" : "Robert the Bruce"
+          },
+          {
+            "value" : 1600,
+            "text" : "7/11/2015: This Sinaloan drug kingpin escapes maximum security prison in Mexico; He was captured six months later, and hasn't broken out since (so far)",
+            "correctResponse" : "El Chapo (or Joaquin Guzman)"
+          },
+          {
+            "value" : 2000,
+            "text" : "7/11/1937: This American composer dies suddenly of a brain tumor, leaving unfinished collaborations with George S. Kaufman and DuBose Heyward",
+            "correctResponse" : "George Gershwin"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "WORLD NON-CAPITAL CITIES",
+    "comments" : "",
+    "clue" : {
+      "text" : "16th-Century cartographer Duarte Pacheco Pereira wrote that sailors could easily identify this African port city by using a white tower as a reference point",
+      "correctResponse" : "Casablanca"
+    }
+  }
+}

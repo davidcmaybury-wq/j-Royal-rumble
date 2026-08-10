@@ -183,7 +183,7 @@ const estimate = () => estimateFor(S.roster.length, S.settings);
 const warnings = () => warningsFor(S.roster.length, S.settings);
 
 const SRC = [
-  ['archive', 'Jeopardy! archive', 'Seasons 22–41, media clues removed'],
+  ['archive', 'Jeopardy! archive', null],
   ['original', 'TTG & LearningMan', 'Your existing written boards'],
   ['upload', 'Uploaded this match', 'Fresh material you add below'],
 ];
@@ -215,9 +215,11 @@ function render() {
   <div class="card"><h2>Clue material</h2>
     <div class="mix">${SRC.map(([k, t, d]) => {
       const pct = mix[k] ?? 0, avail = S.available[k] || 0;
+      const [lo, hi] = s.seasonRange || S.seasons;
+      const desc = d ?? `Seasons ${lo}–${hi}, media clues removed`;
       return `<div class="src ${pct > 0 ? 'on' : 'off'}" data-src="${k}">
         <div class="t"><span>${t}</span><span class="pct num" data-pct="${k}">${pct}%</span></div>
-        <div class="n">${avail ? fmt(avail) + ' categories' : 'none available'} — ${d}</div>
+        <div class="n">${avail ? fmt(avail) + ' categories' : 'none available'} — ${desc}</div>
         <input type="range" min="0" max="100" step="5" value="${pct}" data-w="${k}" ${avail ? '' : 'disabled'}>
       </div>`; }).join('')}</div>
     <p class="note" style="margin:10px 0 0">The mix always totals 100%. Raise one and the others give way.</p>
@@ -227,7 +229,7 @@ function render() {
           <input type="number" id="s-lo" value="${(s.seasonRange || S.seasons)[0]}" min="${S.seasons[0]}" max="${S.seasons[1]}" style="width:78px">
           <input type="number" id="s-hi" value="${(s.seasonRange || S.seasons)[1]}" min="${S.seasons[0]}" max="${S.seasons[1]}" style="width:78px">
         </div>
-        <span class="hint">season ${S.seasons[0]} is 2005, ${S.seasons[1]} is 2025</span></div>
+        <span class="hint">${S.seasons[0]} is 2005, ${S.seasons[1]} is ${2004 + S.seasons[1] - S.seasons[0] + 1}</span></div>
       <button class="alt" id="mine">Use only my own material</button>
     </div>
   </div>
@@ -251,11 +253,27 @@ function render() {
     <div class="row">
       ${num('startScore', 'Starting score', s.startScore, 'what every entrant walks in with')}
       ${num('ceiling', 'Score ceiling', s.ceiling, 'clips every live score')}
-      ${num('ceilingDecayPerClue', 'Ceiling change / clue', s.ceilingDecayPerClue, 'negative decays; keeps late draws honest')}
-      ${num('ceilingFloor', 'Ceiling floor', s.ceilingFloor, 'never drops below the starting score')}
+      <div class="f"><label>Ceiling change / clue</label>
+        <select id="decayMode">
+          <option value="auto" ${s.ceilingDecayPerClue == null ? 'selected' : ''}>Auto</option>
+          <option value="fixed" ${s.ceilingDecayPerClue == null ? '' : 'selected'}>Set a number</option>
+        </select><span class="hint">auto decays to the floor across the match</span></div>
+      <div class="f" id="decaywrap" style="${s.ceilingDecayPerClue == null ? 'display:none' : ''}">
+        <label>Per clue</label>
+        <input type="number" id="ceilingDecayPerClue" value="${s.ceilingDecayPerClue ?? -40}" step="5" style="width:96px">
+        <span class="hint">negative decays</span></div>
+      <div class="f"><label>Ceiling floor</label>
+        <select id="floorMode">
+          <option value="auto" ${s.ceilingFloor == null ? 'selected' : ''}>Auto — match the starting score</option>
+          <option value="fixed" ${s.ceilingFloor == null ? '' : 'selected'}>Set a number</option>
+        </select><span class="hint">can never sit below the starting score</span></div>
+      <div class="f" id="floorwrap" style="${s.ceilingFloor == null ? 'display:none' : ''}">
+        <label>Floor</label>
+        <input type="number" id="ceilingFloor" value="${s.ceilingFloor ?? s.startScore}" style="width:104px">
+        <span class="hint">&nbsp;</span></div>
     </div>
     <div class="row" style="margin-top:14px">
-      <div class="f"><label>New entrant</label>
+      <div class="f"><label>New entrant frequency</label>
         <select id="entryMode">
           <option value="auto" ${s.entryInterval == null ? 'selected' : ''}>Auto</option>
           <option value="fixed" ${s.entryInterval == null ? '' : 'selected'}>Every N clues</option>
@@ -343,10 +361,13 @@ function collect() {
   const g = (id) => document.getElementById(id);
   const auto = g('entryMode').value === 'auto';
   const iv = auto ? '' : g('entryInterval').value.trim();
+  const decayAuto = g('decayMode').value === 'auto';
+  const floorAuto = g('floorMode').value === 'auto';
   return {
     settings: {
       startScore: +g('startScore').value, ceiling: +g('ceiling').value,
-      ceilingDecayPerClue: +g('ceilingDecayPerClue').value, ceilingFloor: +g('ceilingFloor').value,
+      ceilingDecayPerClue: decayAuto ? null : +g('ceilingDecayPerClue').value,
+      ceilingFloor: floorAuto ? null : +g('ceilingFloor').value,
       entryInterval: iv === '' ? null : +iv, targetMinutes: +g('targetMinutes').value,
       stumperFraction: +g('stumperFraction').value, potScoring: g('potScoring').value === 'true',
       delay: +g('delay').value, lockout: +g('lockout').value, secondsPerClue: +g('secondsPerClue').value,
@@ -380,6 +401,10 @@ function wire() {
     save();
   };
   document.getElementById('save').onclick = () => save();
+  ['s-lo', 's-hi'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.onchange = () => save(true).then(() => render());
+  });
   ['targetMinutes', 'secondsPerClue', 'entryInterval'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.oninput = () => {
@@ -391,11 +416,14 @@ function wire() {
       renderWarnings();
     };
   });
-  const mode = document.getElementById('entryMode');
-  mode.onchange = () => {
-    document.getElementById('ivwrap').style.display = mode.value === 'auto' ? 'none' : '';
-    save(true).then(() => render());
-  };
+  [['entryMode', 'ivwrap'], ['decayMode', 'decaywrap'], ['floorMode', 'floorwrap']]
+    .forEach(([sel, wrap]) => {
+      const el = document.getElementById(sel);
+      el.onchange = () => {
+        document.getElementById(wrap).style.display = el.value === 'auto' ? 'none' : '';
+        save(true).then(() => render());
+      };
+    });
 
   const drop = document.getElementById('drop'), file = document.getElementById('file');
   file.onchange = () => queueFiles([...file.files]);

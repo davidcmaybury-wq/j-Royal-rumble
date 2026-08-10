@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 12",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "BIG BIRDS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The largest bird in the world, this beast does not actually stick in its head in the sand. It dares you to come at it",
+            "correctResponse" : "Ostrich"
+          },
+          {
+            "value" : 400,
+            "text" : "To date, this is the only bird to win a war with humans, defeating the Australian Army in 1932",
+            "correctResponse" : "Emu"
+          },
+          {
+            "value" : 600,
+            "text" : "Brought to extinction in the wild in 1987, this vulture with a nearly 10 foot wingspan was successfully bred in captivity and re-introduced to its native habitats",
+            "correctResponse" : "California Condor"
+          },
+          {
+            "value" : 800,
+            "text" : "The third tallest bird in the world, these flightless birds native to South America share their name with a Greek titan and a moon of Saturn",
+            "correctResponse" : "Rhea"
+          },
+          {
+            "value" : 1000,
+            "text" : "The second heaviest birds in the world, these natives of New Guinea look like a cross between a peacock and danger",
+            "correctResponse" : "Cassowary"
+          }
+        ]
+      },
+      {
+        "category" : "GROUCHY OSCARS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "When receiving the Best Supporting Actress award for \"Shakespeare in Love\" this Dame noted that she was being awarded for a mere eight minutes of screen time",
+            "correctResponse" : "Judi Dench"
+          },
+          {
+            "value" : 400,
+            "text" : "The 45th Academy Awards in 1973 were boycotted by this Best Actor winner, who sent Sacheen Littlefeather in his stead to explain his refusal to attend",
+            "correctResponse" : "Marlon Brando"
+          },
+          {
+            "value" : 600,
+            "text" : "The crew of this movie had their moment of elation ruined when Warren beatty had to publicly inform everyone that he had wrongly awarded them best picture",
+            "correctResponse" : "La la land"
+          },
+          {
+            "value" : 800,
+            "text" : "He was the first person to decline an Oscar, passing on the Best Actor award for \"Patton\" in 1972. He said the Oscars were \"a two-hour meat parade\"",
+            "correctResponse" : "George C. Scott"
+          },
+          {
+            "value" : 1000,
+            "text" : "Viewers of the 2024 Oscars roundly criticized the \"In Memoriam\" segment for focusing on a troupe of dancers and this Italian tenor singing with his son, all of whom were conspicuously alive the entire time",
+            "correctResponse" : "Andrea Bocelli"
+          }
+        ]
+      },
+      {
+        "category" : "COOKIE MONSTERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Careful with that \"like\" button! This website's \"Pixel\" tool tracks your browsing even when you leave the site, and they partner with retailers to know everything you buy offline, too",
+            "correctResponse" : "Facebook"
+          },
+          {
+            "value" : 400,
+            "text" : "One of the most ubiquitous advertisers online, DoubleClick is now owned by this search giant as the tip of their tracking iceberg",
+            "correctResponse" : "Google (alphabet)"
+          },
+          {
+            "value" : 600,
+            "text" : "Perhaps surprisingly, the website of this tabloid that continues to employ Darian Lusk for no obvious reason is one of the worst privacy invaders. Their site features 31 cross-site trackers",
+            "correctResponse" : "The Sun"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "You might be surprised to know that this software company, mainly known for their packages for creative professionals and portable document format, is one of the most aggressive trackers online ",
+            "correctResponse" : "Adobe"
+          },
+          {
+            "value" : 1000,
+            "text" : "They might have made their name in ephemeral communication, but their knowledge of you stays forever",
+            "correctResponse" : "Snapchat"
+          }
+        ]
+      },
+      {
+        "category" : "COUNTS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The number of competitive emmy's Angela Lansbury won",
+            "correctResponse" : "0"
+          },
+          {
+            "value" : 400,
+            "text" : "The number of singers in BTS",
+            "correctResponse" : "Seven"
+          },
+          {
+            "value" : 600,
+            "text" : "The number of named elements on the periodic table",
+            "correctResponse" : "118"
+          },
+          {
+            "value" : 800,
+            "text" : "The number of horns a giraffe has",
+            "correctResponse" : "Two"
+          },
+          {
+            "value" : 1000,
+            "text" : "US Vice Presidents",
+            "correctResponse" : "49"
+          }
+        ]
+      },
+      {
+        "category" : "GONZO",
+        "comments" : "Hunter S. Thompson",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Thompson's magnum opus was this semi-factual book about tearing up sin city in a drug-induced haze",
+            "correctResponse" : "Fear and Loathing in Las Vegas"
+          },
+          {
+            "value" : 400,
+            "text" : "Thompson spent a year living with this gang to write a first hand account of their lives",
+            "correctResponse" : "Hell's Angels"
+          },
+          {
+            "value" : 600,
+            "text" : "In one of his more experimental roles, this oddball actor played the Hunter-like character of Raoul Duke after winning Thompson's personal approval",
+            "correctResponse" : "Johnny Depp"
+          },
+          {
+            "value" : 800,
+            "text" : "In one of his great countercultural moments, Thompson wrote that this event (also taking place the day of this competition) was \"decadent and depraved\"",
+            "correctResponse" : "Kentucky Derby"
+          },
+          {
+            "value" : 1000,
+            "text" : "Hunter Thompson ran for this Pitkin county office unsuccessfully in 1970 on the Freak Power ticket",
+            "correctResponse" : "Sheriff"
+          }
+        ]
+      },
+      {
+        "category" : "BERT",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This stammering English King was known as Bertie to family prior to his coronation",
+            "correctResponse" : "George VI"
+          },
+          {
+            "value" : 400,
+            "text" : "He brought what is generally agreed to be the worst Cockney accent in the history of human speech to \"Mary Poppins\" as Bert",
+            "correctResponse" : "Dick van Dyke"
+          },
+          {
+            "value" : 600,
+            "text" : "Better know as \"Turn Ferguson\" this actor famously posed nude for Cosmopolitan",
+            "correctResponse" : "Burt Reynolds"
+          },
+          {
+            "value" : 800,
+            "text" : "Grab three pence for the work of this German Playwright who gave us \"mac the knife\"",
+            "correctResponse" : "Bertolt Brechy"
+          },
+          {
+            "value" : 1000,
+            "text" : "This Minnesota twins hall-of-famer was known for his curveball and incredible longevity",
+            "correctResponse" : "Bert Blyleven"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "THE STONKS OF THEIR TIME",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This floral craze in northern Europe is considered the original archetype of the asset bubble",
+            "correctResponse" : "Dutch Tulip Craze"
+          },
+          {
+            "value" : 800,
+            "text" : "\"TY\" for buying some of these floppy stuffed animals that once threatened to become a new form of currency in the 1990's",
+            "correctResponse" : "Beanie Babies"
+          },
+          {
+            "value" : 1200,
+            "text" : "This traditional asset that had inflated and crashed over and over was central to the recent $300 billion collapse of the Evergrande group",
+            "correctResponse" : "Real Estate"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "Cut a path across land to a bizarre english construction craze of the nineteenth century for the digging of these waterways",
+            "correctResponse" : "Canals"
+          },
+          {
+            "value" : 2000,
+            "text" : "This company rode a giant wave of interest in first-print comic books until about 1993, when the implosion lead them to sell off the movie rights to their favorite heroes in an attempt to stay alive",
+            "correctResponse" : "marvel"
+          }
+        ]
+      },
+      {
+        "category" : "FOREIGN MOVIE STARS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Xhosa actor John Kani played the father of this marvel superhero, so Chadwick Boseman adopted a matching South African accent",
+            "correctResponse" : "Black Panther"
+          },
+          {
+            "value" : 800,
+            "text" : "If you peek behind his \"mask\" to find the \"liar liar\" underneath, it will ruin \"The Truman Show\" this actor put on",
+            "correctResponse" : "Jim Carrey"
+          },
+          {
+            "value" : 1200,
+            "text" : "She convinced Quentin Tarantino to put her in \"Inglourious Basterds\" by arguing she wasn't that big a star in France",
+            "correctResponse" : "Melanie Laurent"
+          },
+          {
+            "value" : 1600,
+            "text" : "Till Schweiger was already the most successful German filmmaker before he moved back in front of the camera for recent american films such as this 1989-set Charlize Theron Action spy thriller as the Watchmaker",
+            "correctResponse" : "Atomic Blonde"
+          },
+          {
+            "value" : 2000,
+            "text" : "He was not de-aged to play Wen Wu in \"Shang-Chi and the legend of the Ten rings.\" He still just looks that good",
+            "correctResponse" : "Tony Leung"
+          }
+        ]
+      },
+      {
+        "category" : "PEACEFUL TRANSITIONS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "In this heavily-populated island nation, the new president and vice president switch chairs with their predecessors to symbolize the peaceful handover of power",
+            "correctResponse" : "Indonesia"
+          },
+          {
+            "value" : 800,
+            "text" : "In 1992, the \"velvet divorce\" peacefully split this nation into two",
+            "correctResponse" : "Czechoslovakia"
+          },
+          {
+            "value" : 1200,
+            "text" : "When footballer George Weah was sworn in as this African nation's president in 2017, it marked the first peaceful handover of power in 74 years",
+            "correctResponse" : "LIberia"
+          },
+          {
+            "value" : 1600,
+            "text" : "The three small soviet republics along this sea separated thanks to the \"singing revolution,\" a mass demonstration of in a living chain across all the nations",
+            "correctResponse" : "Baltic seas"
+          },
+          {
+            "value" : 2000,
+            "text" : "The people power revolution in 1986 lead the eventual peaceful ouster of this \"constitutional authoritarian\" and his shoe-hoarding wife",
+            "correctResponse" : "Ferdinand Marcos"
+          }
+        ]
+      },
+      {
+        "category" : "ART IN ANIMAL CROSSING",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The titular pearl earring in the work by this author becoems a star in the fake",
+            "correctResponse" : "Vermeer"
+          },
+          {
+            "value" : 800,
+            "text" : "Studious though da vinci was, you should never think he would have a coffee stain on this sketch",
+            "correctResponse" : "The Vitruvian man"
+          },
+          {
+            "value" : 1200,
+            "text" : "Alexandaros of Antioch didn't bedazzle this statue",
+            "correctResponse" : "VEnus de milo"
+          },
+          {
+            "value" : 1600,
+            "text" : "In the Birth of venus by this artist, Redd defoliated the fake",
+            "correctResponse" : "Botticelli"
+          },
+          {
+            "value" : 2000,
+            "dailyDouble" : true,
+            "text" : "\"The Blue Boy\" by this artist has a bit of nowl cut in the fake",
+            "correctResponse" : "Gainsborough"
+          }
+        ]
+      },
+      {
+        "category" : "AGRICULTURE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Threshing is done to separate the edible parts of wheat from these scaly, inedible bits",
+            "correctResponse" : "chaff"
+          },
+          {
+            "value" : 800,
+            "text" : "This productive machine includes reaping, threshing, gathering, and winnowing in one step - hence its name",
+            "correctResponse" : "combine"
+          },
+          {
+            "value" : 1200,
+            "text" : "The sunflower-dervied sunchoke is also known by this name which includes a Middle eastern city",
+            "correctResponse" : "Jerusalem Artichoke"
+          },
+          {
+            "value" : 1600,
+            "text" : "Canola oil is made from this plant, whose name is the worst. branding. ever",
+            "correctResponse" : "rapeseed"
+          },
+          {
+            "value" : 2000,
+            "text" : "Despite being one of the most widely-grown grains, only 8% of this crop gets traded internationally",
+            "correctResponse" : "rice"
+          }
+        ]
+      },
+      {
+        "category" : "BEFORE AND AFTER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This frontman and his group's \"night moves\" were running \"against the wind\" in this HBO WWII series",
+            "correctResponse" : "bob seger and the silver bullet band of brothers"
+          },
+          {
+            "value" : 800,
+            "text" : "This John Green novel about love and terminal cancer and the original confederate flag",
+            "correctResponse" : "The fault in our stars and bars"
+          },
+          {
+            "value" : 1200,
+            "text" : "Tim Curry shines in this 70's camp classic now set in missouri",
+            "correctResponse" : "rocky horror picture show-me state"
+          },
+          {
+            "value" : 1600,
+            "text" : "This shania twain tribute to her longtime partner was written under Nurse Ratched's withering eyes",
+            "correctResponse" : "Still the one flew over the cuckoos nest"
+          },
+          {
+            "value" : 2000,
+            "text" : "The poet who wrote the national anthem took his wife to a swingers event",
+            "correctResponse" : "Francis scott key party"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "LINGUISTIC GEOGRAPHY",
+    "comments" : "",
+    "clue" : {
+      "text" : "This is the only english-speaking capital city in central america",
+      "correctResponse" : "Belmopan"
+    }
+  }
+}

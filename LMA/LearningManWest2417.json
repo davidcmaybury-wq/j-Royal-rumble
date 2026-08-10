@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 17",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "WE HAVE TO DO IT",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "When drinking in china, if your host holds up a glass and says \"Gan bei!\" you have to do this (even if it is bai jiu in the glass)",
+            "correctResponse" : "Empty your cup/bottoms up"
+          },
+          {
+            "value" : 400,
+            "text" : "Until 2013 the tradition Royal navy toast was to \"Our wives and sweethearts\"), to which one would reply with this",
+            "correctResponse" : "May They never meet"
+          },
+          {
+            "value" : 600,
+            "text" : "As someone who listens to lyricist Scott McKenzie, once I decided to go here (in San Francisco) I made sure to do this",
+            "correctResponse" : "Wear some flowers in my hair"
+          },
+          {
+            "value" : 800,
+            "text" : "If the police want to use your words to them during an arrest as evidence against you, they must give you this warning, named for a Supreme court case",
+            "correctResponse" : "Miranda warning"
+          },
+          {
+            "value" : 1000,
+            "text" : "This French phrase refers to the need for the nobility to act nobly to justify their high standing in the world, and hopefully not face pitchforks (or worse)",
+            "correctResponse" : "Noblesse oblige"
+          }
+        ]
+      },
+      {
+        "category" : "THE OBLIGATORY CIVIL WAR CATEGORY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Newspaper headlines sang out \"Waterloo Eclipsed!\" after Meade defeated Lee in this battle",
+            "correctResponse" : "Gettysburg"
+          },
+          {
+            "value" : 400,
+            "text" : "This preternaturally cautious generally, who usually estimated enemy forces at double their actual number was defeated by Lincoln for the presidency in 1864",
+            "correctResponse" : "McLellan"
+          },
+          {
+            "value" : 600,
+            "text" : "Gen. Pope was reassigned to Minnesota after his defeat in this 1862 battle, the second on the same field",
+            "correctResponse" : "Second Bull Run"
+          },
+          {
+            "value" : 800,
+            "text" : "Adm. Farragut famously gave this command to his flotilla through a minefield to escape withering bombardment from confederate forts to take Mobile Bay",
+            "correctResponse" : "Damn the torpedos, full speed ahead"
+          },
+          {
+            "value" : 1000,
+            "text" : "This profoundly odd but brilliant confederate general thought one of his arms was longer than the other, and usually held that arm aloft to equalize circulation",
+            "correctResponse" : "Stonewall jackson"
+          }
+        ]
+      },
+      {
+        "category" : "THE OBLIGATORY RIVERS CATEGORY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "World's longest river",
+            "correctResponse" : "Nile"
+          },
+          {
+            "value" : 400,
+            "text" : "World's largest river in flow",
+            "correctResponse" : "Amazon"
+          },
+          {
+            "value" : 600,
+            "dailyDouble" : true,
+            "text" : "This river separates two adjacent world capitals - Kinshasa and Brazzaville",
+            "correctResponse" : "Congo"
+          },
+          {
+            "value" : 800,
+            "text" : "The longest river entirely in europe",
+            "correctResponse" : "Volga"
+          },
+          {
+            "value" : 1000,
+            "text" : "The longest river in poland",
+            "correctResponse" : "Vistula"
+          }
+        ]
+      },
+      {
+        "category" : "STUPID ANSWERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "In the \"Shrek\" movies, it's the name of the donkey voiced by Eddie Murphy",
+            "correctResponse" : "Donkey"
+          },
+          {
+            "value" : 400,
+            "text" : "Indigenous Nicaraguans call this lake Cocibolca; the Spanish called it Mar Dulce, both names meaning \"sweet sea\"",
+            "correctResponse" : "Lake Nicarauga"
+          },
+          {
+            "value" : 600,
+            "text" : "It's the eponymous title of the 1988 collection of early hits by R.E.M. on I.R.S. Records",
+            "correctResponse" : "Eponymous"
+          },
+          {
+            "value" : 800,
+            "text" : " In summer 2019 singles looking for love hooked up on the island of Fiji for season 1 of this series based on a British show",
+            "correctResponse" : "Love Island"
+          },
+          {
+            "value" : 1000,
+            "text" : "The flag that Betsy Ross sewed for the new union of the colonies in 1777 had 13 stars in the top inner corner, the area called this",
+            "correctResponse" : "Union"
+          }
+        ]
+      },
+      {
+        "category" : "MATH TALK",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Mr. Lalonde can tell you all about this geometric figure that extends infinitely in one direction",
+            "correctResponse" : "Ray"
+          },
+          {
+            "value" : 400,
+            "text" : "A parabola, hyperbola, circle, and ellipse can all be described as sections of this 3D object",
+            "correctResponse" : "Cone"
+          },
+          {
+            "value" : 600,
+            "text" : "The plague-sounding term describes the entire group of something that fits a description",
+            "correctResponse" : "locus"
+          },
+          {
+            "value" : 800,
+            "text" : "Calculus teaches us how to form this equation that describes the slopes of another",
+            "correctResponse" : "derivative"
+          },
+          {
+            "value" : 1000,
+            "text" : "A curve can approach, but never reach, this line",
+            "correctResponse" : "Asymptote"
+          }
+        ]
+      },
+      {
+        "category" : "CHRIS BERMAN NICKNAMES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This \"Honest\" actress-turned-entrepreneur concludes the Pledge of Allegiance",
+            "correctResponse" : "Jessica \"liberty and justice for\" alba"
+          },
+          {
+            "value" : 400,
+            "text" : "The Dirk Diggler actor knows how and where to \"get low\" ",
+            "correctResponse" : "Mark \"to the window to the\" wahlberg"
+          },
+          {
+            "value" : 600,
+            "text" : "He coulda had class, he coulda been a contender, and he would have gotten two scoops in every box",
+            "correctResponse" : "Marlon \"raisin\" Brando"
+          },
+          {
+            "value" : 800,
+            "text" : "Wolverine's portrayer does some classic overhead clapping calisthenics",
+            "correctResponse" : "Hugh \"jumping\" jackman"
+          },
+          {
+            "value" : 1000,
+            "text" : "\"e.r.'s\" Dr. Ross adopted the slogan that used to be stitched on the Jeopardy! swag back when Sarah and Jimmy were on camera more",
+            "correctResponse" : "George \"get a\" clooney"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "SCULPTURE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This type of statue typically only shows the head and shoulders of its subject",
+            "correctResponse" : "Bust"
+          },
+          {
+            "value" : 800,
+            "text" : "Anish Kapoor gave this name what Chicago residents affectionately call “the bean” when he made it\n",
+            "correctResponse" : "Cloud Gate"
+          },
+          {
+            "value" : 1200,
+            "text" : "Bernini's mid-17th century work \"Ecstasy of\" this saint was inspired by a Spanish nun",
+            "correctResponse" : "St. Teresa"
+          },
+          {
+            "value" : 1600,
+            "text" : "A statue of this brewer was unveiled in 2013 in Celbridge, Ireland, near where he was born around 1725",
+            "correctResponse" : "Arthur Guinness"
+          },
+          {
+            "value" : 2000,
+            "dailyDouble" : true,
+            "text" : "A pair of bronze nudes, \"Redemption Song\" is a monument to emancipation in this country",
+            "correctResponse" : "Jamaica"
+          }
+        ]
+      },
+      {
+        "category" : "HISTORICAL QUOTES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Showing kinship with many J! alum, this czarina: \"Very early it was noticed that I had a good memory; therefore I was insistently tormented with learning everything by heart.\"",
+            "correctResponse" : "Catherine the Great"
+          },
+          {
+            "value" : 800,
+            "text" : "after a generous peace offer from Darius III to this Macedonian, his general offered: \"If I were you, I would accept this.\" He replied \"If I were you, I would\"",
+            "correctResponse" : "Alexander the great"
+          },
+          {
+            "value" : 1200,
+            "text" : "When told of this general's drinking, Lincoln curtly noted: \"I can't spare this man. He fights\"",
+            "correctResponse" : "Ulysses Grant"
+          },
+          {
+            "value" : 1600,
+            "text" : "This famed rebel's final words, spoken to his executioner: \"Shoot you coward, you're only going to kill a man\"",
+            "correctResponse" : "Che Guevara"
+          },
+          {
+            "value" : 2000,
+            "text" : "When this British admiral was given a signal to retreat in 1801, he playfully held a telescope over his missing eye and noted, “I really do not see the signal”",
+            "correctResponse" : "Horatio Nelson"
+          }
+        ]
+      },
+      {
+        "category" : "FICTIONAL CHARACTERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This Dickensian spinster was jilted at her wedding, and raises a ward to exact revenge on men",
+            "correctResponse" : "Mrs. Haversham"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "Jack London told the tale of this St. Bernard mix that went from champion sled dog to feral hound",
+            "correctResponse" : "Buck"
+          },
+          {
+            "value" : 1200,
+            "text" : "Title nickname of Harry Angstrom, a character in several of John Updike's novels",
+            "correctResponse" : "Rabbit"
+          },
+          {
+            "value" : 1600,
+            "text" : "In \"Their eyes were watching god\" Janie sees this final lover of hers lose his mind to rabies and ultimately shoots him in self-defense",
+            "correctResponse" : "Tea cake"
+          },
+          {
+            "value" : 2000,
+            "text" : "In a Virginia Woolf novel that spans over 300 years, this title character, a poet & nobleman, awakes one day to find he's a woman",
+            "correctResponse" : "Orlando"
+          }
+        ]
+      },
+      {
+        "category" : "ASTRONOMY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This distant body, discovered in 1930, is only 1473 miles across",
+            "correctResponse" : "Pluto"
+          },
+          {
+            "value" : 800,
+            "text" : "in 2014, scientists captured reflections of the sun off this largest Saturnian moon, indicating polar seas",
+            "correctResponse" : "Titan"
+          },
+          {
+            "value" : 1200,
+            "text" : "This star, the closest to our sun, is a mere 4.2 light-years away",
+            "correctResponse" : "Alpha Centauri"
+          },
+          {
+            "value" : 1600,
+            "text" : "Blown back by this, a comet's ion tail points almost directly away from the Sun",
+            "correctResponse" : "Solar wind"
+          },
+          {
+            "value" : 2000,
+            "text" : "The comet discovered by Alan Hale & this Arizona astronomer in 1995 was visible to the naked eye for a record 19 months, though the “Heaven’s Gate” cult only saw 10 of them",
+            "correctResponse" : "Bopp"
+          }
+        ]
+      },
+      {
+        "category" : "MUSICAL COLLABS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Barry Gibb of the BeeGees penned this most successful pop duet in history, \"Island in the steam,\" sung by these country legends",
+            "correctResponse" : "Dolly Parton and Kenny Rogers"
+          },
+          {
+            "value" : 800,
+            "text" : "What? Friends listen to this Diana Ross/Lionel Ritchie tune in the dark...",
+            "correctResponse" : "Endless Love"
+          },
+          {
+            "value" : 1200,
+            "text" : "\"Fill My Cup, Put some liquor in it\" belted this Hawaiian singer with songwriting partner Mark Ronson",
+            "correctResponse" : "Bruno mars and Mark Ronson"
+          },
+          {
+            "value" : 1600,
+            "text" : "Snoop Dogg and this producer/singer managed to \"drop it like it's hot\" all the way to #1",
+            "correctResponse" : "Pharrell Williams"
+          },
+          {
+            "value" : 2000,
+            "text" : "Camilla Cabello and Ed Sheeren hit the charts with this doubletalk single in 2022",
+            "correctResponse" : "Bam Bam"
+          }
+        ]
+      },
+      {
+        "category" : "QUASI-RELATED PAIRS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Congressman Roy and Former lululemon CEO Wilson and abruptly leaving a party",
+            "correctResponse" : "Chips and dip"
+          },
+          {
+            "value" : 800,
+            "text" : "a layer of paint and a chunk of wood that a train rail is set on",
+            "correctResponse" : "Coat and Tie"
+          },
+          {
+            "value" : 1200,
+            "text" : "model Anna Nicole & the vegetable oil brand Florence Henderson endorsed in TV ads",
+            "correctResponse" : "Smith and Wesson"
+          },
+          {
+            "value" : 1600,
+            "text" : "Hermione actress and a painful neck cramp",
+            "correctResponse" : "Watson and Crick"
+          },
+          {
+            "value" : 2000,
+            "text" : "Buildings for livestock and the inventor of dynamite",
+            "correctResponse" : "Barns & nobel"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "SOUTH AMERICAN COUNTRIES",
+    "comments" : "",
+    "clue" : {
+      "text" : "Its presidents have included Johan Kraag and Jules Wijdenbosch",
+      "correctResponse" : "Suriname"
+    }
+  }
+}

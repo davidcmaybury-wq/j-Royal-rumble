@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan East Prelim 9",
+  "author" : "Matt Schiffler",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "FOREIGN LANGUAGE POP",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Korean - this girl group with smash hits like \"Ddu-Du Ddu-Du\"",
+            "correctResponse" : "Blackpink"
+          },
+          {
+            "value" : 400,
+            "text" : "German - this singer of \"99 Luftballoons\" and probably some other songs, we don't know for sure",
+            "correctResponse" : "Nina"
+          },
+          {
+            "value" : 600,
+            "text" : "Spanish - this Mexican folk song adapted by Ritchie Valens in 1958 that later became the title of a biopic about him",
+            "correctResponse" : "La Bamba"
+          },
+          {
+            "value" : 800,
+            "text" : "Japanese - this Kyu Sakamoto song that shares its name with a beef hot-pot dish",
+            "correctResponse" : "Sukiyaki"
+          },
+          {
+            "value" : 1000,
+            "text" : "French - \"Dur Dur D'être Bébé\" made this four year old not played by LeVar Burton into the youngest pop star ever with a #1 hit",
+            "correctResponse" : "Jordy"
+          }
+        ]
+      },
+      {
+        "category" : "WELL ACTUALLY,",
+        "comments" : "Space according to Neil Degrasse Tyson",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "In the movie Prometheus, Vickers notes she flew half a billion miles away from Earth - well actually, half a billion miles is just past this largest planet",
+            "correctResponse" : "Jupiter"
+          },
+          {
+            "value" : 400,
+            "text" : "From its discovery in 1930 until 2006, it was considered a planet - well actually, I decided it only meets the definition of a dwarf planet, and got it demoted",
+            "correctResponse" : "Pluto"
+          },
+          {
+            "value" : 600,
+            "text" : "Every year NY influencers gather at “summer soltice,” also known by this 14-letter occasionto capture the sun setting between buildings  - well actually, it occurs in May and July because the street grid is almost 30 degrees off of true north-south",
+            "correctResponse" : "Manhattanhenge (https://upload.wikimedia.org/wikipedia/commons/d/d7/Manhattanhenge2_rotated%2Bsharpened.jpg)"
+          },
+          {
+            "value" : 800,
+            "text" : "James Cameron thought he got everything perfect in the night sky scene in this blockbuster - well actually, he didn't have the right alignment of stars for April 15, 1912, so I corrected him - and he corrected the scene",
+            "correctResponse" : "Titanic"
+          },
+          {
+            "value" : 1000,
+            "text" : "In the movie “Gravity” space debris wreaks havoc on the Space Shuttle and communication - well actually, communications satellites fly in this type of orbit 100 times higher than the space shuttle to stay over the same place on the surface",
+            "correctResponse" : "Geosynchronus"
+          }
+        ]
+      },
+      {
+        "category" : "ALSO A SPORTS TEAM IN FLORIDA",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The common bottlenose one of these cetaceans is one of the most intelligent known mammals, only slightly behind LearningMan attendees",
+            "correctResponse" : "dolphins"
+          },
+          {
+            "value" : 400,
+            "text" : "Confusingly, it's the nickname of Earvin Johnson, who never played for a Florida basketball team (there weren't any when he played)",
+            "correctResponse" : "Magic"
+          },
+          {
+            "value" : 600,
+            "text" : "It sounds like expensive corn, but it's a term for privateers or pirates found in the Caribbean circa 1700",
+            "correctResponse" : "Buccaneers"
+          },
+          {
+            "value" : 800,
+            "text" : "The largest cat species native to the Americas, they were revered by indigenous cultures as symbols of power and strength",
+            "correctResponse" : "Jaguars"
+          },
+          {
+            "value" : 1000,
+            "text" : "Charles, Davies, Lewis, and Kroc",
+            "correctResponse" : "Rays"
+          }
+        ]
+      },
+      {
+        "category" : "ANAGRAM",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Who wrote this 1215 document that formed much of the basis of modern Western government?  Probably an \"anagram cat\"",
+            "correctResponse" : "Magna Carta"
+          },
+          {
+            "value" : 400,
+            "text" : "These Scottish Protestants are known for their love of \"Britney Spears\"",
+            "correctResponse" : "Presbyterians"
+          },
+          {
+            "value" : 600,
+            "text" : "This Egyptian queen probably had some \"phat tushes\"",
+            "correctResponse" : "Hatshepsut"
+          },
+          {
+            "value" : 800,
+            "text" : "My grandpa was still obsessed with this blonde actress over 30 years after she died, which is why we called him \"Mr. Loony Marine\"",
+            "correctResponse" : "Marilyn Monroe"
+          },
+          {
+            "value" : 1000,
+            "dailyDouble" : true,
+            "text" : "Stay away from this man who was prime minister of Canada from 2006 to 2015 if you don't want \"panther herpes\"",
+            "correctResponse" : "Stephen Harper"
+          }
+        ]
+      },
+      {
+        "category" : "THIS YEAR AT THE KENNEDY CENTER",
+        "comments" : "This year is 2023, ya geniuses",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Get tickets to see Aaron Sorkin's adaptation of this Harper Lee masterpiece",
+            "correctResponse" : "To Kill a Mockingbird"
+          },
+          {
+            "value" : 400,
+            "text" : "For the low, low price of $45, you can see the adaptation of this Baz Luhrmann musical - voulez vous?",
+            "correctResponse" : "Moulin Rouge!"
+          },
+          {
+            "value" : 600,
+            "text" : "Check out Respighi's triptych \"Eternal City\", a musical tour of this European capital",
+            "correctResponse" : "Rome"
+          },
+          {
+            "value" : 800,
+            "text" : "The title of this Tchaikovsky work presented by the Kansas City Ballet makes me wince in imagined pain",
+            "correctResponse" : "Nutcracker"
+          },
+          {
+            "value" : 1000,
+            "text" : "The National opera is performing Gounod's adaptation of this Shakeapeare work featuring such characters as Benvolio, Rosaline, and Friar Laurence",
+            "correctResponse" : "Romeo and Juliet"
+          }
+        ]
+      },
+      {
+        "category" : "PLAY THIS CATEGORY LAST",
+        "comments" : "Trust me on this",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The most populous city where the most widely spoken language is the one mentioned in Foreign Language Pop $1000",
+            "correctResponse" : "Paris"
+          },
+          {
+            "value" : 400,
+            "text" : "This setting for the second act of the movie mentioned Well Actually $1000 orbits at twice the altitude of the Space Shuttle",
+            "correctResponse" : "ISS"
+          },
+          {
+            "value" : 600,
+            "text" : "By total wins and total winnings, the most successful Jeopardy contestant in the genus mentioned in Sports Teams $1000 - see him in the next TOC!",
+            "correctResponse" : "Ray Lalonde"
+          },
+          {
+            "value" : 800,
+            "text" : "The successor to the disease-ridden prime minister mentioned in Anagrams $1000",
+            "correctResponse" : "Justin Trudeau"
+          },
+          {
+            "value" : 1000,
+            "text" : "The last names of the title characters mentioned in Kennedy Center $1000",
+            "correctResponse" : "Montague, Capulet"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "THE BOURBONS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "As King of France from 1774-1792, he really got ahead - in 1793, he lost one",
+            "correctResponse" : "Louis XVI"
+          },
+          {
+            "value" : 800,
+            "text" : "Modern-day Bourbons include Henri, the Grand Duke of this country",
+            "correctResponse" : "Luxembourg"
+          },
+          {
+            "value" : 1200,
+            "text" : "This well-dressed Bourbon took the throne in 2014 upon the death of his father Juan Carlos",
+            "correctResponse" : "Felipe VI/Philip VI"
+          },
+          {
+            "value" : 1600,
+            "text" : "The official chief mistress (yes, that's a thing) of Louis XV, she was the namesake of a fancy 18th-century hairstyle",
+            "correctResponse" : "Madame Pompadour"
+          },
+          {
+            "value" : 2000,
+            "text" : "The first Bourbon king of France, he was assassinated in 1610 by Catholics for not being Catholic enough - because committing murder is totally a super-duper Catholic thing to do",
+            "correctResponse" : "Henry IV (of Navarre)"
+          }
+        ]
+      },
+      {
+        "category" : "BRANDY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Brandy built on her singing fame by starring in this UPN sitcom from 1996 to 2001",
+            "correctResponse" : "Moesha"
+          },
+          {
+            "value" : 800,
+            "text" : "We don't know whether Brandy sips on gin and juice with this 17-time Grammy-nominated cousin of hers",
+            "correctResponse" : "Snoop Dogg (Calvin Broadus)"
+          },
+          {
+            "value" : 1200,
+            "text" : "Brandy starred as the title character in a 1997 remake of this Disney movie - Whitney Houston starred as the Fairy Godmother",
+            "correctResponse" : "Cinderella"
+          },
+          {
+            "value" : 1600,
+            "text" : "In 1996, Brandy was the prom date of this young gentleman - he went on to score..... a lot of points in the NBA",
+            "correctResponse" : "Kobe Bryant"
+          },
+          {
+            "value" : 2000,
+            "text" : "Brandy teamed up with Monica for this 1998 chart-topper, the first number one hit for both singers",
+            "correctResponse" : "The Boy is Mine"
+          }
+        ]
+      },
+      {
+        "category" : "SCOTCH GEOGRAPHY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "1920s British Prime Minister Bonar Law attended high school in this most populous city in Scotland",
+            "correctResponse" : "Glasgow"
+          },
+          {
+            "value" : 800,
+            "text" : "Logically, the inner ones of these islands are closer to the west coast of Scotland and the outer ones are farther from the coast",
+            "correctResponse" : "Hebrides"
+          },
+          {
+            "value" : 1200,
+            "text" : "This one of Scotland's \"five firths\" that borders Falkirk is further from 58 north than the other four of the five firths",
+            "correctResponse" : "Firth of Forth"
+          },
+          {
+            "value" : 1600,
+            "text" : "Due to pollution, we need a solution for this largest Scottish loch (not Ness), which is a hot mess",
+            "correctResponse" : "Loch Lomond"
+          },
+          {
+            "value" : 2000,
+            "text" : "Any Scottish mountain over 3,000 feet is called a munro - there is one row of munros that includes this most tall of all munros",
+            "correctResponse" : "Ben Nevis"
+          }
+        ]
+      },
+      {
+        "category" : "WHINES",
+        "comments" : "famous complaints",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This self-deprecating comedian born in 1921 sure got a lot of respect for someone who claimed to get none of it",
+            "correctResponse" : "Rodney Dangerfield"
+          },
+          {
+            "value" : 800,
+            "text" : "This pig-loving Muppet frequently bemoaned the difficulty of reflecting light with a wavelength around 525 nm",
+            "correctResponse" : "Kermit"
+          },
+          {
+            "value" : 1200,
+            "text" : "In 1962, this politician whined that the press wouldn't have him to kick around anymore - the joke was on him after his misdeeds of the early 70s",
+            "correctResponse" : "Nixon"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "Upset with the press he was getting, this baseball hall-of-famer quipped \"half the lies they tell about me aren't true\"",
+            "correctResponse" : "Yogi Berra"
+          },
+          {
+            "value" : 2000,
+            "text" : "This decidedly-not-cheap Tennessee native once complained, \"it costs a lot of money to look this cheap\"",
+            "correctResponse" : "Dolly Parton"
+          }
+        ]
+      },
+      {
+        "category" : "DJINN",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Characteristic physical feature of the humanoid form of djinn, which technically makes them ungulates",
+            "correctResponse" : "hooves"
+          },
+          {
+            "value" : 800,
+            "text" : "You need more than a medicine ball and pilates mat to do this to a djinn that has possessed a human",
+            "correctResponse" : "exorcise"
+          },
+          {
+            "value" : 1200,
+            "text" : "Many in the Middle East call upon djinn for protection much as Catholics call upon saints, but most Muslim scholars consider that practice to be this 8-letter term for the inappropriate worship of non-deities",
+            "correctResponse" : "idolatry"
+          },
+          {
+            "value" : 1600,
+            "text" : "The tale of Aladdin and the Magic Lamp is one of the One Thousand and One Nights that, according to legend, was narrated by this woman to her husband Shahryar to keep him captivated enough to not kill her",
+            "correctResponse" : "Scheherezade"
+          },
+          {
+            "value" : 2000,
+            "text" : "Al-Jinn, which tells the story of the revelation of the Quran to Djinn and the differing eternal fates of believing and non-believing Djinn, is the 72nd of these, an Arabic term for chapters of the Quran",
+            "correctResponse" : "surah (plural = sur)"
+          }
+        ]
+      },
+      {
+        "category" : "\"BOO\"s",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Coming from a Polynesian term for \"forbidden\", it's something that you are expected not to do or say per cultural norms",
+            "correctResponse" : "taboo"
+          },
+          {
+            "value" : 800,
+            "text" : "There are six species of this large monkey, including the hamadryas and the chacma",
+            "correctResponse" : "baboon"
+          },
+          {
+            "value" : 1200,
+            "text" : "A large collection of things or people, nearly always found as the second half of an alliterative pair",
+            "dailyDouble" : true,
+            "correctResponse" : "caboodle"
+          },
+          {
+            "value" : 1600,
+            "text" : "Named after the northern part of the French Congo, it has the longest fangs of any venomous snake - a terrifying 2 inches",
+            "correctResponse" : "gaboon viper"
+          },
+          {
+            "value" : 2000,
+            "text" : "Named after a 19th-century English mathematician, this type of algebra uses the operators AND, OR, and NOT to produce either a \"true\" or \"false\" result",
+            "correctResponse" : "Boolean algebra"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "CLASSIC MOVIES",
+    "comments" : "",
+    "clue" : {
+      "text" : "Uncredited cast members of this film include Bob Coe, a former WWII flight instructor who owned a crop dusting business in California",
+      "correctResponse" : "North by Northwest"
+    }
+  }
+}

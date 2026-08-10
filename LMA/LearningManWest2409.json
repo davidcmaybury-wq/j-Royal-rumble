@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West Game 09",
+  "author" : "Matt Schiffler",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "INSIDE JOBS",
+        "comments" : "Jobs you do indoors",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "10-letter job title of someone who makes your nails look pretty",
+            "correctResponse" : "manicurist"
+          },
+          {
+            "value" : 400,
+            "text" : "With a name deriving from the Latin for \"lead\", these folks now more commonly work with copper and PVC",
+            "correctResponse" : "plumbers"
+          },
+          {
+            "value" : 600,
+            "text" : "The British term for a pharmacist, or the American term for someone who knows how to use ethyl acetate and zinc chloride",
+            "correctResponse" : "chemist"
+          },
+          {
+            "value" : 800,
+            "text" : "An old-timey term for someone who attached feathers to one end of a stick and sharpened the other end",
+            "correctResponse" : "fletcher"
+          },
+          {
+            "value" : 1000,
+            "text" : "Not hatmaker, it's the fancier 8-letter term for one who engages in hatmaking",
+            "correctResponse" : "milliner"
+          }
+        ]
+      },
+      {
+        "category" : "GRASSY KNOLLS",
+        "comments" : "State's highest points that are merely just this",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "If you paid attention to who wrote this board, you might be able to guess that the unremarkable Hoosier Hill is the highest point in this state",
+            "correctResponse" : "Indiana"
+          },
+          {
+            "value" : 400,
+            "text" : "This state doesn't have a lot of land area to have a highest point, so Jerimoth Hill it is, because it has to be something",
+            "correctResponse" : "Rhode Island"
+          },
+          {
+            "value" : 600,
+            "text" : "This state's barely noticeable Charles Mound is located less than 1,000 feet south of the Wisconsin border",
+            "correctResponse" : "Illinois"
+          },
+          {
+            "value" : 800,
+            "text" : "This state's Britton Hill is the lowest high point of any US state - the term \"hill\" is doing a lot of heavy lifting",
+            "correctResponse" : "Florida"
+          },
+          {
+            "value" : 1000,
+            "text" : "This state's highest point, the imaginatively named High Point, is all the way on the other end of the state from West Cape May, which, shockingly, is west of Cape May",
+            "correctResponse" : "New Jersey"
+          }
+        ]
+      },
+      {
+        "category" : "VACCINES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "In 1885, nine-year-old Joseph Meister was inoculated against this disease by Louis Pasteur himself after being bitten by a dog",
+            "correctResponse" : "Rabies"
+          },
+          {
+            "value" : 400,
+            "text" : "After smacking his head on a rusty metal loop in April 2024, Matt Schiffler had to go in and get a booster against this disease (and got the diphtheria and pertussis antigens as a free bonus)",
+            "correctResponse" : "tetanus"
+          },
+          {
+            "value" : 600,
+            "text" : "These three diseases have been nearly eradicated in the United States thanks to the MMR vaccine",
+            "correctResponse" : "measles, mumps, rubella"
+          },
+          {
+            "value" : 800,
+            "text" : "Since the 1995 approval of a varicella zoster vaccine to prevent shingles, the incidence of this primarily childhood affliction has decreased in the USA by about 90%",
+            "correctResponse" : "chicken pox"
+          },
+          {
+            "value" : 1000,
+            "text" : "Don't shoot!  It's what the m stands for in mRNA, the basis of new vaccine technology that hit prime time during the COVID pandemic",
+            "correctResponse" : "messenger"
+          }
+        ]
+      },
+      {
+        "category" : "GEORGE SOROS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "George's last name spelled backwards is Soros, which means it is one of these reversible words",
+            "correctResponse" : "palindrome"
+          },
+          {
+            "value" : 400,
+            "text" : "George was born in this country in 1930, a mere 12 years after its divorce from Austria",
+            "correctResponse" : "Hungary"
+          },
+          {
+            "value" : 600,
+            "text" : "George was raised by his father to speak this language, which didn't even exist until 1887",
+            "dailyDouble" : true,
+            "correctResponse" : "Esperanto"
+          },
+          {
+            "value" : 800,
+            "text" : "George famously pocketed nearly a billion of this currency in one day by betting big against it in 1992",
+            "correctResponse" : "sterling"
+          },
+          {
+            "value" : 1000,
+            "text" : "George's tutor at the London School of Economics was this Austrian philosopher who, as far as we know, didn't have any penguins",
+            "correctResponse" : "Karl Popper"
+          }
+        ]
+      },
+      {
+        "category" : "5 G",
+        "comments" : "Each correct response will contain the letter G five times",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "It's what you're doing if you keep annoying Mr. Shahade several times a day by messaging him about little things",
+            "correctResponse" : "bugging Greg"
+          },
+          {
+            "value" : 400,
+            "text" : "It's what a grey-clad 1980s cartoon detective would say if he needed his lower limbs to extend rapidly",
+            "correctResponse" : "go-go-Gadget legs!"
+          },
+          {
+            "value" : 600,
+            "text" : "With this image recognition app, you could take a photo with your phone and search for information about it - Alphabet superseded it in 2017 with a similar app called Lens",
+            "correctResponse" : "Google Goggles"
+          },
+          {
+            "value" : 800,
+            "text" : "The daughter of a prominent Titanic victim, this early 20th century socialite and heiress was so enamored with art that she married surrealist Max Ernst",
+            "correctResponse" : "Peggy Guggenheim"
+          },
+          {
+            "value" : 1000,
+            "text" : "A common pastime in the marshlands of the American South, it involves spearing amphibians with a specialized pole resembling a trident",
+            "correctResponse" : "frog gigging"
+          }
+        ]
+      },
+      {
+        "category" : "CONSPIRACY THEORIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "\"Jet Fuel can't melt\" these",
+            "correctResponse" : "Steel beams"
+          },
+          {
+            "value" : 400,
+            "text" : "This society has it right - if we live on a giant circle, why doesn't it look round?",
+            "correctResponse" : "the Flat Earth Society"
+          },
+          {
+            "value" : 600,
+            "text" : "The Communists are putting this in our water to poison us all!  It has nothing to do with preventing cavities, that's just a cover story",
+            "correctResponse" : "FLuoride"
+          },
+          {
+            "value" : 800,
+            "text" : "This secret society that knows everything and controls everything drops their symbols everywhere, but they're the only ones who can truly see the light",
+            "correctResponse" : "Illuminati"
+          },
+          {
+            "value" : 1000,
+            "text" : "These aren't just water condensation resulting from rapid expansion of air passing through a jet engine.  Nonsense!   They're clouds of artificial substances the government is dropping on us from the sky to control our minds that LOOK just like contrails!",
+            "correctResponse" : "Chemtrails"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "WHINE",
+        "comments" : "We give you the whine, you give us the speaker",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "POTUS: \"If you can believe it, Abraham Lincoln was supposedly treated very badly, but nobody's been treated badly like me\"",
+            "correctResponse" : "Donald Trump (accept Donald Fucking Trump, or just That Fucking Guy)"
+          },
+          {
+            "value" : 800,
+            "text" : "POTUS: \"They want the federal government controlling Social Security like it's some sort of federal program\"",
+            "correctResponse" : "George W. Bush"
+          },
+          {
+            "value" : 1200,
+            "text" : "A future POTUS, in 1962: \"you don't have [me] to kick around any more, because, gentlemen, this is my last press conference\"",
+            "correctResponse" : "Richard Nixon"
+          },
+          {
+            "value" : 1600,
+            "text" : "A musician who likes putting fish sticks in his mouth: \"Stanley Kubrick, Picasso, Apostle Paul, fucking Picasso and Escobar. By 50 percent [I'm] more influential than any other human being\"",
+            "correctResponse" : "Kanye West"
+          },
+          {
+            "value" : 2000,
+            "text" : "A coach and sometimes chair-thrower: \"I just feel we haven't - you know - I'm really disappointed in the FUCKING PROGRESS that we've made.  GOD DAMN IT!  Fuck this show... take this fuckin' show and fuckin' forget it, fuckin' bastards!\"",
+            "correctResponse" : "Bobby Knight"
+          }
+        ]
+      },
+      {
+        "category" : "CHEESES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Originating in an English village, it's the most popular cheese in the US that doesn't derive most of its sales from the pizza industry",
+            "correctResponse" : "cheddar"
+          },
+          {
+            "value" : 800,
+            "text" : "This soft cow's milk cheese with a white rind originated in the départment of Seine-et-Marne",
+            "correctResponse" : "brie"
+          },
+          {
+            "value" : 1200,
+            "text" : "This Italian blue cheese sounds like a 19th-century French author who had snakes for hair",
+            "correctResponse" : "gorgonzola"
+          },
+          {
+            "value" : 1600,
+            "text" : "Representing the Swiss canton of Fribourg, this cheese with only very tiny holes melts well and is commonly used as the basis for fondue",
+            "correctResponse" : "Gruyère"
+          },
+          {
+            "value" : 2000,
+            "text" : "In the 1850s, Anders Larsen Bakke of the village of Våle set out to copy Swiss cheese and ended up creating this type which sells millions of pounds in the US every year",
+            "correctResponse" : "Jarlsberg"
+          }
+        ]
+      },
+      {
+        "category" : "GREAT LINES FROM MOVIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This Adam Sandler title character: \"Everyone in this room is dumber for hearing what you said\"",
+            "correctResponse" : "Billy Madison"
+          },
+          {
+            "value" : 800,
+            "text" : "Jason Bateman, in this 2004 sports comedy: \"That's a bold strategy, cotton, let's see if it pays off for them\"",
+            "correctResponse" : "Dodgeball"
+          },
+          {
+            "value" : 1200,
+            "text" : "This actor, as the Joker in the Dark Knight: \"Wanna know how I got these scars?\"",
+            "correctResponse" : "Whig"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This title tycoon: \"You get nothing!  You Lose!  Good day, sir!\"",
+            "correctResponse" : "Willy Wonka"
+          },
+          {
+            "value" : 2000,
+            "text" : "Brad Pitt in this 2009 film: \"We got a German here who wants to die for his country! Oblige him!\"",
+            "correctResponse" : "Inglorious Basterds"
+          }
+        ]
+      },
+      {
+        "category" : "GREAT \"POINTS\"",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Woodrow Wilson wanted to reshape the post-Great War order around this numerical list",
+            "correctResponse" : "Fourteen points"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "Any temperature and pressure at which a solid is converted directly to a gas",
+            "correctResponse" : "sublimation point"
+          },
+          {
+            "value" : 1200,
+            "text" : "Keanu Reeves memorably played \"F....B....I Agent\" Johnny Utah in this surfing crime film",
+            "correctResponse" : "Point Break"
+          },
+          {
+            "value" : 1600,
+            "text" : "Found in Alaska, it's the northernmost point of all US territory ",
+            "correctResponse" : "Point Barrow"
+          },
+          {
+            "value" : 2000,
+            "text" : "\"I'm so excited\" that I finally get to ask about this motown trio. Now \"Jump\" on that buzzer!",
+            "correctResponse" : "Pointer sisters"
+          }
+        ]
+      },
+      {
+        "category" : "GREAT GODS!",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "You can read all about this great god and his prophet Muhammad in the Koran",
+            "correctResponse" : "Allah"
+          },
+          {
+            "value" : 800,
+            "text" : "Amaterasu is the goddess of the Sun in this religion practiced in Honshu and Hokkaido",
+            "correctResponse" : "Shinto(ism)"
+          },
+          {
+            "value" : 1200,
+            "text" : "This member of the Hindu trinity has a destructive side that his wife Kali finds sexy",
+            "correctResponse" : "Shiva"
+          },
+          {
+            "value" : 1600,
+            "text" : "Agloolik is the guardian spirit of these people who live in places like Igloolik",
+            "correctResponse" : "Inuit"
+          },
+          {
+            "value" : 2000,
+            "text" : "I'm cuckoo for Kukulkan, the serpent deity of this civilization that didn't contemplate the year 2013 AD",
+            "correctResponse" : "Maya"
+          }
+        ]
+      },
+      {
+        "category" : "SHAKESPEAREAN BEFORE AND AFTER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Italian car company that ends in the deaths of star-crossed young lovers from rival families",
+            "correctResponse" : "Alfa Romeo and Juliet"
+          },
+          {
+            "value" : 800,
+            "text" : "Iced drink outlet in shopping malls that tells the tragic tale of a power-hungry Roman emperor, and is also an apt description of a recent president",
+            "correctResponse" : "Orange Julius Caesar"
+          },
+          {
+            "value" : 1200,
+            "text" : "Beatrice and Benedick confess their love for one another in this 1991 Metallica power ballad",
+            "correctResponse" : "Much Ado About Nothing Else Matters"
+          },
+          {
+            "value" : 1600,
+            "text" : "A tale about mischievous fairies that made up the most dominant Olympic basketball squad of all time",
+            "correctResponse" : "A Midsummer Night's Dream Team"
+          },
+          {
+            "value" : 2000,
+            "text" : "The King of Navarre and his buddies swear off the ladies for three years in this Neil Simon play where Eddie Kurnitz's kids search for some hidden cash to pay back a loan shark",
+            "correctResponse" : "Love's Labours Lost in Yonkers"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "LOGOS IN BUSINESS",
+    "comments" : "",
+    "clue" : {
+      "text" : " First name of the current Executive Vice President of McKee Foods, whose face has appeared on a line of that company's products since she was four years old",
+      "correctResponse" : "Debbie"
+    }
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 2024 Game 03",
+  "author" : "Matt Schiffler",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "FROM THE FRENCH",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Common in high school, it's a tight-knit group of friend that is exclusive to outsiders",
+            "correctResponse" : "clique"
+          },
+          {
+            "value" : 400,
+            "text" : "A lightly scented perfume, it's a three-word term that sounds like something you probably wouldn't want to splash on your face",
+            "correctResponse" : "eau de toilette"
+          },
+          {
+            "value" : 600,
+            "text" : "A slow-cooked bean soup, or the ceramic dish in which it is prepared",
+            "correctResponse" : "cassoulet"
+          },
+          {
+            "value" : 800,
+            "text" : "In the US, this 6-letter term refers to a nativity scene - in the UK, it's a nursery for very young children",
+            "correctResponse" : "crèche"
+          },
+          {
+            "value" : 1000,
+            "text" : "This clue has a certain...\"I don't know what\" that sounds so much better in French",
+            "correctResponse" : "Je ne sais quoi"
+          }
+        ]
+      },
+      {
+        "category" : "OPERAS BY CHARACTERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Don José, seduced by the title character",
+            "correctResponse" : "Carmen"
+          },
+          {
+            "value" : 400,
+            "text" : "Bartolo, a doctor who attempts to contrive his ward into marriage to get her dowry, and only gets her dowry",
+            "correctResponse" : "The Barber of Seville"
+          },
+          {
+            "value" : 600,
+            "text" : "Ismail Pasha, khedive of Egypt",
+            "correctResponse" : "Aïda"
+          },
+          {
+            "value" : 800,
+            "text" : "Violetta Valéry, who recovers from an illness to fall in love, then dies anyway",
+            "correctResponse" : "La Traviata"
+          },
+          {
+            "value" : 1000,
+            "text" : "Florestan, political prisoner whose capture prompts his wife to disguise herself as a man to free him",
+            "correctResponse" : "Fidelio"
+          }
+        ]
+      },
+      {
+        "category" : "POP MUSIC",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This 2019 hit made Billie Eilish the first artist born in the 21st century to reach #1 on the Billboard Hot 100",
+            "correctResponse" : "Bad Guy"
+          },
+          {
+            "value" : 400,
+            "text" : "#1 in November and December 2019, this Post Malone hit sounds like he's been competing in a marathon on a short track",
+            "correctResponse" : "Circles"
+          },
+          {
+            "value" : 600,
+            "text" : "In 2021, Dua Lipa collaborated with this significantly older British rocker on \"Cold Heart\"",
+            "correctResponse" : "Elton John"
+          },
+          {
+            "value" : 800,
+            "text" : "Known to the authorities as Christopher Comstock, this DJ gets his stage name from the large, white, cylindrical headgear he wears on stage ",
+            "correctResponse" : "Marshmello"
+          },
+          {
+            "value" : 1000,
+            "text" : "Contrary to popular belief, Ashley Frangipane didn't dub herself this by anagram - it's an MTA station in Brooklyn near where she started writing music",
+            "correctResponse" : "Halsey"
+          }
+        ]
+      },
+      {
+        "category" : "PSYCHOLOGY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "It doesn't mean ygolohcysp - it's telling someone to do the opposite of what you want them to do, anticipating that they will do the opposite of what you say",
+            "correctResponse" : "reverse psychology"
+          },
+          {
+            "value" : 400,
+            "text" : "This short word is the part of your mind that contains innate impulses",
+            "correctResponse" : "id"
+          },
+          {
+            "value" : 600,
+            "text" : "This Swiss dude came up with the archetype of what psychologists today call \"archetypes\"",
+            "correctResponse" : "Jung"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "We bet you’re salivating over the chance to name this Russian psychologist born in 1849 who might ring a bell if you study word association for quiz shows",
+            "correctResponse" : "Pavlov"
+          },
+          {
+            "value" : 1000,
+            "text" : "The Greek term for an open marketplace is found in the name of this fear of public spaces or other locations where it's hard to hide",
+            "correctResponse" : "agoraphobia"
+          }
+        ]
+      },
+      {
+        "category" : "NEIGHBORS TO THE NORTH",
+        "comments" : "We give you a country or national subdivision, you give us the neighbor that is immediately across THE MAJORITY OF its northern border",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Lithuania",
+            "correctResponse" : "Latvia"
+          },
+          {
+            "value" : 400,
+            "text" : "Singapore",
+            "correctResponse" : "Malaysia"
+          },
+          {
+            "value" : 600,
+            "text" : "Nigeria",
+            "correctResponse" : "Niger"
+          },
+          {
+            "value" : 800,
+            "text" : "New South Wales",
+            "correctResponse" : "Queensland"
+          },
+          {
+            "value" : 1000,
+            "text" : "Saskatchewan",
+            "correctResponse" : "Northwest Territories (do not accept Northwest Territory)"
+          }
+        ]
+      },
+      {
+        "category" : "YOU CAN'T ASK THAT ON JEOPARDY!",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "When George W. Bush was running for president in 2000, his mic was on when he referred to a reporter as a major-league this 7-letter word for the terminal end of the digestive tract",
+            "correctResponse" : "asshole"
+          },
+          {
+            "value" : 400,
+            "text" : "People who saw \"snakes on a plane\" on TBS probably did need to use their imagination to figure out this words was replaced with \"Monkeygihting\" and \"monday-to-friday\" in the dub",
+            "correctResponse" : "motherfucking"
+          },
+          {
+            "value" : 600,
+            "text" : "E.L. James introduced this silly word into the mainstream by preceding it with \"Kinky.\" Today a subreddit unironically pairs with \"black magic\"",
+            "correctResponse" : "fuckery"
+          },
+          {
+            "value" : 800,
+            "text" : "This 1983 Bond film focused on a troupe of circus acrobats-turned-assassins based in India who help 007 stop a false flag operation",
+            "correctResponse" : "octopussy"
+          },
+          {
+            "value" : 1000,
+            "text" : "Cory Doctorow coined this term for the life cycle of new products that are slowly ruined as the focus turns from users to business customers to investors",
+            "correctResponse" : "enshittification"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "THE 17th CENTURY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Founded in 1607, this first permanent English settlement in the New World was named after the first Stuart king of England",
+            "correctResponse" : "Jamestown"
+          },
+          {
+            "value" : 800,
+            "text" : "In 1631, Shah Jahan commissioned this elaborate mausoleum for his favorite wife Mumtaz - his other wives were pretty much chopped liver",
+            "correctResponse" : "Taj Mahal"
+          },
+          {
+            "value" : 1200,
+            "text" : "This Chinese dynasty shattered in 1644 like one of its expensive vases",
+            "correctResponse" : "Ming"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "The Peace of this place, part of the name of the German state abbreviated NRW, ended the Thirty Years' War in 1648",
+            "correctResponse" : "Westphalia"
+          },
+          {
+            "value" : 2000,
+            "text" : "In 1603, this shogun established a military government that ruled Japan until 1868",
+            "correctResponse" : "Tokugawa"
+          }
+        ]
+      },
+      {
+        "category" : "WOMEN AUTHORS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "She was pretty long lived for a British Romantic author, dying at the ripe old age of 41 before she could publish her novels Mansfield Park and Persuasion",
+            "correctResponse" : "Jane Austen"
+          },
+          {
+            "value" : 800,
+            "text" : "This \"Ramona Quimby\" author was pretty long-lived for ANYONE, dying at the ripe old age of 104 in 2021",
+            "correctResponse" : "Beverly Cleary"
+          },
+          {
+            "value" : 1200,
+            "text" : "The first African-American woman to win a Pulitzer Prize for fiction, this Georgia-born author turned 80 in 2024",
+            "correctResponse" : "Alice Walker"
+          },
+          {
+            "value" : 1600,
+            "text" : "This under-40 Manhattan native seems to title her books by Mad-Lib - her bestsellers include A Court of Thorns and Roses, House of Flame and Shadow, and A Court of Mist and Fury",
+            "correctResponse" : "Sarah Maas"
+          },
+          {
+            "value" : 2000,
+            "text" : "The 2007 Nobel Prize winner for Literature, her \"The Golden Notebook\" comments on such topics as communism and the sexual revolution",
+            "correctResponse" : "Doris Lessing"
+          }
+        ]
+      },
+      {
+        "category" : "BUDDIES IN THE SENATE",
+        "comments" : "We give you a senator, you give us the other senator from the same state as of March 2024",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Mark Kelly",
+            "correctResponse" : "Kyrten Sinema"
+          },
+          {
+            "value" : 800,
+            "text" : "Rick Scott",
+            "correctResponse" : "Marco Rubio"
+          },
+          {
+            "value" : 1200,
+            "text" : "Tommy Tuberville",
+            "correctResponse" : "Katie Britt"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "Tim Scott",
+            "correctResponse" : "Lindsey Graham (accept Lady G)"
+          },
+          {
+            "value" : 2000,
+            "text" : "Shelley Moore Capito",
+            "correctResponse" : "Joe Manchin"
+          }
+        ]
+      },
+      {
+        "category" : "IN LIVING COLORS",
+        "comments" : "Each correct response is the name of an animal that contains a color",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The male leader of a gorilla troop, so-called for his distinguishing swathe of grey hair",
+            "correctResponse" : "silverback"
+          },
+          {
+            "value" : 800,
+            "text" : "Weighing up to 1500 pounds, the largest tuna species are called this in reference to the color of one of their appendages",
+            "correctResponse" : "bluefin"
+          },
+          {
+            "value" : 1200,
+            "text" : "Species Ailurus fulgens, this ruddy tree-dweller resembling a raccoon is native to the eastern Himalayas",
+            "correctResponse" : "red panda"
+          },
+          {
+            "value" : 1600,
+            "text" : "A pugnacious garden bully, or Joe Carter",
+            "correctResponse" : "Blue Jay"
+          },
+          {
+            "value" : 2000,
+            "text" : "This brightly-colored American bird that thrives on deforestation and bird feeders is only distantly related to the same-named subject of a painting that was the macguffin of a 2014 novel by Donna Tartt",
+            "correctResponse" : "Goldfinch"
+          }
+        ]
+      },
+      {
+        "category" : "I AIN'T GOT NO BODY",
+        "comments" : "famous heads that are sitting somewhere far away from the body they once were a part of",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "A museum in Salzburg holds a skull claimed to have belonged to this musical prodigy",
+            "correctResponse" : "Mozart"
+          },
+          {
+            "value" : 800,
+            "text" : "After going on a mass murder spree in this European capital in the late 1830s, Diogo Alves was executed and decapitated, and his head is preserved in a jar where to this day it remains chillingly lifelike",
+            "correctResponse" : "Lisbon"
+          },
+          {
+            "value" : 1200,
+            "text" : "This splendid splinter of Red Sox fame wanted to be cremated, but his kids had other ideas - they sent his body to be cryonically frozen, then his head was accidentally separated from his body and smacked a few times with a monkey wrench",
+            "correctResponse" : "Ted Williams"
+          },
+          {
+            "value" : 1600,
+            "text" : "King Charles II was so pissed off at this deceased Lord Protector that he ordered his body exhumed and had his head chopped off and put on public display on a stake for over 20 years",
+            "correctResponse" : "Oliver Cromwell"
+          },
+          {
+            "value" : 2000,
+            "text" : "You can see the mummified head of this early 19th-century founder of modern utilitarianism at the University College of London, complete with leathery skin and creepy eyes",
+            "correctResponse" : "Jeremy Bentham'"
+          }
+        ]
+      },
+      {
+        "category" : "BEFORE AND AFTER CONNECTED BY A LETTER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "A long-hypothesized undiscovered solar system body full of Marvel Comics mutants",
+            "correctResponse" : "Planet X-Men"
+          },
+          {
+            "value" : 800,
+            "text" : "What it was called when Jack Black's band invaded Normandy on June 6, 1944",
+            "correctResponse" : "Tenacious D-Day"
+          },
+          {
+            "value" : 1200,
+            "text" : "What Edward Teller would use to get rid of his hemorrhoids and everything else within a 20-mile radius",
+            "correctResponse" : "Preparation H-Bomb"
+          },
+          {
+            "value" : 1600,
+            "text" : "Yeah Yeah Yeahs singer who wrote short stories with thrilling plot twists",
+            "correctResponse" : "Karen O Henry"
+          },
+          {
+            "value" : 2000,
+            "text" : "Ascorbic acid, also starring in \"Red Dawn\" and \"E.T. the Extra-terrestrial\"",
+            "correctResponse" : "Vitamin C Thomas Howell"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "BRITISH ROYALTY",
+    "comments" : "",
+    "clue" : {
+      "text" : "This Duchess of Windsor was born in Franklin County, Pennsylvania and died in Paris, France",
+      "correctResponse" : "Wallis Simpson"
+    }
+  }
+}

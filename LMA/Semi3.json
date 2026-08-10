@@ -1,0 +1,394 @@
+{
+  "title": "LearningMan Semifinal3",
+  "author": "David Maybury",
+  "comments": "",
+  "rounds": [
+    [
+      {
+        "category": "TRIPLE RHYME TIME",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "A special liquor named for a dog that is constantly trying get you to give him a piece of your dinner",
+            "correctResponse": "Mooch Pooch Hooch"
+          },
+          {
+            "value": 400,
+            "text": "An affectionate gesture from a single woman from central Europe",
+            "correctResponse": "Swiss Miss Kiss"
+          },
+          {
+            "value": 600,
+            "text": "An exact copy of a flying camera robot on its belly",
+            "correctResponse": "Prone Drone Clone"
+          },
+          {
+            "value": 800,
+            "text": "An enclosure for holding just less than a dozen egg laying birds",
+            "correctResponse": "Ten Hen Pen/Eleven Hen Pen"
+          },
+          {
+            "value": 1000,
+            "text": "Sarcastic chlorine ions cooked in hot oil",
+            "correctResponse": "Snide Fried Chloride"
+          }
+        ]
+      },
+      {
+        "category": "POTENT POTABLES",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "Vodka, Lime juice, ginger beer",
+            "correctResponse": "Moscow Mule"
+          },
+          {
+            "value": 400,
+            "text": "Tequila, soda, grapefruit and lime juice",
+            "correctResponse": "Paloma"
+          },
+          {
+            "value": 600,
+            "text": "Créme de cassis and champagne",
+            "correctResponse": "Kir Royal"
+          },
+          {
+            "value": 800,
+            "text": "Jack Daniels, sweet and sour, sprite",
+            "correctResponse": "Lynchburg Lemonade"
+          },
+          {
+            "value": 1000,
+            "text": "Espresso, Licor 43",
+            "correctResponse": "Carajillo"
+          }
+        ]
+      },
+      {
+        "category": "BEFORE & AFTER",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "This prime defense contractor run by a Canadian SNL alum who played Jiminy Glick",
+            "correctResponse": "Lockheed Martin Short"
+          },
+          {
+            "value": 400,
+            "text": "The Hall-of-Fame LA Lakers point guard and Band-Aid manufacturer",
+            "correctResponse": "Magic Johnson and Johnson"
+          },
+          {
+            "value": 600,
+            "text": "Sisqo's biggest hit that ruled China for three centuries",
+            "correctResponse": "Thong Song Dynasty"
+          },
+          {
+            "value": 800,
+            "text": "These essential one-handed weights whose research won nine Nobel prizes",
+            "correctResponse": "Dumbbell labs"
+          },
+          {
+            "value": 1000,
+            "text": "Thor's friends Fandral, Hogun, and Volstagg perform this Bertolt Brecht work",
+            "correctResponse": "The Warriors Threepenny Opera"
+          }
+        ]
+      },
+      {
+        "category": "BILLBOARD #1 HITS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "This 80's hit by Peter Cetera was comfortably the best thing about the Karate Kid Part II",
+            "correctResponse": "Glory of Love"
+          },
+          {
+            "value": 400,
+            "text": "Debby Boone displaced the Star Wars disco mix at #1 with this megahit",
+            "correctResponse": "You Light up my Life"
+          },
+          {
+            "value": 600,
+            "text": "Both Lionel Richie and Adele had #1 hits of this same title",
+            "correctResponse": "Hello"
+          },
+          {
+            "value": 800,
+            "text": "Start this Flo Rida song's alphabet with A for \"Apple Bottom Jeans\" and B for \"Boots with fur\"",
+            "correctResponse": "Get Low"
+          },
+          {
+            "value": 1000,
+            "dailyDouble": true, 
+            "text": "This 1939 Ruth Lowe song was the first Billboard #1",
+            "correctResponse": "I'll Never Smile Again"
+          }
+        ]
+      },
+      {
+        "category": "NAME'S THE SAME",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "Baldwin, Colbert, Douglas",
+            "correctResponse": "Stephen"
+          },
+          {
+            "value": 400,
+            "text": "Baldwin, Guinness, Benjamin",
+            "correctResponse": "Alec"
+          },
+          {
+            "value": 600,
+            "text": "Baldwin, Bush, Corgan",
+            "correctResponse": "Billy"
+          },
+          {
+            "value": 800,
+            "text": "Baldwin, Ricciardo, Radcliffe",
+            "correctResponse": "Daniel"
+          },
+          {
+            "value": 1000,
+            "text": "Baldwin, Atwell, Steinfeld",
+            "correctResponse": "Hailey"
+          }
+        ]
+      },
+      {
+        "category": "SCIENCE!",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "This effect describes the change in frequency in waves with a moving source",
+            "correctResponse": "Doppler"
+          },
+          {
+            "value": 400,
+            "text": "The force on an airplane that opposes thrust",
+            "correctResponse": "Drag"
+          },
+          {
+            "value": 600,
+            "text": "The effect that draws liquid into narrow gaps",
+            "correctResponse": "Capillary effect"
+          },
+          {
+            "value": 800,
+            "text": "This adjective is the opposite of natural, and used to describe certain motor oils and fabrics",
+            "correctResponse": "Synthetic"
+          },
+          {
+            "value": 1000,
+            "text": "The innermost layer of the atmosphere",
+	        "correctResponse": "Troposphere"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category": "JEOPORTMANTEAU",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "A polish capital that specializes in sawing wood",
+            "correctResponse": "Warsawmill"
+          },
+          {
+            "value": 800,
+            "text": "The southwestern French region's extinct bird species",
+            "correctResponse": "Bordodo"
+          },
+          {
+            "value": 1200,
+            "text": "Webster's comprehensive book of definitons for skateboarding stunts off the ground",
+            "correctResponse": "Dictionaerial"
+          },
+          {
+            "value": 1600,
+            "text": "Cogs in the government red tape machine that gamble over dice",
+            "correctResponse": "Bureaucraps"
+          },
+          {
+            "value": 2000,
+            "text": "The favored pitted green fruit of corpses",
+            "correctResponse": "Avocadaver"
+          }
+        ]
+      },
+      {
+        "category": "BOX OFFICE RECORDS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "This James Cameron sci-fi epic is still #1 all time",
+            "correctResponse": "Avatar"
+          },
+          {
+            "value": 800,
+            "text": "The highest grossing of the Fast & Furious movies, and released in Japan as \"Wild Speed: Sky Mission\"",
+            "correctResponse": "Furious 7"
+          },
+          {
+            "value": 1200,
+            "dailyDouble": true,
+            "text": "Adjusted for inflation, this is the highest grossing movie in history",
+            "correctResponse": "Gone with the Wind"
+          },
+          {
+            "value": 1600,
+            "text": "The highest-grossing Star Wars film",
+            "correctResponse": "Star Wars Episode VII - The Force Awakens"
+          },
+          {
+            "value": 2000,
+            "text": "Many argue this 1972 adult film was the highest grossing film of the year, but extensive use of adult theaters for money laundering at the time cast doubt on this record",
+            "correctResponse": "Deep Throat"
+          }
+        ]
+      },
+      {
+        "category": "MOUNTAIN CLIMBING",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "Reinhold Messner proposed Mount Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, and Puncak Jaya as the definitive version of this list",
+            "correctResponse": "Seven Summits"
+          },
+          {
+            "value": 800,
+            "text": "He was an accomplished climber before participating in the 1996 Everest disaster, and this author describes his Everest climb as his greatest regret in life",
+            "correctResponse": "Jon Krakauer"
+          },
+          {
+            "value": 1200,
+            "text": "The Abruzzi spur is a major feature on the most common route up this forbidding peak",
+            "correctResponse": "K2"
+          },
+          {
+            "value": 1800,
+            "text": "This English artist became obsessed with the Matterhorn after traveling to paint it for travel posters, and eventually became the first to climb it in a tragic mission",
+            "correctResponse": "Edward Whymper"
+          },
+          {
+            "value": 2000,
+            "dailyDouble": true,
+            "text": "In the French adjectival system this is the highest grade of difficulty for climbing, with or without yeti",
+            "correctResponse": "Abominable"
+          }
+        ]
+      },
+      {
+        "category": "DAD JOKE SETUPS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "This Pixar film follows Karl as flies his house to South America, making friends with a talking dog",
+            "correctResponse": "Up"
+          },
+          {
+            "value": 800,
+            "text": "This exercise involves stepping forward and lowering your body to the floor in a walking-like motion",
+            "correctResponse": "Lunges"
+          },
+          {
+            "value": 1200,
+            "text": "These hexagonal structures are often found in apiaries",
+            "correctResponse": "Honeycomb"
+          },
+          {
+            "value": 1600,
+            "text": "This film about Jackie Robinson was titled after his jersey number",
+            "correctResponse": "42"
+          },
+          {
+            "value": 2000,
+            "text": "This horned african animal lends its name to a recursive acronym for free software",
+            "correctResponse": "Gnu"
+          }
+        ]
+      },
+      {
+        "category": "STEP ONE",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "Step One of this experience is admitting you are powerless over alcohol",
+            "correctResponse": "12 step program"
+          },
+          {
+            "value": 800,
+            "text": "A jewish proverb says that even this cat's toy must have a beginning",
+            "correctResponse": "Ball of Yarn"
+          },
+          {
+            "value": 1200,
+            "text": "The Chinese proverb reminds us that a journey of 1000 miles begins with this",
+            "correctResponse": "A single step"
+          },
+          {
+            "value": 1600,
+            "text": "\"In the beginning, God created the heavens and the earth\" starts this book of the bible",
+            "correctResponse": "Genesis"
+          },
+          {
+            "value": 2000,
+            "text": "This bipartisan act was signed into law by Donald Trump in 2018 to help reduce recidivism",
+            "correctResponse": "First Step Act"
+          }
+        ]
+      },
+      {
+        "category": "CUT A HOLE IN A BOX",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "This woodshop stalwart with a circular saw is used for cutting large pieces of sheet stock",
+            "correctResponse": "Table saw"
+          },
+          {
+            "value": 800,
+            "text": "When making your own clothes, these scissors with zigzag blades are used on woven cloths to minimize fraying",
+            "correctResponse": "Pinking shears"
+          },
+          {
+            "value": 1200,
+            "text": "These super-sized shears for cutting sheet metal have a metal in their name",
+            "correctResponse": "Tin snips"
+          },
+          {
+            "value": 1600,
+            "text": "This dog from Bristol in the original RCA ads shares it name with a specialized tool for taking small bites from pieces of tough material",
+            "correctResponse": "Nipper"
+          },
+          {
+            "value": 2000,
+            "text": "Industrial versions of this amplified light device can engrave and burn through metal",
+            "correctResponse": "Laser"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round": {
+    "category": "WORD ORIGINS",
+    "comments": "",
+    "clue": {
+      "text": "This condition was once attributed to an excess of black bile in the body, which is how it gained its name",
+      "correctResponse": "Melancholia"
+    }
+  }
+}

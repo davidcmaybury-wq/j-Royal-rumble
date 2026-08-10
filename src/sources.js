@@ -21,10 +21,13 @@ const MEDIA_PATTERNS = [
 ];
 
 export function isUnanswerableWithoutMedia(text) {
+  if (typeof text !== 'string') return false;
   return MEDIA_PATTERNS.some((re) => re.test(text));
 }
 
 export function stripMediaLinks(text) {
+  if (text == null) return '';
+  if (typeof text !== 'string') text = String(text);
   return text
     .replace(/<a\s[^>]*>(.*?)<\/a>/gis, '$1')
     .replace(/<br\s*\/?>/gi, ' ')
@@ -38,15 +41,16 @@ export function stripMediaLinks(text) {
 
 export function fromTtgJson(doc, { includeFinal = false } = {}) {
   const out = [];
-  doc.rounds.forEach((round, roundIndex) => {
+  (doc.rounds || []).forEach((round, roundIndex) => {
     const ladder = roundIndex === 0
       ? ROW_LADDER['Jeopardy!'] : ROW_LADDER['Double Jeopardy!'];
-    round.forEach((cat, catIndex) => {
+    (round || []).forEach((cat, catIndex) => {
+      if (!cat || !Array.isArray(cat.clues)) return;
       const clues = cat.clues.map((c) => ({
-        row: ladder.indexOf(c.value) + 1,
-        text: stripMediaLinks(c.text),
-        answer: stripMediaLinks(c.correctResponse),
-        wasDailyDouble: !!c.dailyDouble,
+        row: ladder.indexOf(Number(c?.value)) + 1,
+        text: stripMediaLinks(c?.text),
+        answer: stripMediaLinks(c?.correctResponse),
+        wasDailyDouble: !!c?.dailyDouble,
       }));
       out.push(finalize({
         id: `ttg:${slug(doc.title)}:r${roundIndex}:c${catIndex}`,
@@ -175,10 +179,23 @@ export function fromPublicDataset(records, { from = null, to = null } = {}) {
   return cats.filter(Boolean);
 }
 
+// Boards drafted in a word processor arrive with curly quotes that were
+// escaped as if they were straight ones — `\“` is not valid JSON. Rather than
+// lose the whole board, undo the bogus escape and try again.
+export function parseLooseJson(text) {
+  try { return JSON.parse(text); } catch (first) {
+    const repaired = text
+      .replace(/\\([\u2018\u2019\u201c\u201d])/g, '$1')
+      .replace(/^\uFEFF/, '');
+    try { return JSON.parse(repaired); } catch { throw first; }
+  }
+}
+
 // --- shared ----------------------------------------------------------
 
 // A category is usable only if all five rungs are present and answerable.
 function finalize(cat) {
+  if (!cat || !Array.isArray(cat.clues)) return null;
   const byRow = new Map();
   for (const c of cat.clues) {
     if (!c.row || c.row < 1 || c.row > 5) return null;

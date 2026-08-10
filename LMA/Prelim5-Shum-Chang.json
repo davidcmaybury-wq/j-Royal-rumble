@@ -1,0 +1,394 @@
+{
+  "title": "Prelim5 - Jamie Shum-Brian Chang Dream Board",
+  "author": "David Maybury",
+  "comments": "",
+  "rounds": [
+    [
+      {
+        "category": "FAST FOOD",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "Harold and Kumar famously went to this oldest fast food chain founded in Wichita, KS",
+            "correctResponse": "White Castle"
+          },
+          {
+            "value": 400,
+            "text": "This faux-mexican chain takes its name from its founder, not the musical device that used to be integrated into its buildings",
+            "correctResponse": "Taco Bell"
+          },
+          {
+            "value": 600,
+            "text": "He turned Col. Sanders into the face of KFC before launching his own fast food chain named for his daughter",
+            "correctResponse": "Dave Thomas"
+          },
+          {
+            "value": 800,
+            "dailyDouble": true,
+            "text": "Although their slogan is \"Still kind of German\" this west coast hot dog chain is named for an austrian dish they don't serve",
+            "correctResponse": "Wienerschnitzel"
+          },
+          {
+            "value": 1000,
+            "text": "This Atlanta-based chain began as a full-service restaurant in 1946 called the Dwarf House (open 24/7!), but founder Truett Cathy decided to take one dish from the menu and build a chain around that at local malls",
+            "correctResponse": "Chick-fil-A"
+          }
+        ]
+      },
+      {
+        "category": "GIRL GROUPS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "Victoria Beckham was frequently lampooned as \"the fifth best singer\" of this iconic group",
+            "correctResponse": "Spice Girls"
+          },
+          {
+            "value": 400,
+            "text": "This group, who finished third in their season of the X-Factor, had a short run before Camila Cabello left to launch her solo career. Normani Kordei did the same on better terms soon after",
+            "correctResponse": "Fifth Harmony"
+          },
+          {
+            "value": 600,
+            "text": "Diana Ross fronted this Motown trio",
+            "correctResponse": "The Supremes"
+          },
+          {
+            "value": 800,
+            "text": "This prophylactic-wearing hip-hop trio is named for the initials of the stage names of its members",
+            "correctResponse": "TLC"
+          },
+          {
+            "value": 1000,
+            "text": "This colorful K-pop quartet have twice set the record for most-viewed YouTube video in the first 24 hours of release, and are the most-subscribed music act on the platform",
+            "correctResponse": "Blackpink"
+          }
+        ]
+      },
+      {
+        "category": "BOY BANDS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "Donald Faison made his legend with an improvised dance to \"Posion\" by Bell Biv DeVoe, formed from former members of this Bobby Brown-led group",
+            "correctResponse": "New Edition"
+          },
+          {
+            "value": 400,
+            "text": "Lou Perlman got the boot after years of fleecing this boy band once Brian Littrel's attorney uncovered how he added himself as a sixth member. They didn't want it that way",
+            "correctResponse": "Backstreet Boys"
+          },
+          {
+            "value": 600,
+            "text": "The King of Pop got his start in this boy band with his brothers",
+            "correctResponse": "Jackson 5"
+          },
+          {
+            "value": 800,
+            "text": "DNCE's lead singer got his start as one of the members of this tween-aged family band",
+            "correctResponse": "Jonas Brothers"
+          },
+          {
+            "value": 1000,
+            "text": "Mark Walhberg left this band his brother continued on with after only a few months to launch his solo career",
+            "correctResponse": "New Kids on the Block"
+          }
+        ]
+      },
+      {
+        "category": "BEAUTY BRANDS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "This fashion house named for its alliterative creator entered the cosmetics industry in 1924, three years after the successful launch of their signature perfume",
+            "correctResponse": "Chanel"
+          },
+          {
+            "value": 400,
+            "text": "This acronymic brand traces its origins to the modeling industry, as their products were designed to appear well on camera, and their Viva Glam lipstick has become a mainstay in the drag world",
+            "correctResponse": "MAC"
+          },
+          {
+            "value": 600,
+            "text": "This brand made Rhianna the new youngest self-made woman billionaire",
+            "correctResponse": "Fenty Beauty"
+          },
+          {
+            "value": 800,
+            "text": "150 years ago, this Japanese brand started by selling toothpaste. Today they are 4th largest cosmetics company in the world",
+            "correctResponse": "Shiseido"
+          },
+          {
+            "value": 1000, 
+            "text": "This Culver City brand takes it name from the TV studio where Dean and Davis Factor founded it",
+            "correctResponse": "Smashbox"
+          }
+        ]
+      },
+      {
+        "category": "ALLITERATION",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "This New York City Monument is famously sold off to suckers time and time again",
+            "correctResponse": "Brooklyn Bridge"
+          },
+          {
+            "value": 400,
+            "text": "This comedian and star of \"Everybody Loves Raymond\" is currently holding a Las Vegas residency",
+            "correctResponse": "Ray Romano"
+          },
+          {
+            "value": 600,
+            "text": "Many a honeymoon has been taken in this doubletalk French Polynesian Island",
+            "correctResponse": "Bora Bora"
+          },
+          {
+            "value": 800,
+            "text": "\"Superman\" wouldn't have needed \"100 years\" to know this band's name came from a phrase in ice hockey",
+            "correctResponse": "Five For Fighting"
+          },
+          {
+            "value": 1000,
+            "text": "This Arizona-based pizza chain cornered the market on alliteration after acquiring crosstown rival Pistol Pete Pizza, with or without pickled peppers",
+            "correctResponse": "Peter Piper Pizza"
+          }
+        ]
+      },
+      {
+        "category": "THE MATT GALA",
+        "comments": "I will name the TV show or movie, you name the starring Matt or Matthew",
+        "clues": [
+          {
+            "value": 200,
+            "text": "Dallas Buyers' Club",
+            "correctResponse": "Matthew McConaughey"
+          },
+          {
+            "value": 400,
+            "text": "Ferris Bueller's Day Off",
+            "correctResponse": "Matthew Broderick"
+          },
+          {
+            "value": 600,
+            "text": "Glee",
+            "correctResponse": "Matthew Morrison"
+          },
+          {
+            "value": 800,
+            "text": "Episodes",
+            "correctResponse": "Matt LeBlanc"
+          },
+          {
+            "value": 1000,
+            "text": "We Bought a Zoo",
+    	    "correctResponse": "Matt Damon"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category": "DEMONYMS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "This term for a person from the contested region of Kosovo comes from Albanian",
+            "correctResponse": "Kosovar"
+          },
+          {
+            "value": 800,
+            "text": "People from Crete use this term that is quite unfortunate in english",
+            "correctResponse": "Cretan"
+          },
+          {
+            "value": 1200,
+            "text": "New Zealanders are designated by this flightless bird",
+            "correctResponse": "Kiwis"
+          },
+          {
+            "value": 1600,
+            "text": "This term describes people who came from the same city as the Beatles",
+            "correctResponse": "Liverpudlian"
+          },
+          {
+            "value": 2000,
+            "text": "Formula 1 driver Charles LeClerc is described with this word for people from the principality known for hosting the sport's most prestigious race",
+            "correctResponse": "Monegasque"
+          }
+        ]
+      },
+      {
+        "category": "THE SUPREME COURT",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "He successfully argued the side of the plaintiffs in Brown vs. Board before joining the court as the first black justice",
+            "correctResponse": "Thurgood Marshall"
+          },
+          {
+            "value": 800,
+            "text": "Cases the Supreme Court wishes to hear are designated by this order",
+            "correctResponse": "Writ of Certiorari"
+          },
+          {
+            "value": 1200,
+            "dailyDouble": true, 
+            "text": "This legendary jurist coined the phrase \"Clear and present danger\"",
+            "correctResponse": "Oliver Wendell Holmes Jr"
+          },
+          {
+            "value": 1600,
+            "text": "George W. Bush surprised many in his own party when he nominated this White House Counsel to the Supreme Court. Her nomination never made it to Congress, though",
+            "correctResponse": "Harriet Miers"
+          },
+          {
+            "value": 2000,
+            "text": "He successfully argued the side of the plaintiff in Gideon vs. Wainwright before joining the court and ultimately resigning due to the scandals uncovered during his subsequent nomination for Chief Justice",
+            "correctResponse": "Abe Fortas"
+          }
+        ]
+      },
+      {
+        "category": "NORTH KOREA",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "The modern North Korean state was organized by this man, ultimately the first in a dynasty of leaders",
+            "correctResponse": "Kim Il-Sung"
+          },
+          {
+            "value": 800,
+            "dailyDouble": true,
+            "text": "This river marks the northern border of the state, and was an important boundary during the Korean War",
+            "correctResponse": "Yalu"
+          },
+          {
+            "value": 1200,
+            "text": "The official state ideology of self-reliance and independence is identified under this name",
+            "correctResponse": "Juche"
+          },
+          {
+            "value": 1600,
+            "text": "By far the tallest building in North Korea, and long unfinished, the pyramid-shaped 105 Building in Pyongyang was intended to serve this purpose",
+            "correctResponse": "Hotel"
+          },
+          {
+            "value": 2000,
+            "text": "North and South Korea jointly operated an industrial complex in this city until a series of provocations in 2016 caused both countries to pull out",
+            "correctResponse": "Kaesong"
+          }
+        ]
+      },
+      {
+        "category": "GAMBLING",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "Card counting at this table game is not cheating, but the house can refuse to let you play",
+            "correctResponse": "Blackjack"
+          },
+          {
+            "value": 800,
+            "text": "This game was a favorite of James Bond, but the mini version played in casinos today is free of strategy",
+            "correctResponse": "Baccarat"
+          },
+          {
+            "value": 1200,
+            "text": "Casino's charge a \"rake\" against the pots in this game that is the only one not played against the house",
+            "correctResponse": "Poker"
+          },
+          {
+            "value": 1600,
+            "text": "Although this line generally yields slightly better odds at the craps table, betting on it is viewed as antisocial, unless you are Gandalf",
+            "correctResponse": "Don't Pass"
+          },
+          {
+            "value": 2000,
+            "text": "This game is traditionally played in China with dominoes, but casinos hybridized it with poker so they could use cards",
+            "correctResponse": "Pai Gow"
+          }
+        ]
+      },
+      {
+        "category": "AIRPORT CODES",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "ORD: This Chicago code comes from the airport's original name of Orchard Park",
+            "correctResponse": "O'Hare"
+          },
+          {
+            "value": 800,
+            "text": "LHR: One of five major London airports",
+            "correctResponse": "Heathrow"
+          },
+          {
+            "value": 1200,
+            "text": "YVR: A destination for the 2010 Winter Olympics",
+            "correctResponse": "Vancouver"
+          },
+          {
+            "value": 1600,
+            "text": "PEK: This code is pulled from the no-longer used latinization of this city",
+            "correctResponse": "Beijing"
+          },
+          {
+            "value": 2000,
+            "text": "KIX: Maybe not just for kids, but it is the place to go to see the Wizarding World of Harry Potter world in this third-most-populous Japanese City",
+            "correctResponse": "Kansai International/Osaka"
+          }
+        ]
+      },
+      {
+        "category": "OPERA BEFORE AND POP CULTURE AFTER",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "This opera about a Swiss folk hero who covers a 1987 Taylor Dayne hit single",
+            "correctResponse": "William Tell It To My Heart"
+          },
+          {
+            "value": 800,
+            "text": "A Czech opera suggesting an exchange of betrothals involving a re-animated monster",
+            "correctResponse": "The Bartered Bride of Frankenstein"
+          },
+          {
+            "value": 1200,
+            "text": "This Franz Lehar opera about a cheerful surviving spouse who lent her name to the submarine captained by Harrison Ford",
+            "correctResponse": "The Merry Widow Maker"
+          },
+          {
+            "value": 1600,
+            "text": "Mozart's famous opera about a libertine star of \"Boiler Room\" and \"Saving Private Ryan\"",
+            "correctResponse": "Don Giovanni Ribisi"
+          },
+          {
+            "value": 2000,
+            "text": "Bela Bartok composed this one act opera about the home an azure-haired duke shared with He-Man",
+            "correctResponse": "Bluebeard's Castle Grayskull"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round": {
+    "category": "THE NEW PIRATES OF SILICON VALLEY",
+    "comments": "",
+    "clue": {
+      "text": "This app was originally focused on limousine rental until it stole the idea of ride sharing from an eventual competitor",
+      "correctResponse": "Uber"
+    }
+  }
+}

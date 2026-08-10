@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan East 23 Semi 1",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "SUPERB TORONTONIANS",
+        "comments" : "Name this superb toronto resident, like Mattea Roach or Ray Lalonde",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Called \"the Godfather of Grunge\" for his distorted guitar playing, this former member of Buffalo Springfield briefly joined up with Crosby, stills, and Nash at the end of the 60s",
+            "correctResponse" : "Neil Young"
+          },
+          {
+            "value" : 400,
+            "text" : "Born in China, this Torontonian and Jeopardy! champ spent nine months as an accountant, did some work as a stock photo model, and exploded into superstardom when he delivered a great phase 4 Marvel film",
+            "correctResponse" : "Simu Liu"
+          },
+          {
+            "value" : 600,
+            "text" : "Once called \"the softest guy in hip hop,\" this raptors fan clearly knew God's Plan - this mogul is now responsible for 5% of Toronto tourism revenue",
+            "correctResponse" : "Drake"
+          },
+          {
+            "value" : 800,
+            "text" : "This cover singer became the first canadian woman to top the US charts with her cover of \"snowbird;\" she kept bringing something special to every song she sang for five more decades",
+            "correctResponse" : "Anne Murray"
+          },
+          {
+            "value" : 1000,
+            "text" : "In 1964, this former magician and professional skeptic offered a $1 Million prize to anyone who can show actual supernatural ability; It remained uncollected until its cancellation in 2015",
+            "correctResponse" : "James Randi"
+          }
+        ]
+      },
+      {
+        "category" : "CRAZY SPORTS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The average length of a game in this sport had reached 3 hours and 19 minutes until 2022 rule changes; the amount of actual action averages just under 10 minutes",
+            "correctResponse" : "Baseball"
+          },
+          {
+            "value" : 400,
+            "text" : "This bruising sport did not allow overtime play until 1983 because of canadian wartime railroad restrictions",
+            "correctResponse" : "Hockey"
+          },
+          {
+            "value" : 600,
+            "text" : "This famously precise pitcher saw 20,421 hitters, and only 310 got to a 3-0 count, with over half of those coming during intentional walks",
+            "correctResponse" : "Greg maddux"
+          },
+          {
+            "value" : 800,
+            "text" : "This QB and public assistance grifter's first pass completion was to himself for a loss of seven yards",
+            "correctResponse" : "Brett Favre"
+          },
+          {
+            "value" : 1000,
+            "dailyDouble" : true,
+            "text" : "In his 1987 rookie year, Muggsy Bogues, the NBA's shortest player, was 28 inches shorter than this teammate, the league’s tallest player",
+            "correctResponse" : "Manute Bol"
+          }
+        ]
+      },
+      {
+        "category" : "SOUTH AMERICAN GEOGRAPHY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The southernmost point on the continent is this musical cape ",
+            "correctResponse" : "Cape Horn"
+          },
+          {
+            "value" : 400,
+            "text" : "This precious river separating Argentina and Brazil could also be considered an estuary, gulf, or a marginal sea",
+            "correctResponse" : "Rio de la plata"
+          },
+          {
+            "value" : 600,
+            "text" : "At 12,507 feet, it is the world's highest navigable lake",
+            "correctResponse" : "Titicaca"
+          },
+          {
+            "value" : 800,
+            "text" : "This Venezuelan \"lake,\" actually a lagoon, includes an area with the world's highest density of lightning where the Catatumbo river empties into it",
+            "correctResponse" : "Maracaibo"
+          },
+          {
+            "value" : 1000,
+            "text" : "The peak of this volcano, the highest mountain in ecuador, is also the point on earth the farthest from its center, thanks to an assist from the equatorial bulge",
+            "correctResponse" : "Chimborazo"
+          }
+        ]
+      },
+      {
+        "category" : "PROFITABLE PROPHETS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This Houston-based prosperity gospel televangelist garnered a lot of criticism for not opening his 16,000-seat church to refugees from Hurricane Harvey",
+            "correctResponse" : "Joel Osteen"
+          },
+          {
+            "value" : 400,
+            "text" : "This couple, whose PTL charity's collapse also dented cosmetics sales, gained infamy from the wife's messy tears",
+            "correctResponse" : "Jim and Tammy Faye Bakker"
+          },
+          {
+            "value" : 600,
+            "text" : "This minister and mogul got into the university business, with regent university; into politics, running for the republican nomination in 1988; and into TV on his long-running \"the 700 club\"",
+            "correctResponse" : "Pat Robertson"
+          },
+          {
+            "value" : 800,
+            "text" : "Though not a minister, this dickheaded tennesseean financial advisor's evangelical beliefs feature prominently in his debt-hating advice to all",
+            "correctResponse" : "Dave Ramsey"
+          },
+          {
+            "value" : 1000,
+            "text" : "This Fort Worth televangelist counsels parishioners that their donations to God (through him) will return a hundredfold; He earned national mockery for \"blowing the wind of god” at covid-19",
+            "correctResponse" : "Kenneth Copeland"
+          }
+        ]
+      },
+      {
+        "category" : "FIGHT",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This war, named for a greek peninsula, was largely a stalemate until the persians intervened on behalf of the Spartans",
+            "correctResponse" : "Peloponnesian war"
+          },
+          {
+            "value" : 400,
+            "text" : "This bloody conflict resulted when the Missouri compromise was dropped to allow new states to vote for themselves if they wanted to be free, resulting in a huge inrush of violent partisan settlers",
+            "correctResponse" : "Bleeding Kansas"
+          },
+          {
+            "value" : 600,
+            "text" : "Many americans wanted to extend the national border up to this latittude by any means, either negotiation \"or fight\"",
+            "correctResponse" : "Fifty four forty"
+          },
+          {
+            "value" : 800,
+            "text" : "These two hated british political rivals traded the prime ministership back and forth between their parties for 30 years in the 19th century",
+            "correctResponse" : "Gladstone and Disraeli"
+          },
+          {
+            "value" : 1000,
+            "text" : "The Second triumvirate ended much like the first, with one member, this man, consolidating power under himself after eliminating his fellow members",
+            "correctResponse" : "Octavian/Augustus Caesar"
+          }
+        ]
+      },
+      {
+        "category" : "MOMENTS IN NONMONOGAMY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This actress revealed her \"entanglement\" with 21-years-younger August Alsina in a \"\"red table talk,\"\" for which he claimed he had  her husband's blessing",
+            "correctResponse" : "Jada PInkett-Smith"
+          },
+          {
+            "value" : 400,
+            "text" : "Paparazzi following the production of \"Thor: Love and Thunder\" caught Rita Ora sharing a kiss with her fiance, this director of the movie, and star Tessa Thompson",
+            "correctResponse" : "Taika Waititi"
+          },
+          {
+            "value" : 600,
+            "text" : "Possibly setting the record for most double letters in a couple, Dashiell Hammett and this writer of \"The Children's Hour\" had a decades-long publicly open relationship ",
+            "correctResponse" : "Lillian Hellman"
+          },
+          {
+            "value" : 800,
+            "text" : "This actress, who played Cece jones on the disney channel's \"shake it up\" alongside Zendaya has found her way into several other franchises, and a triad with Mod Sun and Tana Mongeau",
+            "correctResponse" : "Bella Thorne"
+          },
+          {
+            "value" : 1000,
+            "text" : "In one of baseball's most bizarre transactions, Yankees pitchers Mike Kekich and Fritz Peterson announced this trade in 1973",
+            "correctResponse" : "families"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "SUPERB FRANCONIANS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Born in Buttenheim, Germany, this business mogul started a venerable eponymous fashion brand in the San Francisco gold rush",
+            "correctResponse" : "Levi Strauss"
+          },
+          {
+            "value" : 800,
+            "text" : "Always remember this doctor who identified a specific degenerative brain disease that afflicts millions",
+            "correctResponse" : "Alzheimer"
+          },
+          {
+            "value" : 1200,
+            "text" : "This problematic composer worked from his unique opera house Bayreuth",
+            "correctResponse" : "Richard wagner"
+          },
+          {
+            "value" : 1600,
+            "text" : "Say a little prayer for this renaissance artist known for his paintings, drawings, and woodcut prints",
+            "correctResponse" : "Durer"
+          },
+          {
+            "value" : 2000,
+            "text" : "Tom Cruise played Claus von Stauffenberg, who was executed after a failed assassination attempt on this man",
+            "correctResponse" : "Adolf Hitler"
+          }
+        ]
+      },
+      {
+        "category" : "CRAZY TORTS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The Georgia Supreme Court ruled that this social media app's \"speed filter\" was potentially liable for inducing an influencer to cause a wreck at 107 mph",
+            "correctResponse" : "Snapchat"
+          },
+          {
+            "value" : 800,
+            "text" : "In the largest ever product liability suit, Grinshaw v. Ford saw the jury award the plaintiffs an explosive $128 million for the defective design of this car",
+            "correctResponse" : "Pinto"
+          },
+          {
+            "value" : 1200,
+            "text" : "Philip White sued T.W. Garner Foods for deceptive marketing as this cowboy-adorned hot sauce was made in North Carolina",
+            "correctResponse" : "Texas Pete"
+          },
+          {
+            "value" : 1600,
+            "text" : "Brent Scruggs launched a class-action suit against Mars, Inc for deceptive labeling because these \"curiously strong\" cinnamon mints are artificially flavored",
+            "correctResponse" : "Altoids"
+          },
+          {
+            "value" : 2000,
+            "text" : "Justin Chimenti sued this chain known for its square patties and thick milkshakes for $50M because their actual burgers don't resemble their ads",
+            "correctResponse" : "Wendy's"
+          }
+        ]
+      },
+      {
+        "category" : "SOUTH AFRICAN GEOGRAPHY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Cape Town is named for this optimistic cape at the end of the cape peninsula",
+            "correctResponse" : "Cape of Good Hope"
+          },
+          {
+            "value" : 800,
+            "text" : "This colorful flow is the longest river in South Africa and makes up the border with Namibia",
+            "correctResponse" : "Orange"
+          },
+          {
+            "value" : 1200,
+            "text" : "This enclave nation in South Africa is the only nation in the world with no point below 1000 meters elevation ",
+            "correctResponse" : "Lesotho"
+          },
+          {
+            "value" : 1600,
+            "text" : "Once known as Port Natal, this east coast city is the second-largest in South Africa",
+            "correctResponse" : "Durban"
+          },
+          {
+            "value" : 2000,
+            "text" : "South Africa controls two uninhabited sub-antarctic islands, which share a name with this Canadian province",
+            "correctResponse" : "Prince Edward Island"
+          }
+        ]
+      },
+      {
+        "category" : "PROPHETABLE PROFITS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This business magnate and flying enthusiast acquired just over $2M in shares of TWA in 1939; he later sold his assets in the airline for $549 million",
+            "correctResponse" : "Hughes"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "The patriarch of this american dynasty made the most of the lack of insider trading laws and got on the short side of a lot major stocks in 1929 and created the wealth that funded their political ambitions for generations to come",
+            "correctResponse" : "Kennedy family"
+          },
+          {
+            "value" : 1200,
+            "text" : "When Benchmark venture capital invested in 30% of this online auction house in 1997, it was valued at $20 million; by the next year the value had grown to $21...billion",
+            "correctResponse" : "ebay"
+          },
+          {
+            "value" : 1600,
+            "text" : "This company has spent nearly a century in the playing card business, but saw a future in interactive battles between simians and tradesmen, growing the company into a global giant",
+            "correctResponse" : "Nintendo"
+          },
+          {
+            "value" : 2000,
+            "text" : "Druggist Asa Candler bought the recipe for this refreshment from John Pemberton in 1888 for $238.98; In 1892, it was the basis for this new company ",
+            "correctResponse" : "Coca cola"
+          }
+        ]
+      },
+      {
+        "category" : "FLIGHT",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The conical shockwave around something traveling at supersonic speed is experienced by humans as this sound",
+            "correctResponse" : "sonic boom"
+          },
+          {
+            "value" : 800,
+            "text" : "Of the four basic forces that operate on an aircraft, this pushes it up higher in the air",
+            "correctResponse" : "lift"
+          },
+          {
+            "value" : 1200,
+            "text" : "This is the term for the part of a landing when the plane has aligned itself to the runway and is descending to land",
+            "correctResponse" : "approach"
+          },
+          {
+            "value" : 1600,
+            "text" : "This postal term describes the full range of conditions in which a plane can safely operate",
+            "correctResponse" : "envelope"
+          },
+          {
+            "value" : 2000,
+            "text" : "See if you can catch this term for the rotation axis where a plane raises and lowers its nose",
+            "correctResponse" : "pitch"
+          }
+        ]
+      },
+      {
+        "category" : "MOMENTS IN NONMAHOGANY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The Ticonderoga pencil is traditionally encased in this wood that gives a distinctive sweetness to the smell of its shavings",
+            "correctResponse" : "cedar"
+          },
+          {
+            "value" : 800,
+            "text" : "Baseball bats are traditionally made from this tree native to the adirondacks, though bats made from maple have grown in popularity lately",
+            "correctResponse" : "ash"
+          },
+          {
+            "value" : 1200,
+            "text" : "This ultralightweight wood has been a favorite of model airplanes for many years",
+            "correctResponse" : "balsa"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "These trees featured on the south carolina flag were an early favorite in building fortifications as cannonballs would bounce off of them",
+            "correctResponse" : "palmetto"
+          },
+          {
+            "value" : 2000,
+            "text" : "This dense wood known for its spicy smoke flavor is also used in the manufacture of railroad ties",
+            "correctResponse" : "Mesquite"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "BUSINESS",
+    "comments" : "",
+    "clue" : {
+      "text" : "It's the world's #1 restaurant chain by revenue, less than 20% of which comes from food",
+      "correctResponse" : "Starbucks"
+    }
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "title": "LearningMan Semifinal 1",
+  "author": "Alex Jacob",
+  "comments": "",
+  "rounds": [
+    [
+      {
+        "category": "TV TITLE CHARACTERS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "LINDSAY WAGNER AS TENNIS PRO JAIME SOMMERS, WHO IS NEARLY KILLED IN A SKYDIVING ACCIDENT; LUCKILY THEY CAN REBUILD HER",
+            "correctResponse": "THE BIONIC WOMAN"
+          },
+          {
+            "value": 400,
+            "text": "DON JOHNSON AS A SPECIAL INVESTIGATOR FOR THE SAN FRANCISCO POLICE DEPARTMENT — DON'T LET HIS LAST NAME FOOL YOU, YOU CAN'T WALK ALL OVER THIS GUY",
+            "correctResponse": "NASH BRIDGES"
+          },
+          {
+            "value": 600,
+            "text": "VALERIE HARPER AS THIS WOMAN WHO OFTEN COMMUNICATED WITH UNSEEN CARLTON THE DOORMAN (AND OCCASIONALLY WITH OLD FRIEND MARY RICHARDS)",
+            "correctResponse": "RHODA"
+          },
+          {
+            "value": 800,
+            "text": "CRAIG STEVENS AS THIS COOL PRIVATE EYE (YOU MIGHT BE MORE FAMILIAR WITH HIS GRAMMY-WINNING THEME SONG)",
+            "correctResponse": "PETER GUNN"
+          },
+          {
+            "value": 1000,
+            "text": "VINCE EDWARDS AS THIS HUNKY, HOTHEADED YOUNG DOCTOR WHO MIGHT BE A FAVORITE OF THE AFFLECK BROTHERS",
+            "correctResponse": "BEN CASEY"
+          }
+        ]
+      },
+      {
+        "category": "FROM THE CZECH",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "WEIRD AL YANKOVIC KNOWS THAT THIS WORD FOUND IN TITLES AFTER \"THUNDER AND LIGHTNING\" AND \"BEER BARREL\" COMES FROM THE CZECH FOR \"HALF\", AS IN \"HALF-STEP\"",
+            "correctResponse": "POLKA"
+          },
+          {
+            "value": 400,
+            "text": "YOU CAN THANK CZECH PLAYWRIGHT KAREL CAPEK FOR THIS WORD FOR AN AUTOMATON, WHICH HE COINED FROM THE CZECH WORD FOR FORCED LABOR",
+            "correctResponse": "ROBOT"
+          },
+          {
+            "value": 600,
+            "text": "THIS IS THE NAME OF A LIGHT LAGER AND A TALL, SLENDER GLASS IT MIGHT GO IN, DERIVED FROM THE NAME OF A CZECH CITY",
+            "correctResponse": "PILSNER"
+          },
+          {
+            "value": 800,
+            "text": "THIS SHORT-BARRELED, HIGH FIRING CANNON USED TO REACH A TARGET BEHIND COVER IS FROM THE CZECH FOR \"SLINGSHOT\"",
+            "correctResponse": "HOWITZER"
+          },
+          {
+            "value": 1000,
+            "text": "THIS DEADLY CZECH-MADE PLASTIC EXPLOSIVE IS NAMED AFTER SEMTIN, A SUBURB OF WHERE THE MIXTURE WAS FIRST MANUFACTURED IN 1964",
+            "correctResponse": "SEMTEX"
+          }
+        ]
+      },
+      {
+        "category": "YEAR-END #1 MOVIES (DOMESTIC BOX OFFICE)",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "THE PRESENCE OF THREE DIFFERENT SPIDER-MEN PROBABLY HELPED THE SPIDER-MAN MOVIE WITH THIS SUBTITLE BECOME THE #1 MOVIE OF 2021",
+            "correctResponse": "NO WAY HOME"
+          },
+          {
+            "value": 400,
+            "text": "IN 1988, THE #1 MOVIE WAS \"RAIN MAN\" — IN THE FOLLOWING YEAR, IT WAS THIS \"MAN\" IN BLACK",
+            "correctResponse": "BATMAN"
+          },
+          {
+            "value": 600,
+            "text": "MATT DAMON PLAYED THE TITLE SOLDIER IN THIS CRITICALLY ACCLAIMED #1 MOVIE OF 1998",
+            "correctResponse": "SAVING PRIVATE RYAN"
+          },
+          {
+            "value": 800,
+            "text": "DUE TO CHILD LABOR LAWS, THE 4 TITLE CHARACTERS OF THIS 1987 HIT — LEONARD NIMOY'S DIRECTORIAL FOLLOW-UP TO \"STAR TREK IV\" — WERE PLAYED BY 5 ACTORS",
+            "correctResponse": "THREE MEN AND A BABY"
+          },
+          {
+            "value": 1000,
+            "text": "PROBABLY ONE OF THE MORE FORGOTTEN OSCAR BEST PICTURE WINNERS, THIS FILM IN WHICH BING CROSBY SINGS \"TOO-RA-LOO-RA-LOO-RAL\" AND \"SWINGING ON A STAR\" WAS THE #1 MOVIE OF 1944 — HEY, IF YOU'RE HEADED THE SAME DIRECTION AS ME, LET'S SEE IT TOGETHER",
+            "correctResponse": "GOING MY WAY"
+          }
+        ]
+      },
+      {
+        "category": "\"GOLDEN\" STATE",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "THIS SHIP ORIGINALLY KNOWN AS THE PELICAN WAS RENAMED BY SIR FRANCIS DRAKE DURING HIS TRIP AROUND THE WORLD",
+            "correctResponse": "GOLDEN HIND"
+          },
+          {
+            "value": 400,
+            "text": "GENGHIS KHAN'S GRANDSON BATU FOUNDED THE MONGOL ARMY KNOWN BY THIS NICKNAME",
+            "correctResponse": "GOLDEN HORDE"
+          },
+          {
+            "value": 600,
+            "dailyDouble": true,
+            "text": "THIS WAS CEREMONIALLY DRIVEN BY LELAND STANFORD ON MAY 10, 1869",
+            "correctResponse": "GOLDEN SPIKE"
+          },
+          {
+            "value": 800,
+            "text": "THIS AWARD ESTABLISHED BY SENATOR WILLIAM PROXMIRE HAS BEEN GIVEN TO PUBLIC OFFICIALS IN THE U.S. WHO ARE DEEMED TO HAVE WASTED PUBLIC MONEY",
+            "correctResponse": "GOLDEN FLEECE AWARD"
+          },
+          {
+            "value": 1000, 
+            "text": "THE TITLE OF THIS 12-VOLUME COMPARATIVE STUDY OF MYTHOLOGY AND RELIGION BY SIR JAMES FRAZER IS TAKEN FROM AN INCIDENT IN THE AENEID",
+            "correctResponse": "THE GOLDEN BOUGH"
+          }
+        ]
+      },
+      {
+        "category": "WARRIORS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "FRENCH PRESIDENT FRANCOIS MITTERAND REPORTEDLY AUTHORIZED THE BOMBING OF THE RAINBOW WARRIOR, A SHIP BELONGING TO THIS ENVIRONMENTAL ORGANIZATION",
+            "correctResponse": "GREENPEACE"
+          },
+          {
+            "value": 400,
+            "text": "\"THE WARRIOR\" WAS A BIG HIT FOR SCANDAL AND FRONTWOMAN PATTY SMYTH, WHO'S NOW MARRIED TO THIS FORMER SPORTS STAR AND CURRENT COMMENTATOR",
+            "correctResponse": "JOHN MCENROE"
+          },
+          {
+            "value": 600,
+            "text": "THE ETHICAL CODE BY WHICH SAMURAI LIVED, THIS WORD LITERALLY MEANS \"THE WAY OF THE WARRIOR\"",
+            "correctResponse": "BUSHIDO"
+          },
+          {
+            "value": 800,
+            "text": "THIS BIBLICAL WARRIOR AND HIS FATHER SAUL WERE THE MIGHTY REFERRED TO IN HIS FRIEND DAVID'S QUOTE \"HOW THE MIGHTY HAVE FALLEN\"",
+            "correctResponse": "JONATHAN"
+          },
+          {
+            "value": 1000,
+            "text": "MINISTER OF DEFENSE UNDER PRESIDENT HO CHI MINH, THIS WILY WARRIOR LED THE VIET MINH TO VICTORY OVER THE FRENCH AT DIEN BIEN PHU",
+            "correctResponse": "VO NGUYEN GIAP"
+          }
+        ]
+      },
+      {
+        "category": "SPORTS GRAB BAG",
+        "comments": "",
+        "clues": [
+          {
+            "value": 200,
+            "text": "CHUCK NOLL COACHED THIS TEAM IN YELLOW IN BLACK TO VICTORY IN SUPER BOWLS IX, X, XIII, AND XIV",
+            "correctResponse": "PITTSBURGH STEELERS"
+          },
+          {
+            "value": 400,
+            "text": "THE MOST VIOLENT WATER POLO MATCH ON RECORD TOOK PLACE BETWEEN THE USSR & THIS COUNTRY AT THE 1956 OLYMPICS, WITH THE REVOLUTION IN THAT COUNTRY THAT HAD JUST BEEN CRUSHED BY THE SOVIETS PROBABLY HAVING SOMETHING TO DO WITH IT",
+            "correctResponse": "HUNGARY"
+          },
+          {
+            "value": 600,
+            "text": "THIS TENNIS STAR WHOSE LAST NAME IS A U.S. STATE CAPITAL BECAME THE YOUNGEST WINNER OF THE U.S. OPEN AT AGE 16 — A YEAR LATER, SHE GOT TO NO. 1 IN THE WORLD",
+            "correctResponse": "TRACY AUSTIN"
+          },
+          {
+            "value": 800,
+            "text": "IT'S THE \"SPACEY\" NAME OF THE NY-BASED SOCCER TEAM IN THE NORTH AMERICAN SOCCER LEAGUE (NASL) THAT THE GREAT PELÉ PLAYED FOR FROM 1975-1977",
+            "correctResponse": "COSMOS"
+          },
+          {
+            "value": 1000,
+            "text": "THIS 1970S DETROIT TIGERS PITCHER KNOWN AS \"THE BIRD\" BECAME A NATIONAL SENSATION IN 1976 DUE TO HIS ERRATIC BEHAVIOR AND AMAZING ROOKIE SEASON",
+	        "correctResponse": "MARK FIDRYCH"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category": "SOUNDS LIKE A HOTEL",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "THE 2006 TONY WINNER FOR BEST MUSICAL WAS BASED ON THE LIVES OF THE MEMBERS OF THIS HALL OF FAME BAND FROM NEWARK",
+            "correctResponse": "THE FOUR SEASONS"
+          },
+          {
+            "value": 800,
+            "text": "IRVING BERLIN WROTE 12 SONGS FOR THIS BING CROSBY FILM, INCLUDING THE UBIQUITOUS \"WHITE CHRISTMAS\"",
+            "correctResponse": "HOLIDAY INN"
+          },
+          {
+            "value": 1200,
+            "text": "ON DECEMBER 20, 1954, WE SAID \"GOODBYE\" TO THIS ENGLISH AUTHOR WHO WROTE ABOUT \"SHANGRI-LA\" IN HIS BOOK \"LOST HORIZON\"",
+            "correctResponse": "HILTON"
+          },
+          {
+            "value": 1800,
+            "text": "LAST NAME OF AMERICAN SINGER-SONGWRITER JOHN WHOSE HIT \"HAVE A LITTLE FAITH IN ME\" HAS BEEN COVERED BY ARTISTS FROM JOE COCKER TO MANDY MOORE",
+            "correctResponse": "HIATT"
+          },
+          {
+            "value": 2000,
+            "text": "LAST NAME OF AUTHOR JOHN WHO WROTE THE 1951 POST-APOCALYPTIC NOVEL \"THE DAY OF THE TRIFFIDS\"",
+            "correctResponse": "WYNDHAM"
+          }
+        ]
+      },
+      {
+        "category": "SOUNDS LIKE A JEOPARDY! CATEGORY",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "THIS WORD CAN REFER TO A MIXTURE OF DRIED, NATURALLY FRAGRANT PLANT MATERIAL",
+            "correctResponse": "POTPOURRI"
+          },
+          {
+            "value": 800,
+            "text": "THIS MATHEMATICAL TREATISE ON GEOMETRY AND NUMBER THEORY IS PERHAPS THE BEST KNOWN WORK OF EUCLID",
+            "correctResponse": "ELEMENTS"
+          },
+          {
+            "value": 1200,
+            "dailyDouble": true,			
+            "text": "THESE FRENCH-NAMED BRIEFCASES, USUALLY MADE OF LEATHER, OPEN INTO TWO EQUAL PARTS",
+            "correctResponse": "PORTMANTEAUS"
+          },
+          {
+            "value": 1600,
+            "text": "THIS INDIE ROCK BAND IS RESPONSIBLE FOR THE 2013 EARWORM \"BEST DAY OF MY LIFE\"",
+            "correctResponse": "AMERICAN AUTHORS"
+          },
+          {
+            "value": 2000,
+            "text": "THIS INDIE POP DUO IS RESPONSIBLE FOR THE 2011 EARWORM \"SAFE AND SOUND\"",
+            "correctResponse": "CAPITAL CITIES"
+          }
+        ]
+      },
+      {
+        "category": "\“SOUTHERN\” COMFORT",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "IT'S WHERE HURRICANES AND TROPICAL STORMS SPIN CLOCKWISE DUE TO THE CORIOLIS EFFECT",
+            "correctResponse": "SOUTHERN HEMISPHERE"
+          },
+          {
+            "value": 800,
+            "text": "THIS DALLAS UNIVERSITY WITH A CHURCH AFFILIATION IS THE SITE OF GEORGE W. BUSH'S PRESIDENTIAL LIBRARY AND MUSEUM",
+            "correctResponse": "SOUTHERN METHODIST UNIV"
+          },
+          {
+            "value": 1200,
+            "text": "THIS WAS NAMED AS A RESULT OF A SURVEY BY THE INTERNATIONAL HYDROGRAPHIC ORGANIZATION — WHAT, DID YOU THINK THERE WERE ONLY 4?",
+            "correctResponse": "SOUTHERN OCEAN"
+          },
+          {
+            "value": 1800,
+            "text": "LYNYRD SKYNYRD'S \"SWEET HOME ALABAMA\" WAS WRITTEN PARTIALLY IN RESPONSE TO THIS NEIL YOUNG SONG",
+            "correctResponse": "SOUTHERN MAN"
+          },
+          {
+            "value": 2000,
+            "text": "THIS SATIRICAL WRITER WHO DIED IN 1995 RECEIVED SCREENWRITING CREDITS FOR DR. STRANGELOVE AND EASY RIDER",
+            "correctResponse": "TERRY SOUTHERN"
+          }
+        ]
+      },
+      {
+        "category": "DOUGHNUT",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "THIS ONE-LINER COMEDIAN WHO DIED OF AN OVERDOSE IN 2005: \"I BOUGHT A DOUGHNUT AND THEY GAVE ME A RECEIPT… I CAN'T IMAGINE A SCENARIO WHERE I WOULD HAVE TO PROVE THAT I BOUGHT A DOUGHNUT.\"",
+            "correctResponse": "MITCH HEDBERG"
+          },
+          {
+            "value": 800,
+            "text": "DO I DARE TO EAT ONE OF THE \"DOUGHNUT\" OR \"ELBERTA\" VARIETIES OF THIS FRUIT?",
+            "correctResponse": "PEACH"
+          },
+          {
+            "value": 1200,			
+            "text": "IF YOU BUY A DOZEN BEIGNETS IN NEW ORLEANS, THE SHOPKEEP MIGHT GIVE YOU A FREEBIE 13th, AS ONE OF THESE APPEALING ANAGRAMS OF THE WORD \"APPEALING\"",
+            "correctResponse": "LAGNIAPPE"
+          },
+          {
+            "value": 1600,
+            "dailyDouble": true,			
+            "text": "IN MATH, IF YOU REVOLVE A CIRCLE AROUND AN AXIS, THE RESULTING DOUGHNUT-SHAPED SOLID IS KNOWN AS THIS TERM THAT SOUNDS LIKE THE ZODIAC SIGN OF SOMEONE BORN ON MAY 1",
+            "correctResponse": "TORUS"
+          },
+          {
+            "value": 2000,
+            "text": "NOTORIOUS DOUGHNUT-LOVER HOMER SIMPSON MAY HAVE BEEN NAMED FOR A CHARACTER IN THIS SATIRICAL NATHANAEL WEST NOVEL SET IN 1930s HOLLYWOOD",
+            "correctResponse": "THE DAY OF THE LOCUST"
+          }
+        ]
+      },
+      {
+        "category": "DANISH",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "STARTING OUT THE CATEGORY WITH A THIS, IN A DANISH AUDIO BRAND'S LOGO, B AND O STANDS FOR THIS AND OLUFSEN",
+            "correctResponse": "BANG"
+          },
+          {
+            "value": 800,
+            "text": "FOUNDED BY A GROUP OF DANES IN 1911, THIS CITY OF SOLVANG IN THIS U.S. STATE IS KNOWN AS THE \"DANISH CAPITAL OF AMERICA\"",
+            "correctResponse": "CALIFORNIA"
+          },
+          {
+            "value": 1200,
+            "text": "IN THE 5th CENTURY, THIS GERMANIC TRIBE FOR WHOM A DANISH PENINSULA WAS NAMED CONQUERED ENGLAND, ALONG WITH THE ANGLES AND THE SAXONS",
+            "correctResponse": "JUTES"
+          },
+          {
+            "value": 1600,
+            "text": "DENOTING A FACTOR OF 10 TO THE NEGATIVE 15th POWER, THE METRIC PREFIX FEMTO- IS FROM THE DANISH FOR \"FIFTEEN\"; SIMILARLY, THIS 4-LETTER PREFIX IS FROM THE DANISH FOR \"EIGHTEEN\"",
+            "correctResponse": "ATTO-"
+          },
+          {
+            "value": 2000,
+            "text": "THE SUCCESSOR TO GEORGE BALANCHINE, THIS DANISH-BORN DANCER AND CHOREOGRAPHER HAD SOLE ARTISTIC LEADERSHIP OF THE NEW YORK CITY BALLET FROM 1990 UNTIL 2018, WHEN HE RESIGNED UNDER A CLOUD OF SEXUAL ASSAULT ALLEGATIONS",
+            "correctResponse": "PETER MARTINS"
+          }
+        ]
+      },
+      {
+        "category": "PANCAKES BISCUITS TOAST WAFFLES MUFFINS",
+        "comments": "",
+        "clues": [
+          {
+            "value": 400,
+            "text": "THE DAY BEFORE LENT, THE CHRISTIAN HOLIDAY KNOWN AS \"SHROVE\" THIS DAY OF THE WEEK IS ASSOCIATED WITH EATING PANCAKES",
+            "correctResponse": "TUESDAY"
+          },
+          {
+            "value": 800,
+            "text": "THIS COMPANY ONCE KNOWN AS THE NATIONAL BISCUIT COMPANY OPERATES THE LARGEST BAKERY IN THE WORLD, A 1.8 MILLION SQUARE FT. PLANT IN CHICAGO",
+            "correctResponse": "NABISCO"
+          },
+          {
+            "value": 1200,
+            "text": "PROSIT OR \"PROST\", FROM THE LATIN FOR \"MAY IT PROVE BENEFICIAL\", IS A WORD USED AS A TOAST IN THIS LANGUAGE",
+            "correctResponse": "GERMAN"
+          },
+          {
+            "value": 1600,
+            "text": "IN 2004, JOHN KERRY WAS THE TARGET OF ONE OF THESE \"INCENDIARY\" DEVICES THAT LISTED HIS WEBSITE AS A TOP RESULT WHEN TYPING \"WAFFLES\" INTO SEARCH ENGINES",
+            "correctResponse": "GOOGLE BOMB"
+          },
+          {
+            "value": 2000,
+            "text": "COMING OUT IN 1996, MUFFIN SPENCER-DEVLIN WAS THE FIRST OPENLY LESBIAN PLAYER IN THIS PROFESSIONAL SPORT",
+            "correctResponse": "GOLF"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round": {
+    "category": "U.S. STATE NICKNAMES",
+    "comments": "",
+    "clue": {
+      "text": "THIS U.S. STATE, THE 3rd SMALLEST IN AREA, IS THE ONLY STATE THAT STARTS WITH THE SAME 3 LETTERS AS ITS OFFICIAL STATE NICKNAME",
+      "correctResponse": "CONNECTICUT"
+    }
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 23 - Semifinal 1",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "REGIONAL BURGER CHAINS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "California gave birth to this descriptive drive-thru oriented burger chain with a very short \"official\" menu",
+            "correctResponse" : "IN-N-OUT"
+          },
+          {
+            "value" : 400,
+            "text" : "This Texas chain fights against punctuation and word spacing in their exclamatory name",
+            "correctResponse" : "Whattaburger"
+          },
+          {
+            "value" : 600,
+            "text" : "You know this super-friendly chain was started in Wisconsin by the cheese curds on the menu",
+            "correctResponse" : "Culver's"
+          },
+          {
+            "value" : 800,
+            "text" : "This midwestern slider chain and stoner destination claims to be the first fast food restaurant in America",
+            "correctResponse" : "Whitecastle"
+          },
+          {
+            "value" : 1000,
+            "text" : "This Israeli chain that focuses on premium sliders has made the news due to questionable franchising practices",
+            "correctResponse" : "Burgerim"
+          }
+        ]
+      },
+      {
+        "category" : "NEW ELEMENT NAMES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The XCOM video games hypothesized the name \"elerium-115\" for this element now named for a world capital",
+            "correctResponse" : "Moscovium"
+          },
+          {
+            "value" : 400,
+            "text" : "The discoverer of x-rays was honored by this element",
+            "correctResponse" : "Roentgoenium"
+          },
+          {
+            "value" : 600,
+            "text" : "A German university town near Frankfurt is the source of this element's name",
+            "correctResponse" : "Darmstadtium"
+          },
+          {
+            "value" : 800,
+            "text" : "This element was named for Glenn, an American scientist working in Russia",
+            "correctResponse" : "Seaborgium"
+          },
+          {
+            "value" : 1000,
+            "text" : "As of this writing in 2023, this noble gas is the only element whose namesake is still alive",
+            "correctResponse" : "Oganesson"
+          }
+        ]
+      },
+      {
+        "category" : "THE TV THEME SONG'S FIRST WORD",
+        "comments" : "From the mind of Roy Camara",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Two and a half men",
+            "correctResponse" : "Men"
+          },
+          {
+            "value" : 400,
+            "text" : "Friends",
+            "correctResponse" : "So"
+          },
+          {
+            "value" : 600,
+            "text" : "Golden Girls",
+            "correctResponse" : "Thank you"
+          },
+          {
+            "value" : 800,
+            "text" : "Cops",
+            "correctResponse" : "Bad"
+          },
+          {
+            "value" : 1000,
+            "text" : "Cheers",
+            "correctResponse" : "Makin'"
+          }
+        ]
+      },
+      {
+        "category" : "\"B\" ON THE MAP",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This middle eastern nation is an archipelago of 50 natural islands and 33 artificial islands",
+            "correctResponse" : "Bahrain"
+          },
+          {
+            "value" : 400,
+            "text" : "This capital city is known as the \"Venice of the east\" for its many canals",
+            "correctResponse" : "Bangkok"
+          },
+          {
+            "value" : 600,
+            "text" : "This regional capital also goes by its aboriginal name of Meanjin",
+            "correctResponse" : "Brisbane"
+          },
+          {
+            "value" : 800,
+            "text" : "This hometown of Maisie Williams made the news in 2020 by throwing a statue of slave trader Edward Colston into the harbor",
+            "correctResponse" : "Bristol"
+          },
+          {
+            "value" : 1000,
+            "text" : "The idea of Wakanda is partly based on the theory that the black diamonds of this C.A.R. capital were created by a meteorite impact that created the massive magnetic anomaly there",
+            "correctResponse" : "Bangui"
+          }
+        ]
+      },
+      {
+        "category" : "ALSO WEED SLANG",
+        "comments" : "thanks to mattea roach",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "A dance move popular with non-dancers when you dip your nose into the crook of your raised elbow",
+            "correctResponse" : "dab"
+          },
+          {
+            "value" : 400,
+            "text" : "a seasoning made from the leaves and stems of a fragrant plant",
+            "correctResponse" : "herb"
+          },
+          {
+            "value" : 600,
+            "text" : "This is a flexible point in the body where two bones meet",
+            "correctResponse" : "joint"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "an acclaimed english actress from the \"quiet place\" movies",
+            "correctResponse" : "Blunt"
+          },
+          {
+            "value" : 1000,
+            "text" : "a striped mustelid with a famous defense",
+            "correctResponse" : "skunk"
+          }
+        ]
+      },
+      {
+        "category" : "SPOONERISM PAIRS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "If you eat too many of these seed-shaped confections you might need this maternity fashion denim",
+            "correctResponse" : "jelly beans/belly jeans"
+          },
+          {
+            "value" : 400,
+            "text" : "This excise fee on your cerebrum that is only charged in cabooses",
+            "correctResponse" : "Brain Tax/Train backs"
+          },
+          {
+            "value" : 600,
+            "text" : "I used a duraflame instead of real firewood in my fireplace to help break up this low-lying cloud over the pond",
+            "correctResponse" : "Fake Log/Lake Fog"
+          },
+          {
+            "value" : 800,
+            "text" : "I was a total psychological mess when I was trying to put a plinth under a coffin",
+            "correctResponse" : "Basket Case/Casket base"
+          },
+          {
+            "value" : 1000,
+            "text" : "This spotted cat rudely getting on the subway is no adoring sheepherder",
+            "correctResponse" : "shoving leopard/loving shepherd"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "OCEANIC LIFE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "One of the few species feared by the great white shark are these large dolphins",
+            "correctResponse" : "Orca"
+          },
+          {
+            "value" : 800,
+            "text" : "These tiny shrimp are the nutritional basis for the world's largest megafauna",
+            "correctResponse" : "Krill"
+          },
+          {
+            "value" : 1200,
+            "text" : "Though not as long as the giant squid, this appropriately-named cousin is heavier due to its stout body",
+            "correctResponse" : "colossal squid (giant cranch squid, antarctic squid)"
+          },
+          {
+            "value" : 1600,
+            "text" : "These microscopic photosynthetic organisms fix about 40% of the world's atmospheric carbon, unlike their \"animal\" cousins",
+            "correctResponse" : "Phytoplankton"
+          },
+          {
+            "value" : 2000,
+            "text" : "The largely inedible purple variety of this sea creature has devasted the kelp forests along the pacific coasts",
+            "correctResponse" : "Sea urchin"
+          }
+        ]
+      },
+      {
+        "category" : "AIRPORTS NAMED FOR PEOPLE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Venice's airport is appropriately named for this famed merchant, explorer, and story teller",
+            "correctResponse" : "Marco Polo"
+          },
+          {
+            "value" : 800,
+            "text" : "Southwest airlines's LUV stock symbol comes from their base at Moss Love Field in this city",
+            "correctResponse" : "Dallas"
+          },
+          {
+            "value" : 1200,
+            "text" : "Good grief! How did I not know that this cartoonist had the sonoma county airport named for him?",
+            "correctResponse" : "Charles Schultz"
+          },
+          {
+            "value" : 1600,
+            "text" : "I always get jazzed landing at this airport in New Orleans",
+            "correctResponse" : "Louis Armstrong New Orleans Airport"
+          },
+          {
+            "value" : 2000,
+            "text" : "This now-closed Yorkshire airport is named for a noted arboreal thief",
+            "correctResponse" : "Robin Hood airport"
+          }
+        ]
+      },
+      {
+        "category" : "TREKKING WITH THE STARS",
+        "comments" : "From Ramon Ymalay",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "John Rhys Davies played the holodeck recreation of this famed Italian renaissance Polymath in Voyager",
+            "correctResponse" : "Leonardo da Vinci"
+          },
+          {
+            "value" : 800,
+            "text" : "Probably doing the opposite of what his gut was telling him, this Seinfeld alum played think tank genius Kurros",
+            "correctResponse" : "Jason Alexander"
+          },
+          {
+            "value" : 1200,
+            "text" : "Ken Jenkins played a cranky old Dr. Paul Stubbs in Next Generation. He played funny cranky old Dr. Bob Kelso on this sitcom",
+            "correctResponse" : "Scrubs"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This \"Big Game\" 6'9' Lakers forward played Kural, the tallest Klingon on record for Star Trek. Wayne and Garth would bow to him",
+            "correctResponse" : "James Worthy"
+          },
+          {
+            "value" : 2000,
+            "text" : "This brash \"sex and the city\" star played the much more restrained, but traitorous Vulcan Lt. Valeris in Star Trek VI: The undiscovered country.",
+            "correctResponse" : "Kim Cattrall"
+          }
+        ]
+      },
+      {
+        "category" : "\"H.P.\"",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This gifted young wizard is \"the boy who lived\"",
+            "correctResponse" : "Harry Potter"
+          },
+          {
+            "value" : 800,
+            "text" : "She played the spontaneously regenerating cheerleader at the center of \"Heroes\" before moving on to \"Nashville\"",
+            "correctResponse" : "Hayden Panettiere"
+          },
+          {
+            "value" : 1200,
+            "text" : "This fast talking, large-eared Texas businessman and independent Presidental candidate generally preferred his middle name over his first initial that fit this category",
+            "correctResponse" : "H. Ross Perot"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This French engineer, mathematican, and philosopher is known for his many theorems and a Conjecture",
+            "correctResponse" : "Henri Poincaré"
+          },
+          {
+            "value" : 2000,
+            "text" : "THis was Hotspur's given name",
+            "correctResponse" : "Harry Percy"
+          }
+        ]
+      },
+      {
+        "category" : "LOVE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This Eliot poem includes the refrain \"In the room the women come and go, talking of Michelangelo\"",
+            "correctResponse" : "Love song of J. Alfred Prufrock"
+          },
+          {
+            "value" : 800,
+            "text" : "This Toni Morrison ghost story was first published in 1987",
+            "correctResponse" : "Beloved"
+          },
+          {
+            "value" : 1200,
+            "text" : "This synth-heavy pop cover of a Neil Sedaka song was Captain and Tenille's biggest hit, and their two versions appeared on both the English and Spanish charts together",
+            "correctResponse" : "Love will keep us together"
+          },
+          {
+            "value" : 1600,
+            "text" : "Shakespeare's only play with Love in the title",
+            "correctResponse" : "Love's labour lost"
+          },
+          {
+            "value" : 2000,
+            "text" : "The bifurcation of the cast into two locations, the villa and Casa amor, is a recurring feature on this reality series",
+            "correctResponse" : "Love Island"
+          }
+        ]
+      },
+      {
+        "category" : "CRAFT",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Don't tie yourself up trying to name this craft of carefully knotting (as opposed to weaving) yarn into objects",
+            "correctResponse" : "Macramé"
+          },
+          {
+            "value" : 800,
+            "text" : "The covid shutdown saw many people take up the hobby of making this bread as yeast supplies evaporated",
+            "correctResponse" : "Sourdough"
+          },
+          {
+            "value" : 1200,
+            "text" : "You can use ordinary paraffin or beef tallow in this luminous craft",
+            "correctResponse" : "Candlemaking"
+          },
+          {
+            "value" : 1600,
+            "text" : "This Top Chef judge has branded his restaurant empire around his flagship restaurant \"Craft\"",
+            "correctResponse" : "Tom Colicchio"
+          },
+          {
+            "value" : 2000,
+            "text" : "Take a slice at naming this classic french art of carefully cutting paper to make patterns",
+            "correctResponse" : "Decoupage"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "GAME SHOW PERSONALITIES",
+    "comments" : "",
+    "clue" : {
+      "text" : "This \"Match Game\" stalwart would win five primetime emmies, including one for when they hosted SNL at the age of 80",
+      "correctResponse" : "Betty White"
+    }
+  }
+}

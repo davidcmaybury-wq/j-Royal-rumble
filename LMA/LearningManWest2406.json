@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 06",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "IN-N-OUT",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The car radio business was a good business to get into, but they got out to focus on semiconductors and mobile phones before splitting in two",
+            "correctResponse" : "Motorola"
+          },
+          {
+            "value" : 400,
+            "text" : "This Kyoto-based company was originally in the handmade trading card business but got out to focus on console gaming",
+            "correctResponse" : "Nintendo"
+          },
+          {
+            "value" : 600,
+            "text" : "HBO was a good place for this telecoms company to get into content creation, but they were delighted to get out and stop being John Oliver's \"business daddy\"",
+            "correctResponse" : "AT&T"
+          },
+          {
+            "value" : 800,
+            "text" : "This Energy company tried to get into the broadband trading business, and they got out when they wound up getting out of all businesses in 2001",
+            "correctResponse" : "Enron"
+          },
+          {
+            "value" : 1000,
+            "text" : "In 1985 the R.J. Reynolds tobacco company bought this packaged foods giant in an attempt to de-tox their own stock. In 1999 they separated as state tobacco lawsuits closed in",
+            "correctResponse" : "Nabisco"
+          }
+        ]
+      },
+      {
+        "category" : "NO DELAY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "In november of 1989, this border structure opened. Eleven months later the border it guarded was erased completely",
+            "correctResponse" : "Berlin Wall"
+          },
+          {
+            "value" : 400,
+            "text" : "These two nations signed a non-aggression pact in 1939. One week later they invaded Poland from both directions",
+            "correctResponse" : "Germany and Soviet Union"
+          },
+          {
+            "value" : 600,
+            "text" : "He found out he was going to be President at 1:20 PM on Nov. 22, 1963. One hour and 18 minutes later he took the oath of office",
+            "correctResponse" : "Lyndon Johnson"
+          },
+          {
+            "value" : 800,
+            "text" : "He won the Nobel Peace Prize nine months after becoming US President, presumably for not being his predecessor",
+            "correctResponse" : "Barack Obama"
+          },
+          {
+            "value" : 1000,
+            "text" : "This Washington, DC museum has developed a \"rapid response\" team that sets up memorial exhibitions for recently passed figures in as little as 48 hours",
+            "correctResponse" : "National portrait Gallery"
+          }
+        ]
+      },
+      {
+        "category" : "4x4",
+        "comments" : "Answers are two four letter words",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "You catch one of these when your insurance company decides to charge you more",
+            "correctResponse" : "rate hike"
+          },
+          {
+            "value" : 400,
+            "text" : "This prickly structure is the seed-bearing organ for certain evergreen trees",
+            "correctResponse" : "pine cone"
+          },
+          {
+            "value" : 600,
+            "text" : "When you have so little money that the most valuable thing you have is a handful of soil, this describes you",
+            "correctResponse" : "Dirt poor"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "The greatest Lynyrd Skynyrd song",
+            "correctResponse" : "Free Bird"
+          },
+          {
+            "value" : 1000,
+            "text" : "The lead of this series took his appearance as a Guest Host on SNL as a chance to tell its fans \"Get a life, will you people? For crying out loud it's just a TV show!\"",
+            "correctResponse" : "Star Trek"
+          }
+        ]
+      },
+      {
+        "category" : "NEAPOLITAN SHAKES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This town was rocked by earthquakes shortly before being buried by pyroclastic flows in AD 79",
+            "correctResponse" : "Pompeii"
+          },
+          {
+            "value" : 400,
+            "text" : "Southern italy is rich in deposits of this porous volcanic rock, often used as an abrasive",
+            "correctResponse" : "Pumice"
+          },
+          {
+            "value" : 600,
+            "text" : "This lawyer and author wrote many letters around the AD 79 cataclysm that serve as the primary historical record",
+            "correctResponse" : "Pliny the Younger"
+          },
+          {
+            "value" : 800,
+            "text" : "This major stratovolcano is regarded as one of the most dangerous because of the 3 million people who live nearby",
+            "correctResponse" : "Vesuvius"
+          },
+          {
+            "value" : 1000,
+            "text" : "A second town destroyed in the AD 79 eruption was this one, named for a mythical greek hero",
+            "correctResponse" : "Herculaneum"
+          }
+        ]
+      },
+      {
+        "category" : "ANIMAL STYLE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "When one lays secretly in wait, they hide like one of these reptiles in a green space",
+            "correctResponse" : "a snake in the grass"
+          },
+          {
+            "value" : 400,
+            "text" : "This idiom for a cheerful person involves a bivalve ",
+            "correctResponse" : "Happy as a clam"
+          },
+          {
+            "value" : 600,
+            "text" : "A bunch of people who disappear as soon as some sort of accountability appears can be said to adopt this behavior of a certain pesky insect",
+            "correctResponse" : "scatter like cockroaches"
+          },
+          {
+            "value" : 800,
+            "text" : "Look atop your house for this feline description of a nervous person",
+            "correctResponse" : "cat on a hot tin roof"
+          },
+          {
+            "value" : 1000,
+            "text" : "Thanks to their large litters and short gestation periods, fluffy rodents appear in this expression for people enjoying rampant sexual activity",
+            "correctResponse" : "fuck like rabbits"
+          }
+        ]
+      },
+      {
+        "category" : "DOUBLE DOUBLE RHYME TIME",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This star of \"nacho libre\" grabs a light bite at his very minimal structure",
+            "correctResponse" : "Jack Black snack shack"
+          },
+          {
+            "value" : 400,
+            "text" : "it turns out this cartoon penguin only lip sync'd his hit singles",
+            "correctResponse" : "Chilly Willy milli vanilli"
+          },
+          {
+            "value" : 600,
+            "text" : "Who's there? A former French premier uses a very trite setup for a pun",
+            "correctResponse" : "Jacques Chirac knock knock"
+          },
+          {
+            "value" : 800,
+            "text" : "A good business deal for everyone starts in the penalty box in hockey",
+            "correctResponse" : "Sin Bin win-win"
+          },
+          {
+            "value" : 1000,
+            "text" : "An illegal workplace for extracting parts from a stolen car only employs people with tousled, messy hair",
+            "correctResponse" : "mop top chop shop"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "THE BEEFCAKE FACTORY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This \"Thor\" actor (and best of his brothers) began marketing the workout regimen that helped developed his famous physique",
+            "correctResponse" : "Chris Hemsworth"
+          },
+          {
+            "value" : 800,
+            "text" : "Journey to colorado to meet this cartoon kid who went crazy on weight gainers to become a beefcake. BEEFCAKE!!!!",
+            "correctResponse" : "Eric Cartman"
+          },
+          {
+            "value" : 1200,
+            "text" : "In the WWF, the Dream Team consisted of Greg Valentine and this wrestler, known as \"the Barber\"",
+            "correctResponse" : "Brutus Beefcake"
+          },
+          {
+            "value" : 1600,
+            "text" : "A career in MMA fighting prepared this actor for roles as Drax the Detroyer as an evil hatchetman in \"Spectre\"",
+            "correctResponse" : "Dave Bautista"
+          },
+          {
+            "value" : 2000,
+            "dailyDouble" : true,
+            "text" : "His role as Khal Drogo should have been his breakout, but his Dothraki dialogue was so convincing that many directors didn't think he spoke English",
+            "correctResponse" : "Jason Momoa"
+          }
+        ]
+      },
+      {
+        "category" : "TRULY TUESDAY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "On this Tuesday in 2001, \"family guy\" creater Seth MacFarlane woke with a horrible hangover and fatefully missed his flight",
+            "correctResponse" : "September 11"
+          },
+          {
+            "value" : 800,
+            "text" : "This national non-holiday occurs on the second tuesday in November",
+            "correctResponse" : "Election day"
+          },
+          {
+            "value" : 1200,
+            "text" : "The stock market panics on Thursday October 29, 1929, Monday the 28th, and Tuesday the 29th all gained this colorful adjective",
+            "correctResponse" : "Black"
+          },
+          {
+            "value" : 1600,
+            "text" : "For many Gen Xers, this event on Tuesday, Jan. 28 1986 above the Florida coast serves as their \"Where were you when\" moment",
+            "correctResponse" : "Challenger explosion"
+          },
+          {
+            "value" : 2000,
+            "text" : "This planet, whose axis of rotation is nearly \"on its side\" was first discovered on Tuesday, March 13, 1781",
+            "correctResponse" : "Uranus"
+          }
+        ]
+      },
+      {
+        "category" : "THANK GODS IT'S SATURDAY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This roman deity, often depicted eating his son, gives his name today's day",
+            "correctResponse" : "Saturn"
+          },
+          {
+            "value" : 800,
+            "text" : "Most english names for days of the week are derived from Norse gods, and the Norse name for Saturday calls out this trickster",
+            "correctResponse" : "Loki"
+          },
+          {
+            "value" : 1200,
+            "text" : "The Greek equivalent of Saturn was this Titan, who sired Zeus",
+            "correctResponse" : "Cronus"
+          },
+          {
+            "value" : 1600,
+            "text" : "The Hindu personification of Saturn was this god, who shared his name with an american speed skater that feuded with Stephen Colbert",
+            "correctResponse" : "Shani"
+          },
+          {
+            "value" : 2000,
+            "text" : "The saturday posture of Buddha has him sheltered by Muchalinda, a multiheaded king of these serpent people",
+            "correctResponse" : "Naga"
+          }
+        ]
+      },
+      {
+        "category" : "CHILES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This mid-sized pepper clocking in around 5000 Scovilles is widely used to add moderate amounts of heat to salsas and tacos",
+            "correctResponse" : "Jalapeno"
+          },
+          {
+            "value" : 800,
+            "text" : "Chef Aron Sanchez said this small, scorching chile with a quarter million Scovilles of heat \"tastes like the sun\"",
+            "correctResponse" : "Habanero"
+          },
+          {
+            "value" : 1200,
+            "text" : "Clocking in at 20,000 Scovilles, this second-most-produced Mexican chile's name is derived from the mountains in which it is grown. ",
+            "correctResponse" : "Serrano"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "The large New Mexico chile has many cultivars, including these very mild 500 scoville varieties named for the Orange County city they were first grown in",
+            "correctResponse" : "Anaheim"
+          },
+          {
+            "value" : 2000,
+            "text" : "Only about one in ten of these Japanese peppers are spicy. They often served grilled as an appetizer to add an element of risk to dinner",
+            "correctResponse" : "Shishito"
+          }
+        ]
+      },
+      {
+        "category" : "DANNYS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "In a surprising plot twist, this dingbat Indiana senator and former Vice President helped convince Mike Pence not to overthrow the government on Jan 6",
+            "correctResponse" : "Dan Quayle"
+          },
+          {
+            "value" : 800,
+            "text" : "This short-statured actor remains shockingly indistinguishable from Arnold Schwarzeneggar",
+            "correctResponse" : "Danny Devito"
+          },
+          {
+            "value" : 1200,
+            "text" : "At age 12, this actor got a role that would make him one of the highest-paid actors on earth, years before he would deserve that honor for playing Weird Al Yankovic",
+            "correctResponse" : "Daniel Radcliffe"
+          },
+          {
+            "value" : 1600,
+            "text" : "This canadian actor and musician got on the boards thanks to a mission from God",
+            "correctResponse" : "Dan Aykroyd"
+          },
+          {
+            "value" : 2000,
+            "text" : "In a rare feat for a father of three, he has as many Best Actor Oscars as children",
+            "correctResponse" : "Daniel Day-lewis"
+          }
+        ]
+      },
+      {
+        "category" : "RED LOB-STERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Image seemed to be everything for this Iranian-American tennis star, until he dropped his famous flowing locks (and secret hairpiece) for a bald look",
+            "correctResponse" : "Andre Agassi"
+          },
+          {
+            "value" : 800,
+            "text" : "This Serb interrupted the budding Federer-Nadal rivalry by assembling a GOAT-level resume right in their faces",
+            "correctResponse" : "Novak Djokovic"
+          },
+          {
+            "value" : 1200,
+            "text" : "For someone that was clearly the greatest in her sport, it's kind of a slap in the face that even her biopic was mostly about her father, which later became about, well, a slap in the face",
+            "correctResponse" : "Serena Williams"
+          },
+          {
+            "value" : 1600,
+            "text" : "This swede set a raft of records in the 70's, and held back the McEnroe era for several years until he retired early in 1984",
+            "correctResponse" : "Bjorn Borg"
+          },
+          {
+            "value" : 2000,
+            "text" : "Across singles, doubles, and mixed doubles, this Australian won 64 grand slam titles (24 of them in singles) and she won 91% of her singles matches",
+            "correctResponse" : "Margaret Court"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "CAPITALS OF THE UNITED STATES",
+    "comments" : "",
+    "clue" : {
+      "text" : "Coincidentally, the capital of the United States was this other Pennsylvania city for one day in 1777 before it was moved to York",
+      "correctResponse" : "Lancaster, PA"
+    }
+  }
+}

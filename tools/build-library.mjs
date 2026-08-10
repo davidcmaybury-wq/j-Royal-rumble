@@ -9,7 +9,7 @@
 // subfolders are walked. Existing material is kept; anything already present
 // with the same category id is skipped rather than duplicated.
 
-import { fromTtgJson, fromJpartyCsv, parseCsv, fromClueTsv } from '../src/sources.js';
+import { fromTtgJson, fromJpartyCsv, parseCsv, fromClueTsv, parseLooseJson } from '../src/sources.js';
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'fs';
 import { gzipSync, gunzipSync } from 'zlib';
 import { join, extname, basename, dirname } from 'path';
@@ -76,7 +76,7 @@ if (cmd === 'add') {
         cats = fromJpartyCsv(parseCsv(text), { label: basename(file) })
           .map((c) => ({ ...c, source: 'original' }));
       } else {
-        const doc = JSON.parse(text);
+        const doc = parseLooseJson(text);
         if (!Array.isArray(doc.rounds)) throw new Error('not a j-trivia.org board');
         cats = fromTtgJson(doc).map((c) => ({ ...c, source: 'original',
           provenance: { file: basename(file), title: doc.title, author: doc.author || null } }));

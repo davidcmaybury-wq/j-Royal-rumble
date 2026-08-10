@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 23 - Prelim 3",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "RISE AND SHINE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Modern mirrors get their shine from the deposition of this metal",
+            "correctResponse" : "silver"
+          },
+          {
+            "value" : 400,
+            "text" : "Be careful of the rise of this extra high tide that comes when the sun and moon are aligned",
+            "correctResponse" : "spring tide"
+          },
+          {
+            "value" : 600,
+            "text" : "Where chemically leavened breads use baking powder, naturally leavened breads get their rise from this microorganism",
+            "correctResponse" : "Yeast"
+          },
+          {
+            "value" : 800,
+            "text" : "The sun gets its shine from the energy liberated by this process",
+            "correctResponse" : "Fusion"
+          },
+          {
+            "value" : 1000,
+            "text" : "Jewelers use this compound of very fine red iron oxide for buffing precious metals to a shine",
+            "correctResponse" : "Rouge"
+          }
+        ]
+      },
+      {
+        "category" : "MORNING \"TEA\"",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This is a cerebral term for a fun little puzzle",
+            "correctResponse" : "Brainteaser"
+          },
+          {
+            "value" : 400,
+            "text" : "Vehicles with small radar-cross sections gain this adjective for sneakiness",
+            "correctResponse" : "Stealth"
+          },
+          {
+            "value" : 600,
+            "text" : "A movie that is written to forcefully elicit an eye-welling response is one of these",
+            "correctResponse" : "Tearjerker"
+          },
+          {
+            "value" : 800,
+            "text" : "Eagle-eyed tax optimizers know this term for the deduction on the place you live ",
+            "correctResponse" : "Homestead"
+          },
+          {
+            "value" : 1000,
+            "text" : "For an indulgent night, order this massive piece of the front tenderloin out of which the filet is often cut tableside",
+            "correctResponse" : "Chateaubriand"
+          }
+        ]
+      },
+      {
+        "category" : "COFFEE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Coffee was first discovered by ethiopian goatherders who saw their flocks become energized and sleepless from eating the cherries, probably due to this wonderful substance",
+            "correctResponse" : "caffeine"
+          },
+          {
+            "value" : 400,
+            "text" : "This large south american nation is the world's largest producer of coffee",
+            "correctResponse" : "Brazil"
+          },
+          {
+            "value" : 600,
+            "text" : "This vowel-loving scandinavian nation is the world's highest consumer of coffee pro capita",
+            "correctResponse" : "Finland"
+          },
+          {
+            "value" : 800,
+            "text" : "The civet cat makes some of the world's most expensive coffee beans by leaving them here",
+            "correctResponse" : "In its poop"
+          },
+          {
+            "value" : 1000,
+            "text" : "Most coffee is either the stronger, less enjoyable Robusta, or this finer-flavored cultivar named for the peninsula it was first cultivated",
+            "correctResponse" : "Arabica"
+          }
+        ]
+      },
+      {
+        "category" : "BRAND PARENTS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The Melville corporation eventually changed its name once it divested most of its retail chains and focused on this acquisition-happy drug store giant ",
+            "correctResponse" : "CVS"
+          },
+          {
+            "value" : 400,
+            "text" : "Darden Restaurants owns several casual dining chains, like the Olive Garden, Longhorn steakhouse, and bahama breeze, but they sold off this unimpressive seafood chain in 2014",
+            "correctResponse" : "Red Lobster"
+          },
+          {
+            "value" : 600,
+            "text" : "KFC and Taco Bell are part of this optimistically-named corporate giant",
+            "correctResponse" : "Yum!"
+          },
+          {
+            "value" : 800,
+            "text" : "Discount-priced Old Navy is owned by this more mid-market apparel brand",
+            "correctResponse" : "GAP"
+          },
+          {
+            "value" : 1000,
+            "text" : "The Luxottica group not only owns LensCrafters, Pearle Vision, and Sunglass Hut, but also most the designer brands sold, as well as Ray-Ban, and this stereotypical favorite of law enforcement",
+            "correctResponse" : "Oakley"
+          }
+        ]
+      },
+      {
+        "category" : "NAMED PSYCHOLOGICAL EFFECTS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This early-90's video game became a syndrome when severe addiction to placing its tetrominos became something people did even with their real lives",
+            "correctResponse" : "Tetris"
+          },
+          {
+            "value" : 400,
+            "text" : "Some experiments suggested that listening to classical music would briefly improve spatial reasoning, an effect named for this savant",
+            "correctResponse" : "Mozart"
+          },
+          {
+            "value" : 600,
+            "text" : "Out, out, this damned effect where the response to a cleaning cue increases with shame, spurring neurotic behavior",
+            "correctResponse" : "Lady Macbeth effect"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "There are two names in this effect for describing how a small gain in skill can lead to wildly bad estimates of ability",
+            "correctResponse" : "Dunning-Kruger effect"
+          },
+          {
+            "value" : 1000,
+            "text" : "This two-named effect will keep popping up again now that you've been reminded of it, and example of itself",
+            "correctResponse" : "Baader-meinhof"
+          }
+        ]
+      },
+      {
+        "category" : "CHRIS BERMAN NICKNAMES",
+        "comments" : "Classic puns like Greg \"Math\" Maddux",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Just imagine this Candian heartthrob (and Mr. Hailee Baldwin) reprising this classic Jerry Mathers sitcom scamp",
+            "correctResponse" : "Justin \"leave it to\" bieber"
+          },
+          {
+            "value" : 400,
+            "text" : "Hawaiian singer peter hernandez joined jared leto's band",
+            "correctResponse" : "Bruno \"30 seconds to\" mars"
+          },
+          {
+            "value" : 600,
+            "text" : "We did have to get one athlete in: this longtime cardinals first baseman who was a favorite of A.A. Milne",
+            "correctResponse" : "Albert \"winnie the\" pujols"
+          },
+          {
+            "value" : 800,
+            "text" : "The face of the first african american woman to win a Best Actress oscar after a boxing match also evokes some tasty treats",
+            "correctResponse" : "Halle \"Black and blue\" berry"
+          },
+          {
+            "value" : 1000,
+            "text" : "This singer/rapper from \"Moonlight,\" \"Hidden Figures,\" and \"Glass Onion\" might cover a classic Billy Idol song",
+            "correctResponse" : "Janelle \"mony\" monae"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "RIVER DEEP",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "IN the middle of the night, Billy Joel went walking in his sleep along this river that was the title track of his 1993 album",
+            "correctResponse" : "River of dreams"
+          },
+          {
+            "value" : 800,
+            "text" : "Although much of it has been altered by the massive dams, this river still reaches tremendous depths in the Three Gorges region",
+            "correctResponse" : "Yangtze"
+          },
+          {
+            "value" : 1200,
+            "text" : "Alan Jackson waxed rhapsodic about this river along the Georgia/Alabama border. He never knew how much that muddy water meant to him",
+            "correctResponse" : "Chattahoochee"
+          },
+          {
+            "value" : 1600,
+            "text" : "This african river is the deepest in the world, up to 220 meters ",
+            "correctResponse" : "Congo"
+          },
+          {
+            "value" : 2000,
+            "text" : "This distributary of the Mississippi is expected to eventually become its primary flow, which would be disastrous for the ports of New Orleans and Baton Rouge",
+            "correctResponse" : "Atchafalaya"
+          }
+        ]
+      },
+      {
+        "category" : "MOUNTAIN HIGH",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This famously photogenic Swiss-Italian peak is also one of Disneyland's signature rides",
+            "correctResponse" : "Matterhorn"
+          },
+          {
+            "value" : 800,
+            "text" : "This majestic washington mountain is about 14,400 feet tall, but has 13,200 feet of prominence",
+            "correctResponse" : "Mount Rainer"
+          },
+          {
+            "value" : 1200,
+            "text" : "It is said that he who climbs this japanese mountain once is a wise man, but who climbs it twice is a fool",
+            "correctResponse" : "Mount fuji"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This peak named for an explorer of the region, was where Sir Edmund HIllary did his close-to-home training",
+            "correctResponse" : "Mount Cook"
+          },
+          {
+            "value" : 2000,
+            "text" : "This semi-architectural peak towers over the eastern end of the Yosemite Valley.",
+            "correctResponse" : "half dome peak"
+          }
+        ]
+      },
+      {
+        "category" : "OLD BRITISH MONEY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This tiny coin, contrasted with the much larger penny, would also lend its name to an early bicycle",
+            "correctResponse" : "Farthing"
+          },
+          {
+            "value" : 800,
+            "text" : "The british had 20 of these in a pound until decimalization. They were also the main currency in austria",
+            "correctResponse" : "Shilling"
+          },
+          {
+            "value" : 1200,
+            "text" : "This royal-sounding coin was equal to 60 pence",
+            "correctResponse" : "crown"
+          },
+          {
+            "value" : 1600,
+            "text" : "This coin, which was one-quarter an ounce of gold, was named for the African country where much of the metal was mined",
+            "correctResponse" : "Guinea"
+          },
+          {
+            "value" : 2000,
+            "text" : "This two-shilling piece lent its name to the sworn enemy of Guilder in \"The Princess Bride\"",
+            "correctResponse" : "Florin"
+          }
+        ]
+      },
+      {
+        "category" : "J! SUPERCHAMP NAME ETYMOLOGIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This German name for \"cutter\" certainly left a gash in the record books",
+            "correctResponse" : "Schneider"
+          },
+          {
+            "value" : 800,
+            "text" : "An old medieval fiddle, known as a rote, is the source of this occupational last name",
+            "correctResponse" : "Rutter"
+          },
+          {
+            "value" : 1200,
+            "text" : "His name comes from the german for a lumberjack",
+            "correctResponse" : "Holzhauer"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This english name means Littlejohn",
+            "correctResponse" : "Jennings"
+          },
+          {
+            "value" : 2000,
+            "text" : "In italian, his name means \"beloved by god.\" His results certainly suggest that!",
+            "correctResponse" : "Amodio"
+          }
+        ]
+      },
+      {
+        "category" : "DUCKING AUTOCORRECT",
+        "comments" : "From the mind of Mattea Roach - Don't let the mistakes trip you up",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "I had a habit of leaving these Ticonderoga beauties in my lover at school",
+            "correctResponse" : "Pencils"
+          },
+          {
+            "value" : 800,
+            "text" : "This group remade Roberta Flack's \"Kissing me softly with his song\" in 1996",
+            "correctResponse" : "The Fugees"
+          },
+          {
+            "value" : 1200,
+            "text" : "The former hamster Henry Hill decided to come clean when he saw that there was a hit coming for him, and his story was the basis of this Scorcese movie",
+            "correctResponse" : "Goodfellas"
+          },
+          {
+            "value" : 1600,
+            "text" : "In the first Michael Bay Transformers movie, this character was recast from a VW Beetle into a Chevy corpse",
+            "correctResponse" : "Bumblebee"
+          },
+          {
+            "value" : 2000,
+            "text" : "This actor has recently signed away the rights to digitally recreate his voice for Dearth Vibrator",
+            "correctResponse" : "James Earl Jones"
+          }
+        ]
+      },
+      {
+        "category" : "ANAGRAMS",
+        "comments" : "Name the two anagrams of each other",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This musclely fiber was need to hoist the magnums of these beverages",
+            "correctResponse" : "WINES/SINEW"
+          },
+          {
+            "value" : 800,
+            "text" : "The worried pig found these luxurious delicacies",
+            "correctResponse" : "FRETFUL/TRUFFLE"
+          },
+          {
+            "value" : 1200,
+            "text" : "You can get the meat from this horizontal display area",
+            "correctResponse" : "FLESH/SHELF"
+          },
+          {
+            "value" : 1600,
+            "text" : "These boots favored by the beatles are good to wear while drawing chemicals out of something into solution",
+            "correctResponse" : "CHELSEA/LEACHES"
+          },
+          {
+            "value" : 2000,
+            "text" : "They let this spotted cat out of prison early for good behavior",
+            "correctResponse" : "LEOPARD/PAROLED"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "HORSE RACING VOCABULARLY",
+    "comments" : "",
+    "clue" : {
+      "text" : "This phrase often used in politics describes someone who participated in a race but performed unremarkably",
+      "correctResponse" : "also-ran"
+    }
+  }
+}

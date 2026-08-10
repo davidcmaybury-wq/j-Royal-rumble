@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 24 Spare 2",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "REALITY SHOW CATCHPHRASES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Will you accept this rose?",
+            "correctResponse" : "The Bachelor"
+          },
+          {
+            "value" : 400,
+            "text" : "Shantay you stay",
+            "correctResponse" : "RuPaul's Drag Race"
+          },
+          {
+            "value" : 600,
+            "text" : "Make it work",
+            "correctResponse" : "Project Runway"
+          },
+          {
+            "value" : 800,
+            "text" : "I got a text!",
+            "correctResponse" : "Love island"
+          },
+          {
+            "value" : 1000,
+            "text" : "It will kill",
+            "correctResponse" : "Forged in Fire"
+          }
+        ]
+      },
+      {
+        "category" : "NEIGHBOR NEIGHBORS",
+        "comments" : "Words close to \"neighbor\" in the dictionary",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This underarm, behind-the-neck wrestling hold was a signature of The Miz's",
+            "correctResponse" : "Nelson"
+          },
+          {
+            "value" : 400,
+            "text" : "Numbers below zero have this pessimistic descriptor",
+            "correctResponse" : "Negative"
+          },
+          {
+            "value" : 600,
+            "text" : "Dakota Johnson, Honor Swinton-Byrne, Colin Hanks, and Rumer Willis are examples of this “natal” insult",
+            "correctResponse" : "Nepo-babies"
+          },
+          {
+            "value" : 800,
+            "text" : "This organ system handles \"command and control\" for your body",
+            "correctResponse" : "nervous system"
+          },
+          {
+            "value" : 1000,
+            "text" : "Occurring seven days after a spring tide, this is a period of very moderate tides",
+            "correctResponse" : "Neap Tide"
+          }
+        ]
+      },
+      {
+        "category" : "THE COOK",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "By his own description, he wasn't special as a chef. He was an exceptional writer and TV personality, until his suicide in 2018",
+            "correctResponse" : "Anthony Bourdain"
+          },
+          {
+            "value" : 400,
+            "text" : "This former  CIA agent revolutionized home cooking, broadcast cooking, and cookbook writing",
+            "correctResponse" : "Julia Child"
+          },
+          {
+            "value" : 600,
+            "text" : "One of the original haute cuisine chefs, he is credited with inventing, among many other dishes, Cherries Jubilee",
+            "correctResponse" : "Auguste Escoffier"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "His love of trashy food is exemplified in his signature \"garbage can nachos\" with donkey sauce",
+            "correctResponse" : "Guy Fieri"
+          },
+          {
+            "value" : 1000,
+            "text" : "She popularized indian cooking on the BBC for decades, and her Chicken Tikka Masala is considered definitive",
+            "correctResponse" : "Madra Jaffrey"
+          }
+        ]
+      },
+      {
+        "category" : "THE THIEF ",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "He set a record for embezzlement, stealing an estimated $65 billion",
+            "correctResponse" : "Bernie Madoff"
+          },
+          {
+            "value" : 400,
+            "text" : "Steve Jobs regarded this Korean iPhone competitor as a \"100% stolen product\"",
+            "correctResponse" : "Samsung Galaxy"
+          },
+          {
+            "value" : 600,
+            "text" : "He was clearly \"under pressure\" when he thought adding one note to the signature bass riff made it different",
+            "correctResponse" : "Vanilla Ice"
+          },
+          {
+            "value" : 800,
+            "text" : "These \"buttery-soft\" (eww) leggings launched as a multilevel startup before taking \"market saturation\" to new heights",
+            "correctResponse" : "LuLaRoe"
+          },
+          {
+            "value" : 1000,
+            "text" : "HE asked to be buried where his last arrow fell, and fired a final shot from his deathbed",
+            "correctResponse" : "Robin Hood"
+          }
+        ]
+      },
+      {
+        "category" : "HIS WIFE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Franklin Delano Roosevelt",
+            "correctResponse" : "Eleanor Roosevelt"
+          },
+          {
+            "value" : 400,
+            "text" : "Diego Rivera (twice)",
+            "correctResponse" : "Frida Kahlo"
+          },
+          {
+            "value" : 600,
+            "text" : "Hitler",
+            "correctResponse" : "Eva Braun"
+          },
+          {
+            "value" : 800,
+            "text" : "Henry VIII (Wife III)",
+            "correctResponse" : "Jane Seymour"
+          },
+          {
+            "value" : 1000,
+            "text" : "MIchael Douglas",
+            "correctResponse" : "Catherine Zeta-Jones"
+          }
+        ]
+      },
+      {
+        "category" : "HER LOVER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Guinivere",
+            "correctResponse" : "Lancelot"
+          },
+          {
+            "value" : 400,
+            "text" : "Catherine the great (the one of village-faking fame)",
+            "correctResponse" : "Potemkin"
+          },
+          {
+            "value" : 600,
+            "text" : "Françoise Gaime Gilot (before her marriage to Jonas Salk)",
+            "correctResponse" : "Pablo Picasso"
+          },
+          {
+            "value" : 800,
+            "text" : "Tiffany \"New York\" Pollard (almost)",
+            "correctResponse" : "Flavor Flav"
+          },
+          {
+            "value" : 1000,
+            "text" : "Kitty Püning",
+            "correctResponse" : "Robert Oppenheimer"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "IF WISHES WERE HORSES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This legendary horse won the 1973 triple crown, setting speed records in every race",
+            "correctResponse" : "Secretariat"
+          },
+          {
+            "value" : 800,
+            "text" : "As a five year old, this stallion shocked War Admiral in the 1938 Pimlico Special",
+            "correctResponse" : "Seabiscuit"
+          },
+          {
+            "value" : 1200,
+            "text" : "The \"horse of the century\" he won 20 of his 21 races and was named athlete of the year alongside Babe Ruth",
+            "correctResponse" : "Man o' war"
+          },
+          {
+            "value" : 1600,
+            "text" : "By winning the Breeders’ Cup Classic after the triple crown, he was the first horse to complete the Grand Slam of Thoroughbred Racing",
+            "correctResponse" : "American Pharoah"
+          },
+          {
+            "value" : 2000,
+            "text" : "This alliterative stallion won the 1977 triple crown, having never lost a race. The only other horse to duplicate this was his descendant",
+            "correctResponse" : "Seattle Slew"
+          }
+        ]
+      },
+      {
+        "category" : "BEGGARS WOULD RIDE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "According to legend, this noblewoman rode nude through coventry to get her husband to grant relief from his oppressive taxes",
+            "correctResponse" : "Lady Godiva"
+          },
+          {
+            "value" : 800,
+            "text" : "The Bible only records Jesus riding once, when he rode a donkey into Jerusalem, an occasion marked by this holiday today",
+            "correctResponse" : "Palm Sunday"
+          },
+          {
+            "value" : 1200,
+            "text" : "The crest of this Crusades-era \"poor order” depicted two knights riding on a single horse",
+            "correctResponse" : "Knights Templar"
+          },
+          {
+            "value" : 1600,
+            "text" : "Born a citizen of the Cherokee nation, Oklahoma's favorite son \"never met a man he didn't like.\" He never met the host of this event, though",
+            "correctResponse" : "Will Rogers"
+          },
+          {
+            "value" : 2000,
+            "text" : "Israel Bissell rode 340 miles to alert colonists of the British attack on lexington, but lacked the euphony of this other rider Longfellow wrote about instead",
+            "correctResponse" : "Paul Revere"
+          }
+        ]
+      },
+      {
+        "category" : "IF TURNIPS WERE WATCHES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Originally started as answer to low-cost Japanese watches, this Swiss conglomerate now owns nearly the whole Swiss watch industry",
+            "correctResponse" : "Swatch"
+          },
+          {
+            "value" : 800,
+            "text" : "This company's classic F91W has been in constant production since 1989, but gained infamy as the preferred timer of IEDs",
+            "correctResponse" : "Casio"
+          },
+          {
+            "value" : 1200,
+            "text" : "This american company is credited with inventing the wristwatch for artillerymen in world war I, the first of many beatings their products would take",
+            "correctResponse" : "Timex"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This Swiss Company's name combines a French acronym for “advanced guard techniques\" and the founder's name. He invented a dashboard chronometer, and the name has kept its association with auto racing since",
+            "correctResponse" : "TAG Heuer"
+          },
+          {
+            "value" : 2000,
+            "text" : "Nine of the ten most expensive watches ever sold were made by this haute horologie maker",
+            "correctResponse" : "Patek Philippe"
+          }
+        ]
+      },
+      {
+        "category" : "I'D HAVE ONE AT MY SIDE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Othello was undone by the machinations of this trusted lieutenant",
+            "correctResponse" : "Iago"
+          },
+          {
+            "value" : 800,
+            "text" : "This hunchbacked assistant of Dr. Frankenstein wasn't in the original book. He only appeared in the movies",
+            "correctResponse" : "Igor"
+          },
+          {
+            "value" : 1200,
+            "text" : "The brothers Grimm wrote about these siblings who stuck together to keep themselves from being lost forever in the wood",
+            "correctResponse" : "Hansel and Gretl"
+          },
+          {
+            "value" : 1600,
+            "text" : "This porter accompanied Phileas Fogg on his literary circumnavigation",
+            "correctResponse" : "Passepartout"
+          },
+          {
+            "value" : 2000,
+            "text" : "Enkidu was the loyal companion of this subject of ancient epics",
+            "correctResponse" : "Gilgamesh"
+          }
+        ]
+      },
+      {
+        "category" : "\"IF\"'S AND AND'S",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This is the summary of Murphy's law",
+            "correctResponse" : "If anything can go wrong, it will"
+          },
+          {
+            "value" : 800,
+            "text" : "It's time to get out of the kitchen when this happens",
+            "correctResponse" : "If you can't stand the heat"
+          },
+          {
+            "value" : 1200,
+            "text" : "Traditionally, this is when you should not fix something",
+            "correctResponse" : "If it ain't broke"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "When someone tries to tell you that something isn't what you think, you can cite this abductive anatine test with this six-word phrase",
+            "correctResponse" : "If it looks like a duck..."
+          },
+          {
+            "value" : 2000,
+            "text" : "Assuming that you are not a gravedigger, this is the right time to stop digging",
+            "correctResponse" : "If you find yourself in a hole"
+          }
+        ]
+      },
+      {
+        "category" : "POTS AND PANS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Common cookware is used in this idiom for a bad situation that is getting worse",
+            "correctResponse" : "out of the frying pan, into the fire"
+          },
+          {
+            "value" : 800,
+            "text" : "Many a cooking competition sees a competitor try to beat the clock by using this bomblike cookware to speed up the cook on tough cuts of meat",
+            "correctResponse" : "pressure cooker"
+          },
+          {
+            "value" : 1200,
+            "text" : "Many asian cuisines rely on these large pans made to sit on intense burners and cooked in near-constant motion",
+            "correctResponse" : "Wok"
+          },
+          {
+            "value" : 1600,
+            "text" : "This north african pot lends its name to a dish traditionally cooked in it",
+            "correctResponse" : "Tagine"
+          },
+          {
+            "value" : 2000,
+            "text" : "In addition to serving as slang for an activity that torments a bed partner, this heavy cast iron pot is also a valuable tool for baking bread",
+            "correctResponse" : "Dutch Oven"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "THERE'D BE NO WORK FOR TINKERS",
+    "comments" : "",
+    "clue" : {
+      "text" : "This colorful term refers to tinkers and metalworker who specialize in lighter alloys than iron, especially tin",
+      "correctResponse" : "Whitesmith"
+    }
+  }
+}

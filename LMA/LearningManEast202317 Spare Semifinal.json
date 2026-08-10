@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan East 23 Spare Semifinal",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "FUN WORDS TO SAY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "These short-legged australian marsupials have uniquely cubic poop",
+            "correctResponse" : "wombats"
+          },
+          {
+            "value" : 400,
+            "text" : "This putty is used to fill holes and gaps in drywall",
+            "correctResponse" : "Spackle"
+          },
+          {
+            "value" : 600,
+            "text" : "This otter-like actor vaulted himself onto the A-list with his portrayal of Sherlock Holmes in the BBC's \"sherlock\"",
+            "correctResponse" : "Benedict Cumberbatch"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "This old timey word for a commotion was also a short-lived variety series on NBC in the 60s and an electronic game from Cranium",
+            "correctResponse" : "Hullabaloo"
+          },
+          {
+            "value" : 1000,
+            "text" : "This term for an obsequious person evokes an image of one who is willing clean the drool from another's lips and dates back to the bible, though it has recently surged again in popularity",
+            "correctResponse" : "lickspittle"
+          }
+        ]
+      },
+      {
+        "category" : "BASKETBALL SLANG",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This is the term for a shot that makes no contact with the rim or backboard, and it is helpfully chanted by the crowd when it happens",
+            "correctResponse" : "Airball"
+          },
+          {
+            "value" : 400,
+            "text" : "Many hapless defenders got to have this experience against michael jordan when a photographer caught them being humiliated for a large format print",
+            "correctResponse" : "posterized"
+          },
+          {
+            "value" : 600,
+            "text" : "This term for a great assist references some really small coin",
+            "correctResponse" : "dime"
+          },
+          {
+            "value" : 800,
+            "text" : "A perfect shot that only catches the strings of the net has this onomatopea-derived name",
+            "correctResponse" : "swish"
+          },
+          {
+            "value" : 1000,
+            "text" : "This additive phrase is often shouted when a player makes a shot in spite of a called foul, referencing the foul shot to come",
+            "correctResponse" : "and 1"
+          }
+        ]
+      },
+      {
+        "category" : "ACTORS WHO FAKED THEIR TWANG",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Among the many english dialects this actor has ruined is a Louisiana drawl as prosecutor Jim Garrison in \"JFK\"",
+            "correctResponse" : "Kevin Costner"
+          },
+          {
+            "value" : 400,
+            "text" : "It seemed like nearly the whole cast of this supernatural show set in bontemps, LA were from overseas; for instance, the first billed kiwi Anna Paquin",
+            "correctResponse" : "True Blood"
+          },
+          {
+            "value" : 600,
+            "text" : "Detective and \"independent arbiter of the truth\" Benoit Blanc's rich southern accent contrasts with the actor’s most-famous role",
+            "correctResponse" : "Daniel Craig"
+          },
+          {
+            "value" : 800,
+            "text" : "\"Con air\" is a great bad movie, and this long-haired star's \"Alabama\" accent is a great bad accent",
+            "correctResponse" : "Nic Cage"
+          },
+          {
+            "value" : 1000,
+            "text" : "This london-born actor who played sexy Dumbledore in the \"fantastic beasts\" movies had an never-before-heard accent in \"Midnight in the Garden of Good and Evil\"",
+            "correctResponse" : "Jude Law"
+          }
+        ]
+      },
+      {
+        "category" : "KID LIT EN FRANÇAIS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Bonsoir Lune",
+            "correctResponse" : "Goodnight moon"
+          },
+          {
+            "value" : 400,
+            "text" : "Les Œufs Verts au Jambon",
+            "correctResponse" : "Green eggs and ham"
+          },
+          {
+            "value" : 600,
+            "text" : "Le Toile de Charlotte",
+            "correctResponse" : "Charlotte's web"
+          },
+          {
+            "value" : 800,
+            "text" : "Là où se termine le trottoir",
+            "correctResponse" : "Where the sidewalk ends"
+          },
+          {
+            "value" : 1000,
+            "text" : "On fait tous caca",
+            "correctResponse" : "Everyone poops/everybody poos"
+          }
+        ]
+      },
+      {
+        "category" : "DREAM BOATS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This probably-not-big-enough boat named for the only animal known to hunt great white sharks hunted a great white shark in \"jaws\"",
+            "correctResponse" : "orca"
+          },
+          {
+            "value" : 400,
+            "text" : "U-96 was the claustrophic setting for this 1981 Wolfgang Peterson film",
+            "correctResponse" : "Das Boot"
+          },
+          {
+            "value" : 600,
+            "text" : "Captain Smollett leads Long John Silver to sea on this ship named for a large Caribbean island",
+            "correctResponse" : "Hispaniola"
+          },
+          {
+            "value" : 800,
+            "text" : "This doomed fishing boat in \"A Perfect Storm\" wasn't able to clear the massive rogue wave in the poster",
+            "correctResponse" : "Andrea Gail"
+          },
+          {
+            "value" : 1000,
+            "text" : "Captain Jack aubrey commanded this corvette in its cat-and-mouse duel with the Acheron on the far side of the world",
+            "correctResponse" : "HMS Surprise"
+          }
+        ]
+      },
+      {
+        "category" : "ADD A LETTER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Add a letter to Greg Louganis's sport to get Max Verstappen's",
+            "correctResponse" : "dive/drive"
+          },
+          {
+            "value" : 400,
+            "text" : "Add a letter to this swampy note in Scotch to get this crease in a kilt",
+            "correctResponse" : "peat/pleat"
+          },
+          {
+            "value" : 600,
+            "text" : "Add a letter to this action for having turned the ignition on in a car and get this word for how the noise affected me",
+            "correctResponse" : "started/startled"
+          },
+          {
+            "value" : 800,
+            "text" : "Add a letter to this act of thoughtfully guiding two adverse parties to get this thoughtful guiding of oneself alone",
+            "correctResponse" : "mediate/meditate"
+          },
+          {
+            "value" : 1000,
+            "text" : "Add a letter to this term for one's enemies to get this vulpine adversary of small woodland creatures",
+            "correctResponse" : "foes/foxes"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "LATIN PHRASES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "It goes on and on and on and on and...",
+            "correctResponse" : "ad infinitum"
+          },
+          {
+            "value" : 800,
+            "text" : "In addition to being a famously indulgent NY restaurant, it is the phrase that means \"on its own\"",
+            "correctResponse" : "per se"
+          },
+          {
+            "value" : 1200,
+            "text" : "remember our deal clarice, something for something; you give me the latin phrase, I give you 1200 points",
+            "correctResponse" : "quid pro quo"
+          },
+          {
+            "value" : 1600,
+            "text" : "Do you really want to question if I'm acting in \"good faith\" when I say I am this type of champion?",
+            "correctResponse" : "bona fide"
+          },
+          {
+            "value" : 2000,
+            "text" : "This clue seems difficult \"on its face\" but there is some pretty plain language about the question in here",
+            "correctResponse" : "prima facie"
+          }
+        ]
+      },
+      {
+        "category" : "HERBS & SPICES",
+        "comments" : "All found in KFC original recipe",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This small-leafed Mediterranean plant popular in italian-american cuisine was called the “spice of life” by henry tillman",
+            "correctResponse" : "Oregano"
+          },
+          {
+            "value" : 800,
+            "text" : "The seeds of this plant are ground up and mixed with vinegar to produce the tangy yellow condiment that makes hot dogs magical",
+            "correctResponse" : "mustard"
+          },
+          {
+            "value" : 1200,
+            "text" : "Putting this herb on your pizza isn’t a “fawlty” choice - it’s a classic on the Margherita",
+            "correctResponse" : "basil"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "this spice of ground red peppers is used as much for its bright color as its mild flavor, but some of the smoked varieties are important in Hungarian cuisine",
+            "correctResponse" : "paprika"
+          },
+          {
+            "value" : 2000,
+            "text" : "Hopefully your rhythm gets you to this cousin of oregano at just the right moment",
+            "correctResponse" : "thyme"
+          }
+        ]
+      },
+      {
+        "category" : "GETTING SOLD",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "In one of the worst acquisitions ever AOL bought this media conglomerate for $182 billion",
+            "correctResponse" : "Time warner"
+          },
+          {
+            "value" : 800,
+            "text" : "In 1636 a sailor was supposedly imprisoned when he stole a 3000 florin bulb of this flower, thinking it was onion",
+            "correctResponse" : "tulip"
+          },
+          {
+            "value" : 1200,
+            "text" : "Among the most expensive things sold on ebay was a model II of this company's business jets for $4.9 million",
+            "correctResponse" : "Gulfstream"
+          },
+          {
+            "value" : 1600,
+            "text" : "The most valuable baseball card in history was the 1911 American Tobacco Company T206 of this Pirates player, which sold for $6.6 million ",
+            "correctResponse" : "Honus wagner"
+          },
+          {
+            "value" : 2000,
+            "text" : "The most expensive sale of a sports team ever was the $4 billion purchase of this NBA franchise (and its sister WNBA franchise) that couldn't get Charles Barkley or Steve Nash a ring",
+            "correctResponse" : "Phoenix suns"
+          }
+        ]
+      },
+      {
+        "category" : "UP THE RIVER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "UP the delaware river is this town George Washington launched a famous amphibious attack on",
+            "correctResponse" : "Trenton"
+          },
+          {
+            "value" : 800,
+            "text" : "Up the thames river from london is this town named for a shallow stretch beasts of burden could cross",
+            "correctResponse" : "oxford"
+          },
+          {
+            "value" : 1200,
+            "text" : "UP the potomac from our location here in DC is this town where john brown conducted his famous raid",
+            "correctResponse" : "frozen"
+          },
+          {
+            "value" : 1600,
+            "text" : "Up the Rhine from Rotterdam is this former capital and birthplace of Beethoven",
+            "correctResponse" : "Bonn"
+          },
+          {
+            "value" : 2000,
+            "text" : "Up the ganges from Dhaka, Bangladesh in the southeastern part of the indian state of uttar pradesh is this city that in Hindu mythology was founded by Shiva, and where he dropped one of the heads of Brahma",
+            "correctResponse" : "Varanasi"
+          }
+        ]
+      },
+      {
+        "category" : "BEHIND THE CALL LETTERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "In los angeles, KFWB was the station of this studio",
+            "correctResponse" : "warner borthers"
+          },
+          {
+            "value" : 800,
+            "text" : "KXII in Sherman, TX wants you to know it is this channel on your TV dial",
+            "correctResponse" : "twelve"
+          },
+          {
+            "value" : 1200,
+            "text" : "Chicago's WGN is also an acronym for this humble self-view of their status amongst journalism",
+            "correctResponse" : "World's Greatest News"
+          },
+          {
+            "value" : 1600,
+            "text" : "KELP isn't for telling you about seaweed forests - it's for this major west texas city",
+            "correctResponse" : "El Paso"
+          },
+          {
+            "value" : 2000,
+            "dailyDouble" : true,
+            "text" : "KOIT picked this name to reflect a famous landmark in this city",
+            "correctResponse" : "San Francisco (Coit tower)"
+          }
+        ]
+      },
+      {
+        "category" : "FILL IN THE AUTHOR",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "CHESTER A. _______ __ _______ KENT",
+            "correctResponse" : "ARTHUR C CLARKE"
+          },
+          {
+            "value" : 800,
+            "text" : "Pee wee _______ _______ Dewey",
+            "correctResponse" : "Herman Melville"
+          },
+          {
+            "value" : 1200,
+            "text" : "Huey _______ _______ Channing",
+            "correctResponse" : "Lewis Caroll"
+          },
+          {
+            "value" : 1600,
+            "text" : "Upton _______ _______ Capaldi",
+            "correctResponse" : "Sinclair Lewis"
+          },
+          {
+            "value" : 2000,
+            "text" : "Sandra _______ _______ Cavill",
+            "correctResponse" : "O. Henry"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "ALLITERATIVE AMERICANS",
+    "comments" : "",
+    "clue" : {
+      "text" : "In 1932 he & several San Francisco colleagues formed Group f/64 to promote greater realism in their art",
+      "correctResponse" : "Ansel Adams"
+    }
+  }
+}

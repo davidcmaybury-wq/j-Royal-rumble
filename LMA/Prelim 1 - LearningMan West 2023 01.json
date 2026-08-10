@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 23 - Prelim 1",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "NUMBER PLEASE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Including this clue, the number of times \"five\" is the correct answer in this category",
+            "correctResponse" : "Five"
+          },
+          {
+            "value" : 400,
+            "text" : "The full number of Spice Girls",
+            "correctResponse" : "Five"
+          },
+          {
+            "value" : 600,
+            "text" : "The number of books in the Hitchhiker's Guide to the Galaxy trilogy written by Douglas Adams",
+            "correctResponse" : "Five"
+          },
+          {
+            "value" : 800,
+            "text" : "The number in the name of the rock trio featuring Ben Folds",
+            "correctResponse" : "Five"
+          },
+          {
+            "value" : 1000,
+            "text" : "In pulp fiction, Mia Wallace did a pilot for a show called \"Fox Force\" this",
+            "correctResponse" : "Five"
+          }
+        ]
+      },
+      {
+        "category" : "THE STREETS OF HOLLYWOOD IN MUSIC",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Sheryl Crow hit the big time wanting have to fun until the sun came up on this Boulevard",
+            "correctResponse" : "Santa Monica Boulevard"
+          },
+          {
+            "value" : 400,
+            "dailyDouble" : true,
+            "text" : "The Posies had a hit singing about the \"The Sweethearts of\" this famed shopping drag where Vivian Ward couldn't get served. Big Mistake",
+            "correctResponse" : "Rodeo Drive"
+          },
+          {
+            "value" : 600,
+            "text" : "In an Andrew Lloyd Webber musical, screenwriter Joe Gillis sings about his mercenary residence in a dilapated mansion on this road",
+            "correctResponse" : "Sunset Boulevard"
+          },
+          {
+            "value" : 800,
+            "text" : "In her sassy 40's inspired hit \"Candyman\" Christina Aguilera drank champagne and danced all night at the Spider Club at this intersection",
+            "correctResponse" : "Hollywood & Vine"
+          },
+          {
+            "value" : 1000,
+            "text" : "Kenny Chesney starts \"Setting the world on fire\" by getting drunk on this road that extends from the 405",
+            "correctResponse" : "La Cienega Boulevard"
+          }
+        ]
+      },
+      {
+        "category" : "THE STARS OF THE INTERNET",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "2007 World Barista Champion James Hoffman has found a new career with precisely spoken videos about the many, many ways of making this beverage",
+            "correctResponse" : "Coffee"
+          },
+          {
+            "value" : 400,
+            "text" : "Swede Felix Kjellberg first achieved megastardom uploading videos of himself playing video games under this name",
+            "correctResponse" : "PewDiePie"
+          },
+          {
+            "value" : 600,
+            "text" : "This YouTube megastar's most viewed video is not him eating something crazy, but nonviolent recreation of Squid Game",
+            "correctResponse" : "MrBeast"
+          },
+          {
+            "value" : 800,
+            "text" : "These douchey brothers constantly court fame, controversy, wrestling and boxing matches to their 23million+ subscribers",
+            "correctResponse" : "Jake and Logan Paul"
+          },
+          {
+            "value" : 1000,
+            "text" : "Andrew Ilnyckyj, Steven Lim, and Adam Bianchi created this show that \"looked at three dishes at three drastically different price points\" that was by far the most successful show on Buzzfeed.",
+            "correctResponse" : "Worth it"
+          }
+        ]
+      },
+      {
+        "category" : "RETOLD CLASSICS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Disney moved Denmark to Africa with this retelling of \"Hamlet\"",
+            "correctResponse" : "The Lion King"
+          },
+          {
+            "value" : 400,
+            "text" : "The taming of the shrew was made surprisingly charming and not terrible by Heath Ledger and Julia Styles in this movie",
+            "correctResponse" : "10 things I hate about you"
+          },
+          {
+            "value" : 600,
+            "text" : "Alicia Silverstone was shot onto the A-list with this retelling of Emma",
+            "correctResponse" : "Clueless"
+          },
+          {
+            "value" : 800,
+            "text" : "The Coen brother reset the Odyssey into depression-era mississippi in this film ",
+            "correctResponse" : "O Brother, where art thou?"
+          },
+          {
+            "value" : 1000,
+            "text" : "River Phoenix and Keanu Reeves starred in this Pacific Northwest-set remake of \"Henry IV, part I,\" and \"Henry IV, part 2\"",
+            "correctResponse" : "My Own Private Idaho"
+          }
+        ]
+      },
+      {
+        "category" : "\"DANCING WITH STARS\" CHAMPIONS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "In season 4, this speed skating champion surprised everyone with his samba hips",
+            "correctResponse" : "Apolo Anton Ono"
+          },
+          {
+            "value" : 400,
+            "text" : "Adam Carolla remembered laughing when people wondered if this Figure Skating gold medalist could also dance on the floor in season 6",
+            "correctResponse" : "Kristi Yamaguchi"
+          },
+          {
+            "value" : 600,
+            "text" : "In season 10, this former Pussycat Doll (probably the only one you can name) won, before landing her own judging gig on \"The Masked Singer\"",
+            "correctResponse" : "Nicole Scherzinger"
+          },
+          {
+            "value" : 800,
+            "text" : "This Season 19 Champion brought his signature dance from \"the Fresh Prince of Bel Air\" with him",
+            "correctResponse" : "Alfonso Ribiero"
+          },
+          {
+            "value" : 1000,
+            "text" : "Season 21's winner was a animal activist and zookeeper following in her legendary father's footsteps",
+            "correctResponse" : "Bindi Irwin"
+          }
+        ]
+      },
+      {
+        "category" : "THE BELMONT STAKES",
+        "comments" : "Running this weekend!",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "With a time of 2:24 flat, this legendary horse set the record for time to run the Belmont in 1973",
+            "correctResponse" : "Secretariat"
+          },
+          {
+            "value" : 400,
+            "text" : "The length of this race is a dozen of these traditional measures of distance that ox could plow",
+            "correctResponse" : "furlong"
+          },
+          {
+            "value" : 600,
+            "text" : "In 2015, this \"egyptian\" colt won the belmont and the triple crown, breaking a 27 year drought",
+            "correctResponse" : "American Pharoah"
+          },
+          {
+            "value" : 800,
+            "text" : "Like all of the triple crown races, the winning horses receives a blanket of flowers. This is the \"meaty\" flower for the Belmont",
+            "correctResponse" : "Carnations"
+          },
+          {
+            "value" : 1000,
+            "text" : "This long island hamlet hosts the Belmont, but we only give it a \"B minus\"",
+            "correctResponse" : "Elmont"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "A \"NICE\" CATEGORY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 469,
+            "text" : "A chopped tuna salad takes its name from this city on the French Riviera",
+            "correctResponse" : "Nice"
+          },
+          {
+            "value" : 869,
+            "text" : "Russel Crowe and Ryan Gosling starred in this 2016 film set in 70's Hollywood",
+            "correctResponse" : "The Nice Guys"
+          },
+          {
+            "value" : 1269,
+            "text" : "The Beach Boys often speculated about the pluses of adulthood in this song",
+            "correctResponse" : "Wouldn't it be nice"
+          },
+          {
+            "value" : 1631,
+            "text" : "In \"Roadhouse\" Patrick Swayze told his bouncers to \"be nice until\" this time",
+            "correctResponse" : "it's time not to be nice"
+          },
+          {
+            "value" : 2069,
+            "text" : "This is the term for any horizontal molding that crowns a building",
+            "correctResponse" : "Cornice"
+          }
+        ]
+      },
+      {
+        "category" : "GEOGRAPHIC ODDITIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Because of the curious way it treats overseas territorities as regular departements, this nation is in more time zones than any other",
+            "correctResponse" : "France"
+          },
+          {
+            "value" : 800,
+            "text" : "This is the world's largest country with one time zone",
+            "correctResponse" : "China"
+          },
+          {
+            "value" : 1200,
+            "text" : "There are only two \"doubly landlocked\" countries (countries surrounded by other landlocked countries). One is Uzbekistan, and the other is this principality",
+            "correctResponse" : "Liechtenstein"
+          },
+          {
+            "value" : 1600,
+            "text" : "This monumental New York Island is completely surrounded by New Jersey",
+            "correctResponse" : "LIberty island"
+          },
+          {
+            "value" : 2000,
+            "dailyDouble" : true,
+            "text" : "These three Central European nations (two of which were once in a dual monarchy together, the other a velvet divorcee) set up a triangular picnic table at their mutual border to accomodate trinational picnics",
+            "correctResponse" : "Austria, Hungary, and Slovakia"
+          }
+        ]
+      },
+      {
+        "category" : "HISTORIC NAMES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "In addition to being the founding figure of modern Ethiopia, he is regarded as a messiah by some sects of rastafarianism",
+            "correctResponse" : "Haile Selassie"
+          },
+          {
+            "value" : 800,
+            "text" : "Iowan Norman Borlaug developed a high-yield, disease-resitant strain of this grain, and introduced it around the world, prompting the \"Green Revolution\"",
+            "correctResponse" : "Wheat"
+          },
+          {
+            "value" : 1200,
+            "text" : "This French explorer was the first to map the gulf of saint lawrence and later the river as well",
+            "correctResponse" : "Jacques Cartier"
+          },
+          {
+            "value" : 1600,
+            "text" : "Arguably the greatest mariner ever to live, he was captured by the Ming armies, castrated, and put in service of a prince who would be his eventual benefactor",
+            "correctResponse" : "Zheng He"
+          },
+          {
+            "value" : 2000,
+            "text" : "This quaker visited Newgate prison 1812, and spent the rest of her life reforming prisons throughout Europe and creating the modern correctional system",
+            "correctResponse" : "Elizabeth Fry"
+          }
+        ]
+      },
+      {
+        "category" : "HEALTH",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "While myopia is the term for nearsightedness, and hyperopia for farsightedness, this is the term for what is commonly called \"old sight\"",
+            "correctResponse" : "Presbyopia"
+          },
+          {
+            "value" : 800,
+            "text" : "The computing revolution of the 1980's brought about a resurgence of this disease that previously primarily affected pianists",
+            "correctResponse" : "Carpal Tunnel Syndrome"
+          },
+          {
+            "value" : 1200,
+            "dailyDouble" : true,
+            "text" : "DVT is an abbreviation for this - a clot inside in the body",
+            "correctResponse" : "Deep Vein Thrombosis"
+          },
+          {
+            "value" : 1600,
+            "text" : "A generation of medications for depression focused on inhibiting the reuptake of this neurotransmitter",
+            "correctResponse" : "Serotonin"
+          },
+          {
+            "value" : 2000,
+            "text" : "To answer the common question about what this organ does: It's the primary blood filter and manages the levels of the various types of cells in the blood",
+            "correctResponse" : "Spleen"
+          }
+        ]
+      },
+      {
+        "category" : "BROADWAY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Hugh Jackman headlined a revival of this Iowa-set musical",
+            "correctResponse" : "The Music Man"
+          },
+          {
+            "value" : 800,
+            "text" : "This initialized musical focused on the work of the King of Pop",
+            "correctResponse" : "MJ"
+          },
+          {
+            "value" : 1200,
+            "text" : "A \"parisian\" musical based on a Baz Luhrman jukebox musical film that debuted on broadway in 2018",
+            "correctResponse" : "Moulin Rouge!"
+          },
+          {
+            "value" : 1600,
+            "text" : "The wives of Henry VIII take center stage in this numerical musical",
+            "correctResponse" : "Six"
+          },
+          {
+            "value" : 2000,
+            "text" : "This recursive show by Michael R. Jackson is about a black queer man writing a musical about a black queer man",
+            "correctResponse" : "A strange loop"
+          }
+        ]
+      },
+      {
+        "category" : "SPORTS BEFORE AND LITERATURE AFTER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The orange clad Volunteers of a streetcar named desire",
+            "correctResponse" : "University of Tennessee Williams"
+          },
+          {
+            "value" : 800,
+            "text" : "The point forward called \"the King\" who wrote Ulysses",
+            "correctResponse" : "Lebron James Joyce"
+          },
+          {
+            "value" : 1200,
+            "text" : "A famed 80's sprinter and long jumper that lent his name to Charles Dodgson",
+            "correctResponse" : "Carl Lewis Carrol"
+          },
+          {
+            "value" : 1600,
+            "text" : "The baseball team founded by Gene Autry that help Robert Langdon unwind a plot to blow up the Vatican",
+            "correctResponse" : "Los Angeles Angels and Demons"
+          },
+          {
+            "value" : 2000,
+            "text" : "A Canadian football team from a prairie province that appears in the title of a Zane Grey western",
+            "correctResponse" : "Saskatechewan Roughriders of the purple sage"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "FOOD NAMES",
+    "comments" : "",
+    "clue" : {
+      "text" : "This term can describe a bread or noodle in a stew, a wrapped mince, or a dough filled with gelatinized soup",
+      "correctResponse" : "Dumpling"
+    }
+  }
+}

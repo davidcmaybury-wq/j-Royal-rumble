@@ -7,7 +7,7 @@ import { gunzipSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, DEFAULT_SETTINGS } from './engine.js';
-import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv } from './sources.js';
+import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -113,6 +113,9 @@ class Match {
     this.game = new RumbleGame({
       players, settings: this.settings, categoryPool: this.pool(), rng: this.rng,
     });
+    // The engine resolves the auto settings against the roster. Adopt what it
+    // decided so the console and the setup view report real numbers, not nulls.
+    this.settings = { ...this.settings, ...this.game.s };
     this.phase = 'live';
   }
 
@@ -283,7 +286,7 @@ app.post('/api/match/:id/material', (req, res) => {
     if (format === 'csv' || /\.csv$/i.test(name)) {
       categories = fromJpartyCsv(parseCsv(content), { label: name });
     } else {
-      const doc = JSON.parse(content);
+      const doc = parseLooseJson(content);
       if (!Array.isArray(doc.rounds)) {
         return res.status(400).json({ error:
           "that JSON isn't in j-trivia.org format — it needs a top-level \"rounds\" array of category lists" });

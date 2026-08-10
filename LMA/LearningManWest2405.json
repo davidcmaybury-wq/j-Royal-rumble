@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 05",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "DOGGIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Charles Grodin wore his signature miserable face well as this St. Bernard turned his life upside down",
+            "correctResponse" : "Beethoven"
+          },
+          {
+            "value" : 400,
+            "text" : "Kevin Costner voiced this dog named after ferrari's founder in \"The Art of Racing in the Rain\"",
+            "correctResponse" : "Enzo"
+          },
+          {
+            "value" : 600,
+            "text" : "This little guy ate an entire wheel of cheese. Ron Burgundy wasn't even mad. It was amazing",
+            "correctResponse" : "Baxter"
+          },
+          {
+            "value" : 800,
+            "text" : "Technically there's nothing in the rules that says I can't ask about this 1997 movie about a sporty dog that has spawned four direct sequels and nine other franchise films",
+            "correctResponse" : "Air Bud"
+          },
+          {
+            "value" : 1000,
+            "text" : "The internet raged after a behind-the-scenes video from this 2017 glurgefest about canine reincarnation called the use of animal actors into question",
+            "correctResponse" : "A Dog's Purpose"
+          }
+        ]
+      },
+      {
+        "category" : "COWGIRLS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This sharpshooter had her story adapted into a 1946 Broadway show",
+            "correctResponse" : "Annie Oakley"
+          },
+          {
+            "value" : 400,
+            "text" : "This \"disastrous\" star of Buffalo Bill's Wild West show was, confusingly, also an acquaintance of Wild Bill Hickok",
+            "correctResponse" : "Calamity jane"
+          },
+          {
+            "value" : 600,
+            "text" : "Seth MacFarlane cast this South African co-star opposite...himself as his love interest in \"A Million Ways to Die in the West\"",
+            "correctResponse" : "Charlize Theron"
+          },
+          {
+            "value" : 800,
+            "text" : "She was the companion cowgirl to Woody in the \"Toy Story\" movies",
+            "correctResponse" : "Jessie"
+          },
+          {
+            "value" : 1000,
+            "text" : "She delivers a savage coup-de-grace to Gene Hackman as the Lady in \"the Quick and the Dead\"",
+            "correctResponse" : "Sharon Stone"
+          }
+        ]
+      },
+      {
+        "category" : "MISSIONARIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "I presume you know the name of this explorer and missionary who was found by Harry Stanley in Southern Africa",
+            "correctResponse" : "David Livingstone"
+          },
+          {
+            "value" : 400,
+            "text" : "Though his name suggests more Alpine origins, this Alsatian humanitarian and reverend won the 1952 Nobel Peace Prize for his \"reverence for life\" philosophy",
+            "correctResponse" : "Albert Schweitzer"
+          },
+          {
+            "value" : 600,
+            "text" : "A priest who cared for 10,024 of these young indigents in Britain, George Müller was accused of raising the poor above their natural station in life in the 1800's",
+            "correctResponse" : "Orphans"
+          },
+          {
+            "value" : 800,
+            "text" : "William Carey was a baptist minister who first went to this city, but was forced to leave rather than get drawn into its infamous black hole ",
+            "correctResponse" : "Calcutta"
+          },
+          {
+            "value" : 1000,
+            "dailyDouble" : true,
+            "text" : "Thomas Birch Freeman was the son of an African father and an English mother, and went to Accra, where he founded methodist churches in the 1800's when the territory was known by this name ",
+            "correctResponse" : "Gold Coast"
+          }
+        ]
+      },
+      {
+        "category" : "SCISSORS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "These speciality shears leave a zigzag edge in fabric to reduce fraying",
+            "correctResponse" : "pinking shears"
+          },
+          {
+            "value" : 400,
+            "text" : "This very specialized scissor has a small oepning and a linear slide to slice the tips of certain logs off for smoking",
+            "correctResponse" : "cigar cutter"
+          },
+          {
+            "value" : 600,
+            "text" : "The first scissors, made from springs, were found in the \"cradle of civilization\" in this region",
+            "correctResponse" : "Mesopotamia"
+          },
+          {
+            "value" : 800,
+            "text" : "The oldest company in Finland is this giant known for their famous orange-handled scissors",
+            "correctResponse" : "Fiskars"
+          },
+          {
+            "value" : 1000,
+            "text" : "Robert Hinchcliffe of this Yorkshire steel city invented a method of producing scissors from casting, enabling their industrial production",
+            "correctResponse" : "Sheffield"
+          }
+        ]
+      },
+      {
+        "category" : "LOTUS",
+        "comments" : "Every answer is also a car made by Lotus, and starts with an E",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The french word for passion, maybe you'll show some in this answer",
+            "correctResponse" : "Elan"
+          },
+          {
+            "value" : 400,
+            "text" : "A French word often paired with \"de corps\" for military units that have a strong team spirit",
+            "correctResponse" : "Espirit"
+          },
+          {
+            "value" : 600,
+            "text" : "You can do incredibly well if you can think of the name of this business calculation software",
+            "correctResponse" : "Excel"
+          },
+          {
+            "value" : 800,
+            "text" : "Beethoven wrote a small piano solo for this person",
+            "correctResponse" : "Elise"
+          },
+          {
+            "value" : 1000,
+            "text" : "The characteristic spirit of a culture, era, or place",
+            "correctResponse" : "Ethos"
+          }
+        ]
+      },
+      {
+        "category" : "'69",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "A plaque signed by Richard Nixon marks the site of this July 20, 1969 event",
+            "correctResponse" : "Moon landing"
+          },
+          {
+            "value" : 400,
+            "text" : "On May 10, 1869 Leland Stanford drove the \"last spike\" in this major achievement",
+            "correctResponse" : "Transcontinental railroad"
+          },
+          {
+            "value" : 600,
+            "text" : "This Scot received a patent for an early steam engine in 1769",
+            "correctResponse" : "James Watt"
+          },
+          {
+            "value" : 800,
+            "text" : "In 1669 the Sicilian city of Nicolosi was destroyed by an eruption of this crossword-favorite volcano",
+            "correctResponse" : "Mt. Etna"
+          },
+          {
+            "value" : 1000,
+            "text" : "1569 saw the first of these world-distorting map projections that had many kids thinking Greenland was as big as Africa",
+            "correctResponse" : "Mercator"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "ALSO AN APOSTLE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This Wake Forest point guard and State Farm spokesman was the hub of the \"Lob City\" Clippers",
+            "correctResponse" : "Chris Paul"
+          },
+          {
+            "value" : 800,
+            "text" : "This member of the Royal Family has resigned from his public roles and relieved of his associations with the family due to his contact associated with Jeffrey Epstein",
+            "correctResponse" : "Andrew"
+          },
+          {
+            "value" : 1200,
+            "text" : "This song was a #1 hit for Lady Gaga and was also her first music video she directed, recasting the apostles as a biker gang",
+            "correctResponse" : "Judas"
+          },
+          {
+            "value" : 1600,
+            "text" : "This actress won a BAFTA for \"Four Weddings and a Funeral\" and was Oscar-nominated for \"the English Patient\"",
+            "correctResponse" : "Kristen Scott Thomas"
+          },
+          {
+            "value" : 2000,
+            "dailyDouble" : true,
+            "text" : "He gave you 49 more ways to leave your lover than you should need to leave your lover in a 1975 single",
+            "correctResponse" : "Paul Simon"
+          }
+        ]
+      },
+      {
+        "category" : "LET'S CELEBRATE TEACHERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "She was an early star on BuzzFeed video, and only wanted to appear in the pilot of \"Abbott Elementary,\" but ABC insisted she star in it as 2nd grade teacher Janine Teagues",
+            "correctResponse" : "Quinta Brunson"
+          },
+          {
+            "value" : 800,
+            "text" : "John Kimble, played by this actor, had some challenges adapting to teaching Kindergarten instead of police work. Good thing he didn't have a tumor",
+            "correctResponse" : "Arnold Schwarzeneggar"
+          },
+          {
+            "value" : 1200,
+            "text" : "Gabe Kaplan played this \"boomerang instructor\" that came back to his alma mater to teach",
+            "correctResponse" : "Mr. Kotter"
+          },
+          {
+            "value" : 1600,
+            "text" : "Don't pronounce the name of this beleagured teacher of Bart simpson the way it's spelled. She has it hard enough",
+            "correctResponse" : "Edna Krabappel"
+          },
+          {
+            "value" : 2000,
+            "text" : "This apartment handyman proved an invaluable mentor to young Daniel LaRusso as he adapted to life in Reseda",
+            "correctResponse" : "Mr. Miyagi"
+          }
+        ]
+      },
+      {
+        "category" : "GRAPHIC NOVELS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Wearing a cowlick and accompanied by his faithful dog Snowy, this young belgian reporter has sold more than 200 million copies",
+            "correctResponse" : "tintin"
+          },
+          {
+            "value" : 800,
+            "text" : "This art Spiegelman novel about the holocaust gained extra notoriety when it was banned in a Tennessee school district just before holocaust rememberance day in 2022",
+            "correctResponse" : "Maus"
+          },
+          {
+            "value" : 1200,
+            "text" : "Alan Moore wrote this dark commentary on comic book heros that was made into a lousy Zack Snyder film and an excellent HBO sequel series",
+            "correctResponse" : "Watchmen"
+          },
+          {
+            "value" : 1600,
+            "text" : "This book about jewish tenement residents by Will Eisner is credited with popularizing the term \"graphic novel\"",
+            "correctResponse" : "A Contract with God"
+          },
+          {
+            "value" : 2000,
+            "text" : "J! Alum Mattea Roach won the 2023 Canada Reads contest on behalf of this Kate Beaton memoir",
+            "correctResponse" : "Ducks"
+          }
+        ]
+      },
+      {
+        "category" : "BACK-TO-BACK OSCAR NOMS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "He was nominated in 1973, 1974, 1975, and 1976, and won none of those. Maybe that's why he doesn't waste time when he's giving the awards out",
+            "correctResponse" : "Al Pacino"
+          },
+          {
+            "value" : 800,
+            "text" : "He was nominated in 2010 and 2011 for \"The Hurt Locker\" and \"The Town\" but he hasn't hit the target of winning one yet",
+            "correctResponse" : "Jeremy Renner"
+          },
+          {
+            "value" : 1200,
+            "text" : "She has been nominated 21 times over 39 years, so she has a raft of back-to-back nods, but none of her three wins were consecutive",
+            "correctResponse" : "Meryl Streep"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "He had back-to-back wins in '37 and '38 for \"captain courageous\" and \"boys town\", and then back-to-back nominations in '60 and '61 for \"Inherit the wind\" and \"judgement at nuremberg\"",
+            "correctResponse" : "Spencer Tracy"
+          },
+          {
+            "value" : 2000,
+            "text" : "She was nominated in 1974 for \"The Exorcist\" and won in 1975 for \"Alice doesn't live here anymore\"",
+            "correctResponse" : "Ellen Burstyn"
+          }
+        ]
+      },
+      {
+        "category" : "THE ANDES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This incan citadel was abandoned in 1572, and re-discovered in 1902",
+            "correctResponse" : "Machu Picchu"
+          },
+          {
+            "value" : 800,
+            "text" : "This fun-to-say body of water is the world's highest navigable lake",
+            "correctResponse" : "Titicaca"
+          },
+          {
+            "value" : 1200,
+            "text" : "The southern end of the andes are in this archipelago that's the last stop en route to antarctica",
+            "correctResponse" : "Tierra del feugo"
+          },
+          {
+            "value" : 1600,
+            "text" : "This seaside desert is one of the driest and foggiest places on earth",
+            "correctResponse" : "Atacama"
+          },
+          {
+            "value" : 2000,
+            "text" : "This 22,838 foot summit in Argentina is the tallest mountain in the Western Hemisphere",
+            "correctResponse" : "Aconcagua"
+          }
+        ]
+      },
+      {
+        "category" : "BIG SCORING SCRABBLE WORDS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Also your host's license plate, this is an affectionate term for a trivia expert",
+            "correctResponse" : "Quizzer"
+          },
+          {
+            "value" : 800,
+            "text" : "Put a quarter in this machine and pick a great tune",
+            "correctResponse" : "Jukebox"
+          },
+          {
+            "value" : 1200,
+            "text" : "This technical term that encompasses processes like rusting and burning will light up your score",
+            "correctResponse" : "Oxidize"
+          },
+          {
+            "value" : 1600,
+            "text" : "This queen whose corpse was trampled and eaten by stray dogs cut such a figure in history, her name is an allowed scrabble word",
+            "correctResponse" : "Jezebel"
+          },
+          {
+            "value" : 2000,
+            "text" : "A brightly colored mexican bird that can found as far north as arizona, this animal can drop some serious points, as well as a mess on the windshield",
+            "correctResponse" : "Quetzal"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "JUDICIAL WORD PLAY",
+    "comments" : "",
+    "clue" : {
+      "text" : "BEFORE AND AFTER: \nThis chief justice and his successor",
+      "correctResponse" : "Earl Warren Burger"
+    }
+  }
+}

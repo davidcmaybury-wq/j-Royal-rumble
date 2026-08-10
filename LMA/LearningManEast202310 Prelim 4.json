@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan East Prelim 4",
+  "author" : "Matt Schiffler",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "HARD NOT TO SING",
+        "comments" : "Thank God Matt's not here to read these",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "5-word title of the Andrew Gold song that was covered by Cynthia Fee as the theme song to The Golden Girls",
+            "correctResponse" : "Thank You for Being a Friend"
+          },
+          {
+            "value" : 400,
+            "text" : "This is what brings the boys to the yard for Kelis, presumably because the machine at McDonald's is down",
+            "correctResponse" : "milkshake"
+          },
+          {
+            "value" : 600,
+            "text" : "He's who the Madrigals don't talk about in \"Encanto\"",
+            "correctResponse" : "Bruno"
+          },
+          {
+            "value" : 800,
+            "text" : "Four-word title of a 2020 biopic about Ray Parker Jr. - remember to phrase in the form of a question",
+            "correctResponse" : "Who Ya Gonna Call?"
+          },
+          {
+            "value" : 1000,
+            "text" : "It's what Sheena Easton's baby takes to work - oddly, he takes another one in the late afternoon",
+            "correctResponse" : "Morning Train"
+          }
+        ]
+      },
+      {
+        "category" : "FOOD HISTORY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This flambeéd dish of tiny red fruits was reportedly invented by Escoffier in honor of Queen Victoria's 60th anniversary on the throne",
+            "correctResponse" : "Cherries jubilee"
+          },
+          {
+            "value" : 400,
+            "text" : "This term for a dessert of ice cream and cake topped with brown meringue was coined in honor of a very large, very cold purchase by the US government",
+            "correctResponse" : "baked Alaska"
+          },
+          {
+            "value" : 600,
+            "text" : "Also known as meat jelly, it has been used since at least the 14th century to preserve meat by keeping air and bacteria out - not to remove wedgies",
+            "correctResponse" : "aspic"
+          },
+          {
+            "value" : 800,
+            "text" : "As early as the 12th century, bakers were making these biscuits as dry as possible so they would become palatable over time as they absorbed moisture from the air - hence their 8-letter name",
+            "correctResponse" : "hardtack"
+          },
+          {
+            "value" : 1000,
+            "text" : "Similar to a poultry shakshuka, this dish was created by Napoleon's chef Dunand in honor of an 1800 victory at a site in Italy",
+            "correctResponse" : "chicken Marengo"
+          }
+        ]
+      },
+      {
+        "category" : "DEITIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Yama is the Hindu god of this much-feared state, personified in Greek mythology as Thanatos",
+            "correctResponse" : "death"
+          },
+          {
+            "value" : 400,
+            "text" : "In the Yoruba religion, Ogun, the orisha of this metal, is often depicted as a blacksmith",
+            "correctResponse" : "iron"
+          },
+          {
+            "value" : 600,
+            "text" : "The Navajo revere Ma'ii, this animal, as a trickster god - but perhaps he isn't as wiley as he thinks",
+            "correctResponse" : "coyote"
+          },
+          {
+            "value" : 800,
+            "text" : "This Greek goddess of retribution lends her name to a term for what the Yankees are to the Red Sox, or the Joker to Batman",
+            "correctResponse" : "Nemesis"
+          },
+          {
+            "value" : 1000,
+            "text" : "I'm going to make Dave pronounce Amenominakanushi and Umashiashikabihikoji, two of these Shinto deities of creation that sound like what you do when you punch or slap a folded paper swan",
+            "correctResponse" : "hitorigami"
+          }
+        ]
+      },
+      {
+        "category" : "FICTIONAL CITIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Follow the yellow brick road to this green metropolis",
+            "correctResponse" : "Emerald City"
+          },
+          {
+            "value" : 400,
+            "text" : "The title Maine town of a TV series inspired by the works of Stephen King",
+            "correctResponse" : "Castle Rock"
+          },
+          {
+            "value" : 600,
+            "text" : "Supposedly in central Minnesota, it's the setting of a recurring Garrison Keillor segment in \"A Prairie Home Companion\"",
+            "correctResponse" : "Lake Wobegon"
+          },
+          {
+            "value" : 800,
+            "text" : "Don't insult this three-letter city from Dante's Divine Comedy that encompasses the sixth through ninth (heh, nice) circles of Hell",
+            "correctResponse" : "Dis"
+          },
+          {
+            "value" : 1000,
+            "text" : "The seat of Yoknapatawpha County, this town was named after the founder of a very fine university",
+            "dailyDouble" : true,
+            "correctResponse" : "Jefferson"
+          }
+        ]
+      },
+      {
+        "category" : "MAY-DECEMBER RELATIONSHIPS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Michael Douglas is 25 years older than this Welsh-born, Greek-letter-named, Oscar-winning wife of his",
+            "correctResponse" : "Catherine Zeta-Jones"
+          },
+          {
+            "value" : 400,
+            "text" : "Voters were so grossed out by this middle-aged president marrying 21-year-old Frances Folsom that they gave him four years off from the presidency before electing him again",
+            "correctResponse" : "Grover Cleveland"
+          },
+          {
+            "value" : 600,
+            "text" : "This nearly 50-year-old Oscar winner never met a 24-year-old he didn't like - we can't say the same for 25-year-olds",
+            "correctResponse" : "Leonardo DiCaprio"
+          },
+          {
+            "value" : 800,
+            "text" : "We'd love to be a \"Fly\" on the the wall for conversations between this septuagenarian ex of Geena Davis and yet-to-turn-40-year-old wife Emilie Livingston",
+            "correctResponse" : "Jeff Goldblum"
+          },
+          {
+            "value" : 1000,
+            "text" : "This senior citizen starred in \"Far From Heaven\" when his wife Laura Savoie was in grade school - first and last names required, since his brother is slightly less of a cradle robber",
+            "correctResponse" : "Dennis Quaid"
+          }
+        ]
+      },
+      {
+        "category" : "FIRST AND LAST NAME'S THE SAME",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The NBA's all time leader in career points per game and the actor who played the title character in \"Creed\"",
+            "correctResponse" : "Michael Jordan"
+          },
+          {
+            "value" : 400,
+            "text" : "Author of \"Look Homeward, Angel\" and author of \"Bonfire of the Vanities\"",
+            "correctResponse" : "Thomas (Tom) Wolfe"
+          },
+          {
+            "value" : 600,
+            "text" : "One of these guys wrote \"Tess of the D'Urbervilles\" and the other one has starred as Mad Max and Bane",
+            "correctResponse" : "Thomas (Tom) Hardy"
+          },
+          {
+            "value" : 800,
+            "text" : "One of these three guys is considered the father of the US Navy, one was the bassist for Led Zeppelin, and one is the namesake of the basketball arena at the University of Virginia",
+            "correctResponse" : "John Paul Jones"
+          },
+          {
+            "value" : 1000,
+            "text" : "It doesn't take a genius to come up with this birth name of actor and director Albert Brooks",
+            "correctResponse" : "Albert Einstein"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "OLOGYOLOGY",
+        "comments" : "You name what each of these things is the study of",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Ichthyology",
+            "correctResponse" : "fish"
+          },
+          {
+            "value" : 800,
+            "text" : "Ornithology",
+            "correctResponse" : "birds"
+          },
+          {
+            "value" : 1200,
+            "text" : "Herpetology - NO, NOT STD'S",
+            "correctResponse" : "reptiles"
+          },
+          {
+            "value" : 1600,
+            "text" : "Hippology",
+            "correctResponse" : "horses"
+          },
+          {
+            "value" : 2000,
+            "text" : "Ethology",
+            "correctResponse" : "animal behavior"
+          }
+        ]
+      },
+      {
+        "category" : "THE TROPHY'S NAMESAKE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The namesake of the trophy awarded to the champions of the NHL postseason",
+            "correctResponse" : "Lord Stanley"
+          },
+          {
+            "value" : 800,
+            "text" : "To get the trophy named after this man, winning the Super Bowl is the only thing",
+            "correctResponse" : "Vince Lombardi"
+          },
+          {
+            "value" : 1200,
+            "text" : "The MVPs of the conference finals get the trophies named after these two guys who played in a lot of conference finals in the 1980s after squaring off in the 1979 Final Four",
+            "correctResponse" : "Larry Bird, Magic Johnson"
+          },
+          {
+            "value" : 1600,
+            "text" : "Only one college football player can win the prestigious trophy given at the Downtown Athletic Club and named after him",
+            "correctResponse" : "John Heisman"
+          },
+          {
+            "value" : 2000,
+            "text" : "The name of the winner of the Indy 500 is assimilated into this trophy named after a doubly-eponymous automotive supplier",
+            "correctResponse" : "BorgWarner"
+          }
+        ]
+      },
+      {
+        "category" : "THE BELOVED OPERA CATEGORY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The name of the Barber of Seville, he comes up in a Mozart title and is mentioned a bunch of times in rapid succession in the Largo al Factotum aria",
+            "correctResponse" : "Figaro"
+          },
+          {
+            "value" : 800,
+            "text" : "This hunchbacked Verdi title character is the court jester for the Duke of Mantua",
+            "correctResponse" : "Rigoletto"
+          },
+          {
+            "value" : 1200,
+            "text" : "While this American composer is best known for his symphonies and ballets, but he also composed the opera \"the tender land\"",
+            "correctResponse" : "Aaron Copland"
+          },
+          {
+            "value" : 1600,
+            "text" : "The true identity of the title character, it was the original title of Beethoven's only opera",
+            "correctResponse" : "Leonore"
+          },
+          {
+            "value" : 2000,
+            "dailyDouble" : true,
+            "text" : "With a surname Ethan Allen would be proud of, this early opera composer wrote his masterpiece L'Orfeo in the same year English settlers first landed in Jamestown",
+            "correctResponse" : "Claudio Monteverdi"
+          }
+        ]
+      },
+      {
+        "category" : "INTERSTATE HIGHWAYS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Running from Seattle to Boston, it's the longest interstate highway in the US",
+            "correctResponse" : "I-90"
+          },
+          {
+            "value" : 800,
+            "text" : "A stretch of I-5 in this state is the only road in the US that averages over half a million vehicles of traffic per day",
+            "correctResponse" : "California"
+          },
+          {
+            "value" : 1200,
+            "dailyDouble" : true,
+            "text" : "I-10 in this state includes a 26-lane stretch, 80 mph speed limits, and the highest exit number in the interstate system, Exit 880",
+            "correctResponse" : "Texas"
+          },
+          {
+            "value" : 1600,
+            "text" : "The lowest-numbered interstate in the US, I-4, is located entirely in this state and follows the path of a railroad that was laid out in 1884",
+            "correctResponse" : "Florida"
+          },
+          {
+            "value" : 2000,
+            "text" : "Believe it or not, there are four interstate highways in this state, and they're the only ones in the US whose designations start with a letter",
+            "correctResponse" : "Hawaii"
+          }
+        ]
+      },
+      {
+        "category" : "MAY-DECEMBER CASTING",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Suck it, Trebek!  1999's \"Entrapment\" starred Catherine Zeta-Jones and this former James Bond nearly 40 years her senior",
+            "correctResponse" : "Sean Connery"
+          },
+          {
+            "value" : 800,
+            "text" : "After working with her 21-year-older co-star Tom Cruise in \"Edge of Tomorrow\", this actress went home to her husband John Krasinski, who is more her age",
+            "correctResponse" : "Emily Blunt"
+          },
+          {
+            "value" : 1200,
+            "text" : "Guy-born-during-the-Great-Depression Robert Redford made an Indecent Proposal to this much younger actress in a 1993 blockbuster",
+            "correctResponse" : "Demi Moore"
+          },
+          {
+            "value" : 1600,
+            "text" : "In a 1997 hit, Helen Hunt played a waitress who had a superhuman amount of patience for the abrasive character played by this much older dude ",
+            "correctResponse" : "Jack Nicholson"
+          },
+          {
+            "value" : 2000,
+            "text" : "34 years separate these two stars who played Bob and Carol in Lost in Translation",
+            "correctResponse" : "Bill Murray and Scarlett Johansson"
+          }
+        ]
+      },
+      {
+        "category" : "TERRIFYING BEFORE AND AFTER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "After leading the Confederate army to surrender, his next highlight was hiding in a book depository and assassinating the 35th President",
+            "correctResponse" : "Robert E. Lee Harvey Oswald"
+          },
+          {
+            "value" : 800,
+            "text" : "The co-star of \"grease\" was the infamous \"clown killer\" of 1970s Chicagoland",
+            "correctResponse" : "Elton John Wayne Gacy"
+          },
+          {
+            "value" : 1200,
+            "text" : "\"Bodak Yellow\" singer who was arrested in Kansas in 2005 for a string of sadistic murders committed years earlier",
+            "correctResponse" : "Cardi BTK Killer"
+          },
+          {
+            "value" : 1600,
+            "text" : "Before his PlayStation-controller-driven submarine predictably imploded on him, he subjected millions to his right-wing bloviating on syndicated radio every day",
+            "correctResponse" : "Stockton Rush Limbaugh"
+          },
+          {
+            "value" : 2000,
+            "text" : "This legendary smooth jazz saxophonist was convicted on multiple counts in the Watergate break-ins and, whaddaya know, ended up as a panelist on Fox News",
+            "correctResponse" : "Kenny G. Gordon Liddy"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "IVY LEAGUE HISTORY",
+    "comments" : "",
+    "clue" : {
+      "text" : "From 1788 to 1790, it was the only one of the current Ivy League institutions to not be located in a US state",
+      "correctResponse" : "Brown University"
+    }
+  }
+}

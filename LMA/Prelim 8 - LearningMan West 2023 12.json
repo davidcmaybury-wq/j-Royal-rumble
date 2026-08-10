@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 23 - Prelim 8",
+  "author" : "Matt Schiffler",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "SHIVER ME WINTERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Due to its frigid climate, this largest freshwater lake in the world routinely freezes about 5 feet thick",
+            "correctResponse" : "Lake Baikal"
+          },
+          {
+            "value" : 400,
+            "text" : "This is the coldest temperature ever recorded in Arizona - you don't have to specify F or C, it's the same number",
+            "correctResponse" : -40
+          },
+          {
+            "value" : 600,
+            "text" : "In February 2023, the famously breezy station atop this New Hampshire mountain registered a windchill of 100 below zero",
+            "correctResponse" : "Mt. Washington"
+          },
+          {
+            "value" : 800,
+            "text" : "On January 1, 1885, residents of this Canadian provincial capital had a \"rough ride,\" waking up to a temperature of -58 F",
+            "correctResponse" : "Regina"
+          },
+          {
+            "value" : 1000,
+            "dailyDouble" : true,
+            "text" : "The fifth most populous city in Japan, and home to one of its great breweries, it averages nearly 200 inches of snowfall per year",
+            "correctResponse" : "Sapporo"
+          }
+        ]
+      },
+      {
+        "category" : "\"R\" MATEY",
+        "comments" : "Celebrity romances where one partner's last name starts with the letter R",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Director of Lock, Stock, and Two Smoking Barrels, this man was married to Madonna from 2000-2008",
+            "correctResponse" : "Guy Ritchie"
+          },
+          {
+            "value" : 400,
+            "text" : "Loni Anderson married this mustachioed actor and frequent SNL Celebrity Jeopardy contestant in 1988",
+            "correctResponse" : "Burt Reynolds"
+          },
+          {
+            "value" : 600,
+            "text" : "This funny lady was married to Gene Wilder until her untimely 1989 death",
+            "correctResponse" : "Gilda Radner"
+          },
+          {
+            "value" : 800,
+            "text" : "Reportedly, this tobacco enthusiast and seaman was trying to bone Queen Elizabeth I",
+            "correctResponse" : "Sir Walter Raleigh"
+          },
+          {
+            "value" : 1000,
+            "text" : "This Israeli model dated Leonardo DiCaprio until she committed the unforgivable sin of turning 25",
+            "correctResponse" : "Bar Refaeli"
+          }
+        ]
+      },
+      {
+        "category" : "DAVY JONES'S LOCKER",
+        "comments" : "People who were buried at sea",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "In May 2011, Navy SEALs buried this notorious Saudi at sea in the manner prescribed by Islamic law",
+            "correctResponse" : "Osama bin Laden"
+          },
+          {
+            "value" : 400,
+            "text" : "Hawaiians didn't have refrigeration in 1779, so after they cannibalized this English captain, they dumped the leftovers into the ocean",
+            "correctResponse" : "James Cook"
+          },
+          {
+            "value" : 600,
+            "text" : "The remains of this English privateer found their way into the abyss after his failed 1596 invasion of Panama",
+            "correctResponse" : "Francis Drake"
+          },
+          {
+            "value" : 800,
+            "text" : "The youngest Australian to serve in WWI, 14-year-old James Martin was buried in the Mediterranean in 1915 after dying of disease on this Turkish peninsula",
+            "correctResponse" : "Gallipoli"
+          },
+          {
+            "value" : 1000,
+            "text" : "This admiral and explorer of the Ming Dynasty is thought to have been buried at sea in 1433, but nobody is really sure",
+            "correctResponse" : "Zheng He"
+          }
+        ]
+      },
+      {
+        "category" : "YOHO",
+        "comments" : "Canada's 7th most favourite national park!",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Yoho national park is in this province, just across the border from Banff",
+            "correctResponse" : "British Columbia"
+          },
+          {
+            "value" : 400,
+            "text" : "Yoho is located just east of this other national park, not to be confused with one in Montana by the same name",
+            "correctResponse" : "Glacier National Park"
+          },
+          {
+            "value" : 600,
+            "text" : "Also known as the carcajou, this large and fierce mustelid is found in Yoho, but oddly enough, not in Ann Arbor",
+            "correctResponse" : "wolverine"
+          },
+          {
+            "value" : 800,
+            "text" : "This first Canadian Prime Minister had the idea to create Yoho National Park after visiting the area in 1886",
+            "correctResponse" : "John Macdonald"
+          },
+          {
+            "value" : 1000,
+            "text" : "The Burgess Shale is a massive deposit of these evidence of times of yore",
+            "correctResponse" : "Fossils"
+          }
+        ]
+      },
+      {
+        "category" : "\"HO\"",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "It's famously rowan ward's favorite animal",
+            "correctResponse" : "horse"
+          },
+          {
+            "value" : 400,
+            "text" : "President of Vietnam from 1945-69, this revolutionary went by an avuncular nickname",
+            "correctResponse" : "(Uncle) Ho Chi Minh"
+          },
+          {
+            "value" : 600,
+            "text" : "7-letter term for an Appalachian folk dance that was also Colin Mochrie's least favorite \"whose line\" game",
+            "correctResponse" : "hoedown"
+          },
+          {
+            "value" : 800,
+            "text" : "Term for a group of Karens who enjoy telling you what you can and can't do with your own house",
+            "correctResponse" : "homeowner's association (HOA also acceptable)"
+          },
+          {
+            "value" : 1000,
+            "text" : "An Ancient Greek citizen/soldier typically known for using the phalanx formation",
+            "correctResponse" : "hoplite"
+          }
+        ]
+      },
+      {
+        "category" : "A BOTTLE OF RUM",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Despite his 1979 #1 hit with it in the chorus, Rupert Holmes claims never to have had one of these rum cocktails. We're sure he had half a brain, though",
+            "correctResponse" : "piña colada"
+          },
+          {
+            "value" : 400,
+            "text" : "Color of rum creepily referred to by Danny in The Shining",
+            "correctResponse" : "red"
+          },
+          {
+            "value" : 600,
+            "text" : "This 17th century Welsh privateer and eventual governor of Jamaica actually has nothing to do with the brand of rum named after him",
+            "correctResponse" : " (Captain) Henry Morgan"
+          },
+          {
+            "value" : 800,
+            "text" : "After he was booted off of the HMS Bounty, he took his winning personality to Australia, eventually triggering the Rum Rebellion",
+            "correctResponse" : "William Bligh"
+          },
+          {
+            "value" : 1000,
+            "text" : "The plant that is fermented to make rum",
+            "correctResponse" : "sugarcane"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "KINGS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This king of Thailand, tenth of his name, is neither a llama nor a ding-dong",
+            "correctResponse" : "Rama X"
+          },
+          {
+            "value" : 800,
+            "text" : "The longevity of the progeny of this King of England were recently cited in a colorful agreement between Disney and the now-defunct special district they inhabit",
+            "correctResponse" : "Charles III"
+          },
+          {
+            "value" : 1200,
+            "text" : "The Mali Empire reached its greatest territorial extent under this 14th century king",
+            "correctResponse" : "Mansa Musa"
+          },
+          {
+            "value" : 1600,
+            "text" : "The longest verifiable reign of any monarch in history, 83 years, was that of Sobhuza II, king of this country that was officially renamed in 2018",
+            "correctResponse" : "Swaziland (or eSwatini)"
+          },
+          {
+            "value" : 2000,
+            "text" : "After Italy invaded his native Albania in 1939, he went into exile and never returned home",
+            "correctResponse" : "Zog I"
+          }
+        ]
+      },
+      {
+        "category" : "PREDATORS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Name of the band famous for \"Bang a Gong\" or dinosaur whose arms were too short to bang a gong",
+            "correctResponse" : "T. Rex"
+          },
+          {
+            "value" : 800,
+            "text" : "This insect poses like it's speaking to the Lord as a means of ensnaring unsuspecting prey",
+            "correctResponse" : "mantis (televangelist also acceptable)"
+          },
+          {
+            "value" : 1200,
+            "text" : "Species Ursus maritimus, these predators gather near Churchill, Manitoba every fall to wait for the Hudson Bay to freeze so they can go seal hunting",
+            "correctResponse" : "polar bears"
+          },
+          {
+            "value" : 1600,
+            "text" : "Also known as the duck hawk, when it's chasing prey, it has been known to dive through the air faster than the top speed of an Indycar",
+            "correctResponse" : "peregrine falcon"
+          },
+          {
+            "value" : 2000,
+            "text" : "This type of plant lures insects into a sweet-smelling cavity to slip, fall, and drown in a reservoir of water at the bottom",
+            "correctResponse" : "pitcher plant"
+          }
+        ]
+      },
+      {
+        "category" : "CAPITALS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "For a brief period on June 28, 2021, this capital of Oregon was the hottest inhabited location in the world",
+            "correctResponse" : "Salem"
+          },
+          {
+            "value" : 800,
+            "text" : "This capital of Newfoundland and Labrador should not be confused with the New Brunswick city named after the same guy",
+            "correctResponse" : "St. John's (neg on St. John)"
+          },
+          {
+            "value" : 1200,
+            "text" : "Fittingly, it's the only world capital through whose city limits the Equator runs",
+            "correctResponse" : "Quito"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "Of the 50 countries in Asia, it's the one with the highest percentage of its residents living in its capital city",
+            "correctResponse" : "Singapore"
+          },
+          {
+            "value" : 2000,
+            "text" : "This Brunei city has a pretty long name for the capital of such a small country",
+            "correctResponse" : "Bandar Seri Begawan"
+          }
+        ]
+      },
+      {
+        "category" : "JETS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "The name of this supersonic passenger jet reflects the international cooperation that led to its development",
+            "correctResponse" : "Concorde"
+          },
+          {
+            "value" : 800,
+            "text" : "With over 15,000 deliveries since the 1960s, it's Boeing's best selling model, despite its MAX variant being grounded in 2019 after some high-profile disasters",
+            "correctResponse" : 737
+          },
+          {
+            "value" : 1200,
+            "text" : "Certified for up to 853 passengers, the A380 by this European manufacturer is the world's largest passenger jet",
+            "correctResponse" : "Airbus"
+          },
+          {
+            "value" : 1600,
+            "text" : "Alphanumeric designation of Lockheed's Blackbird, still the fastest air-breathing manned aircraft ever produced",
+            "correctResponse" : "SR-71"
+          },
+          {
+            "value" : 2000,
+            "text" : "The first commercial jet airliner was this French company's Comet, entering service in 1951",
+            "correctResponse" : "de Havilland"
+          }
+        ]
+      },
+      {
+        "category" : "SENATORS",
+        "comments" : "We give you the person, you give us the state they represented in the US Senate",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "John F. Kennedy",
+            "correctResponse" : "Massachusetts"
+          },
+          {
+            "value" : 800,
+            "text" : "Henry du Pont",
+            "dailyDouble" : true,
+            "correctResponse" : "Delaware"
+          },
+          {
+            "value" : 1200,
+            "text" : "Henry Clay",
+            "correctResponse" : "Kentucky"
+          },
+          {
+            "value" : 1600,
+            "text" : "Ben Nighthorse Campbell",
+            "correctResponse" : "Colorado"
+          },
+          {
+            "value" : 2000,
+            "text" : "Robert La Follette",
+            "correctResponse" : "Wisconsin"
+          }
+        ]
+      },
+      {
+        "category" : "STARS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Born Norma Jean Mortenson, she was one of the biggest stars of the 1950s until her untimely death in 1962",
+            "correctResponse" : "Marilyn Monroe"
+          },
+          {
+            "value" : 800,
+            "text" : "This Australian was paid $20 million for his starring role in Thor: Love and Thunder - was he though?",
+            "correctResponse" : "Chris Hemsworth"
+          },
+          {
+            "value" : 1200,
+            "text" : "\"Achy Breaky Heart\" singer with a \"Wrecking Ball\" of a daughter",
+            "correctResponse" : "Billy Ray Cyrus"
+          },
+          {
+            "value" : 1600,
+            "text" : "First name of Mr. Nelson, who temporarily abandoned all pronounceable names after Warner Brothers pissed him off",
+            "correctResponse" : "Prince"
+          },
+          {
+            "value" : 2000,
+            "text" : "Raspy-voiced 1930s sex symbol who said \"I believe in censorship - I've made a fortune out of it\"",
+            "correctResponse" : "Mae West"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "BOOK REVIEWS",
+    "comments" : "",
+    "clue" : {
+      "text" : "Shortly after it was released, Publisher's Weekly implored its author to \"publish the massacre scene separately\" and \"leave the stories of the Spanish Civil War to Malraux\"",
+      "correctResponse" : "For Whom the Bell Tolls"
+    }
+  }
+}

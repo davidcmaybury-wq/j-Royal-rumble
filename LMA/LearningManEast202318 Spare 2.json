@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan East Spare 2",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "EASY IF YOU PLAYED RISK",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "These mountains in western Russia mark the eastern boundary of Europe",
+            "correctResponse" : "Urals"
+          },
+          {
+            "value" : 400,
+            "text" : "The former name of Thailand, it lives on in a cat breed",
+            "correctResponse" : "Siam"
+          },
+          {
+            "value" : 600,
+            "text" : "This Archipelago nation is the world's 4th most populous",
+            "correctResponse" : "Indonesia"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "This city, historically called the Siberian Athens, has a surprisingly badass coat of arms featuring a tiger with a sable in its mouth",
+            "correctResponse" : "Irkutsk"
+          },
+          {
+            "value" : 1000,
+            "text" : "A thinly-populated remote pacific peninsula, this region features the Sea of Okhotsk to the west and some truly righteous surfing to the east",
+            "correctResponse" : "Kamchatka"
+          }
+        ]
+      },
+      {
+        "category" : "BIRD",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This incredibly dangerous six-foot-tall bird, the world's largest, doesn't stick its head in the sand when it senses danger; Danger dives under the sand to hide from it",
+            "correctResponse" : "Ostrich"
+          },
+          {
+            "value" : 400,
+            "text" : "This handsomely-attired flightless bird of the southern hemisphere is an adept fisherman",
+            "correctResponse" : "penguin"
+          },
+          {
+            "value" : 600,
+            "text" : "North America's largest flying land bird, this \"stately\" species was driven to extinction in the wild by DDT and deforestation, but conservation and captive breeding have begun rebuilding their numbers",
+            "correctResponse" : "California Condors"
+          },
+          {
+            "value" : 800,
+            "text" : "For every season, these \"byrds byrds\" birds take on the world’s longest migrations",
+            "correctResponse" : "terns"
+          },
+          {
+            "value" : 1000,
+            "text" : "Heh heh... one of the longest-living non-aquatic animals, a Major Mitchel's variety of this crested, vocal Australasian bird lived to 120 years old",
+            "correctResponse" : "Cockatoo"
+          }
+        ]
+      },
+      {
+        "category" : "MAGIC",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "You may recall this wizard's first name from Robbie Coltrane's warm greeting. You can recall his last name from Tom Felton's spitting contempt",
+            "correctResponse" : "Harry Potter"
+          },
+          {
+            "value" : 400,
+            "text" : "This T.H. white book that has ruined many a middle school summer tells the story of a boy named Wart",
+            "correctResponse" : "The once and future king"
+          },
+          {
+            "value" : 600,
+            "text" : "Among Ursula Le Guin's many fine works is this fantasy novel following a young mage named Ged in the titular archipelago",
+            "correctResponse" : "Wizard of earthsea"
+          },
+          {
+            "value" : 800,
+            "text" : "Among the most disappointing movie adaptations was the star-studded 2006 film of the first novel of this Christopher Paolini dragonriding series",
+            "correctResponse" : "Eragon, (Inheritance trilogy)"
+          },
+          {
+            "value" : 1000,
+            "text" : "Among J. R. R. Tolkien's most obtuse and expansive works was this prequel to the Hobbit and Lord of the Rings that was edited and published after his death by his son Christopher",
+            "correctResponse" : "Silmarillon"
+          }
+        ]
+      },
+      {
+        "category" : "THOSE DAMNED HALOGENS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "An extremely reactive element used in sanitation, it's presence near metals promotes nearly every form of corrosion",
+            "correctResponse" : "Chlorine"
+          },
+          {
+            "value" : 400,
+            "text" : "This halogen is the heaviest essential mineral nutrient",
+            "correctResponse" : "Iodine"
+          },
+          {
+            "value" : 600,
+            "text" : "This highly toxic, yellow gas is the most reactive of the halogens",
+            "correctResponse" : "Fluorine"
+          },
+          {
+            "value" : 800,
+            "text" : "A reddish-brown element normally a liquid at room temperature, it's name is derived from the Greek for \"stench\"",
+            "correctResponse" : "Bromine"
+          },
+          {
+            "value" : 1000,
+            "text" : "The newest of the Halogens, this is named for the state that home to one of the main centers of nuclear research",
+            "correctResponse" : "Tennessine"
+          }
+        ]
+      },
+      {
+        "category" : "WHAT A MAROON",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "this little Persian gulf nation's flag is maroon with a serrated band of nine white points",
+            "correctResponse" : "Qatar"
+          },
+          {
+            "value" : 400,
+            "text" : "Flying over Riga is this country's flag featuring two broad maroon bands and one narrow white one",
+            "correctResponse" : "Latvia"
+          },
+          {
+            "value" : 600,
+            "text" : "Located in College Station, TX, this school's colors are Maroon and White",
+            "correctResponse" : "Texas A&M"
+          },
+          {
+            "value" : 800,
+            "text" : "The maroon-clad Tigers represent this Atlanta HBCU that matriculated Spike Lee and Samuel L. Jackson...and Herman Cain",
+            "correctResponse" : "Morehouse"
+          },
+          {
+            "value" : 1000,
+            "text" : "This backwards land-grant technical institute in Blacksburg that continues to vomit out garbage orange-and-maroon clad sports teams has changed names four times in an effort to suck less",
+            "correctResponse" : "Viriginia Polytechnic Institute and State University (begrudgingly accept Virginia Tech)"
+          }
+        ]
+      },
+      {
+        "category" : "EDIBLE BEFORE AND AFTER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This basic pasta dish of long, medium width noodles and a simple parmesan cheese sauce that was the least intelligent and weakest of the Godfather's sons",
+            "correctResponse" : "Fettucini Alfredo Corleone"
+          },
+          {
+            "value" : 400,
+            "text" : "A poached egg served with Canadian bacon on an open-face English muffin topped with hollandaise sauce that betrayed the Continental Army and served as a redcoat",
+            "correctResponse" : "Eggs Benedict Arnold"
+          },
+          {
+            "value" : 600,
+            "text" : "A dish of diced poultry in a creamy sherry-mushroom sauce that might appeal to the current British monarch",
+            "correctResponse" : "Chicken à la King Charles III"
+          },
+          {
+            "value" : 800,
+            "text" : "A flambéed dessert of monkey food and vanilla ice cream that makes inexpensive spectacles",
+            "correctResponse" : "Bananas Foster Grant"
+          },
+          {
+            "value" : 1000,
+            "text" : "a rudyard kipling novella of two men who rule a remote part of afghanistan and a giant, delicious sea crustacean from \"deadliest catch\"",
+            "correctResponse" : "The man who would be king crab"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "LOST GAME FOUR",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "in 1996 this team went down three games to one against the Cardinals in the NLCS, but a John Smoltz shutout set them on the path to the World Series",
+            "correctResponse" : "Atlanta Braves"
+          },
+          {
+            "value" : 800,
+            "text" : "They say your 27th is the hardest; the New York Yankees proved that in 2004 by dropping game four to this long-futile squad, resulting in a historic collapse from a 3-0 ALCS lead",
+            "correctResponse" : "Boston Red Sox"
+          },
+          {
+            "value" : 1200,
+            "text" : "Hakeem Olajuwon cemented his Hall of Fame credentials when his Houston Rockets completed a sweep of this promising young center's Orlando Magic in 1995",
+            "correctResponse" : "Shaquille O'Neal"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "In an affront to the sport of hockey, this cold-weather team lost game 4 of the 2004 Stanley Cup finals in the Saddledome to the tropical Tampa Bay Lightning, and went on to burn out in games 6 and 7 as well",
+            "correctResponse" : "Calgary Flames"
+          },
+          {
+            "value" : 2000,
+            "text" : "The colorado avalanche defeated this team and their rat-throwing fans in triple overtime in 1996 to win their first stanley cup",
+            "correctResponse" : "Florida Panthers"
+          }
+        ]
+      },
+      {
+        "category" : "BITTER, PARTY OF ONE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Turn the lights out to enjoy this bitter confection rich in cocoa solids and low in sugar",
+            "correctResponse" : "Dark chocolate"
+          },
+          {
+            "value" : 800,
+            "text" : "The greens of this common weed add a nice bitterness to any salad",
+            "correctResponse" : "dandelion"
+          },
+          {
+            "value" : 1200,
+            "text" : "This maroon, Italian-named leafy vegetable is often mixed with cabbage for a crunchy, bitter salad",
+            "correctResponse" : "Radicchio"
+          },
+          {
+            "value" : 1600,
+            "text" : "Denatonium benzoate, the most bitter substance known, is added to this otherwise sweet-tasting automotive fluid to deter children from drinking it",
+            "correctResponse" : "antifreeze/coolant"
+          },
+          {
+            "value" : 2000,
+            "text" : "The most bitter naturally occurring substance, derived from the bitter version of this fruit, is used a spray to deter pets from chewing ",
+            "correctResponse" : "Bitter apple"
+          }
+        ]
+      },
+      {
+        "category" : "ROUTES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This overland trade route between the Far East and Europe also became the name of a website for selling illegal goods and services",
+            "correctResponse" : "silk road"
+          },
+          {
+            "value" : 800,
+            "text" : "Connecting Chicago to the Santa Monica Pier, this historic highway has been featured in literature, music, and movies",
+            "correctResponse" : "Route 66"
+          },
+          {
+            "value" : 1200,
+            "text" : "This infamous \"geometric\" trade route moved slaves to the New World while keeping british industry steaming along",
+            "correctResponse" : "Triangle Trade route/Atlantic triangle"
+          },
+          {
+            "value" : 1600,
+            "text" : "The incredibly scenic California Route 1, which runs much of its length within yards of the ocean, often goes by this three letter nickname",
+            "correctResponse" : "PCH"
+          },
+          {
+            "value" : 2000,
+            "text" : "This african trade route across its largest desert was traditionally done camelback, until seafaring began to displace it",
+            "correctResponse" : "trans-saharan route"
+          }
+        ]
+      },
+      {
+        "category" : "THE DISMAL SCIENCE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This british economist fundamentally changed the world of macroeconomics by arguing for government intervention in the economy",
+            "correctResponse" : "Keynes"
+          },
+          {
+            "value" : 800,
+            "text" : "When challenged by the number of countries that hadn't imploded, this \"Invisible Hand\" economist wryly noted \"there is a lot of ruin in a nation\"",
+            "correctResponse" : "Adam Smith"
+          },
+          {
+            "value" : 1200,
+            "text" : "This economist, often paired with Ricardo, was known for his \"trap,\" saying that populations would grow until collapse",
+            "correctResponse" : "Malthus"
+          },
+          {
+            "value" : 1600,
+            "text" : "This University of Chicago economist argued against prevailing theory in a very pro-business system that promoted the goodness of greed",
+            "correctResponse" : "Milton Friedman"
+          },
+          {
+            "value" : 2000,
+            "text" : "This NYT columnist and Nobel Prize winner with a voice made for newsprint authored the \"New Trade Theory\" to explain the mechanisms of globalization",
+            "correctResponse" : "Paul Krugman"
+          }
+        ]
+      },
+      {
+        "category" : "ABBRE-\"V\"-ATIONS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Abbreviation for a computer-generated world that may help you escape from the regular one for a while",
+            "correctResponse" : "VR"
+          },
+          {
+            "value" : 800,
+            "text" : "I get the special treatment when I go places, that's why this three-letter abbreviation is on all my tickets",
+            "correctResponse" : "VIP"
+          },
+          {
+            "value" : 1200,
+            "text" : "This three-letter excise is applied only to the work done within a country when a good is exported",
+            "correctResponse" : "VAT"
+          },
+          {
+            "value" : 1600,
+            "text" : "Many environmental agencies look closely at carbon-based compounds that can create odors and cause pollution, known by this three-letter abbreviation",
+            "correctResponse" : "VOC"
+          },
+          {
+            "value" : 2000,
+            "text" : "In the early 2000's it was believed that this \"internet phone\" would take over communication, but the suddenly rise of mobile phones changed the market",
+            "correctResponse" : "VoIP"
+          }
+        ]
+      },
+      {
+        "category" : "MOUNTAIN CLIMBING",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This sherpa accompanied Sir Edmund Hillary on the first successful Everest ascent",
+            "correctResponse" : "Tenzing norgay"
+          },
+          {
+            "value" : 800,
+            "text" : "This John Krakauer novel tells the tragic story of the disastrous 1996 Everest climbing season from a first person perspective",
+            "correctResponse" : "Into thin air"
+          },
+          {
+            "value" : 1200,
+            "text" : "He passed away during an early Everest summit attempt; the discovery of his body in 1999 only further fueled speculation as to whether he summitted the peak",
+            "correctResponse" : "George Mallory"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "The duke of Abruzzi has a spur named for him on the ascent of this tallest peak of the karakoram range",
+            "correctResponse" : "K2"
+          },
+          {
+            "value" : 2000,
+            "text" : "Arguably the greatest climber in history, this not-very-Italian-sounding Italian made the first solo ascent of Everest, the first without supplemental oxygen, and the first to climb all 14 peaks over 8000 meters",
+            "correctResponse" : "Reinhold Messner"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "CLASSIC MOVIES",
+    "comments" : "",
+    "clue" : {
+      "text" : "Immediately after a January 20, 1982 concert in Des Moines, he went to a hospital for rabies and tetanus vaccines",
+      "correctResponse" : "Ozzy Osbourne"
+    }
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 14",
+  "author" : "Kendra Westerhaus",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "HAM RADIO",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "originally a perjorative term, \"ham\" may have come from clunkiness communicating via these dots and dashes",
+            "correctResponse" : "Morse code"
+          },
+          {
+            "value" : 400,
+            "text" : "Amateur radio as we know it today can be traced back to 1909, with the publication of the First Annual Official this Blue Book of the this Association of America",
+            "correctResponse" : "wireless"
+          },
+          {
+            "value" : 600,
+            "text" : "Regulations and standards for amateur radio are governed by this body, the ITU",
+            "correctResponse" : "International Telecommunication Union"
+          },
+          {
+            "value" : 800,
+            "text" : "Voice options in amateur radio include AM and FM, standing for these two ways of communicating via radio waves",
+            "correctResponse" : "Amplitude and frequency modulation"
+          },
+          {
+            "value" : 1000,
+            "text" : "To prove his love, Dustin sings Susie The Neverending Story Theme Song over ham radio on this Netflix hit",
+            "correctResponse" : "Stranger things"
+          }
+        ]
+      },
+      {
+        "category" : "THE SWISS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This former professional tennis player was ranked number one by the ATP for a record 237 consecutive weeks",
+            "correctResponse" : "Roger Federer"
+          },
+          {
+            "value" : 400,
+            "text" : "Swiss Chemist Albert Hoffmann called this substance his \"problem child\" in a book title",
+            "correctResponse" : "LSD"
+          },
+          {
+            "value" : 600,
+            "text" : "This Swiss actress played Honey Ryder in the first Bond film, Dr. No",
+            "correctResponse" : "Ursula Andress"
+          },
+          {
+            "value" : 800,
+            "text" : "What’s citizenship got to do with it? A lot of taxes, for one, as this “Queen of Rock and Roll”\" showed when she became a Swiss citizen in 2013",
+            "correctResponse" : "Tina Turner"
+          },
+          {
+            "value" : 1000,
+            "text" : "Swiss psychiatrist Eugen Bleuler was responsible for replacing the term “dementia Praecox\"” with this to describe a group of disorders characterized by a loss of touch with reality",
+            "correctResponse" : "Schizophrenia"
+          }
+        ]
+      },
+      {
+        "category" : "REUBENS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : " The BOXER ALSO known as \"the hurricane\" ",
+            "correctResponse" : "Reuben Carter"
+          },
+          {
+            "value" : 400,
+            "text" : "His non-Playhouse roles included Amilyn in 1992’s Buffy the Vampire Slayer and himself in 2023’s Quiz Lady, his final role",
+            "correctResponse" : "Paul Reubens"
+          },
+          {
+            "value" : 600,
+            "text" : "Following his win on the second season of American Idol, he released a platinum-selling debut album, Soulful",
+            "correctResponse" : "Reuben Studdard"
+          },
+          {
+            "value" : 800,
+            "text" : "This Flemish Baroque painters’ works include \"The Judgement of Paris\" ",
+            "correctResponse" : "Peter Paul Reubens"
+          },
+          {
+            "value" : 1000,
+            "text" : "She originated the role of Mimi in \"Rent\" ",
+            "correctResponse" : "Daphne Ruben-Vega"
+          }
+        ]
+      },
+      {
+        "category" : "B-L-T",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Although this word is French, it comes from Latin and Greek terms meaning \"to dance\" ",
+            "correctResponse" : "ballet"
+          },
+          {
+            "value" : 400,
+            "text" : "Stars of this 1968 neo-noir include Robert Vaughn, Jacqueline Bisset, Steve McQueen, and one very famous Mustang",
+            "correctResponse" : "bullit"
+          },
+          {
+            "value" : 600,
+            "text" : "Photos taken this way can give off a silhouette effect",
+            "correctResponse" : "Backlit"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "Developed in Yonkers, this first synthetic plastic is used in jewelry and kitchenware",
+            "correctResponse" : "Bakelite"
+          },
+          {
+            "value" : 1000,
+            "text" : "This Alabama town is named after the glossy sheen of\n coal mined close by",
+            "correctResponse" : "Brilliant"
+          }
+        ]
+      },
+      {
+        "category" : "SUBWAY STOPS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Canal Street, 34th Street-Herald Square, Times Square-42nd Street",
+            "correctResponse" : "NYC"
+          },
+          {
+            "value" : 400,
+            "text" : "L’Enfant Plaza, DuPont Circle, Metro Center",
+            "correctResponse" : "Washington DC"
+          },
+          {
+            "value" : 600,
+            "text" : "24th Street Mission, Powell Street, Embarcadero",
+            "correctResponse" : "San Francisco"
+          },
+          {
+            "value" : 800,
+            "text" : "Slauson, Pico/Aliso, Wilshire/Vernon",
+            "correctResponse" : "Los Angeles"
+          },
+          {
+            "value" : 1000,
+            "text" : "Coventry, Little Italy-University Circle, Tower City Center",
+            "correctResponse" : "Cleveland"
+          }
+        ]
+      },
+      {
+        "category" : "SANDWICHES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "There’s controversy over whether this sandwich was developed at Phillips’s or Cole’s, but both agree it should be served with a side of au jus",
+            "correctResponse" : "French Dip"
+          },
+          {
+            "value" : 400,
+            "text" : "The official Denny’s website describes this as a \"ham and scrambled egg sandwich with Swiss and American cheese on grilled artisan bread\" ",
+            "correctResponse" : "Moons over my hammy"
+          },
+          {
+            "value" : 600,
+            "text" : "The influence of French Indochina can be seen in the baguette used in this sandwich, traditionally topped with cilantro and pickled vegetables",
+            "correctResponse" : "Banh Mi"
+          },
+          {
+            "value" : 800,
+            "text" : "Dumas knows that the addition of turkey and Deep-frying to a Croque Monseiur gives you this sandwich",
+            "correctResponse" : "Monte Crsito"
+          },
+          {
+            "value" : 1000,
+            "text" : "Local lore is that longshoremen on the three rivers in this city developed the sandwich topped with fries and coleslaw for convenient eating",
+            "correctResponse" : "Pittsburgh"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "SOMEDAY YOU'LL FIND IT",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Hamlet couldn’t tell you that you can take a ferry from Helsingborg, Sweden, to Helsingor, in this country",
+            "correctResponse" : "Denmark"
+          },
+          {
+            "value" : 800,
+            "text" : "To get from Tegucigalpa to San Jose, pad through this Central American country",
+            "correctResponse" : "Nicaragua"
+          },
+          {
+            "value" : 1200,
+            "text" : "Head south from Timbuktu until you cross the border into this country",
+            "correctResponse" : "Burkina Faso"
+          },
+          {
+            "value" : 1600,
+            "text" : "Follow the Amazon through Brazil, around the southern tip of Colombia, and into this country",
+            "correctResponse" : "Peru"
+          },
+          {
+            "value" : 2000,
+            "text" : "Go due north from Kabul and you’ll be in this former Soviet republic",
+            "correctResponse" : "Tajikistan"
+          }
+        ]
+      },
+      {
+        "category" : "THE RAINBOW",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Individuals with a knack for gardening are said to have this",
+            "correctResponse" : "green thumb"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "Elongated wavelengths as an object moves away from us creates this astronomical effect",
+            "correctResponse" : "red shift"
+          },
+          {
+            "value" : 1200,
+            "text" : "This disease is caused by a virus transmitted by bites from Aedus and Haemagogus mosquitos",
+            "correctResponse" : "Yellow Fever"
+          },
+          {
+            "value" : 1600,
+            "text" : "No word if Brooke Shields or Christopher Atkins have ever seen this geothermal wonder in Iceland",
+            "correctResponse" : "Blue Lagoon"
+          },
+          {
+            "value" : 2000,
+            "text" : "There’s only one answer to the name of this band with members Amy Ray and Emily Saliers",
+            "correctResponse" : "Indigo Girls"
+          }
+        ]
+      },
+      {
+        "category" : "CONNECTIONS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Roses, A Rat, What the Rock is Cooking",
+            "correctResponse" : "Things you smell"
+          },
+          {
+            "value" : 800,
+            "text" : "Classic, punk, yacht",
+            "correctResponse" : "rock"
+          },
+          {
+            "value" : 1200,
+            "text" : "Zip, chorus, manufacturing",
+            "correctResponse" : "line"
+          },
+          {
+            "value" : 1600,
+            "text" : "Republic, split, boat",
+            "correctResponse" : "banana"
+          },
+          {
+            "value" : 2000,
+            "text" : "Turn, about, poker",
+            "correctResponse" : "Face"
+          }
+        ]
+      },
+      {
+        "category" : "LOVERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Following a bus accident which ended her original career aspirations, she met fellow artist and future husband Diego Rivera at a meeting of the Mexican Communist Party",
+            "correctResponse" : "Frida Kahlo"
+          },
+          {
+            "value" : 800,
+            "text" : "\"The Autobiography of Alice B. Toklas\" wasn’t written by Alice, but by this woman, her lover",
+            "correctResponse" : "Gertrude Stein"
+          },
+          {
+            "value" : 1200,
+            "text" : "Abelard (do you need more?)",
+            "correctResponse" : "Heloise"
+          },
+          {
+            "value" : 1600,
+            "text" : "While still married to June, he had a well-documented affair with Anais Nin - how scandalous!",
+            "correctResponse" : "Henry Miller"
+          },
+          {
+            "value" : 2000,
+            "text" : "Eric Clapton’s \"Wonderful Tonight\" and The Beatles’ George Harrison-penned \"Something\" were both written about this woman, who was married to both songwriters ",
+            "correctResponse" : "Pattie Boyd"
+          }
+        ]
+      },
+      {
+        "category" : "DREAMS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Human dreams occur mainly in this phase of sleep, REM for short",
+            "correctResponse" : "Rapid Eye Movement"
+          },
+          {
+            "value" : 800,
+            "text" : "Whether it’s factually true or not, this band sang \"Thunder only happens when it’s rainin’\" in their song, Dreams",
+            "correctResponse" : "Fleetwood Mac"
+          },
+          {
+            "value" : 1200,
+            "text" : "Martin Luther King Jr.’s \"I Have a Dream\" speech was delivered during the March on Washington for Jobs and Freedom on August 28 of this year",
+            "correctResponse" : "1963"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "A seminal book in the field of psychoanalysis, Sigmund Freud’s “Die Traumdeutung” translates to this",
+            "correctResponse" : "The interpretation of Dreams"
+          },
+          {
+            "value" : 2000,
+            "text" : "First recorded by Ozzie Nelson and His Orchestra in 1931, this standard was later popularized by The Mamas & the Papas",
+            "correctResponse" : "Dream little Dream of me"
+          }
+        ]
+      },
+      {
+        "category" : "ME",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "ME is the postal abbreviation for this state",
+            "correctResponse" : "Maine"
+          },
+          {
+            "value" : 800,
+            "text" : "Microsoft released this widely-despised version of Windows in 2000, known as ME for short",
+            "correctResponse" : "Millenium edition"
+          },
+          {
+            "value" : 1200,
+            "text" : "Myalgic encephalomyelitis is an alternative name for this disease, commonly abbreviated as CFS",
+            "correctResponse" : "Chronic Fatigue Syndrome"
+          },
+          {
+            "value" : 1600,
+            "text" : "ME can stand for this type of doctor who attempts to determine the cause of death postmortem",
+            "correctResponse" : "MEdical Examiner"
+          },
+          {
+            "value" : 2000,
+            "text" : ".me is the internet country code for this nation",
+            "correctResponse" : "Montenegro"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "BUSINESS",
+    "comments" : "",
+    "clue" : {
+      "text" : "This company with over 37,000 global locations is the world's leading distributor of children's toys",
+      "correctResponse" : "McDonald's"
+    }
+  }
+}

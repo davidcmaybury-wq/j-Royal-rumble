@@ -8,8 +8,8 @@ export const BOARD_CATEGORIES = 6;
 export const DEFAULT_SETTINGS = {
   startScore: 3000,
   ceiling: 11000,
-  ceilingDecayPerClue: -40,
-  ceilingFloor: 1000,
+  ceilingDecayPerClue: null,  // null => auto: decay to the floor over the match
+  ceilingFloor: null,         // null => auto: the starting score
   entryInterval: null,       // null => auto from roster + targetMinutes
   entrantsOnFieldClear: 2,
   stumperFraction: 0.5,      // 0 disables the universal-stumper deduction
@@ -26,6 +26,21 @@ export function autoEntryInterval(playerCount, targetMinutes, secondsPerClue) {
   const targetClues = (targetMinutes * 60) / secondsPerClue;
   const raw = Math.round((targetClues * 0.6) / (playerCount - 3));
   return Math.min(15, Math.max(2, raw));
+}
+
+// Roughly how many clues a match of this shape runs. Mirrors the estimate the
+// setup page shows the host — the queue emptying, plus an endgame.
+export function expectedClues(playerCount, interval) {
+  const entry = Math.max(0, playerCount - 3) * interval;
+  return Math.round(entry + Math.max(22, entry * 0.67));
+}
+
+// A ceiling that decays from its opening value down to the floor across the
+// expected length of the match. Set by hand if you want it steeper.
+export function autoCeilingDecay(ceiling, floor, playerCount, interval) {
+  const clues = expectedClues(playerCount, interval);
+  if (clues <= 0 || ceiling <= floor) return 0;
+  return -Math.max(5, Math.round((ceiling - floor) / clues / 5) * 5);
 }
 
 // Deterministic PRNG (mulberry32) so a match can be replayed from its seed.
@@ -54,6 +69,12 @@ export class RumbleGame {
     if (this.s.entryInterval == null) {
       this.s.entryInterval = autoEntryInterval(
         players.length, this.s.targetMinutes, this.s.secondsPerClue);
+    }
+    // The floor can never be below the entry stake, so that is also its default.
+    if (this.s.ceilingFloor == null) this.s.ceilingFloor = this.s.startScore;
+    if (this.s.ceilingDecayPerClue == null) {
+      this.s.ceilingDecayPerClue = autoCeilingDecay(
+        this.s.ceiling, this.s.ceilingFloor, players.length, this.s.entryInterval);
     }
 
     this.players = new Map();

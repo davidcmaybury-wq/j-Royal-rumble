@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan East Semi 2",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "WORLD CITIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Anthony bourdain described this most-populous city in the Southern Hemisphere as “if L.A. threw up on New York\"",
+            "correctResponse" : "São Paolo"
+          },
+          {
+            "value" : 400,
+            "text" : "This city formerly known as Saigon is now home to Landmark 81, the tallest building in Vietnam",
+            "correctResponse" : "Ho Chi Minh City"
+          },
+          {
+            "value" : 600,
+            "text" : "Events in this Libyan city in 2012 were the subject ten separate congressional investigations",
+            "correctResponse" : "Benghazi"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "King Henry IV effectively ended the religious wars with the Edict of this city, guaranteeing religious tolerance for Protestants",
+            "correctResponse" : "Nantes"
+          },
+          {
+            "value" : 1000,
+            "text" : "This former gold rush city sits on Port Phillip, an enclosed bay on the southern edge of its nation",
+            "correctResponse" : "Melbourne"
+          }
+        ]
+      },
+      {
+        "category" : "MASSIVE BAG DROPS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This bland, mediocre entertainment executive could have continued collecting massive checks for producing America's two most popular game shows, but he wanted to be in front of the camera",
+            "correctResponse" : "Mike Richards"
+          },
+          {
+            "value" : 400,
+            "text" : "This comedienne who created a wildly successful eponymous sitcom in the 80's and 90's was minting herself on the revival, but couldn't resist the allure of being racist on Twitter",
+            "correctResponse" : "Roseanne"
+          },
+          {
+            "value" : 600,
+            "text" : "Known for his spastic physical comedy and sharing his name with a bland mediocrity, the comedian went on a racist tirade against hecklers at the Laugh Factory, killing his career",
+            "correctResponse" : "Michael Richards"
+          },
+          {
+            "value" : 800,
+            "text" : "Offered a seven-picture deal after his adequate debut, this Australian model instead decided the superspy he played would be antiquated in the liberated 70's",
+            "correctResponse" : "George Lazenby"
+          },
+          {
+            "value" : 1000,
+            "text" : "This chef, known for her love of deep-frying and Type 2 diabetes, got cancelled in 2013 for planning a \"plantation party\" for white guests with a black waitstaff",
+            "correctResponse" : "Paula Deen"
+          }
+        ]
+      },
+      {
+        "category" : "HEY BIG SPENDER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This christopher nolan space travel movie cost more to make than the actual Indian space program that put an actual probe on the actual moon",
+            "correctResponse" : "Interstellar"
+          },
+          {
+            "value" : 400,
+            "text" : "Among the things that blew up in \"Gravity\" was this $150 billion dollar facility",
+            "correctResponse" : "the international space station"
+          },
+          {
+            "value" : 600,
+            "text" : "Why have a learjet when you can have the DreamJet, a full widebody 787 configured just for your personal travel by this manufacturer",
+            "correctResponse" : "Boeing"
+          },
+          {
+            "value" : 800,
+            "text" : "Alberto Giacometti's sculpture \"L'homme au dougt\" sold for $141.3 million; no wonder this country put his face on their money",
+            "correctResponse" : "Switzerland"
+          },
+          {
+            "value" : 1000,
+            "text" : "The average price for a parking spot in this American district is $1 million; Taxi!",
+            "correctResponse" : "Manhattan"
+          }
+        ]
+      },
+      {
+        "category" : "PSYCHOLOGY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "A division of the American Psychological Association is devoted to these, such as to gambling",
+            "correctResponse" : "Addiction"
+          },
+          {
+            "value" : 400,
+            "text" : "Adjective for information received by the brain on an unconscious level, from the Latin for \"below the threshold\"",
+            "correctResponse" : "subliminal"
+          },
+          {
+            "value" : 600,
+            "text" : "It's genetics or upbringing in this classic debate of 2 words with the same second syllable",
+            "correctResponse" : "nature or nuture"
+          },
+          {
+            "value" : 800,
+            "text" : "This Swiss mister came up with concepts like the collective unconscious & archetypes",
+            "correctResponse" : "Carl Jung"
+          },
+          {
+            "value" : 1000,
+            "text" : "A parent creating in a child the physical symptoms of an illness may be exhibiting this Baron's syndrome",
+            "correctResponse" : "Munchhausen"
+          }
+        ]
+      },
+      {
+        "category" : "PRESIDENTIAL FIRSTS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This was the first (and only) president to serve in both world wars",
+            "correctResponse" : "Dwight Eisenhower"
+          },
+          {
+            "value" : 400,
+            "text" : "The first president to also be a slaveowner",
+            "correctResponse" : "George Washington"
+          },
+          {
+            "value" : 600,
+            "text" : "First divorcee to be elected president",
+            "correctResponse" : "Ronald Reagan"
+          },
+          {
+            "value" : 800,
+            "text" : "First president born in the 1800's; first to enforce the Fugitive Slave Act, First to run as a Know Nothing",
+            "correctResponse" : "MIllard Fillmore"
+          },
+          {
+            "value" : 1000,
+            "text" : "The first president to ride in an airplane - he was also the first in a submarine",
+            "correctResponse" : "Teddy Roosevelt"
+          }
+        ]
+      },
+      {
+        "category" : "GROWING ANAGRAMS",
+        "comments" : "Starting with five letters, each pair gets one letter longer as you go down",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "5 letters - For a program to break down an input into discrete data; an extra part held in case of need",
+            "correctResponse" : "parse/spare"
+          },
+          {
+            "value" : 400,
+            "text" : "6 letters - oxidized; a lightweight long coat for keep clothing clean",
+            "correctResponse" : "rusted/duster"
+          },
+          {
+            "value" : 600,
+            "text" : "7 letters - held an ambition for something greater; to give up all hope for something better",
+            "correctResponse" : "aspired/despair"
+          },
+          {
+            "value" : 800,
+            "text" : "8 letters - an animal that kills other animals for food (or an alien who kills humans for sport); a small lacrimal secretion",
+            "correctResponse" : "predator/teardrop"
+          },
+          {
+            "value" : 1000,
+            "text" : "9 letters - Held a bidding war for; the cabinet department headed by Miguel cardona focused on schooling",
+            "correctResponse" : "auctioned/education"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "TROUBLESOME PRIESTS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This reform-oriented german monk wrote 95 theses against the behavior of the catholic church that would ultimately cleave christendom",
+            "correctResponse" : "Martin Luther"
+          },
+          {
+            "value" : 800,
+            "text" : "This spanish friar was first to lead the Inquisition, and oversaw over 2000 burnings at a stake",
+            "correctResponse" : "Tomás de torquemada"
+          },
+          {
+            "value" : 1200,
+            "text" : "This italian friar was known for his strident criticism of secular art and clerical corruption; after a trial by fire went poorly, public opinion turned against him and he was hanged",
+            "correctResponse" : "Girolamo Savonarola"
+          },
+          {
+            "value" : 1600,
+            "text" : "Known as the \"red eminence\" this cardinal worked tirelessly to weaken various nobles and centralize power at the throne; he also invented the table knife",
+            "correctResponse" : "Cardinal Richilieu"
+          },
+          {
+            "value" : 2000,
+            "text" : "He was made Archbishop of Canterbury thanks to efforts by the Boleyn family; he rewarded them by making Anne a queen",
+            "correctResponse" : "Thomas Cranmer"
+          }
+        ]
+      },
+      {
+        "category" : "IRRATIONAL NUMBERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "($303.7 Million for five years)\nThe contract signed by this fourth-best player on the celtics in the offseason\n",
+            "correctResponse" : "Jalen brown"
+          },
+          {
+            "value" : 800,
+            "text" : "(3.1415926....)\nI'm hungry for a deep dish ratio of a circumference to the diameter",
+            "correctResponse" : "pi"
+          },
+          {
+            "value" : 1200,
+            "text" : "(2.71828...)\nThis number who name is the initial of a Swiss mathematicians",
+            "correctResponse" : "e"
+          },
+          {
+            "value" : 1600,
+            "text" : "(1.41421...)\nTake a radical look at this number that is the ratio of the hypotenuse of an isosceles right triangle to its legs",
+            "correctResponse" : "Square Root of Two"
+          },
+          {
+            "value" : 2000,
+            "dailyDouble" : true,
+            "text" : "(1.61803...)\nThis aesthetically pleasing relationship between two dimensions of an object",
+            "correctResponse" : "Golden Ratio"
+          }
+        ]
+      },
+      {
+        "category" : "A DAY AT DISNEYLAND",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This roller coaster with animatronic yetis is famously named for a Swiss mountain",
+            "correctResponse" : "Matterhorn"
+          },
+          {
+            "value" : 800,
+            "text" : "Possibly the most famous roller coaster, this indoor dark ride's paradoxical name reflects its sci-fi setting and futuristic conical enclosure",
+            "correctResponse" : "Space mountain"
+          },
+          {
+            "value" : 1200,
+            "text" : "The ride subtitled \"the temple of the forbidden eye\" is set in the supernatural universe of this movie archaeologist",
+            "correctResponse" : "Indiana Jones"
+          },
+          {
+            "value" : 1600,
+            "text" : "This highly innovative, and often broken-down, trackless ride relies on innovative storytelling and live special effects to show the \"rise of\" this last-trilogy Star Wars faction",
+            "correctResponse" : "the Resistance"
+          },
+          {
+            "value" : 2000,
+            "text" : "Astro Blasters is a dark ride through a laser shooting gallery based around this Pixar interstellar hero",
+            "correctResponse" : "Buzz Lightyear"
+          }
+        ]
+      },
+      {
+        "category" : "THINGS GORDON RAMSAY WON'T EAT",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Gordon categorically refuses to consider pizza topped with this fruit, a delicious combination",
+            "correctResponse" : "pineapple"
+          },
+          {
+            "value" : 800,
+            "text" : "Regarding meals on this conveyance: \"I know where this food's been and where it goes, and how long it took before it got on board\"",
+            "correctResponse" : "airplane"
+          },
+          {
+            "value" : 1200,
+            "text" : "Gordon refuses to touch \"ready meals\" stored this way: \"they all taste exactly the same\"",
+            "correctResponse" : "frozen"
+          },
+          {
+            "value" : 1600,
+            "text" : "This southern thanksgiving dish that routinely results in dozens of house fires each year is not only \"fucking disgusting\" but intolerably dry",
+            "correctResponse" : "deep-fried turkey"
+          },
+          {
+            "value" : 2000,
+            "text" : "Gordon objects to this food for moral reasons; he has been drenched in gasoline and held at gunpoint by the fishing gangs harvesting the key ingredient",
+            "correctResponse" : "Shark fin soup"
+          }
+        ]
+      },
+      {
+        "category" : "WOMEN AUTHORS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "If you are reading a book about an Anne, it's probably by this canadian",
+            "correctResponse" : "L.M. Montgomery"
+          },
+          {
+            "value" : 800,
+            "text" : "Born in Iran, this author of \"the golden notebook\" moved to southern rhodesia before coming to London in 1949 the same year she got divorced",
+            "correctResponse" : "Doris lessing"
+          },
+          {
+            "value" : 1200,
+            "text" : "This journalist and writer worked for Vogue for seven years before moving to los angeles, where she authored \"slouching towards Bethlehem\"",
+            "correctResponse" : "Joan Didion"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This screenwriter and director made a huge splash with \"Ladybird,\" which won her the opportunity to write and direct a branded 2023 megahit",
+            "correctResponse" : "Greta Gerwig"
+          },
+          {
+            "value" : 2000,
+            "text" : "This trailblazing author founded Hogarth Press with her husband, which published much of her work",
+            "correctResponse" : "Virginia Woolf"
+          }
+        ]
+      },
+      {
+        "category" : "SOUNDS LIKE A CELEBRITY BABY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This singular of a Fleetwood Mac album which also completes the title of the Adele song: \"_______ has it\"",
+            "correctResponse" : "Rumer (willis)"
+          },
+          {
+            "value" : 800,
+            "text" : "THis cupertino-based consumer electronics company makes the iPhone, and billions of dollars",
+            "correctResponse" : "Apple (paltrow)"
+          },
+          {
+            "value" : 1200,
+            "text" : "In \"Austin powers: The Spy who shagged me\" Dr. Evil's secret lunar lair had these two teams operating it",
+            "correctResponse" : "Moon Unit Zappa"
+          },
+          {
+            "value" : 1600,
+            "text" : "Bradley Cooper voices this brilliant, sarcastic Raccoon in the \"Guardians of the Galaxy\" movies",
+            "correctResponse" : "Rocket (pharrell williams, Jamie Oliver, Sam Worthington)"
+          },
+          {
+            "value" : 2000,
+            "text" : "This was superman's Kryptonian name",
+            "correctResponse" : "Kal-el (Nicolas Cage)"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "ACTRESSES",
+    "comments" : "",
+    "clue" : {
+      "text" : "James Cameron mixed high and low technology in his movies, like when he used this actress's identical twin sister to save on CGI",
+      "correctResponse" : "Linda Hamilton"
+    }
+  }
+}

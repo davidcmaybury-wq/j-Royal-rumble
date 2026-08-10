@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan East 23 Prelim 11",
+  "author" : "Matt Takimoto",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "SALTY SNACKS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The classic trail mix GORP stands for \"good old\" these two ingredients",
+            "correctResponse" : "Raisins and Peanuts"
+          },
+          {
+            "value" : 400,
+            "text" : "Happy Days fans will love these Italian croccanti snacks, oven baked and cheesy",
+            "correctResponse" : "Fonzies"
+          },
+          {
+            "value" : 600,
+            "text" : "This brand with a rhyming name began life in Philadelphia as the American Cone and Pretzel Company",
+            "correctResponse" : "Rold Gold"
+          },
+          {
+            "value" : 800,
+            "text" : "Blue chips? Fuego Azul is the very unsettling flavor offered by this Mexican brand",
+            "correctResponse" : "Takis"
+          },
+          {
+            "value" : 1000,
+            "text" : "Feeling a bit daring? Try these spicy toasted grasshoppers, especially popular in Oaxaca, Mexico",
+            "correctResponse" : "Chapulines"
+          }
+        ]
+      },
+      {
+        "category" : "NAME THE DECADE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "First running of the Indy 500; only running of the Titanic",
+            "correctResponse" : "1910s"
+          },
+          {
+            "value" : 400,
+            "text" : "South Sudan joins the US; bin Laden and Gaddafi are killed",
+            "correctResponse" : "2010s"
+          },
+          {
+            "value" : 600,
+            "text" : "Nat Turner rebels; Martin Van Buren is elected President",
+            "correctResponse" : "1830s"
+          },
+          {
+            "value" : 800,
+            "text" : "The Bounty crew mutinies; The Tennis Court Oath is taken",
+            "correctResponse" : "1780s"
+          },
+          {
+            "value" : 1000,
+            "text" : "Francis Bacon rebels; Pope Clement X dies",
+            "correctResponse" : "1670s"
+          }
+        ]
+      },
+      {
+        "category" : "PUPPET, PIRATE, OR POET?",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Abby Cadabby",
+            "correctResponse" : "puppet"
+          },
+          {
+            "value" : 400,
+            "text" : "Countee Cullen",
+            "correctResponse" : "poet"
+          },
+          {
+            "value" : 600,
+            "text" : "Anne Bonny",
+            "correctResponse" : "pirate"
+          },
+          {
+            "value" : 800,
+            "text" : "John Drinkwater",
+            "correctResponse" : "poet"
+          },
+          {
+            "value" : 1000,
+            "text" : "Abelardo Montoya",
+            "correctResponse" : "puppet"
+          }
+        ]
+      },
+      {
+        "category" : "CLASSIC VIDEO GAMES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This character first hatched in Super Mario World for the Super Nintendo",
+            "correctResponse" : "Yoshi"
+          },
+          {
+            "value" : 400,
+            "text" : "You take the title character subterranean in this alliterative game by Namco",
+            "correctResponse" : "Dig Dug"
+          },
+          {
+            "value" : 600,
+            "dailyDouble" : true,
+            "text" : "The original US release of Pokemon (Red and Blue) featured these two characters on the covers",
+            "correctResponse" : "Charizard and Blastoise"
+          },
+          {
+            "value" : 800,
+            "text" : "The smooth side-scrolling of this motorcycle racing game aided in the development of Super Mario Bros.",
+            "correctResponse" : "Excitebike"
+          },
+          {
+            "value" : 1000,
+            "text" : "This challenger to the Atari 2600 came with the first at-home version of Donkey Kong",
+            "correctResponse" : "ColecoVision"
+          }
+        ]
+      },
+      {
+        "category" : "FALL GUYS",
+        "comments" : "a category about guys born in fall",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "October 20th, 1950: the late leader of the Heartbreakers",
+            "correctResponse" : "Tom Petty"
+          },
+          {
+            "value" : 400,
+            "text" : "November 26th, 1975: the Palestinian-American founder of We The Best Music",
+            "correctResponse" : "DJ Khaled"
+          },
+          {
+            "value" : 600,
+            "text" : "November 11th, 1960: the host of the CNN travel show \"Searching for Italy\"",
+            "correctResponse" : "Stanley Tucci"
+          },
+          {
+            "value" : 800,
+            "text" : "September 29th, 1907: country star and founding owner of the California Angels MLB team",
+            "correctResponse" : "Gene Autry"
+          },
+          {
+            "value" : 1000,
+            "text" : "October 31st, 1931: He hosted the CBS Evening News for 24 years",
+            "correctResponse" : "Dan Rather"
+          }
+        ]
+      },
+      {
+        "category" : "\"P-S-L\" SEASON",
+        "comments" : "Each correct response will begin with a P, contain an S, and end with an L",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Surname shared by actor Pedro and mathematician Blaise",
+            "correctResponse" : "Pascal"
+          },
+          {
+            "value" : 400,
+            "text" : "The female reproductive parts of a flower",
+            "correctResponse" : "pistil"
+          },
+          {
+            "value" : 600,
+            "text" : "It's the sobriquet for Beethoven's Sixth Symphony",
+            "correctResponse" : "Pastoral"
+          },
+          {
+            "value" : 800,
+            "text" : "The 12-letter adjective currently attached to Matt Amodio's research at Harvard",
+            "correctResponse" : "postdoctoral"
+          },
+          {
+            "value" : 1000,
+            "text" : "This pride flag has a pink stripe on top, yellow in the middle, and blue on the bottom",
+            "correctResponse" : "pansexual"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "AFRICA",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Fittingly, this river separates the cities of Brazzaville and Kinshasa",
+            "correctResponse" : "Congo"
+          },
+          {
+            "value" : 800,
+            "text" : "He was ousted as President of Egypt in 2011, after a 30 year reign",
+            "correctResponse" : "Hosni Mubarak"
+          },
+          {
+            "value" : 1200,
+            "text" : "It's the only nation to share a land border with The Gambia",
+            "correctResponse" : "Senegal"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This city in West Africa has the second-most vowels of any world capital",
+            "correctResponse" : "Ouagadougou"
+          },
+          {
+            "value" : 2000,
+            "text" : "During his 1324 pilgrimage to Mecca, he gave away so much gold on his journey, the inflation crippled the economies of Mali's rivals",
+            "correctResponse" : "Mansa Musa"
+          }
+        ]
+      },
+      {
+        "category" : "A SONG OF ICE OR FIRE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "It heavily samples (and some would say plagiarizes) \"Under Pressure\" by Queen",
+            "correctResponse" : "Ice Ice Baby"
+          },
+          {
+            "value" : 800,
+            "text" : "This 2014 Pitbull banger shares its name with a brand of cinnamon whiskey",
+            "correctResponse" : "Fireball"
+          },
+          {
+            "value" : 1200,
+            "text" : "This James Taylor classic peaked at #3 on the Billboard charts in 1970",
+            "correctResponse" : "Fire and Rain"
+          },
+          {
+            "value" : 1600,
+            "text" : "\"I've seen it before, it happens all the time, you're closing the door, you leave the world behind\" sings Lou Gramm of Foreigner in this 1977 hit",
+            "correctResponse" : "Cold as Ice"
+          },
+          {
+            "value" : 2000,
+            "text" : "Michael Moore was arrested by the NYPD for shooting the video for this Rage Against the Machine song outside the New York Stock Exchange",
+            "correctResponse" : "Sleep Now in the Fire"
+          }
+        ]
+      },
+      {
+        "category" : "URANUS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Uranus is our solar system's largest example of this type of big, chilly planet",
+            "correctResponse" : "Ice Giant"
+          },
+          {
+            "value" : 800,
+            "text" : "Uranus has 27 moons, and 13 of these orbiting it",
+            "correctResponse" : "Rings"
+          },
+          {
+            "value" : 1200,
+            "text" : "This spacecraft was the first (and only) to capture images of Uranus, doing so in a 1986 flyby",
+            "correctResponse" : "Voyager 2"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "Hopefully, Uranus's innermost moon isn't as brutally honest as this namesake daughter, or else it might get exiled from orbit",
+            "correctResponse" : "Cordelia"
+          },
+          {
+            "value" : 2000,
+            "text" : "William Herschel wanted to name the planet after King George III. Instead, this German astronomer's suggestion won out, and Uranus it was",
+            "correctResponse" : "Johann Bode"
+          }
+        ]
+      },
+      {
+        "category" : "\"LORD\" HAVE MERCY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "A power struggle between Jack and Ralph sits at the center of this 1954 dystopian novel",
+            "correctResponse" : "Lord of the Flies"
+          },
+          {
+            "value" : 800,
+            "text" : "His name is Peter Quill, but people call him this",
+            "correctResponse" : "Star-Lord"
+          },
+          {
+            "value" : 1200,
+            "text" : "The ruler of the mythical land of Dulac, voiced by John Lithgow",
+            "correctResponse" : "Lord Farquaad"
+          },
+          {
+            "value" : 1600,
+            "text" : "George Harrison was found in court to have subconsciously plagarized The Chiffons \"He's So Fine\" when he wrote this track",
+            "correctResponse" : "My Sweet Lord"
+          },
+          {
+            "value" : 2000,
+            "text" : "Ethan Hawke played the role of abolitionist John Brown in this 2020 Showtime miniseries",
+            "correctResponse" : "The Good Lord Bird"
+          }
+        ]
+      },
+      {
+        "category" : "THE OBLIGATORY AUTHORS CATEGORY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "We at Jeopardy! are duty-bound to provide at least one clue per game about these literary sisters",
+            "correctResponse" : "Bronte"
+          },
+          {
+            "value" : 800,
+            "text" : "Jeopardy! board. This author. Always on.",
+            "correctResponse" : "Hemingway"
+          },
+          {
+            "value" : 1200,
+            "text" : "Sleepy Hollow? Cider House? Doesn't matter, just gimme their last name",
+            "correctResponse" : "Irving"
+          },
+          {
+            "value" : 1600,
+            "text" : "We need one really old author, for variety. The Oedipus guy? Sure, that'll work",
+            "correctResponse" : "Sophocles"
+          },
+          {
+            "value" : 2000,
+            "text" : "If her nonfiction book about pesticides isn't involved, is it even Jeopardy!?",
+            "correctResponse" : "Rachel Carson"
+          }
+        ]
+      },
+      {
+        "category" : "BEFORE AND AFTER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "They tested the durability of Fallingwater in Kitty Hawk, NC",
+            "correctResponse" : "Frank Lloyd Wright Brothers"
+          },
+          {
+            "value" : 800,
+            "text" : "Chester Gould's titular police detective searches for a white whale",
+            "correctResponse" : "Moby-Dick Tracy"
+          },
+          {
+            "value" : 1200,
+            "text" : "Teenager Jenna Rink makes a birthday wish, and wakes the next morning to find she's older, and in the command module with Jim Lovell and Fred Haise",
+            "correctResponse" : "Apollo 13 Going on 30"
+          },
+          {
+            "value" : 1600,
+            "text" : "Bible book about a DC Comics supervillian, a reanimated version of murder victim Cyrus Gold",
+            "correctResponse" : "Song of Solomon Grundy"
+          },
+          {
+            "value" : 2000,
+            "text" : "Steven Bochco police procedural set in the location where Romulus and Remus were found by the she-wolf Lupa",
+            "correctResponse" : "Palatine Hill Street Blues"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "MEDICAL INNOVATIONS",
+    "comments" : "",
+    "clue" : {
+      "text" : "This ubiquitous medical accessory, from its first use by Rene Lennaec in 1816, was a major step forward in the practice of auscultation",
+      "correctResponse" : "Stethoscope"
+    }
+  }
+}

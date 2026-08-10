@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 04",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "(HAN) SOLOS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Bill Burgess trained for 18 hours, had a hearty meal of ham and eggs, and then made the second solo crossing of this body of water in 22 hours and 35 minutes",
+            "correctResponse" : "English Channel"
+          },
+          {
+            "value" : 400,
+            "text" : "He won the Orteig prize for the first flight from New York to Paris, also the first solo transatlantic crossing, in a mere 33 hours",
+            "correctResponse" : "Charles Lindbergh"
+          },
+          {
+            "value" : 600,
+            "text" : "In the film \"free solo\" Alex Honnold and his giant hands successfully climbed this rock face on his own, with no ropes, equipment, or partners",
+            "correctResponse" : "El capitan"
+          },
+          {
+            "value" : 800,
+            "text" : "Arguably the biggest show stopper in opera, \"The Queen of the Night\" is a stunning solo with a top F in this Mozart opera",
+            "correctResponse" : "The Magic Flute"
+          },
+          {
+            "value" : 1000,
+            "text" : "Among the many feats of this Tyrolean legend are the first solo ascent of Everest, the first without oxygen, and the first solo crossing of the Gobi desert ",
+            "correctResponse" : "Reinhold Messner"
+          }
+        ]
+      },
+      {
+        "category" : "[THE BOOK OF] LUKE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Chapter 3 focuses on this son of Zecheriah who dunked Jesus before finding himself behind by a head ",
+            "correctResponse" : "John the Baptist"
+          },
+          {
+            "value" : 400,
+            "text" : "Chapter 8 of the gospel of Luke tells the story of the varying fortunes of scattered seeds, lending itself to the title of this Octavia Butler novel",
+            "correctResponse" : "Parable of the Sower"
+          },
+          {
+            "value" : 600,
+            "text" : "Luke was unique among the authors of the Gospels in having this profession",
+            "correctResponse" : "Doctor"
+          },
+          {
+            "value" : 800,
+            "text" : "In chapter 4, Jesus ministers at synagogues in this lakeside region",
+            "correctResponse" : "Gallilee"
+          },
+          {
+            "value" : 1000,
+            "text" : "Luke's Gospel was addressed to this person, whose name means \"loved by God\"",
+            "correctResponse" : "Theophilus"
+          }
+        ]
+      },
+      {
+        "category" : "LEI-A",
+        "comments" : "About Hawai'i",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Visitors to Pearl Harbor can visit the memorial atop the wreckage of this battleship sunk on Dec. 7, 1941",
+            "correctResponse" : "USS Arizona"
+          },
+          {
+            "value" : 400,
+            "text" : "Oahu features a large pineapple plantation for this brand ",
+            "correctResponse" : "Dole"
+          },
+          {
+            "value" : 600,
+            "text" : "Coffee is grown in a narrow region on the Big Island that shares this name with the airport on its west coast",
+            "correctResponse" : "Kona"
+          },
+          {
+            "value" : 800,
+            "text" : "Oracle founder Larry Ellison has purchased nearly 98% of this Hawaiian island, which he wants to turn into a green resort",
+            "correctResponse" : "Lanai"
+          },
+          {
+            "value" : 1000,
+            "dailyDouble" : true,
+            "text" : "This extinct volcanic caldera whose name came from the gems the local calcite crystals resembled, was a natural amphitheater for the sunshine music festival in the 60's and 70's",
+            "correctResponse" : "Diamond Head"
+          }
+        ]
+      },
+      {
+        "category" : "CHEWY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This fluffy candy invented in Atlantic city is repeatedly pulled to produce its sweet chew",
+            "correctResponse" : "Taffy"
+          },
+          {
+            "value" : 400,
+            "text" : "Done correctly, this fried seafood appetizer is a delicate treat. Done wrong, it's like rubber bands",
+            "correctResponse" : "Calamari"
+          },
+          {
+            "value" : 600,
+            "text" : "These boiled-and-baked bread treats get their chewy texture from high-gluten flour and lots of working",
+            "correctResponse" : "Bagels"
+          },
+          {
+            "value" : 800,
+            "text" : "Originally a method of drying and preserving meat, this treat is a signature of Buc-ee's locations throughout the south",
+            "correctResponse" : "jerky"
+          },
+          {
+            "value" : 1000,
+            "text" : "This fruity, square Halloween treat comes in the flavors of red (cherry), Pink (garbage), orange (trash), and yellow (disgusting)",
+            "correctResponse" : "Starburst"
+          }
+        ]
+      },
+      {
+        "category" : "YODA SAYS...",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Save nine, this does",
+            "correctResponse" : "A stitch in time"
+          },
+          {
+            "value" : 400,
+            "text" : "Make an omelette without this, one cannot",
+            "correctResponse" : "Breaking eggs"
+          },
+          {
+            "value" : 600,
+            "text" : "When you do this, wake up with fleas you will",
+            "correctResponse" : "Lay with dogs"
+          },
+          {
+            "value" : 800,
+            "text" : "Know well, on which side buttered this is",
+            "correctResponse" : "Your Bread"
+          },
+          {
+            "value" : 1000,
+            "text" : "When it cured, it cannot be, this it must be",
+            "correctResponse" : "Endured"
+          }
+        ]
+      },
+      {
+        "category" : "R2D2",
+        "comments" : "Answers have two R's and two D's",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "This adjective describes a more intense crimson shade",
+            "correctResponse" : "redder"
+          },
+          {
+            "value" : 400,
+            "text" : "This batman villain went from campy question mark spandex to a serial killer vibe in recent movies",
+            "correctResponse" : "The Riddler"
+          },
+          {
+            "value" : 600,
+            "text" : "Amazon is one of the leading consumers of this very recyclable paper product",
+            "correctResponse" : "cardboard"
+          },
+          {
+            "value" : 800,
+            "text" : "This is the story, of a medical term for a condition of a slow heartbeat",
+            "correctResponse" : "bradycardia"
+          },
+          {
+            "value" : 1000,
+            "text" : "Peaceable assemblies are seen a means to force the resolution of these sorts of \"grievances\"",
+            "correctResponse" : "unredressed"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "DARTH VADER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This stammering Mississippi native provided Darth Vader's legendary voice",
+            "correctResponse" : "James Earl Jones"
+          },
+          {
+            "value" : 800,
+            "text" : "Lucasfilm trademarked this characteristic ominous sound that signaled the villain's presence",
+            "correctResponse" : "breathing"
+          },
+          {
+            "value" : 1200,
+            "text" : "Before being christened Darth Vader, he was a sand-hating little bitch answering to this name",
+            "correctResponse" : "Anakin Skywaker"
+          },
+          {
+            "value" : 1600,
+            "text" : "This vice president proudly wore the mantle of the \"Darth Vader\" of his administration",
+            "correctResponse" : "Dick Cheney"
+          },
+          {
+            "value" : 2000,
+            "text" : "Before Vader’s turn to the Dark Side, this young Jedi was his padawan learner (before Rosario Dawson played her in her own Disney+ series)",
+            "correctResponse" : "Ahsoka tano"
+          }
+        ]
+      },
+      {
+        "category" : "THE EMPEROR",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This emperor, also christened \"the Great,\" was the first Roman emperor to convert to Christianity. He later moved the imperial residence to a city renamed after himself",
+            "correctResponse" : "Constantine"
+          },
+          {
+            "value" : 800,
+            "text" : "Traditionally viewed as the first Holy Roman Emperor, this Frankish conqueror was crowned by pope Leo III",
+            "correctResponse" : "Charlemagne"
+          },
+          {
+            "value" : 1200,
+            "text" : "This leader of the Belgian empire committed a massive string of atrocities in Congo, using slave labor to create massive wealth for himself",
+            "correctResponse" : "Leopold II"
+          },
+          {
+            "value" : 1600,
+            "text" : "Under the 62 years of his leadership Japan changed from a growing empire to pacifist industrial giant",
+            "correctResponse" : "Hirohito"
+          },
+          {
+            "value" : 2000,
+            "text" : "Famed for his massive chin and rivalry with Henry VIII, this spaniard was Holy Roman Emperor for 37 years",
+            "correctResponse" : "Charles V"
+          }
+        ]
+      },
+      {
+        "category" : "HUTTS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This waterside shelter is usually sought after at any hotel resort",
+            "correctResponse" : "Cabana"
+          },
+          {
+            "value" : 800,
+            "text" : "These round central asian huts are seeing a resurgence in popularity, thanks partly to their funny name",
+            "correctResponse" : "Yurt"
+          },
+          {
+            "value" : 1200,
+            "text" : "A legendary D&D game saw a confused player eventually slain by this common garden structure",
+            "correctResponse" : "Gazebo"
+          },
+          {
+            "value" : 1600,
+            "text" : "These domed huts, similar in construction to tipis, were used by many Native American tribes",
+            "correctResponse" : "Wigwam"
+          },
+          {
+            "value" : 2000,
+            "text" : " Some of 170,000 of these low-cost, lightweight semicircular huts of corrugated steel were manufactured in huge quantities in WWII and sold as surplus after",
+            "correctResponse" : "Quonset hut"
+          }
+        ]
+      },
+      {
+        "category" : "CAD'S BANES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This famous Spanish lover invited a statue of the slain Don Gonzalo to dinner, in vain attempt at redemption before his death\n",
+            "correctResponse" : "Don Juan"
+          },
+          {
+            "value" : 800,
+            "text" : "This famous Italian lover died friendless in Bohemia - he spent his final years writing his memoirs as an alternative to suicide",
+            "correctResponse" : "Casanova"
+          },
+          {
+            "value" : 1200,
+            "dailyDouble" : true,
+            "text" : "Arie Luyendyk Jr. finished second on this show, then appeared in a central role on its companion show before getting knifed in the first finale of the Traitors",
+            "correctResponse" : "The Bachelorette"
+          },
+          {
+            "value" : 1600,
+            "text" : "Tim Meadows played Leon Phelps, better known by this title under which he gave horrible answers \"to all your romantic queries\"",
+            "correctResponse" : "The Ladies Man"
+          },
+          {
+            "value" : 2000,
+            "text" : "This young cad was the subject of a multi-pronged (social) murder plot in a 2006 teen comedy ",
+            "correctResponse" : "John Tucker"
+          }
+        ]
+      },
+      {
+        "category" : "GENERAL GRIEVOUS INJURIES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Beck Weathers was left for dead here, but miraculously survived a night without shelter, losing his right arm, left digits, both feet, and his nose",
+            "correctResponse" : "Mount Everest"
+          },
+          {
+            "value" : 800,
+            "text" : "28 have died and 479 injured when these inflatable playgrounds have come unmoored and blown away, leading the Mommyish blog to name them “Giant inflatable death traps of doom”",
+            "correctResponse" : "Bouncy castles"
+          },
+          {
+            "value" : 1200,
+            "text" : "A warehouse accident lead to a 15-tall wave of this sticky sugar byproduct in Boston in 1919, killing 21 and injuring 150",
+            "correctResponse" : "molasses"
+          },
+          {
+            "value" : 1600,
+            "text" : "from 2002 to 2010 17,616 men reported to E.R.'s with genital injuries involving this clothing accessory, usually without cameron diaz",
+            "correctResponse" : "Zipper"
+          },
+          {
+            "value" : 2000,
+            "text" : "In 2006, Truman Duncan fell in front of these freight movers and was cut in half. He called 911 on his cell phone and survived",
+            "correctResponse" : "Train"
+          }
+        ]
+      },
+      {
+        "category" : "SUPREME LEADERS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "First appointed by Nixon and elevated to Chief Justice by Ronald Reagan, this conservative justice lead the court to reduce the number of certs granted",
+            "correctResponse" : "Rehnquist"
+          },
+          {
+            "value" : 800,
+            "text" : "He was the first chief Justice who clerked for another chief justice",
+            "correctResponse" : "John Roberts"
+          },
+          {
+            "value" : 1200,
+            "dailyDouble" : true,
+            "text" : "This Chief Justice became the only president to swear in another president for office",
+            "correctResponse" : "Taft"
+          },
+          {
+            "value" : 1600,
+            "text" : "This \"dredful\" chief justice tried to settle the slavery question by explaining slaves were not citizens of any state, and therefore had no rights",
+            "correctResponse" : "Roger Taney"
+          },
+          {
+            "value" : 2000,
+            "text" : "This former treasury secretary and senator tried to run for President while being chief justice in 1868 and 1872",
+            "correctResponse" : "Salmon P. Chase"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "MAY THE FORCE BE WITH YOU",
+    "comments" : "",
+    "clue" : {
+      "text" : "Tracing its origins to the Napoleonic code, this clause allows one to suspend the contract when unpredictable, irresistible forces intervene",
+      "correctResponse" : "force majeure"
+    }
+  }
+}

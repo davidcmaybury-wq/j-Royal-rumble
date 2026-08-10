@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 10",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "VERY LONG SONG TITLES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Meatloaf took over 12 minutes on \"Bat Out of Hell II:Back into Hell\" to never actually explain the title of this song",
+            "correctResponse" : "I would do anything for love (but I won't do that)"
+          },
+          {
+            "value" : 400,
+            "text" : "This gospel-style song off the Joshua Tree implied Bono's ongoing useless searching",
+            "correctResponse" : "I still haven't found what I'm looking for"
+          },
+          {
+            "value" : 600,
+            "text" : "Panic! At The Disco is well-known for long song titles, and this 2019 shout of delight to the folks back home was no exception",
+            "correctResponse" : "Hey look ma I made it"
+          },
+          {
+            "value" : 800,
+            "text" : "\"Independence Day\" starts with this on-the-nose R.E.M. single playing in the background",
+            "correctResponse" : "it's the end of the world as we know it (and I feel fine)"
+          },
+          {
+            "value" : 1000,
+            "text" : "Bobby Bare got a grammy nomination for Best Country Song for this unique Christian-football waltz that truly split the uprights",
+            "correctResponse" : "Drop Kick Me Jesus (through the goalposts of life)"
+          }
+        ]
+      },
+      {
+        "category" : "I LIKE BIG \"BUTT\"S ",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "A compelling rung at the 2020 Democratic Presidential nomination got this South Bend mayor a position as Secretary of Transportation",
+            "correctResponse" : "Pete Buttigieg"
+          },
+          {
+            "value" : 400,
+            "text" : "This delightful \"bon vivant,\" floss dancer, and retired professor \"brought it\" to the Alex Trebek Stage once again for the 2024 JIT",
+            "correctResponse" : "Sam Buttrey"
+          },
+          {
+            "value" : 600,
+            "text" : "Amy Fisher became a national story in the mid-90's as the \"Long Island Lolita\" when her affair with this man lead to her attempt to murder his wife",
+            "correctResponse" : "Joey Buttafuoco"
+          },
+          {
+            "value" : 800,
+            "text" : "Pancakes will no longer be covered in the maple-flavored sugar syrup of this culturally outdated icon",
+            "correctResponse" : "Mrs. Butterworth"
+          },
+          {
+            "value" : 1000,
+            "text" : "Although his role as a child genius in \"Ender's Game\" didn't send his movie career into orbit, he has enjoyed better success on Netflix's \"Sex Education\"",
+            "correctResponse" : "Asa Butterfield"
+          }
+        ]
+      },
+      {
+        "category" : "I CANNOT LIE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The CIA still uses this machine, measuring a variety of biological indicators for stress, but only for granting clearances, as the evidence from it is not admissible in court\n",
+            "correctResponse" : "polygraph"
+          },
+          {
+            "value" : 400,
+            "text" : "Sodium thiopental is one of many psychoactive substances that some claim without evidence is an example of this type of drug that makes a victim unable to lie",
+            "correctResponse" : "truth serum"
+          },
+          {
+            "value" : 600,
+            "text" : "The \"functional\" version of this body imaging device can map bloodflow in the brain, and indicate with the creative centers are working harder than recall, indicating lying",
+            "correctResponse" : "MRI"
+          },
+          {
+            "value" : 800,
+            "dailyDouble" : true,
+            "text" : "This German baron was a well-known serial fabulist, and his name is now applied to a more pernicious type of medical abuse",
+            "correctResponse" : "Munchhausen"
+          },
+          {
+            "value" : 1000,
+            "text" : "This Navajo trickster god, known by his wild canine animal form, told the first lie when he told the Creator that he was not laughing as he fashioned other animals from clay",
+            "correctResponse" : "Coyote"
+          }
+        ]
+      },
+      {
+        "category" : "OPERA WITH JUVERIA ZAHEER",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Weezer named their 1996 concept album after this Madame Butterfly Lieutenant; she could have done better tbh ",
+            "correctResponse" : "Pinkerton"
+          },
+          {
+            "value" : 400,
+            "text" : "It’s too little too late for this Tchaikovsky Opera hero: he rejects Tatyana in Act 1; by Act 3 the tables have turned, and she rejects him",
+            "correctResponse" : "Eugene Onegin"
+          },
+          {
+            "value" : 600,
+            "text" : "When you sign up for the Pag / Cav double-bill, you'll be seeing this Mascagni opera with Leoncavallo’s Pagliacci",
+            "correctResponse" : "Cavalleria Rusitcana"
+          },
+          {
+            "value" : 800,
+            "text" : "The biblical books of 2 Kings, Jeremiah, Lamentations, and Daniel form the basis for this Verdi opera's libretto; its most famous number is “Chorus of the Hebrew Slaves”",
+            "correctResponse" : "Nabucco"
+          },
+          {
+            "value" : 1000,
+            "text" : "Beethoven's \"fidelio\" was influenced by this French composer with an angelic name's “Les Deux Journees;” His best known is Madea, which is rarely performed today",
+            "correctResponse" : "Cherubini"
+          }
+        ]
+      },
+      {
+        "category" : "CONSUMER PRODUCTS FROM 1902",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The Sears catalog featured \"Laudanum\" an extract of this botanical product (and the basis of wars in asia)",
+            "correctResponse" : "Opium"
+          },
+          {
+            "value" : 400,
+            "text" : "For your viewing enjoyment, you could purchase slides that showed the recent assassination of this president for your Stereopticon",
+            "correctResponse" : "William McKinley"
+          },
+          {
+            "value" : 600,
+            "text" : "The Giant Power Heidelberg Electric Belt was indicated to address this \"weakness peculiar to men” ",
+            "correctResponse" : "Impotence"
+          },
+          {
+            "value" : 800,
+            "text" : "One could get \"spirits of\" this paint thinner for killing internal parasites - and maybe the host too",
+            "correctResponse" : "turpentine"
+          },
+          {
+            "value" : 1000,
+            "text" : "One the great skincare products of the time were “Dr. French’s complexion wafers,” which were made with salts of this element, often paired with old lace",
+            "correctResponse" : "arsenic"
+          }
+        ]
+      },
+      {
+        "category" : "FAMOUS PEOPLE ANAGRAMS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "If you lived in Paris in the 1920s, you might have a “cool chance” to meet this fashion designer",
+            "correctResponse" : "Coco Chanel"
+          },
+          {
+            "value" : 400,
+            "text" : "Many NFL \"tacklers vie\" to bring down this Chiefs TE",
+            "correctResponse" : "Travis Kelce"
+          },
+          {
+            "value" : 600,
+            "text" : "This elderly sci-fi creator really gives the \"cougars glee\"",
+            "correctResponse" : "George Lucas"
+          },
+          {
+            "value" : 800,
+            "text" : "If you can access \"Adobe online,\" you can create a pdf about this frontiersman",
+            "correctResponse" : "Daniel Boone"
+          },
+          {
+            "value" : 1000,
+            "text" : "Sit back and listen to this \"The Lost City\" actress \"uncork ballads \"",
+            "correctResponse" : "Sandra Bullock"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "THE LYRICAL STYLINGS OF JOE BIDEN",
+        "comments" : "Name the song",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "i'm not big on social graces, guess I'll slip on down to the oasis",
+            "correctResponse" : "friends in low places"
+          },
+          {
+            "value" : 800,
+            "text" : "Now let me welcome everybody to the wild, wild west\nA state that's untouchable like Elliot Ness\nThe track hits ya eardrum like a slug to ya chest\nPack a vest for your Jimmy in the city of sex",
+            "correctResponse" : "California love"
+          },
+          {
+            "value" : 1200,
+            "text" : "To the extreme I rock a mic like vandal, light up the stage and wax a chump like a candle",
+            "correctResponse" : "Ice ice baby"
+          },
+          {
+            "value" : 1600,
+            "text" : "Oh ho I feel it, coming back again. Like a rolling thunder chasing the wind",
+            "correctResponse" : "Lightning Crashes"
+          },
+          {
+            "value" : 2000,
+            "text" : "Run and tell all of the angels \nthis could take all night\nThink I’ll need a devil to help me get things right",
+            "correctResponse" : "Learn to fly"
+          }
+        ]
+      },
+      {
+        "category" : "THE SUMMER OLYMPICS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "In 1980 and 1984 these two back-to-back host nations exchanged boycotts of each other's games",
+            "correctResponse" : "Soviet Union and United States"
+          },
+          {
+            "value" : 800,
+            "text" : "In a stunning (but needless) act of fortitude, this gymnast did a winning vault on an injured ankle, sticking a one-footed landing",
+            "correctResponse" : "Kerri Strug"
+          },
+          {
+            "value" : 1200,
+            "text" : "In 2012 the women's freestyle swimming events were dominated by this swimmer",
+            "correctResponse" : "Katie Ledecky"
+          },
+          {
+            "value" : 1600,
+            "text" : "The gymnastics perfect 10 was long thought unattainable, until this young Romanian delivered a pile of them",
+            "correctResponse" : "Nadia Comenici"
+          },
+          {
+            "value" : 2000,
+            "text" : "The 1972 Olympics in this city were infamous for a hostage crisis in the Olympic village",
+            "correctResponse" : "Munich"
+          }
+        ]
+      },
+      {
+        "category" : "THE RENAISSANCE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "There are ongoing theories that the spread of this new brew from Turkey, which displaced many alcoholic beverages of the time, help ignite an era of thought and creativity",
+            "correctResponse" : "Coffee"
+          },
+          {
+            "value" : 800,
+            "text" : "The Medici family, who served as patrons for much of the renaissance, rose to prominence in this city",
+            "correctResponse" : "Florence"
+          },
+          {
+            "value" : 1200,
+            "text" : "In the time of the renaissance, the church was a formidable political power, ruling these regions of Italy",
+            "correctResponse" : "The Papal States"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "While the renaissance was a very European phenomenon, most of the world's scholarship was still blossoming to the east, forcing many scholars to learn this language",
+            "correctResponse" : "Arabic"
+          },
+          {
+            "value" : 2000,
+            "text" : "This renaissance family gave the world popes Callixtus III, Alexander VI and Innocent X, and a great premium cable series",
+            "correctResponse" : "Borgias"
+          }
+        ]
+      },
+      {
+        "category" : "AMERICAN AUTHORS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "She wrote a unique novel of sixteen interlocking stories built around a Mah Jong game",
+            "correctResponse" : "amy tan"
+          },
+          {
+            "value" : 800,
+            "text" : "in addition to writing a classic novel about justice in Alabama, she was a childhood friend of Truman Capote",
+            "correctResponse" : "Igor"
+          },
+          {
+            "value" : 1200,
+            "text" : "This author takes an honest look at mental illness, domestic abuse, and family dysfunction with a refreshing touch of humor “I know this much is true”",
+            "correctResponse" : "Wally Lamb"
+          },
+          {
+            "value" : 1600,
+            "text" : "Anchors aweigh on her \"ship of fools!'",
+            "correctResponse" : "Katherine Anne Porter"
+          },
+          {
+            "value" : 2000,
+            "text" : "She was born in Jackson, MS in 1909, died there in 2001, and in between wrote \"The Optimist's Daughter\" and won a Presidential Medal of Freedom",
+            "correctResponse" : "Eudora Welty"
+          }
+        ]
+      },
+      {
+        "category" : "AN ISTHMUS FOR CHRISTMAS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "This narrow isthmus joining the two great western hemisphere continents was long part of Colombia",
+            "correctResponse" : "Panama"
+          },
+          {
+            "value" : 800,
+            "text" : "This Greek Isthmus connecting the Peloponnesus to the mainland is also known for a rich leather extolled with a richer accent in Chrysler commercials of yore",
+            "correctResponse" : "Corinth"
+          },
+          {
+            "value" : 1200,
+            "text" : "Although Russia annexed this peninsula, the isthmus that connected it to the mainland was under Ukrainian control until the recent invasion",
+            "correctResponse" : "Crimea"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "The suez canal cuts through the isthmus that connects Egypt to this peninsula",
+            "correctResponse" : "Sinai"
+          },
+          {
+            "value" : 2000,
+            "text" : "The \"mainland\" part of Hong Kong, this peninsula, is connected to the rest of China by a narrow isthmus",
+            "correctResponse" : "Kowloon"
+          }
+        ]
+      },
+      {
+        "category" : "OVERLAPS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "A young genius and the very basic class he was discovered in are both named in German",
+            "correctResponse" : "Wunderkindergarten"
+          },
+          {
+            "value" : 800,
+            "text" : "In the capital of Honduras one would not natively find many of these cousins of the llama known for their soft wool",
+            "correctResponse" : "Tegucigalpaca"
+          },
+          {
+            "value" : 1200,
+            "text" : "This actress, famous for her role in \"weird science,\" will make you eat the vegetable George H. W. Bush famously despised",
+            "correctResponse" : "Kelly LeBrockolli"
+          },
+          {
+            "value" : 1600,
+            "text" : "The mountain where, according to tradition, Noah's Ark was beached is also a great place to get a traditional French vegetable stew (especially prepared by cartoon rats)",
+            "correctResponse" : "Mount Araratatoulle"
+          },
+          {
+            "value" : 2000,
+            "text" : "A famously dark bread that is baked on a cable channel aimed for children",
+            "correctResponse" : "Pumpernickelodeon"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "ETYMOLOGY",
+    "comments" : "",
+    "clue" : {
+      "text" : "Ancient Romans noted that this disease seemed to originate in swamplands and named it for the foul odors in those regions",
+      "correctResponse" : "Malaria"
+    }
+  }
+}

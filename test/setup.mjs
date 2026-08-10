@@ -132,6 +132,49 @@ check('settings lock once the match starts', locked.status === 409);
   h.close(); ps3.forEach((s) => s.close());
 }
 
+// --- auto ceiling floor and decay -------------------------------------
+{
+  const m4 = await (await api('/api/match', { method: 'POST', body: JSON.stringify({
+    settings: { startScore: 4000, ceiling: 12000 } }) })).json();
+  const v = await (await api(`/api/match/${m4.gameId}`, {}, m4.hostKey)).json();
+  check('ceiling floor defaults to auto', v.settings.ceilingFloor === null);
+  check('ceiling decay defaults to auto', v.settings.ceilingDecayPerClue === null);
+
+  const ps = [];
+  for (const n of ['A','B','C','D','E','F','G','H']) {
+    const s = io(U, { transports: ['websocket'] });
+    await once(s, 'connect');
+    await new Promise((r) => s.emit('join', { gameId: m4.gameId, name: n }, r));
+    ps.push(s);
+  }
+  const h = io(U, { transports: ['websocket'] });
+  await once(h, 'connect');
+  let st = null;
+  h.on('state', (x) => { st = x; });
+  await new Promise((r) => h.emit('host-join', { gameId: m4.gameId, hostKey: m4.hostKey }, (x) => { st = x.state; r(); }));
+  h.emit('start-match');
+  await wait(300);
+  check('auto floor resolves to the starting score', st.settings.ceilingFloor === 4000,
+    String(st.settings.ceilingFloor));
+  check('auto decay resolves to a negative number', st.settings.ceilingDecayPerClue < 0,
+    `${st.settings.ceilingDecayPerClue}/clue`);
+  check('the opening ceiling is the configured one', st.ceiling === 12000, String(st.ceiling));
+
+  // Play far enough that a decaying ceiling would have gone under the stake.
+  for (let i = 0; i < 25 && st.phase === 'live'; i++) {
+    const open = [];
+    st.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) open.push([si, x.row]); }));
+    if (!open.length) break;
+    h.emit('pick-clue', { slot: open[0][0], row: open[0][1] });
+    await wait(80);
+    h.emit('resolve', { winnerToken: null });
+    await wait(130);
+  }
+  check('the ceiling never dips below the entry stake', st.ceiling >= 4000,
+    `${st.ceiling} after ${st.clues} clues`);
+  h.close(); ps.forEach((s) => s.close());
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); ps.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);

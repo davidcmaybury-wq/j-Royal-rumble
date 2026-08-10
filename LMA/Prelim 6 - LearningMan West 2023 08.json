@@ -1,0 +1,394 @@
+{
+  "title" : "LearningMan West 23 - Prelim 6",
+  "author" : "David Maybury",
+  "comments" : "",
+  "rounds" : [
+    [
+      {
+        "category" : "FAMOUS NAVARROS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Monica Aldama is the relentless coach of the Navarro college squad in this pandemic-smash Netflix series",
+            "correctResponse" : "Cheer"
+          },
+          {
+            "value" : 400,
+            "text" : "This former Jane's Addiction guitarist had a second career hosting many reality shows, but most notably 13 seasons of \"Ink Master\"",
+            "correctResponse" : "Dave Navarro"
+          },
+          {
+            "value" : 600,
+            "text" : "Joe Navarro is an FBI specialist in decoding this form of nonverbal \"language\"",
+            "correctResponse" : "Body Language"
+          },
+          {
+            "value" : 800,
+            "text" : "This right-wing economist described his job as to construct \"the underlying analytics that confirm [Trump's] intuition on trade\"",
+            "correctResponse" : "Peter Navarro"
+          },
+          {
+            "value" : 1000,
+            "text" : "Although a registered Republican, this centrist pundit and \"View\" host shot to fame with her relentless attacks on Donald Trump and his defenders",
+            "correctResponse" : "Ana Navarro-Cardenas"
+          }
+        ]
+      },
+      {
+        "category" : "MIDDLE NAMES",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "John _______ Kennedy",
+            "correctResponse" : "FItzgerlad"
+          },
+          {
+            "value" : 400,
+            "text" : "Thomas _______ Eliot",
+            "correctResponse" : "Stearns"
+          },
+          {
+            "value" : 600,
+            "text" : "Walter ________ Disney",
+            "correctResponse" : "Elias"
+          },
+          {
+            "value" : 800,
+            "text" : "Jerome _________ Salinger",
+            "correctResponse" : "David"
+          },
+          {
+            "value" : 1000,
+            "dailyDouble" : true,
+            "text" : "Clive ________ Lewis",
+            "correctResponse" : "Staples"
+          }
+        ]
+      },
+      {
+        "category" : "STOCK SYMBOLS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "HEINY - this Dutch brewer with an eight year old sense of humor",
+            "correctResponse" : "Heineken"
+          },
+          {
+            "value" : 400,
+            "text" : "Gibraltar Industries picked this four-letter ticker that is strongly associated with their name",
+            "correctResponse" : "ROCK"
+          },
+          {
+            "value" : 600,
+            "text" : "LMNOP - an artifully chosen selection for this Google parent",
+            "correctResponse" : "Alphabet"
+          },
+          {
+            "value" : 800,
+            "text" : "Harley-Davidson leveraged their popular nickname for this snappy symbol",
+            "correctResponse" : "HOG"
+          },
+          {
+            "value" : 1000,
+            "text" : "BID - This noted auction house",
+            "correctResponse" : "Sotheby's"
+          }
+        ]
+      },
+      {
+        "category" : "MODERN SLANG",
+        "comments" : "from Ramon Ymalay",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Affirmation or agreement. Also something you do at a casino",
+            "correctResponse" : "Bet"
+          },
+          {
+            "value" : 400,
+            "text" : "Something amazing, great, or exciting. Also one of the great innovations of early man",
+            "correctResponse" : "Fire"
+          },
+          {
+            "value" : 600,
+            "text" : "Provoking an obssession in someone else. Also what the people in a 1996 Tony award winning musical were wishing for",
+            "correctResponse" : "living rent free"
+          },
+          {
+            "value" : 800,
+            "text" : "Becoming offended or having their feelings hurt. Also often associated with PTSD",
+            "correctResponse" : "Triggered"
+          },
+          {
+            "value" : 1000,
+            "text" : "Trendy or stylish. Also what a leaky faucet does",
+            "correctResponse" : "Drip"
+          }
+        ]
+      },
+      {
+        "category" : "THE LYRICAL STYLINGS OF WILL.I.AM",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "Will famously had this fellow Black eyed Pea serenade her own \"lovely lady lumps\" ",
+            "correctResponse" : "Fergie"
+          },
+          {
+            "value" : 400,
+            "text" : "In this Onomatopea-titled song, will was \"3008, and you're so 2000-and-late\"",
+            "correctResponse" : "Boom Boom Pow"
+          },
+          {
+            "value" : 600,
+            "text" : "In \"T.H.E. (The hardest Ever)\" Will tells this NY-born Puerto Rican triple threat before she sings: \"This beat is the shit, feces.\"",
+            "correctResponse" : "Jennifer Lopez"
+          },
+          {
+            "value" : 800,
+            "text" : "In \"The Hangover, part II\" this bearded comic actor experiences a flashback to this line from will: \"Imma be a brother but my name ain't Lehman, I'll be a bank, I'll be loanin' out semen.\"",
+            "correctResponse" : "Zack Galafinakis"
+          },
+          {
+            "value" : 1000,
+            "text" : "In \"Feelin' Myself\" we can only hope will is not talking about this country music scion and disney alum when he sings: \"She give me IQ that means she give me head\"",
+            "correctResponse" : "Miley Cyrus"
+          }
+        ]
+      },
+      {
+        "category" : "RHYME TIME",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 200,
+            "text" : "The fatty part of milk gets this treatment before topping a latte",
+            "correctResponse" : "Cream Steam"
+          },
+          {
+            "value" : 400,
+            "text" : "A tote with branded merch, like you get after appearing on Jeopardy",
+            "correctResponse" : "Swag Bag"
+          },
+          {
+            "value" : 600,
+            "text" : "You record the sounds of a youngster with this",
+            "correctResponse" : "Tyke Mike"
+          },
+          {
+            "value" : 800,
+            "text" : "An astounding feat of prestidigitation with a sad ending",
+            "correctResponse" : "Tragic magic"
+          },
+          {
+            "value" : 1000,
+            "text" : "Marvel's Dr. Strange wears this on two fingers of his left hand to open a portal, not slay Goliaths",
+            "correctResponse" : "Sling Ring"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "category" : "THE MOVIE SPIN ZONE",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "Christian Bale plays a struggling investment banker dealing with his mental health as he climbs the corporate ladder to finds his place in society",
+            "correctResponse" : "American Psycho"
+          },
+          {
+            "value" : 800,
+            "text" : "Brad Pitt plays a soldier trying to perfect his art in the backdrop of World War II",
+            "correctResponse" : "Inglourius basterds"
+          },
+          {
+            "value" : 1200,
+            "text" : "Jennifer Lawrence and Leonardo DiCaprio are scientists who discover fame as they try to save the world",
+            "correctResponse" : "Don't Look up"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "Daniel Kaluuya plays a brilliant black artist struggling to be a part of his white girlfriend's family",
+            "correctResponse" : "Get Out"
+          },
+          {
+            "value" : 2000,
+            "text" : "John Goodman helps a couple kids survive through an alien invasion",
+            "correctResponse" : "10 Cloverfield Lane"
+          }
+        ]
+      },
+      {
+        "category" : "SCIENTIFIC MISSTEPS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "In his version of evolution, acquired traits could be passed on to subsequent generation",
+            "correctResponse" : "Larmarck"
+          },
+          {
+            "value" : 800,
+            "text" : "It was long believed that this nigh-undetectable medium conducted light through the universe, until Michelson & Morley proved it didn't exist",
+            "correctResponse" : "æther"
+          },
+          {
+            "value" : 1200,
+            "text" : "Until germ theory proved otherwise, doctors believed this \"bad air\" carried diseases",
+            "correctResponse" : "Miasma"
+          },
+          {
+            "value" : 1600,
+            "text" : "Until the discovery of oxygen, substances were thought to contain this primordial form of fire",
+            "correctResponse" : "Phlogiston"
+          },
+          {
+            "value" : 2000,
+            "text" : "A favorite of racists at the time, this 19th century medical theory held that brain function was extremely localized, and the shape of the skull dictated personality",
+            "correctResponse" : "Phrenology"
+          }
+        ]
+      },
+      {
+        "category" : "NARRATORS",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "He introduced himself at the start as the storyteller of \"Moby-Dick\"",
+            "correctResponse" : "Ishmael"
+          },
+          {
+            "value" : 800,
+            "text" : "This writer's avatar, Raoul Duke, tells the story of tearing up Vegas with his attorney, Dr. Gonzo",
+            "correctResponse" : "Hunter S. Thompson"
+          },
+          {
+            "value" : 1200,
+            "text" : "She tells of how she attempts to navigate the post-american state of Gilead",
+            "correctResponse" : "Offred"
+          },
+          {
+            "value" : 1600,
+            "text" : "He tells the story of a \"crumby\" week in New York",
+            "correctResponse" : "Holden Caulfield"
+          },
+          {
+            "value" : 2000,
+            "text" : "This foulmouthed botanist shares his amazing extraterrestrial survivor story",
+            "correctResponse" : "Mark Watney"
+          }
+        ]
+      },
+      {
+        "category" : "ANTARCTICA",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "One of the continent's most prominent features is a peninsula that extends towards this continent",
+            "correctResponse" : "South America"
+          },
+          {
+            "value" : 800,
+            "text" : "On June 22, this astronomical event occurs, leaving virtually all of the continent without direct sunlight",
+            "correctResponse" : "Winter Solstice"
+          },
+          {
+            "value" : 1200,
+            "text" : "On his third expedition to Antarctica, his ship became ice bound, and sank the following summer, beginning a two-year struggle to survive",
+            "correctResponse" : "Ernest Shackleton"
+          },
+          {
+            "value" : 1600,
+            "text" : "The Amundsen-scott research station at the south pole has a marathon of these movies when the last flight before the nine-month winter leaves",
+            "correctResponse" : "The Thing"
+          },
+          {
+            "value" : 2000,
+            "text" : "An antarctic research station shares this name (meaning \"east\") with Russia's first space program",
+            "correctResponse" : "Philip Marlowe"
+          }
+        ]
+      },
+      {
+        "category" : "VEXILLOLOGY",
+        "comments" : "",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "In a unique flourish, this non-Russian-speaking country's flag features an AK-47",
+            "correctResponse" : "Mozambique"
+          },
+          {
+            "value" : 800,
+            "text" : "This island known for a race has a triskelion of armored legs on its flag",
+            "correctResponse" : "Isle of man"
+          },
+          {
+            "value" : 1200,
+            "text" : "Don't put yourself in the hospital trying to think of this country's flag with a single coniferous tree of the genus Cedrus",
+            "correctResponse" : "Lebanon"
+          },
+          {
+            "value" : 1600,
+            "dailyDouble" : true,
+            "text" : "This state passed a law on March 3, 2023 to modernize and simplify the design with a stylized insect habitat",
+            "correctResponse" : "Utah"
+          },
+          {
+            "value" : 2000,
+            "text" : "This territory's flag featured a half-red/half-white circle on an background of inverted colors",
+            "correctResponse" : "Greenland"
+          }
+        ]
+      },
+      {
+        "category" : "CONVERGENT ETYMOLOGIES",
+        "comments" : "Guess the word from its multiple etymologies",
+        "clues" : [
+          {
+            "value" : 400,
+            "text" : "When used to describe an enclosed plot of multiple buildings it comes from the Malay for \"a village.\" When used to describe making one thing from several, it comes from the French for \"arrange\"",
+            "correctResponse" : "Compound"
+          },
+          {
+            "value" : 800,
+            "text" : "When used for the end of a sleeve, it comes from the Latin for \"head covering.\" The blow to the head comes from the Swedish for \"push\"",
+            "correctResponse" : "Cuff"
+          },
+          {
+            "value" : 1200,
+            "text" : "This derived its meaning of a \"puzzle\" from the Old English for \"conjecture,\" but it's definition of \"perforation\" from the old English for \"sieve\"",
+            "correctResponse" : "RIddle"
+          },
+          {
+            "value" : 1600,
+            "text" : "As a blemish, it is from the Old English for \"mark.\" For an animal, it comes from the Middle Dutch for \"loose earth.\" For a chemistry counting term it come from the German for \"molecule.\"",
+            "correctResponse" : "Mole"
+          },
+          {
+            "value" : 2000,
+            "text" : "For a body of water, it comes from the Norse for \"strait.\" For a noise, it comes from the Latin for \"noise.\" For being uninjured, it comes from the Old English for \"health.\"",
+            "correctResponse" : "Sound"
+          }
+        ]
+      }
+    ]
+  ],
+  "final_jeopardy_round" : {
+    "category" : "STATE MOTTOS",
+    "comments" : "",
+    "clue" : {
+      "text" : "This one-word state motto is a famous quote by an ancient Greek in the 3rd century BC.",
+      "correctResponse" : "Eureka"
+    }
+  }
+}
