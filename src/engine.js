@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS = {
   targetMinutes: 60,
   delay: 200,                // ms held back so buzzers arm with Zoom audio
   lockout: 250,              // ms penalty for buzzing before the lights
+  seasonRange: null,         // [lo, hi] archive seasons; null = all
 };
 
 export function autoEntryInterval(playerCount, targetMinutes, secondsPerClue) {

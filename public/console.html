@@ -14,7 +14,7 @@
 html,body{margin:0;height:100%;overflow:hidden}
 body{background:var(--ink);color:var(--chalk);font:400 15px/1.5 "IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums lining-nums}
-.mq{font-family:"Anton",Impact,sans-serif;font-weight:400}
+.mq{font-family:"Anton",Impact,sans-serif}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -23,20 +23,21 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .brand{font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass)}
 .st{display:flex;align-items:baseline;gap:6px}
 .st .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
-.st .v{font-size:16px}
-.ceil .v{color:var(--brass)}
-.sp{margin-left:auto;display:flex;gap:6px}
+.st .v{font-size:16px}.ceil .v{color:var(--brass)}
+.sp{margin-left:auto;display:flex;gap:6px;align-items:center}
 .tb{padding:4px 10px;border:1px solid var(--line);border-radius:var(--r);font-size:12.5px;color:var(--slate)}
 .tb:hover:not(:disabled){border-color:var(--slate);color:var(--chalk)}
-.tb:disabled{opacity:.3;cursor:default}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--alarm)}
+.dot.on{background:var(--live)}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:1px;background:var(--line);min-height:0}
 .stage{background:var(--ink);overflow:auto;min-height:0;padding:10px}
 .rail{background:var(--ink);overflow:auto;min-height:0;padding:10px;display:flex;flex-direction:column;gap:10px}
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
 .cat{font-size:10px;line-height:1.25;letter-spacing:.04em;text-transform:uppercase;text-align:center;
-padding:7px 4px;background:var(--panel2);border-radius:var(--r) var(--r) 0 0;min-height:48px;
+padding:7px 4px;background:var(--panel2);border-radius:var(--r) var(--r) 0 0;min-height:52px;
 display:flex;flex-direction:column;justify-content:center;gap:2px;position:relative}
 .cat .note{font-size:9px;letter-spacing:0;text-transform:none;color:var(--brass);font-style:italic}
+.cat .src{position:absolute;top:2px;left:4px;font-size:8px;color:var(--slate);letter-spacing:.08em}
 .veto{position:absolute;top:2px;right:3px;font-size:13px;color:var(--slate);padding:1px 3px;border-radius:3px}
 .veto:hover{color:var(--alarm);background:#0004}
 .stack{display:grid;gap:5px;margin-top:5px}
@@ -49,6 +50,15 @@ display:flex;flex-direction:column;justify-content:center;gap:2px;position:relat
 .cnote{font-size:13px;color:var(--brass);font-style:italic}
 .ctxt{font-size:clamp(19px,3vw,36px);line-height:1.3;max-width:24ch}
 .locked{font-size:11.5px;color:var(--slate)}
+.lobby{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:20px}
+.lobby h1{font:400 clamp(28px,5vw,52px)/1 "Anton",Impact,sans-serif;margin:0;color:var(--brass)}
+.join{font-size:13px;color:var(--slate)}
+.join code{font-family:"IBM Plex Mono",monospace;color:var(--chalk);background:var(--panel);padding:3px 8px;border-radius:var(--r)}
+.who{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:640px}
+.chip{padding:5px 11px;background:var(--panel);border-radius:20px;font-size:13px;border:1px solid var(--line)}
+.chip.off{opacity:.45}
+.go{padding:11px 26px;border:1px solid var(--brass);color:var(--brass);border-radius:var(--r);font-size:15px}
+.go:disabled{opacity:.35;border-color:var(--line);color:var(--slate);cursor:default}
 .sect{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate);display:flex;justify-content:space-between;margin-bottom:6px}
 .pl{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:7px;
 padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px;border-left:2px solid transparent}
@@ -57,39 +67,34 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .pl.buzzed{background:var(--panel2)}
 .pl.onclock{box-shadow:inset 0 0 0 1px var(--brass)}
 .pl.miss{opacity:.4}.pl.miss .nm{text-decoration:line-through}
+.pl.gone .nm{color:var(--slate)}
 .pl .dr{font-size:11.5px;color:var(--slate);text-align:right}
 .pl .nm{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl .sc{font-size:14.5px}
-.pl.out{opacity:.5}.pl.out .sc{color:var(--chalk);font-size:13px}
+.pl.out{opacity:.5}.pl.out .sc{font-size:13px}
 .pl.out .sub{font-size:10px;color:var(--slate);display:block;line-height:1.3}
-.pl.out .nm{font-size:12.5px}
 .clock{border:1px solid var(--line);border-radius:var(--r);padding:10px;text-align:center;background:var(--panel)}
 .clock.soon{border-color:var(--brass)}
 .clock .n{font-size:42px;line-height:.9;color:var(--brass);display:block}
 .clock.soon .n{animation:pl 1s ease-in-out infinite}
 @keyframes pl{0%,100%{opacity:1}50%{opacity:.4}}
 .clock .lbl{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate)}
-.clock .who{font-size:12px;margin-top:5px}
+.clock .who2{font-size:12px;margin-top:5px}
 .dock{border-top:1px solid var(--line);background:var(--panel);padding:10px 14px;min-height:92px;display:flex;align-items:center;gap:14px}
 .idle{color:var(--slate);font-size:13.5px}
 .race{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
 .bz{display:flex;align-items:center;gap:8px;padding:6px 11px;border-radius:var(--r);background:var(--panel2);font-size:13px}
 .bz.on{box-shadow:inset 0 0 0 1px var(--brass);background:#243259}
 .bz .t{font-size:12px;color:var(--slate)}
+.bz .e{font-size:10px;color:var(--alarm)}
 .acts{display:flex;gap:6px}
 .act{padding:9px 15px;border-radius:var(--r);font-size:13.5px;border:1px solid var(--line);text-align:center;white-space:nowrap}
 .act .kb{display:block;font-size:9.5px;color:var(--slate);margin-top:2px;letter-spacing:.08em}
 .good{background:#17402F;border-color:#2C6B4F}.good:hover{background:#1D5540}
 .bad{background:#3E1A17;border-color:#6B2C26}.bad:hover{background:#54221D}
 .neu:hover{background:var(--panel2)}
-.priv{position:fixed;right:14px;bottom:106px;width:280px;background:#0E1526;border:1px solid var(--brass);
-border-radius:6px;box-shadow:0 10px 34px #0009;z-index:40;overflow:hidden}
-.priv h3{margin:0;font:500 10px/1 "IBM Plex Sans";letter-spacing:.12em;text-transform:uppercase;
-color:#0A0E1C;background:var(--brass);padding:6px 9px;display:flex;justify-content:space-between}
-.priv .body{padding:11px}
-.priv .k{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate)}
-.priv .a{font-size:19px;color:var(--live);line-height:1.3;margin-top:4px}
-.priv .none{font-size:13px;color:var(--slate)}
+.arm{background:#3A2E0C;border-color:var(--brass);color:var(--brass)}
+.arm:hover{background:#4A3A0F}
 .entry{position:fixed;left:0;right:250px;bottom:92px;background:#0E1526F2;border-top:2px solid var(--brass);
 border-bottom:1px solid var(--brass);padding:14px 26px;z-index:60;display:flex;align-items:center;gap:22px;
 animation:rise .22s cubic-bezier(.2,.8,.3,1);cursor:pointer}
@@ -97,40 +102,9 @@ animation:rise .22s cubic-bezier(.2,.8,.3,1);cursor:pointer}
 .entry .lbl{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--brass);display:block}
 .entry .no{font-size:60px;line-height:.85;color:var(--brass)}
 .entry .nm{font-size:30px;line-height:1.05}
-.entry .who2{display:flex;align-items:baseline;gap:14px}
+.entry .who3{display:flex;align-items:baseline;gap:14px}
 .entry .sub{font-size:11.5px;color:var(--slate);margin-left:auto;text-align:right;line-height:1.5}
 @media (prefers-reduced-motion:reduce){.clock.soon .n,.entry{animation:none}}
-.results{position:fixed;inset:0;background:#0A0E1CF7;z-index:80;display:flex;align-items:center;justify-content:center;padding:22px}
-.rbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;max-width:820px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
-.champ{padding:22px 24px 18px;border-bottom:1px solid var(--line);text-align:center}
-.champ .lbl{font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--brass)}
-.champ .cn{font-size:52px;line-height:1.05;margin:4px 0}
-.champ .cs{font-size:12.5px;color:var(--slate)}
-.record{display:flex;align-items:center;gap:14px;padding:11px 20px;background:var(--panel2);border-bottom:1px solid var(--line)}
-.record .rl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate)}
-.record .rv{font-size:30px;line-height:1;color:var(--brass);margin-left:auto}
-.record .rv .ru{font-size:13px;color:var(--slate);margin-left:3px}
-.record .rw{font-size:14px;text-align:right;min-width:150px}
-.record .rc{display:block;font-size:10.5px;color:var(--slate)}
-.tabs{display:flex;gap:4px;padding:10px 14px 0}
-.tabs button{padding:6px 14px;font-size:12.5px;color:var(--slate);border:1px solid var(--line);
-border-bottom:none;border-radius:var(--r) var(--r) 0 0;background:var(--ink)}
-.tabs button.on{color:var(--brass);background:var(--panel);border-color:var(--brass)}
-.tabs button:hover:not(.on){color:var(--chalk)}
-.tw{overflow:auto;padding:0 6px}
-.results tr.win td{color:var(--brass);background:#1B244480}
-.results table{width:100%;border-collapse:collapse;font-size:13px}
-.results th{position:sticky;top:0;background:var(--panel);text-align:right;padding:9px 10px;font-weight:500;
-font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line)}
-.results th:hover{color:var(--chalk)}
-.results th.s{color:var(--brass)}
-.results th:nth-child(2),.results td:nth-child(2){text-align:left}
-.results td{padding:7px 10px;text-align:right;border-bottom:1px solid #1A2237}
-.results td.rk{color:var(--slate)}
-.results tbody tr:hover{background:var(--panel2)}
-.dnp{font-size:11.5px;color:var(--slate);padding:10px 10px 14px;margin:0}
-.rfoot{padding:12px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
-.rfoot .hint{font-size:11.5px;color:var(--slate);margin-right:auto}
 .feed{position:fixed;left:14px;bottom:104px;display:flex;flex-direction:column-reverse;gap:4px;z-index:30;pointer-events:none}
 .ev{background:var(--panel2);border-left:2px solid var(--brass);padding:5px 10px;font-size:12px;max-width:330px;border-radius:0 var(--r) var(--r) 0}
 .ev.elim{border-left-color:var(--alarm)}.ev.enter{border-left-color:var(--live)}
@@ -141,305 +115,260 @@ font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);c
   <header class="top">
     <span class="brand mq">J! Royal Rumble</span>
     <span class="st"><span class="k">Clue</span><span class="v num" id="s-clue">0</span></span>
-    <span class="st"><span class="k">In</span><span class="v num" id="s-field">3</span></span>
-    <span class="st"><span class="k">Queue</span><span class="v num" id="s-q">27</span></span>
-    <span class="st ceil"><span class="k">Ceiling</span><span class="v num" id="s-ceil">11,000</span></span>
-    <span class="sp"><button class="tb" id="endm">End match</button><button class="tb" id="mute">Sound on</button><button class="tb" id="undo" disabled>Undo</button><button class="tb" id="reset">Restart</button></span>
+    <span class="st"><span class="k">In</span><span class="v num" id="s-field">0</span></span>
+    <span class="st"><span class="k">Queue</span><span class="v num" id="s-q">0</span></span>
+    <span class="st ceil"><span class="k">Ceiling</span><span class="v num" id="s-ceil">&mdash;</span></span>
+    <span class="sp">
+      <span class="dot" id="conn" title="server connection"></span>
+      <button class="tb" id="admin">Admin window</button>
+      <button class="tb" id="mute">Sound on</button>
+      <button class="tb" id="endm">End match</button>
+    </span>
   </header>
   <div class="main">
     <section class="stage" id="stage" aria-label="Board"></section>
     <aside class="rail">
       <div><div class="sect"><span>In the ring</span><span id="ring-n"></span></div><div id="ring"></div></div>
       <div class="clock" id="clock"><span class="lbl">Clues to next entry</span>
-        <span class="n mq num" id="cd">5</span><div class="who" id="who"></div></div>
-      <div><div class="sect"><span>Out · by clues survived</span><span id="out-n"></span></div><div id="out"></div></div>
+        <span class="n mq num" id="cd">&mdash;</span><div class="who2" id="who"></div></div>
+      <div><div class="sect"><span>Out &middot; by clues survived</span><span id="out-n"></span></div><div id="out"></div></div>
     </aside>
   </div>
-  <footer class="dock" id="dock"><span class="idle">Pick a clue to start the next race.</span></footer>
+  <footer class="dock" id="dock"><span class="idle">Connecting&hellip;</span></footer>
 </div>
-<aside class="priv" id="priv">
-  <h3><span>Admin window · not shared</span><span id="priv-tog" style="cursor:pointer">–</span></h3>
-  <div class="body" id="priv-body"><div class="none">No clue on screen.</div></div>
-</aside>
 <div class="feed" id="feed" aria-live="polite"></div>
 <p class="sr" id="sr" aria-live="assertive"></p>
-<script>
 
-let AC=null,muted=false;
-function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}
-  if(AC&&AC.state==="suspended")AC.resume();return AC}
-function tone(f,t0,dur,gain,type="sawtooth",slideTo){
-  const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain();
-  o.type=type;o.frequency.setValueAtTime(f,t0);
-  if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,t0+dur);
-  g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(gain,t0+.012);
-  g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
-  o.connect(g);g.connect(a.destination);o.start(t0);o.stop(t0+dur+.05);
-}
-function noise(t0,dur,gain){
-  const a=ac();if(!a)return;const n=a.sampleRate*dur,b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);
-  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
-  const src=a.createBufferSource();src.buffer=b;
-  const f=a.createBiquadFilter();f.type="lowpass";f.frequency.setValueAtTime(1400,t0);
-  f.frequency.exponentialRampToValueAtTime(180,t0+dur);
-  const g=a.createGain();g.gain.setValueAtTime(gain,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
-  src.connect(f);f.connect(g);g.connect(a.destination);src.start(t0);
-}
-// entry: two-note brass call, moderate
-function sfxEntry(){if(muted)return;const a=ac();if(!a)return;const t=a.currentTime;
-  [0,.16].forEach((off,i)=>{const f=i?415.3:311.1;
-    tone(f,t+off,.30,.16,"sawtooth");tone(f*2,t+off,.26,.07,"square")});
-  tone(207.7,t,.55,.10,"triangle");
-}
-// elimination: louder, lower, percussive slam
-function sfxElim(n=1){if(muted)return;const a=ac();if(!a)return;const t=a.currentTime;
-  noise(t,.5,.34);
-  tone(146.8,t,.62,.30,"sawtooth",73.4);
-  tone(73.4,t+.02,.75,.24,"square");
-  if(n>1)setTimeout(()=>{const b=ac();if(b){noise(b.currentTime,.42,.26);tone(130.8,b.currentTime,.5,.22,"sawtooth",65)}},170);
-}
-const ROW=[100,200,300,400,500];
-let seed=11;const rnd=()=>{seed|=0;seed=seed+0x6d2b79f5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
-const NAMES=["Dave","Nam","Wayne","Zach","Ward","Weiss","Michael","Priya","Otto","Reggie","Sofia","Lena","Marcus","Ines","Bo","Yuki","Cal","Dot","Ravi","Nell","Tam","Gus","Iris","Ola","Pete","Suki","Vic","Wren","Xan","Zed"];
-const CATS=[
-{t:"SOUNDS LIKE AN AUTOBOT",n:null,c:[["This portly stinging insect continues to fly, in spite of expectations","Bumblebee"],["An older term for a classic car stripped down and rebuilt with a high-powered engine","Hot Rod"],["This tool that cranks a socket in only one direction is also pejorative modern slang","Ratchet"],["This form of improvised music is a slam dunk in Utah","Jazz"],["A person who can talk a lot can talk like this Martin Lawrence movie title","Bluestreak"]]},
-{t:"BECAUSE IT'S WHERE?",n:"Name the country where the mountain is found",c:[["Kilimanjaro","Tanzania"],["Table Mountain","South Africa"],["Mount Elbrus","Russia"],["The Matterhorn, at the border of these two nations","Switzerland and Italy"],["Annapurna","Nepal"]]},
-{t:"I DATED TAYLOR SWIFT",n:null,c:[["This Chiefs tight end boosted ratings every time Taylor was in the family suite","Travis Kelce"],["Was he bigger than his body? He was waiting on the world to change","John Mayer"],["This pop brother wound up close with his ex-wife Sophie Turner","Joe Jonas"],["Her relationship with this singer went in just one direction: downhill","Harry Styles"],["She briefly dated this other Taylor, but it faded into the twilight","Taylor Lautner"]]},
-{t:"MEET CAPTAIN PEDANTIC",n:null,c:[["This force on a revolving body isn't real in an inertial reference frame","Centrifugal force"],["You don't stand behind a podium. You stand on it, behind one of these","Lectern"],["They didn't use every part of the buffalo. They did that to this animal","Bison"],["Can you detect the grammatical faux pas I wrote this sentence with?","A preposition at the end"],["\"All adult alligators axe alliteration\" — that was actually this","Assonance"]]},
-{t:"TRILLION DOLLAR COMPANIES",n:null,c:[["The first company to clear a trillion, based in Cupertino","Apple"],["This Redmond software powerhouse with a bright Outlook","Microsoft"],["The river whose name is shared with this retailer of everything A to Z","Amazon"],["Google reorganized as a child of this parent company in 2015","Alphabet"],["This Middle Eastern F1 sponsor sees its product go out the tailpipe","Saudi Aramco"]]},
-{t:"TRAGIC HEROES",n:null,c:[["This strongman was blinded after Delilah weakened him with a new 'do","Samson"],["This Danish prince feigned insanity seeking the truth of his father's death","Hamlet"],["He bathed in dragon's blood but a leaf left one spot vulnerable","Siegfried"],["Never try to beat an Oracle's prophecy. Ask this Theban king","Oedipus"],["He shared a love potion with his uncle's bride-to-be","Tristan"]]},
-{t:"REALITY TV",n:null,c:[["This Alan Cumming-hosted deception smash became Peacock's top show","The Traitors"],["This restaurant spinoff of a Beverly Hills franchise is named for its star","Vanderpump Rules"],["This hit gave us Boston Rob, Parvati Shallow and Richard Hatch","Survivor"],["This geometric competition locks contestants in apartments till the last day","The Circle"],["Meet the yachties serving the wealthy in the tropics","Below Deck"]]},
-{t:"ASIANS AT THE OSCARS",n:null,c:[["She won a long-overdue Oscar for \"Everything Everywhere All at Once\"","Michelle Yeoh"],["This Taiwanese director broke through with \"Life of Pi\"","Ang Lee"],["He is so far the only Goonie to win an Oscar","Ke Huy Quan"],["This \"Nomadland\" director promptly directed a Marvel movie","Chloé Zhao"],["This Swiss-Mongol actor won for a Broadway adaptation, not \"Westworld\"","Yul Brynner"]]},
-{t:"TEAMS THAT DON'T END IN S",n:null,c:[["Shai Gilgeous-Alexander leads this Great Plains squad, off-key","Oklahoma City Thunder"],["Release this young NHL team in Seattle","Kraken"],["Taking his talents to South Beach meant joining this club","Miami Heat"],["Long the stereotype of AL futility until 2004","Boston Red Sox"],["A tribute to Martin Luther King Jr. is in this WNBA squad's name","Atlanta Dream"]]}];
-const S={start:3000,ceil0:11000,decay:-40,floor:1000,interval:5,stumper:.5};
-let G,hist=[],catN=0,privOpen=true;
-const ceiling=()=>Math.max(S.floor,S.ceil0+S.decay*G.clues);
-const ring=()=>G.players.filter(p=>p.st==="live");
-const queued=()=>G.players.filter(p=>p.st==="q");
-const drawCat=()=>{const s=CATS[catN++%CATS.length];return{t:s.t,n:s.n,clues:s.c.map((x,i)=>({row:i+1,text:x[0],ans:x[1],done:false}))}};
-function init(){
-  seed=Math.floor(Math.random()*1e6);hist=[];catN=Math.floor(rnd()*CATS.length);
-  const order=NAMES.slice().sort(()=>rnd()-.5);
-  G={clues:0,players:order.map((n,i)=>({id:i,name:n,draw:i+1,st:"q",score:0,pins:0,correct:0,missed:0,peak:0,att:0,early:0,won:0,drained:0,times:[],enteredAt:null,outAt:null,outOrder:null})),
-     board:Array.from({length:6},drawCat),live:null,race:[],locked:[],clears:0,fastest:null};
-  for(let i=0;i<3;i++)admit();render();
-}
-function admit(){const p=queued()[0];if(!p)return null;p.st="live";p.score=Math.min(S.start,ceiling());p.enteredAt=G.clues;return p}
-function snap(){hist.push(JSON.stringify({G,catN}));if(hist.length>40)hist.shift()}
-function undo(){if(!hist.length)return;const x=JSON.parse(hist.pop());G=x.G;catN=x.catN;render()}
-function newRace(){
-  const el=ring().filter(p=>!G.locked.includes(p.id));
-  G.race=el.filter(()=>rnd()>.22).map(p=>{
-    const early=rnd()<.09;                       // jumped the lights
-    const ms=Math.round((320+rnd()*1400+(early?250:0))*10)/10; // 0.1ms resolution; 250ms lockout penalty
-    p.att++;if(early)p.early++;p.times.push(ms);
-    if(!G.fastest||ms<G.fastest.ms)G.fastest={ms,id:p.id,clue:G.clues+1,cat:G.live?G.live.cat:"",val:G.live?G.live.val:0};
-    return{id:p.id,ms,early}}).sort((a,b)=>a.ms-b.ms);
-  if(G.race[0])G.players.find(p=>p.id===G.race[0].id).won++;
-}
-function pick(ci,ri){if(G.live)return;const c=G.board[ci].clues[ri];if(c.done)return;
-  G.live={ci,ri,cat:G.board[ci].t,note:G.board[ci].n,text:c.text,ans:c.ans,val:ROW[ri],misses:[]};
-  G.locked=[];newRace();render()}
-function wrong(){if(!G.live||!G.race.length)return;
-  const b=G.race[0],p=G.players.find(x=>x.id===b.id);
-  G.locked.push(b.id);G.live.misses.push(b.id);
-  say(`${p.name} misses — −${G.live.val}, locked out · re-toss`);
-  newRace();render()}
+<script src="/socket.io/socket.io.js"></script>
+<script type="module">
+import { socket, gameId, hostKey, fmt } from '/rumble.js';
 
-function resolve(winnerId){
-  if(!G.live)return;snap();
-  const {ci,ri,val,misses}=G.live;
-  G.board[ci].clues[ri].done=true;G.clues++;
-  misses.forEach(id=>{const p=G.players.find(x=>x.id===id);if(p.st==="live")p.score-=val});
-  const live=ring();
-  if(winnerId!=null){const w=G.players.find(p=>p.id===winnerId),opp=live.filter(p=>p.id!==winnerId);
-    w.correct++;w.score+=val*opp.length;w.drained+=val*opp.length;opp.forEach(p=>p.score-=val);
-    say(`${w.name} +${(val*opp.length).toLocaleString()} · others −${val}`)}
-  else{const d=Math.round(val*S.stumper);live.forEach(p=>p.score-=d);say(`Stumper — everyone −${d}`)}
-  const cap=ceiling();ring().forEach(p=>{if(p.score>cap)p.score=cap;if(p.score>p.peak)p.peak=p.score});
-  let doomed=ring().filter(p=>p.score<0);
-  if(doomed.length&&doomed.length===ring().length){
-    const sv=[...ring()].sort((a,b)=>b.score-a.score)[0];
-    doomed=doomed.filter(p=>p.id!==sv.id);say(`Total wipe — ${sv.name} survives on points`,"elim")}
-  doomed.forEach(p=>{p.st="out";p.outAt=G.clues;p.outOrder=G.players.filter(x=>x.st==="out").length;
-    say(`${p.name} out — survived ${tenure(p)} clues`,"elim")});
-  if(doomed.length)sfxElim(doomed.length);
-  if(winnerId!=null&&doomed.length){const w=G.players.find(p=>p.id===winnerId);if(w.st==="live")w.pins+=doomed.length}
-  if(G.board[ci].clues.every(c=>c.done))G.board[ci]=drawCat();
-  G.live=null;G.race=[];G.locked=[];
-  if(ring().length===1&&queued().length){
-    const ch=ring()[0];
-    const bonus=G.board.flatMap(c=>c.clues).filter(c=>!c.done).reduce((s,c)=>s+ROW[c.row-1],0);
-    ch.score=Math.min(ch.score+bonus,ceiling());G.clears++;
-    G.board=Array.from({length:6},drawCat);
-    say(`${ch.name} cleared the field · +${bonus.toLocaleString()}`,"enter");
-    const a=[admit(),admit()].filter(Boolean);render();
-    if(a.length)takeover(a,ch.name+" cleared the field");return}
-  if(G.clues%S.interval===0){const p=admit();render();if(p){takeover([p]);return}}
-  if(!queued().length&&ring().length<=1){G.over=true;render();showResults();return}
-  render();
-}
-function takeover(ps,why){
-  sfxEntry();
-  document.querySelectorAll(".entry").forEach(n=>n.remove());
-  const d=document.createElement("div");d.className="entry";
-  const stake=Math.min(S.start,ceiling()).toLocaleString();
-  d.innerHTML=`<div><span class="lbl">Entry</span></div>`+
-    ps.map(p=>`<div class="who2"><span class="no mq num">${p.draw}</span><span class="nm mq">${p.name}</span></div>`).join("")+
-    `<div class="sub">${why?why+"<br>two enter":"enters with "+stake}</div>`;
-  document.body.appendChild(d);
-  document.getElementById("sr").textContent="Entry "+ps.map(p=>"number "+p.draw+", "+p.name).join(" and ");
-  const t=setTimeout(kill,4000);
-  function kill(){d.remove();clearTimeout(t);removeEventListener("keydown",kill)}
-  addEventListener("keydown",kill);d.onclick=kill;
-}
+let S = null, prev = null, muted = false;
+const $ = (id) => document.getElementById(id);
+const say = (m, cls) => { const f = $('feed'), e = document.createElement('div');
+  e.className = 'ev ' + (cls || ''); e.textContent = m; f.appendChild(e);
+  setTimeout(() => e.remove(), 5000);
+  while (f.children.length > 4) f.firstChild.remove();
+  $('sr').textContent = m; };
 
-let sortKey="tenure",sortDir=-1,tab="match";
-const COLS={
- match:[["draw","Draw",p=>p.draw],["name","Player",p=>p.name],["tenure","Clues survived",p=>tenure(p)],
-   ["outOrder","Out",p=>p.outOrder||999],["correct","Correct",p=>p.correct],["missed","Missed",p=>p.missed],
-   ["pins","Pins",p=>p.pins],["drained","Drained",p=>p.drained],["peak","Peak",p=>p.peak]],
- buzz:[["draw","Draw",p=>p.draw],["name","Player",p=>p.name],["att","Attempts",p=>p.att],
-   ["early","Early",p=>p.early],["won","Won",p=>p.won],["rate","Win rate",p=>p.att?p.won/p.att:0],
-   ["avg","Avg ms",p=>avgT(p)],["best","Best ms",p=>bestT(p)]]};
-const avgT=p=>p.times.length?Math.round(p.times.reduce((a,b)=>a+b,0)/p.times.length*10)/10:0;
-const bestT=p=>p.times.length?Math.min(...p.times):0;
-function cell(p,k){
-  if(k==="name")return p.name;
-  if(k==="outOrder")return p.outOrder?ord(p.outOrder):"—";
-  if(k==="rate")return p.att?Math.round(p.won/p.att*100)+"%":"—";
-  if(k==="peak"||k==="drained")return p[k].toLocaleString();
-  if(k==="avg"||k==="best"){const v=k==="avg"?avgT(p):bestT(p);return p.times.length?v.toFixed(1):"—"}
-  if((k==="avg"||k==="best")&&!p.times.length)return "—";
-  const f=COLS[tab].find(c=>c[0]===k)[2];return f(p);
-}
-function showResults(){
-  const champ=ring()[0]||null;
-  const played=G.players.filter(p=>p.st!=="q");
-  const dnp=G.players.filter(p=>p.st==="q");
-  const cols=COLS[tab];
-  const f=(cols.find(c=>c[0]===sortKey)||cols[2])[2];
-  const rows=played.slice().sort((a,b)=>{const x=f(a),y=f(b);
-    return (typeof x==="string"?x.localeCompare(y):x-y)*sortDir||a.draw-b.draw});
-  const head=cols.map(c=>`<th data-k="${c[0]}" class="${sortKey===c[0]?"s":""}">${c[1]}${sortKey===c[0]?(sortDir<0?" ▾":" ▴"):""}</th>`).join("");
-  const body=rows.map(p=>`<tr class="${p===champ?"win":""}">`+
-    cols.map(c=>`<td class="${c[0]==="name"?"":"num"}">${c[0]==="name"&&p===champ?"◆ "+p.name:cell(p,c[0])}</td>`).join("")+`</tr>`).join("");
-  const el=document.createElement("div");el.className="results";
-  el.innerHTML=`<div class="rbox">
-    <div class="champ"><div class="lbl">Last one standing</div>
-      <div class="cn mq">${champ?champ.name:"—"}</div>
-      <div class="cs">${champ?`entry #${champ.draw} · ${tenure(champ)} clues survived · ${champ.correct} correct · ${champ.pins} pins`:"match ended with no one in the ring"}</div></div>
-    ${G.fastest?(()=>{const fp=G.players.find(x=>x.id===G.fastest.id);
-      return `<div class="record"><span class="rl">Fastest buzz of the match</span>
-      <span class="rv num">${G.fastest.ms.toFixed(1)}<span class="ru">ms</span></span>
-      <span class="rw">${fp.name}<span class="rc">clue ${G.fastest.clue} · ${G.fastest.cat} $${G.fastest.val}</span></span></div>`})():""}
-    <div class="tabs"><button data-t="match" class="${tab==="match"?"on":""}">Match</button><button data-t="buzz" class="${tab==="buzz"?"on":""}">Buzzers</button></div>
-    <div class="tw"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
-    ${dnp.length?`<p class="dnp">${dnp.length} never entered: ${dnp.map(p=>"#"+p.draw+" "+p.name).join(", ")}</p>`:""}</div>
-    <div class="rfoot"><span class="hint">Sort any column. Only the last one standing counts.</span>
-      <button class="tb" id="r-close">Back to board</button><button class="tb" id="r-new">New match</button></div></div>`;
-  document.body.appendChild(el);
-  el.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{
-    const k=th.dataset.k;if(k===sortKey)sortDir*=-1;else{sortKey=k;sortDir=(k==="name"||k==="draw"||k==="best"||k==="avg")?1:-1}
-    el.remove();showResults()});
-  el.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
-    if(b.dataset.t===tab)return;tab=b.dataset.t;
-    sortKey=tab==="match"?"tenure":"won";sortDir=-1;el.remove();showResults()});
-  el.querySelector("#r-close").onclick=()=>el.remove();
-  el.querySelector("#r-new").onclick=()=>{el.remove();init()};
-}
-function say(m,cls=""){const f=document.getElementById("feed"),e=document.createElement("div");
-  e.className="ev "+cls;e.textContent=m;f.appendChild(e);setTimeout(()=>e.remove(),5000);
-  while(f.children.length>4)f.firstChild.remove()}
-const ord=n=>{const v=n%100;return n+(v>=11&&v<=13?"th":["th","st","nd","rd"][n%10]||"th")};
-const tenure=p=>p.st==="q"?0:(p.outAt==null?G.clues:p.outAt)-p.enteredAt;
-function standings(){ // eliminated, best first: tenure desc, then score-at-exit is gone so fall back to later exit
-  return G.players.filter(p=>p.st==="out")
-    .sort((a,b)=>tenure(b)-tenure(a)||b.outAt-a.outAt||a.draw-b.draw)}
-const s=(id,v)=>document.getElementById(id).textContent=v;
-function render(){
-  const live=ring(),q=queued(),cap=ceiling();
-  s("s-clue",G.clues);s("s-field",live.length);s("s-q",q.length);s("s-ceil",cap.toLocaleString());
-  document.getElementById("undo").disabled=!hist.length;
-  const stage=document.getElementById("stage");
-  if(G.live){const {cat,note,text,val}=G.live;
-    stage.innerHTML=`<div class="clue"><div class="cmeta">${cat} · <span class="v">$${val}</span></div>
-      ${note?`<div class="cnote">${note}</div>`:""}<div class="ctxt">${text}</div>
-      ${G.locked.length?`<div class="locked">Locked out: ${G.locked.map(id=>G.players.find(p=>p.id===id).name).join(", ")}</div>`:""}</div>`;
-  }else{
-    const g=document.createElement("div");g.className="grid";
-    G.board.forEach((cat,ci)=>{
-      const col=document.createElement("div"),h=document.createElement("div");h.className="cat";
-      h.innerHTML=`<div>${cat.t}</div>`+(cat.n?`<div class="note">${cat.n}</div>`:"");
-      const v=document.createElement("button");v.className="veto";v.textContent="↻";
-      v.setAttribute("aria-label","Reroll "+cat.t);
-      v.onclick=e=>{e.stopPropagation();snap();G.board[ci]=drawCat();say("Category rerolled");render()};
-      h.appendChild(v);
-      const st=document.createElement("div");st.className="stack";
-      cat.clues.forEach((c,ri)=>{const b=document.createElement("button");b.className="cell num";
-        b.textContent=c.done?"":"$"+ROW[ri];b.disabled=c.done;b.onclick=()=>pick(ci,ri);st.appendChild(b)});
-      col.append(h,st);g.appendChild(col)});
-    stage.innerHTML="";stage.appendChild(g);
-  }
-  const r=document.getElementById("ring");r.innerHTML="";
-  const on=G.race[0];
-  [...live].sort((a,b)=>b.score-a.score).forEach(p=>{
-    const bz=G.race.find(b=>b.id===p.id),d=document.createElement("div");
-    d.className="pl"+(p.score<600?" hot":"")+(p.score>=cap?" capped":"")+(G.locked.includes(p.id)?" miss":"")
-      +(bz?" buzzed":"")+(on&&on.id===p.id?" onclock":"");
-    d.innerHTML=`<span class="dr num">${p.draw}</span><span class="nm">${p.name}${p.pins?` <span style="color:var(--slate);font-size:11px">◆${p.pins}</span>`:""}</span><span class="sc num">${p.score.toLocaleString()}</span>`;
-    r.appendChild(d)});
-  s("ring-n",live.length);
-  const cd=q.length?S.interval-(G.clues%S.interval):null;
-  document.getElementById("clock").classList.toggle("soon",cd===1);s("cd",cd??"—");
-  document.getElementById("who").innerHTML=q.length?`<b>#${q[0].draw} ${q[0].name}</b> next`:`<span style="color:var(--slate)">Queue empty</span>`;
-  const o=document.getElementById("out");o.innerHTML="";
-  const st=standings();
-  st.slice(0,7).forEach((p,i)=>{
-    const d=document.createElement("div");d.className="pl out";
-    d.innerHTML=`<span class="dr num">${i+1}</span><span class="nm">${p.name}<span class="sub num">${tenure(p)} clues · ${ord(p.outOrder)} out</span></span><span class="sc num">${tenure(p)}</span>`;
-    o.appendChild(d)});
-  s("out-n",st.length);
-  renderDock();renderPriv();
-}
-function renderDock(){
-  const d=document.getElementById("dock");
-  if(!G.live){d.innerHTML=`<span class="idle">Pick a clue to start the next race.</span>`;return}
-  const on=G.race[0];
-  const race=G.race.map((b,i)=>{const p=G.players.find(x=>x.id===b.id);
-    return `<span class="bz${i===0?" on":""}"><span>${p.name}${b.early?' <span style="color:var(--alarm);font-size:10px">EARLY</span>':""}</span><span class="t num">${b.ms.toFixed(1)}</span></span>`}).join("");
-  const acts=on
-    ?`<button class="act good" id="ok">Correct<span class="kb">Y</span></button>
-      <button class="act bad" id="no">Wrong · re-toss<span class="kb">N</span></button>
-      <button class="act neu" id="kill">Nobody got it<span class="kb">X</span></button>`
-    :`<button class="act neu" id="kill">Nobody got it<span class="kb">X</span></button>`;
-  d.innerHTML=`<div class="race">${race||'<span class="idle">No buzz. X scores it as a stumper.</span>'}</div><div class="acts">${acts}</div>`;
-  const q=id=>d.querySelector("#"+id);
-  if(on){q("ok").onclick=()=>resolve(on.id);q("no").onclick=wrong}
-  q("kill").onclick=()=>resolve(null);
-}
-function renderPriv(){
-  const b=document.getElementById("priv-body");
-  if(!privOpen){b.style.display="none";return}
-  b.style.display="";
-  b.innerHTML=G.live?`<div class="k">Correct response</div><div class="a">${G.live.ans}</div>`:`<div class="none">No clue on screen.</div>`;
-}
-document.getElementById("priv-tog").onclick=()=>{privOpen=!privOpen;
-  document.getElementById("priv-tog").textContent=privOpen?"–":"+";renderPriv()};
-addEventListener("keydown",e=>{
-  if(document.querySelector(".entry"))return;
-  if(!G.live)return;
-  const on=G.race[0],k=e.key.toLowerCase();
-  if(k==="y"&&on){e.preventDefault();resolve(on.id)}
-  else if(k==="n"&&on){e.preventDefault();wrong()}
-  else if(k==="x"){e.preventDefault();resolve(null)}
+let AC = null;
+const ac = () => { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (AC && AC.state === 'suspended') AC.resume(); return AC; };
+function tone(f, t0, dur, g0, type, slide) { const a = ac(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sawtooth';
+  o.frequency.setValueAtTime(f, t0);
+  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + dur);
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(g0, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.05); }
+function noise(t0, dur, g0) { const a = ac(); if (!a) return;
+  const n = a.sampleRate * dur, b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const s = a.createBufferSource(); s.buffer = b;
+  const f = a.createBiquadFilter(); f.type = 'lowpass';
+  f.frequency.setValueAtTime(1400, t0); f.frequency.exponentialRampToValueAtTime(180, t0 + dur);
+  const g = a.createGain(); g.gain.setValueAtTime(g0, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start(t0); }
+const sfxEntry = () => { if (muted) return; const a = ac(); if (!a) return; const t = a.currentTime;
+  [0, 0.16].forEach((o, i) => { const f = i ? 415.3 : 311.1;
+    tone(f, t + o, 0.30, 0.16); tone(f * 2, t + o, 0.26, 0.07, 'square'); });
+  tone(207.7, t, 0.55, 0.10, 'triangle'); };
+const sfxElim = (n) => { if (muted) return; const a = ac(); if (!a) return; const t = a.currentTime;
+  noise(t, 0.5, 0.34); tone(146.8, t, 0.62, 0.30, 'sawtooth', 73.4); tone(73.4, t + 0.02, 0.75, 0.24, 'square');
+  if (n > 1) setTimeout(() => { const b = ac(); if (b) { noise(b.currentTime, 0.42, 0.26);
+    tone(130.8, b.currentTime, 0.5, 0.22, 'sawtooth', 65); } }, 170); };
+
+socket.on('connect', () => {
+  $('conn').classList.add('on');
+  socket.emit('host-join', { gameId: gameId, hostKey: hostKey }, (r) => {
+    if (r && r.error) return say('Host key rejected — check the console URL');
+    if (r && r.state) apply(r.state);
+  });
 });
-document.getElementById("mute").onclick=e=>{muted=!muted;e.target.textContent=muted?"Sound off":"Sound on";if(!muted)ac()};
-addEventListener("pointerdown",()=>ac(),{once:true});
-document.getElementById("undo").onclick=undo;
-document.getElementById("endm").onclick=()=>showResults();
-document.getElementById("reset").onclick=init;
-init();
+socket.on('disconnect', () => $('conn').classList.remove('on'));
+socket.on('state', apply);
+socket.on('error-msg', (m) => say(m));
+socket.on('resolved', (e) => {
+  if (e.eliminated && e.eliminated.length) sfxElim(e.eliminated.length);
+  if (e.fieldClear) say('Field cleared — +' + fmt(e.fieldClear.bonus) + ' bonus, board reset', 'enter');
+  if (e.stumperDeduction) say('Stumper — everyone −' + e.stumperDeduction);
+  if (e.totalWipe) say('Total wipe — highest score survives', 'elim');
+});
+
+function apply(next) { if (!next) return; prev = S; S = next; detectEvents(); render(); }
+
+// Entry and elimination are derived from state transitions rather than pushed
+// as their own events, so a reconnect mid-match can't replay a horn.
+function detectEvents() {
+  if (!prev || !prev.live || !S.live) return;
+  const was = new Set(prev.live.map((p) => p.token));
+  const now = new Set(S.live.map((p) => p.token));
+  const entered = S.live.filter((p) => !was.has(p.token));
+  const gone = prev.live.filter((p) => !now.has(p.token));
+  if (entered.length) { sfxEntry(); banner(entered); }
+  gone.forEach((p) => say(p.name + ' out — survived ' + p.tenure + ' clues', 'elim'));
+}
+
+function banner(ps) {
+  document.querySelectorAll('.entry').forEach((n) => n.remove());
+  const d = document.createElement('div'); d.className = 'entry';
+  d.innerHTML = '<div><span class="lbl">Entry</span></div>' +
+    ps.map((p) => '<div class="who3"><span class="no mq num">' + p.draw +
+      '</span><span class="nm mq">' + p.name + '</span></div>').join('') +
+    '<div class="sub">' + (ps.length > 1 ? 'field cleared<br>two enter'
+      : 'enters with ' + fmt(ps[0].score)) + '</div>';
+  document.body.appendChild(d);
+  const t = setTimeout(kill, 4000);
+  function kill() { d.remove(); clearTimeout(t); removeEventListener('keydown', kill); }
+  addEventListener('keydown', kill); d.onclick = kill;
+}
+
+function render() {
+  const live = S.live || [], q = S.queue || [], out = S.out || [];
+  $('s-clue').textContent = S.clues || 0;
+  $('s-field').textContent = live.length;
+  $('s-q').textContent = q.length;
+  $('s-ceil').textContent = S.ceiling ? fmt(S.ceiling) : '—';
+  if (S.phase === 'lobby') return renderLobby();
+  if (S.clue) renderClue(); else renderBoard();
+
+  const r = $('ring'); r.innerHTML = '';
+  const race = S.race || {}, buzzes = race.buzzes || [], locked = race.lockedOut || [];
+  const buzzed = new Set(buzzes.map((b) => b.token));
+  const on = buzzes[0];
+  live.slice().sort((a, b) => b.score - a.score).forEach((p) => {
+    const d = document.createElement('div');
+    d.className = 'pl' + (p.score < 600 ? ' hot' : '') + (p.capped ? ' capped' : '')
+      + (locked.indexOf(p.token) >= 0 ? ' miss' : '')
+      + (buzzed.has(p.token) ? ' buzzed' : '')
+      + (on && on.token === p.token ? ' onclock' : '')
+      + (p.connected ? '' : ' gone');
+    d.innerHTML = '<span class="dr num">' + p.draw + '</span><span class="nm">' + p.name
+      + (p.connected ? '' : ' <span style="color:var(--alarm);font-size:10px">&#9676;</span>')
+      + (p.pins ? ' <span style="color:var(--slate);font-size:11px">&#9670;' + p.pins + '</span>' : '')
+      + '</span><span class="sc num">' + fmt(p.score) + '</span>';
+    r.appendChild(d);
+  });
+  $('ring-n').textContent = live.length;
+
+  const cd = S.cluesUntilNextEntry;
+  $('clock').classList.toggle('soon', cd === 1);
+  $('cd').textContent = (cd === null || cd === undefined) ? '—' : cd;
+  $('who').innerHTML = q.length
+    ? '<b>#' + q[0].draw + ' ' + q[0].name + '</b> next'
+    : '<span style="color:var(--slate)">Queue empty</span>';
+
+  const o = $('out'); o.innerHTML = '';
+  out.slice().sort((a, b) => b.tenure - a.tenure).slice(0, 7).forEach((p, i) => {
+    const d = document.createElement('div'); d.className = 'pl out';
+    d.innerHTML = '<span class="dr num">' + (i + 1) + '</span><span class="nm">' + p.name
+      + '<span class="sub num">' + p.tenure + ' clues</span></span>'
+      + '<span class="sc num">' + p.tenure + '</span>';
+    o.appendChild(d);
+  });
+  $('out-n').textContent = out.length;
+  renderDock();
+}
+
+function renderLobby() {
+  const roster = S.roster || [];
+  const url = location.origin + '/j/' + S.gameId;
+  $('stage').innerHTML = '<div class="lobby"><h1>J! Royal Rumble</h1>'
+    + '<div class="join">Players join at <code>' + url + '</code></div>'
+    + '<div class="who">' + (roster.length
+      ? roster.map((p) => '<span class="chip' + (p.connected ? '' : ' off') + '">' + p.name + '</span>').join('')
+      : '<span class="idle">Waiting for players&hellip;</span>') + '</div>'
+    + '<button class="go" id="start"' + (roster.length < 3 ? ' disabled' : '') + '>Start with '
+      + roster.length + ' player' + (roster.length === 1 ? '' : 's') + '</button>'
+    + '<div class="idle" style="font-size:12px">' + (roster.length < 3
+      ? 'Three players minimum.'
+      : 'Entry every ' + S.settings.entryInterval + ' clues · start ' + fmt(S.settings.startScore)
+        + ' · ceiling ' + fmt(S.settings.ceiling)) + '</div></div>';
+  const b = $('start');
+  if (b) b.onclick = () => { ac(); socket.emit('start-match'); };
+  $('dock').innerHTML = '<span class="idle">Waiting in the lobby.</span>';
+}
+
+function renderBoard() {
+  const g = document.createElement('div'); g.className = 'grid';
+  (S.board || []).forEach((cat, ci) => {
+    const col = document.createElement('div'), h = document.createElement('div');
+    h.className = 'cat';
+    h.innerHTML = '<div class="src">' + (cat.source === 'original' ? 'TTG' : 'J!') + '</div>'
+      + '<div>' + cat.title + '</div>' + (cat.note ? '<div class="note">' + cat.note + '</div>' : '');
+    const v = document.createElement('button'); v.className = 'veto'; v.textContent = '\u21BB';
+    v.setAttribute('aria-label', 'Reroll ' + cat.title);
+    v.onclick = (e) => { e.stopPropagation(); socket.emit('veto', { slot: ci }); say('Category rerolled'); };
+    h.appendChild(v);
+    const st = document.createElement('div'); st.className = 'stack';
+    cat.clues.forEach((c) => {
+      const b = document.createElement('button'); b.className = 'cell num';
+      b.textContent = c.revealed ? '' : '$' + [100, 200, 300, 400, 500][c.row - 1];
+      b.disabled = !!c.revealed;
+      b.onclick = () => socket.emit('pick-clue', { slot: ci, row: c.row });
+      st.appendChild(b);
+    });
+    col.appendChild(h); col.appendChild(st); g.appendChild(col);
+  });
+  $('stage').innerHTML = ''; $('stage').appendChild(g);
+}
+
+function renderClue() {
+  const c = S.clue, locked = (S.race && S.race.lockedOut) || [];
+  const names = (S.live || []).filter((p) => locked.indexOf(p.token) >= 0).map((p) => p.name);
+  $('stage').innerHTML = '<div class="clue">'
+    + '<div class="cmeta">' + c.category + ' &middot; <span class="v">$' + c.value + '</span></div>'
+    + (c.note ? '<div class="cnote">' + c.note + '</div>' : '')
+    + '<div class="ctxt">' + c.text + '</div>'
+    + (names.length ? '<div class="locked">Locked out: ' + names.join(', ') + '</div>' : '')
+    + '</div>';
+}
+
+function renderDock() {
+  const d = $('dock');
+  if (!S.clue) { d.innerHTML = '<span class="idle">Pick a clue to start the next race.</span>'; return; }
+  const race = S.race || {}, buzzes = race.buzzes || [], on = buzzes[0];
+  if (!race.open && !buzzes.length) {
+    d.innerHTML = '<div class="race"><span class="idle">Read the clue aloud, then arm.</span></div>'
+      + '<div class="acts"><button class="act arm" id="arm">Arm buzzers<span class="kb">space</span></button></div>';
+    $('arm').onclick = () => socket.emit('activate');
+    return;
+  }
+  const chips = buzzes.map((b, i) => '<span class="bz' + (i === 0 ? ' on' : '') + '"><span>' + b.name
+    + (b.early ? ' <span class="e">EARLY</span>' : '') + '</span><span class="t num">'
+    + b.ms.toFixed(1) + '</span></span>').join('');
+  const acts = on
+    ? '<button class="act good" id="ok">Correct<span class="kb">Y</span></button>'
+      + '<button class="act bad" id="no">Wrong &middot; re-toss<span class="kb">N</span></button>'
+      + '<button class="act neu" id="stump">Nobody got it<span class="kb">X</span></button>'
+    : '<button class="act neu" id="stump">Nobody got it<span class="kb">X</span></button>';
+  d.innerHTML = '<div class="race">' + (chips || '<span class="idle">Buzzers live &mdash; waiting.</span>')
+    + '</div><div class="acts">' + acts + '</div>';
+  if (on) {
+    $('ok').onclick = () => socket.emit('resolve', { winnerToken: on.token });
+    $('no').onclick = () => socket.emit('mark-wrong', { token: on.token });
+  }
+  $('stump').onclick = () => socket.emit('resolve', { winnerToken: null });
+}
+
+addEventListener('keydown', (e) => {
+  if (document.querySelector('.entry')) return;
+  if (!S || !S.clue) return;
+  const race = S.race || {}, buzzes = race.buzzes || [], on = buzzes[0];
+  const k = (e.key || '').toLowerCase();
+  if (e.code === 'Space' && !race.open && !buzzes.length) { e.preventDefault(); socket.emit('activate'); }
+  else if (k === 'y' && on) { e.preventDefault(); socket.emit('resolve', { winnerToken: on.token }); }
+  else if (k === 'n' && on) { e.preventDefault(); socket.emit('mark-wrong', { token: on.token }); }
+  else if (k === 'x') { e.preventDefault(); socket.emit('resolve', { winnerToken: null }); }
+});
+
+$('admin').onclick = () => window.open('/admin/' + gameId + '#' + hostKey,
+  'rumble-admin', 'width=520,height=640');
+$('mute').onclick = (e) => { muted = !muted;
+  e.target.textContent = muted ? 'Sound off' : 'Sound on'; if (!muted) ac(); };
+$('endm').onclick = () => { if (confirm('End the match now?')) socket.emit('end-match'); };
+addEventListener('pointerdown', () => ac(), { once: true });
 </script>
 </body>
 </html>

@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { randomUUID, randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
+import { gunzipSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, DEFAULT_SETTINGS } from './engine.js';
@@ -11,7 +12,13 @@ import { makeWeightedPool } from './sources.js';
 const __dir = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
 
-const LIBRARY = JSON.parse(readFileSync(join(__dir, '../data/library.json'), 'utf8'));
+// 45k categories decompress to ~90MB of JS objects. Loaded once at boot and
+// held in memory; the alternative is a per-draw disk read on every category.
+const LIBRARY = gunzipSync(readFileSync(join(__dir, '../data/library.ndjson.gz')))
+  .toString('utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+
+const SEASONS = [...new Set(LIBRARY.map((c) => c.provenance?.season).filter(Boolean))].sort();
+console.log(`library: ${LIBRARY.length} categories, seasons ${SEASONS[0]}-${SEASONS.at(-1)}`);
 
 const app = express();
 app.use(express.json());
@@ -41,8 +48,10 @@ class Match {
 
   pool() {
     const buckets = {};
+    const [lo, hi] = this.settings.seasonRange || [SEASONS[0], SEASONS.at(-1)];
     for (const [name, weight] of Object.entries(this.blend)) {
-      const cats = LIBRARY.filter((c) => c.source === name);
+      const cats = LIBRARY.filter((c) => c.source === name
+        && (name !== 'archive' || (c.provenance.season >= lo && c.provenance.season <= hi)));
       if (cats.length && weight > 0) buckets[name] = { weight, categories: cats };
     }
     if (!Object.keys(buckets).length) {
@@ -154,7 +163,7 @@ app.post('/api/match', (req, res) => {
 app.get('/api/library', (_req, res) => {
   const by = {};
   for (const c of LIBRARY) by[c.source] = (by[c.source] || 0) + 1;
-  res.json({ total: LIBRARY.length, bySource: by });
+  res.json({ total: LIBRARY.length, bySource: by, seasons: [SEASONS[0], SEASONS.at(-1)] });
 });
 
 app.get('/j/:id', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
