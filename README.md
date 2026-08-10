@@ -30,6 +30,7 @@ The winner is the last one standing. Every other statistic is for fun.
     test/setup.mjs    room codes, uploads, blend, start alert
     test/estimate.mjs match-length estimates and the setup warnings
     test/buzzer.mjs   buzz arbitration: early presses, lockouts, ordering
+    test/record.mjs   undo, corrections, score history, match recording
 
 ## Running it
 
@@ -67,6 +68,24 @@ Categories are tagged `original` or `archive` so a match can draw from either or
 blend them by weight. Archive material comes from a public dataset rather than
 from j-archive directly, at the maintainer's request. Media-dependent clues are
 filtered out; a category is only playable if all five rows survive.
+
+## Fixing a scoring mistake
+
+**Undo clue** in the console takes back the whole last clue — scores,
+eliminations, entries, the board, all of it — and puts the clue back on the
+board to be replayed. Use it when the wrong player was credited.
+
+**Click any player in the ring** to adjust their score directly. Use it when
+the value was wrong, or for anything undo can't reach. Both are logged, and the
+count shows next to the version in the top bar.
+
+## Recording a match
+
+Tick **record detailed match data** on the setup page. When the match ends the
+console offers a JSON download containing every clue, every buzz time, the
+score of everyone in the ring before and after, entries, eliminations,
+corrections, and a comparison of the predicted length against the real one.
+Off by default.
 
 ## Adding your own boards
 

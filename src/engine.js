@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS = {
   potScoring: true,          // winner collects the value from EACH opponent
   secondsPerClue: 17.5,
   targetMinutes: 60,
+  recordMatch: false,        // keep a detailed log of the match
   delay: 200,                // ms held back so buzzers arm with Zoom audio
   lockout: 250,              // ms penalty for buzzing before the lights
   seasonRange: null,         // [lo, hi] archive seasons; null = all
@@ -96,6 +97,60 @@ export class RumbleGame {
     for (let i = 0; i < Math.min(3, this.drawOrder.length); i++) this.admit('opening');
     this.finished = false;
     this.winnerId = null;
+  }
+
+  // ---- snapshots ------------------------------------------------------
+  // Everything mutable, serialised. A host mis-scores a clue about as often as
+  // they mis-click one, so undo has to restore the whole world — scores,
+  // eliminations, the board, the used-clue set — not just the last number.
+
+  snapshot() {
+    return JSON.stringify({
+      players: [...this.players.entries()],
+      board: this.board,
+      drawOrder: this.drawOrder,
+      eliminationOrder: this.eliminationOrder,
+      usedClueIds: [...this.usedClueIds],
+      cluesRevealed: this.cluesRevealed,
+      fieldClears: this.fieldClears,
+      vetoedThisMatch: this.vetoedThisMatch,
+      finished: this.finished,
+      winnerId: this.winnerId,
+      log: this.log,
+      s: this.s,
+    });
+  }
+
+  restore(snap) {
+    const d = JSON.parse(snap);
+    this.players = new Map(d.players);
+    this.board = d.board;
+    this.drawOrder = d.drawOrder;
+    this.eliminationOrder = d.eliminationOrder;
+    this.usedClueIds = new Set(d.usedClueIds);
+    this.cluesRevealed = d.cluesRevealed;
+    this.fieldClears = d.fieldClears;
+    this.vetoedThisMatch = d.vetoedThisMatch;
+    this.finished = d.finished;
+    this.winnerId = d.winnerId;
+    this.log = d.log;
+    this.s = d.s;
+  }
+
+  // A manual correction. Deliberately does not re-run elimination on its own —
+  // the caller decides, because pushing somebody below zero by hand should be
+  // an explicit act rather than a side effect of fixing a typo.
+  adjustScore(token, delta) {
+    const p = this.players.get(token);
+    if (!p) return null;
+    const before = p.score;
+    p.score = Math.min(p.score + delta, this.ceiling);
+    if (p.state === 'eliminated' && p.score >= 0) {
+      p.state = 'live';
+      p.eliminatedAtClue = null;
+      this.eliminationOrder = this.eliminationOrder.filter((id) => id !== token);
+    }
+    return { before, after: p.score };
   }
 
   // ---- derived values -------------------------------------------------

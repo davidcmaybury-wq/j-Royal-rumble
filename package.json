@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -16,7 +16,8 @@
     "buzzer-test": "node test/buzzer.mjs",
     "ship": "bash tools/ship.sh",
     "build-library": "node tools/build-library.mjs",
-    "refresh-library": "node tools/refresh-library.mjs"
+    "refresh-library": "node tools/refresh-library.mjs",
+    "record-test": "node test/record.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

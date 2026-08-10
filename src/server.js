@@ -6,7 +6,7 @@ import { readFileSync } from 'fs';
 import { gunzipSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { RumbleGame, makeRng, autoEntryInterval, DEFAULT_SETTINGS } from './engine.js';
+import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS } from './engine.js';
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -62,6 +62,11 @@ class Match {
     this.fastest = null;
     this.stats = new Map();      // token -> buzzer + drain stats
     this.uploads = [];           // { name, categories: [...] }
+    this.undoStack = [];         // snapshots taken before each scored clue
+    this.history = [];           // { clue, ceiling, scores } — always kept, drives the graph
+    this.record = null;          // detailed log, only when the host asks for it
+    this.startedAt = null;
+    this.corrections = [];
   }
 
   stat(token) {
@@ -117,6 +122,32 @@ class Match {
     // decided so the console and the setup view report real numbers, not nulls.
     this.settings = { ...this.settings, ...this.game.s };
     this.phase = 'live';
+    this.startedAt = Date.now();
+    this.history = [{ clue: 0, ceiling: this.game.ceiling,
+      scores: Object.fromEntries(this.game.live().map((p) => [p.id, p.score])) }];
+    if (this.settings.recordMatch) {
+      this.record = {
+        version: VERSION,
+        startedAt: new Date().toISOString(),
+        settings: { ...this.settings },
+        blend: { ...this.blend },
+        available: this.available(),
+        roster: [...this.roster.values()].map((p) => ({ token: p.token, name: p.name })),
+        draw: [...this.game.players.values()]
+          .sort((a, b) => a.drawNumber - b.drawNumber)
+          .map((p) => ({ draw: p.drawNumber, token: p.id, name: p.name })),
+        estimate: {
+          entryInterval: this.settings.entryInterval,
+          secondsPerClue: this.settings.secondsPerClue,
+          expectedClues: expectedClues(this.roster.size, this.settings.entryInterval),
+          expectedMinutes: Math.round(
+            expectedClues(this.roster.size, this.settings.entryInterval)
+            * this.settings.secondsPerClue / 60),
+        },
+        clues: [],
+        events: [],
+      };
+    }
   }
 
   // --- public views ----------------------------------------------------
@@ -146,6 +177,10 @@ class Match {
         clue: this.clue,
         race: this.raceView(),
         fastest: this.fastest,
+        history: this.history,
+        recording: !!this.record,
+        corrections: this.corrections.length,
+        canUndo: this.undoStack.length > 0,
         ...(this.phase === 'over' ? { standings: this.standings() } : {}),
       } : {}),
     };
@@ -183,6 +218,48 @@ class Match {
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected })),
     };
+  }
+
+  note(type, data) {
+    if (!this.record) return;
+    this.record.events.push({ at: this.elapsed(), clue: this.game?.cluesRevealed ?? 0, type, ...data });
+  }
+
+  elapsed() {
+    return this.startedAt ? Math.round((Date.now() - this.startedAt) / 100) / 10 : 0;
+  }
+
+  // A finished record with the things worth comparing against the model.
+  finishRecord() {
+    if (!this.record) return null;
+    const g = this.game;
+    const secs = this.startedAt ? (Date.now() - this.startedAt) / 1000 : 0;
+    const clues = g?.cluesRevealed || 0;
+    const e = this.record.estimate;
+    this.record.finishedAt = new Date().toISOString();
+    this.record.actual = {
+      clues,
+      seconds: Math.round(secs),
+      minutes: Math.round(secs / 60),
+      secondsPerClue: clues ? Math.round(secs / clues * 10) / 10 : null,
+      fieldClears: g?.fieldClears ?? 0,
+      corrections: this.corrections.length,
+    };
+    this.record.estimateError = {
+      cluesPredicted: e.expectedClues, cluesActual: clues,
+      cluesOffBy: clues - e.expectedClues,
+      minutesPredicted: e.expectedMinutes, minutesActual: this.record.actual.minutes,
+      minutesOffBy: this.record.actual.minutes - e.expectedMinutes,
+      secondsPerCluePredicted: e.secondsPerClue,
+      secondsPerClueActual: this.record.actual.secondsPerClue,
+    };
+    this.record.fieldOverTime = this.history.map((h) => ({
+      clue: h.clue, inRing: Object.keys(h.scores).length, ceiling: h.ceiling }));
+    this.record.standings = this.standings();
+    this.record.history = this.history;
+    this.record.corrections = this.corrections;
+    this.record.fastest = this.fastest;
+    return this.record;
   }
 
   standings() {
@@ -237,7 +314,9 @@ class Match {
       roster: this.roster.size,
       myBuzz: mine ? { ms: mine.ms, early: mine.early, ...(mine.ranked || {}) } : null,
       ...(this.phase === 'over'
-        ? { standings: this.standings(), fastest: this.fastest } : {}),
+        ? { standings: this.standings(), fastest: this.fastest, history: this.history,
+            draw: [...this.game.players.values()].map((p) => ({ token: p.id, name: p.name, draw: p.drawNumber })) }
+        : {}),
     };
   }
 }
@@ -335,6 +414,19 @@ app.get('/api/library', (_req, res) => {
 
 app.get('/', (_req, res) => res.sendFile(join(__dir, '../public/setup.html')));
 app.get('/setup/:id', (_req, res) => res.sendFile(join(__dir, '../public/setup.html')));
+app.get('/api/match/:id/record', (req, res) => {
+  const m = auth(req) || (matches.get((req.params.id || '').toUpperCase()));
+  if (!m) return res.status(404).json({ error: 'no such match' });
+  if (m.hostKey !== (req.get('x-host-key') || req.query.key)) {
+    return res.status(403).json({ error: 'bad host key' });
+  }
+  const rec = m.record ? (m.record.actual ? m.record : m.finishRecord()) : null;
+  if (!rec) return res.status(404).json({ error: 'this match was not recorded' });
+  res.setHeader('content-disposition',
+    `attachment; filename="rumble-${m.id}-${new Date().toISOString().slice(0, 10)}.json"`);
+  res.json(rec);
+});
+
 app.get('/j/:id', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
 app.get('/join', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
 app.get('/host/:id', (_req, res) => res.sendFile(join(__dir, '../public/console.html')));
@@ -454,17 +546,50 @@ io.on('connection', (socket) => {
   socket.on('resolve', hostOnly(({ winnerToken }) => {
     const { slot, row } = match.clue;
     const missed = [...match.race.lockedOut];
+    const snap = match.game.snapshot();
+    const statsSnap = JSON.stringify([...match.stats.entries()]);
+    const clueMeta = { ...match.clue };
+    const buzzes = (match.race?.buzzes || []).map((b) => ({ ...b }));
+    const before = Object.fromEntries(match.game.live().map((p) => [p.id, p.score]));
+    const t0 = match.lastClueAt || match.startedAt;
+    match.lastClueAt = Date.now();
+
     const entry = match.game.resolveClue(slot, row, { winnerId: winnerToken ?? null, missedIds: missed });
+    match.undoStack.push({ snap, statsSnap, fastest: match.fastest, clue: clueMeta });
+    if (match.undoStack.length > 60) match.undoStack.shift();
     if (winnerToken && entry.gain) match.stat(winnerToken).drained += entry.gain;
     for (const p of match.game.live()) {
       const st = match.stat(p.id);
       if (p.score > st.peak) st.peak = p.score;
     }
+    const after = Object.fromEntries(match.game.live().map((p) => [p.id, p.score]));
+    match.history.push({ clue: match.game.cluesRevealed, ceiling: match.game.ceiling, scores: after });
+
+    if (match.record) {
+      match.record.clues.push({
+        n: match.game.cluesRevealed,
+        at: match.elapsed(),
+        seconds: t0 ? Math.round((Date.now() - t0) / 100) / 10 : null,
+        category: clueMeta.category, source: match.game.board[slot]?.source,
+        note: clueMeta.note || null, row: clueMeta.row, value: clueMeta.value,
+        buzzes: buzzes.map((b) => ({ name: b.name, ms: b.ms, spectator: b.spectator })),
+        winner: winnerToken ? match.roster.get(winnerToken)?.name : null,
+        missed: missed.map((t) => match.roster.get(t)?.name),
+        stumper: !winnerToken,
+        ceiling: match.game.ceiling,
+        inRing: Object.keys(after).length,
+        scoresBefore: before, scoresAfter: after,
+        eliminated: (entry.eliminated || []).map((t) => match.roster.get(t)?.name),
+        fieldClear: entry.fieldClear ? true : undefined,
+      });
+    }
+
     match.clue = null; match.race = null;
     pushAll();
     io.to(`${match.id}:host`).emit('resolved', entry);
     if (match.game.finished) {
       match.phase = 'over';
+      match.finishRecord();
       pushAll();
     }
   }));
@@ -489,7 +614,42 @@ io.on('connection', (socket) => {
     pushHost();
   }));
 
-  socket.on('end-match', hostOnly(() => { match.phase = 'over'; pushAll(); }));
+  socket.on('end-match', hostOnly(() => {
+    match.phase = 'over'; match.finishRecord(); pushAll();
+  }));
+
+  // --- corrections -----------------------------------------------------
+
+  socket.on('undo-clue', hostOnly(() => {
+    const last = match.undoStack.pop();
+    if (!last) return socket.emit('error-msg', 'nothing to undo');
+    match.game.restore(last.snap);
+    match.stats = new Map(JSON.parse(last.statsSnap));
+    match.fastest = last.fastest;
+    match.history.pop();
+    if (match.record) match.record.clues.pop();
+    match.phase = 'live';
+    match.clue = null; match.race = null;
+    match.corrections.push({ at: match.elapsed(), clue: match.game.cluesRevealed,
+      type: 'undo', category: last.clue?.category, value: last.clue?.value });
+    match.note('undo', { category: last.clue?.category, value: last.clue?.value });
+    pushAll();
+    io.to(`${match.id}:host`).emit('undone', { category: last.clue?.category, value: last.clue?.value });
+  }));
+
+  socket.on('adjust-score', hostOnly(({ token: t, delta, reason }) => {
+    const r = match.game.adjustScore(t, Number(delta) || 0);
+    if (!r) return socket.emit('error-msg', 'no such player');
+    const name = match.roster.get(t)?.name;
+    match.corrections.push({ at: match.elapsed(), clue: match.game.cluesRevealed,
+      type: 'adjust', player: name, delta: Number(delta), from: r.before, to: r.after,
+      reason: reason || null });
+    match.note('adjust', { player: name, delta: Number(delta), to: r.after });
+    const h = match.history[match.history.length - 1];
+    if (h) h.scores[t] = r.after;
+    pushAll();
+    io.to(`${match.id}:host`).emit('adjusted', { name, delta: Number(delta), to: r.after });
+  }));
 
   // --- player actions --------------------------------------------------
 

@@ -136,6 +136,22 @@ font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);
 .b2 th:nth-child(2),.b2 td:nth-child(2){text-align:left}
 .b2 tr.win td{color:var(--brass)}
 @media (prefers-reduced-motion:reduce){.fin{animation:none}}
+.pl[data-token]{cursor:pointer}
+.pl[data-token]:hover{background:var(--panel2)}
+.fix{position:fixed;inset:0;background:#0A0E1CD0;z-index:95;display:flex;align-items:center;justify-content:center}
+.fixbox{background:var(--panel);border:1px solid var(--brass);border-radius:8px;padding:18px 20px;min-width:330px}
+.fh{font-size:15px;margin-bottom:12px;display:flex;align-items:baseline;gap:10px}
+.fh .fs{margin-left:auto;color:var(--brass);font-size:17px}
+.fg{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}
+.fg button{flex:1;min-width:52px;padding:7px 0;border:1px solid var(--line);border-radius:var(--r);font-size:13px}
+.fg button:hover{border-color:var(--brass);color:var(--brass)}
+.fr{display:flex;gap:6px;margin-top:8px}
+.fr input{flex:1;background:var(--ink);border:1px solid var(--line);border-radius:var(--r);
+color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-width:0}
+.fr button{padding:7px 13px;border:1px solid var(--line);border-radius:var(--r);font-size:13px}
+.fr button:hover{border-color:var(--slate)}
+.fn{font-size:11px;color:var(--slate);margin-top:10px}
+.chart{margin-top:16px;background:var(--ink);border-radius:var(--r);padding:8px 4px}
 .feed{position:fixed;left:14px;bottom:104px;display:flex;flex-direction:column-reverse;gap:4px;z-index:30;pointer-events:none}
 .ev{background:var(--panel2);border-left:2px solid var(--brass);padding:5px 10px;font-size:12px;max-width:330px;border-radius:0 var(--r) var(--r) 0}
 .ev.elim{border-left-color:var(--alarm)}.ev.enter{border-left-color:var(--live)}
@@ -153,6 +169,7 @@ font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);
       <span class="dot" id="conn" title="server connection"></span>
       <button class="tb" id="admin" title="Opens on your unshared screen">Pop out answers &#8599;</button>
       <button class="tb" id="mute">Sound on</button>
+      <button class="tb" id="undo" disabled title="Take back the last scored clue">Undo clue</button>
       <button class="tb" id="endm">End match</button>
       <span class="ver num" id="ver" title="build version"></span>
     </span>
@@ -174,6 +191,7 @@ font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { socket, gameId, hostKey, fmt } from '/rumble.js';
+import { scoreChart } from '/chart.js';
 const GID = gameId();
 
 let S = null, prev = null, muted = false;
@@ -264,7 +282,9 @@ function render() {
   $('s-field').textContent = live.length;
   $('s-q').textContent = q.length;
   $('s-ceil').textContent = S.ceiling ? fmt(S.ceiling) : '—';
-  if (S.version) $('ver').textContent = 'v' + S.version;
+  if (S.version) $('ver').textContent = 'v' + S.version
+    + (S.recording ? ' \u25CF rec' : '') + (S.corrections ? ' \u00B7 ' + S.corrections + ' fixed' : '');
+  const u = $('undo'); if (u) u.disabled = !S.canUndo;
   if (S.phase === 'lobby') return renderLobby();
   if (S.clue) renderClue(); else renderBoard();
 
@@ -279,10 +299,14 @@ function render() {
       + (buzzed.has(p.token) ? ' buzzed' : '')
       + (on && on.token === p.token ? ' onclock' : '')
       + (p.connected ? '' : ' gone');
+    d.dataset.token = p.token; d.dataset.name = p.name; d.tabIndex = 0;
+    d.title = 'Click to correct this score';
     d.innerHTML = '<span class="dr num">' + p.draw + '</span><span class="nm">' + p.name
       + (p.connected ? '' : ' <span style="color:var(--alarm);font-size:10px">&#9676;</span>')
       + (p.pins ? ' <span style="color:var(--slate);font-size:11px">&#9670;' + p.pins + '</span>' : '')
       + '</span><span class="sc num">' + fmt(p.score) + '</span>';
+    d.onclick = () => openCorrect(p);
+    d.onkeydown = (e) => { if (e.key === 'Enter') openCorrect(p); };
     r.appendChild(d);
   });
   $('ring-n').textContent = live.length;
@@ -330,6 +354,11 @@ function showFinish() {
   const more = document.createElement('div'); more.className = 'more';
   const b1 = document.createElement('button'); b1.textContent = 'Full standings';
   b1.onclick = showStandings;
+  if (S.recording) {
+    const b0 = document.createElement('button'); b0.textContent = 'Download match data';
+    b0.onclick = () => window.open(`/api/match/${GID}/record?key=${encodeURIComponent(hostKey)}`, '_blank');
+    more.appendChild(b0);
+  }
   const b2 = document.createElement('button'); b2.textContent = 'Hide';
   b2.onclick = () => d.remove();
   more.append(b1, b2); d.appendChild(more);
@@ -389,6 +418,32 @@ function showStandings() {
     if (b.dataset.t === sTab) return;
     sTab = b.dataset.t; sKey = sTab === 'match' ? 'tenure' : 'won'; sDir = -1; showStandings();
   });
+}
+
+// Adjudication goes wrong in two ways: the wrong player was credited, or the
+// value was. Undo covers the first; this covers the second, and anything else.
+function openCorrect(p) {
+  document.querySelectorAll('.fix').forEach((n) => n.remove());
+  const el = document.createElement('div'); el.className = 'fix';
+  const vals = [100, 200, 300, 400, 500, 1000];
+  el.innerHTML = `<div class="fixbox">
+    <div class="fh">Correct <b>${p.name}</b><span class="fs num">${fmt(p.score)}</span></div>
+    <div class="fg">${vals.map((v) => `<button data-d="${-v}">&minus;${v}</button>`).join('')}</div>
+    <div class="fg">${vals.map((v) => `<button data-d="${v}">+${v}</button>`).join('')}</div>
+    <div class="fr"><input type="number" id="fixamt" placeholder="other amount" step="100">
+      <button id="fixgo">Apply</button><button id="fixno">Cancel</button></div>
+    <div class="fn">Corrections are logged. Undo clue takes back a whole clue instead.</div>
+  </div>`;
+  document.body.appendChild(el);
+  const send = (delta) => { socket.emit('adjust-score', { token: p.token, delta }); el.remove(); };
+  el.querySelectorAll('[data-d]').forEach((b) => b.onclick = () => send(Number(b.dataset.d)));
+  el.querySelector('#fixgo').onclick = () => {
+    const v = Number(el.querySelector('#fixamt').value);
+    if (v) send(v); else el.remove();
+  };
+  el.querySelector('#fixno').onclick = () => el.remove();
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
+  setTimeout(() => el.querySelector('#fixamt').focus(), 50);
 }
 
 function renderLobby() {
@@ -493,7 +548,10 @@ $('admin').onclick = () => {
 };
 $('mute').onclick = (e) => { muted = !muted;
   e.target.textContent = muted ? 'Sound off' : 'Sound on'; if (!muted) ac(); };
+$('undo').onclick = () => socket.emit('undo-clue');
 $('endm').onclick = () => { if (confirm('End the match now?')) socket.emit('end-match'); };
+socket.on('undone', (d) => say(`Took back ${d.category} $${d.value}`));
+socket.on('adjusted', (d) => say(`${d.name} corrected by ${d.delta > 0 ? '+' : ''}${fmt(d.delta)} to ${fmt(d.to)}`));
 addEventListener('pointerdown', () => ac(), { once: true });
 </script>
 </body>

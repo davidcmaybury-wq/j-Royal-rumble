@@ -27,6 +27,7 @@ jobs:
           node test/e2e.mjs
           node test/setup.mjs
           node test/buzzer.mjs
+          node test/record.mjs
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

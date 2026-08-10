@@ -115,6 +115,7 @@ align-items:center;justify-content:center;gap:6px;z-index:20;padding:20px;text-a
 .mine .pos{margin-left:auto;text-align:right}
 .rec{padding:9px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;font-size:12px;color:var(--slate)}
 .rec .v{margin-left:auto;font-size:19px;color:var(--brass)}
+.chart{margin:0 12px;background:var(--ink);border-radius:var(--r);padding:6px 2px}
 .tabs{display:flex;gap:4px;padding:9px 12px 0}
 .tabs button{padding:6px 13px;font-size:12px;color:var(--slate);border:1px solid var(--line);
 border-bottom:none;border-radius:var(--r) var(--r) 0 0;background:var(--ink)}
@@ -140,6 +141,7 @@ white-space:nowrap;border-bottom:1px solid var(--line);z-index:2}
 <script type="module">
 import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
          lockoutRemaining, startLatencyReports, fmt, ord } from '/rumble.js';
+import { scoreChart } from '/chart.js';
 
 // /j/CODE prefills the code; /join leaves it blank. Either way the player
 // confirms it, so a stray link can't drop somebody into the wrong room.
@@ -401,6 +403,9 @@ function renderResults() {
     </div>` : ''}
     ${V.fastest ? `<div class="rec"><span>Fastest buzz of the match</span>
       <span>${V.fastest.name}</span><span class="v num">${V.fastest.ms.toFixed(1)}</span></div>` : ''}
+    ${V.history && V.history.length > 2 ? `<div class="chart">${
+      scoreChart(V.history, V.draw || [], {
+        winnerToken: champ && champ.token, width: 500, height: 190 })}</div>` : ''}
     <div class="tabs">
       <button data-t="match" class="${rTab === 'match' ? 'on' : ''}">Match</button>
       <button data-t="buzz" class="${rTab === 'buzz' ? 'on' : ''}">Buzzers</button></div>
