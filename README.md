@@ -72,11 +72,15 @@ filtered out; a category is only playable if all five rows survive.
 
 ## Sound
 
-The cues are synthesised by `tools/make-audio.py` and committed as mp3. They
-are not sampled from anywhere — which keeps the licensing unambiguous, and
-keeps a comfortable distance from WWE's actual Royal Rumble buzzer.
+The entry horn is built from a recording in `sources/`; the chop and the
+countdown tones are synthesised. See CREDITS.md for provenance.
 
-    python3 tools/make-audio.py     rewrites public/audio/*.mp3
+    python3 tools/build-audio.py sources/   rebuilds cues from recordings
+    python3 tools/make-audio.py             rebuilds the synthesised cues
+
+Raw recordings don't drop straight in — `build-audio.py` trims to the onset,
+shapes the tail, matches loudness across cues so one doesn't tower over
+another, and adds a short room.
 
 Browsers block audio until a page has been interacted with, so both the console
 and the buzzer unlock on the first tap or key press.
