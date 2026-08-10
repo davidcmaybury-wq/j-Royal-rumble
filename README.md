@@ -78,9 +78,17 @@ Drop a folder of boards into the repo and merge them into the library:
 Categories already present are skipped, so re-running is safe. Commit the
 changed `data/library.ndjson.gz` and push.
 
-Archive seasons come from the public clue dataset:
+Archive material refreshes itself. A scheduled workflow runs on the 1st of each
+month, pulls any new seasons from the public clue dataset, and commits the
+result — which then goes through the usual test gates before deploying. Run it
+by hand from the Actions tab, or locally:
 
-    node tools/build-library.mjs seasons ./seasons   # season*.tsv files
+    node tools/refresh-library.mjs --dry-run   # what would change
+    node tools/refresh-library.mjs            # merge it
+
+The source is the public dataset on GitHub, not j-archive. The archive's
+maintainer asked not to be crawled, and this keeps us off their server
+entirely.
 
 ## Deploying
 

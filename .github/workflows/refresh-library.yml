@@ -1,0 +1,62 @@
+name: refresh library
+
+# The clue dataset picks up new episodes as they air. Once a month is plenty —
+# a season adds roughly 230 games over ten months, so nothing is urgent, and a
+# light touch keeps us a good citizen of somebody else's repository.
+on:
+  schedule:
+    - cron: '0 9 1 * *'      # 09:00 UTC on the 1st
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Report what would change without committing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Look for new material
+        id: refresh
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            node tools/refresh-library.mjs --dry-run | tee out.txt
+          else
+            node tools/refresh-library.mjs | tee out.txt
+          fi
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          cat out.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          rm out.txt
+
+      # The library is what the server serves, so a change here must not ship
+      # without the usual gates. Committing lets the deploy workflow run them.
+      - name: Commit if the library grew
+        if: ${{ inputs.dry_run != true }}
+        run: |
+          if git diff --quiet -- data/; then
+            echo "no change to the library"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "Refresh clue library
+
+          ${{ steps.refresh.outputs.summary }}"
+          git push
+
+      - name: Summary
+        run: |
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.refresh.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
