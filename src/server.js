@@ -44,6 +44,14 @@ class Match {
     this.race = null;            // { open, activatedAt, delay, buzzes:[], lockedOut:Set }
     this.vetoLog = [];
     this.fastest = null;
+    this.stats = new Map();      // token -> buzzer + drain stats
+  }
+
+  stat(token) {
+    if (!this.stats.has(token)) {
+      this.stats.set(token, { att: 0, early: 0, won: 0, drained: 0, peak: 0, times: [] });
+    }
+    return this.stats.get(token);
   }
 
   pool() {
@@ -90,13 +98,18 @@ class Match {
         board: g.board.map((c) => ({
           title: c.title, note: c.note, source: c.source,
           clues: c.clues.map((x) => ({ row: x.row, revealed: x.revealed })) })),
-        live: g.live().map(this.playerRow, this),
+        // The engine flips the last player's state to 'winner', which would
+        // drop them out of the ring at the exact moment they win it.
+        live: [...g.players.values()]
+          .filter((p) => p.state === 'live' || p.state === 'winner')
+          .map(this.playerRow, this),
         queue: g.queued().map((p) => ({ draw: p.drawNumber, name: p.name })),
         out: [...g.players.values()].filter((p) => p.state === 'eliminated')
           .map(this.playerRow, this),
         clue: this.clue,
         race: this.raceView(),
         fastest: this.fastest,
+        ...(this.phase === 'over' ? { standings: this.standings() } : {}),
       } : {}),
     };
   }
@@ -123,6 +136,30 @@ class Match {
     };
   }
 
+  standings() {
+    const g = this.game;
+    if (!g) return [];
+    return [...g.players.values()].filter((p) => p.state !== 'queued').map((p) => {
+      const st = this.stat(p.id);
+      const times = st.times;
+      return {
+        token: p.id, draw: p.drawNumber, name: p.name,
+        // Only the genuine last-one-standing is crowned. A match ended early
+        // by the host has no winner, however many are still in the ring.
+        winner: p.state === 'winner'
+          || (this.phase === 'over' && p.state === 'live' && g.live().length === 1),
+        tenure: (p.eliminatedAtClue ?? g.cluesRevealed) - (p.enteredAtClue ?? 0),
+        outOrder: p.eliminatedAtClue == null ? null
+          : g.eliminationOrder.indexOf(p.id) + 1,
+        correct: p.correct, missed: p.missed, pins: p.pins,
+        drained: st.drained, peak: Math.max(st.peak, p.score),
+        att: st.att, early: st.early, won: st.won,
+        avg: times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length * 10) / 10 : null,
+        best: times.length ? Math.min(...times) : null,
+      };
+    });
+  }
+
   // Sent to a player. Never carries the correct response.
   playerView(token) {
     const g = this.game;
@@ -145,8 +182,13 @@ class Match {
         entryStake: Math.min(this.settings.startScore, g.ceiling),
       },
       buzzOpen: !!this.race?.open,
-      myBuzz: mine ? { ms: mine.ms, early: mine.early,
-        ...(mine.ranked || {}) } : null,
+      clueUp: !!this.clue,
+      clueValue: this.clue?.value ?? null,
+      lockout: this.settings.lockout,
+      roster: this.roster.size,
+      myBuzz: mine ? { ms: mine.ms, early: mine.early, ...(mine.ranked || {}) } : null,
+      ...(this.phase === 'over'
+        ? { standings: this.standings(), fastest: this.fastest } : {}),
     };
   }
 }
@@ -264,6 +306,11 @@ io.on('connection', (socket) => {
     const { slot, row } = match.clue;
     const missed = [...match.race.lockedOut];
     const entry = match.game.resolveClue(slot, row, { winnerId: winnerToken ?? null, missedIds: missed });
+    if (winnerToken && entry.gain) match.stat(winnerToken).drained += entry.gain;
+    for (const p of match.game.live()) {
+      const st = match.stat(p.id);
+      if (p.score > st.peak) st.peak = p.score;
+    }
     match.clue = null; match.race = null;
     pushAll();
     io.to(`${match.id}:host`).emit('resolved', entry);
@@ -308,8 +355,11 @@ io.on('connection', (socket) => {
       token, name: match.roster.get(token)?.name || 'Player',
       ms: Math.round(ms * 10) / 10, early: status === 'early', spectator,
     };
+    const st = match.stat(token);
+    st.att++; if (rec.early) st.early++; st.times.push(rec.ms);
     match.race.buzzes.push(rec);
     match.race.buzzes.sort((a, b) => a.ms - b.ms);
+    if (!spectator && match.race.buzzes[0].token === token) st.won++;
 
     if (!spectator && (!match.fastest || rec.ms < match.fastest.ms)) {
       match.fastest = { ms: rec.ms, name: rec.name, clue: g.cluesRevealed + 1,

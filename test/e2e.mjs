@@ -182,6 +182,71 @@ await wait(150);
 check('veto swaps the category', state.board[0].title !== cat0,
   `${cat0} → ${state.board[0].title}`);
 
+// --- standings at the end of the match ----------------------------------
+host.emit('end-match');
+await wait(400);
+check('match reports as over', state.phase === 'over');
+const st = state.standings || [];
+check('standings cover everyone who played', st.length >= 5, st.length + ' entries');
+// A host-aborted match has no winner, however many are still in the ring.
+const champs = st.filter((p) => p.winner);
+check('an aborted match crowns nobody', champs.length === 0, champs.map((p) => p.name).join(','));
+check('standings carry buzzer stats', st.some((p) => p.att > 0 && p.best != null));
+check('standings carry drain totals', st.some((p) => p.drained > 0));
+check('players receive standings too', players.some((p) => p.view && p.view.standings));
+check('players still never see an answer',
+  players.every((p) => !JSON.stringify(p.view || {}).includes('correctResponse')));
+
+// --- a match played to its natural end crowns exactly one --------------
+{
+  const r2 = await fetch(`${U}/api/match`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ settings: { entryInterval: 99, startScore: 200, ceiling: 2000 } }),
+  });
+  const m2 = await r2.json();
+  const h2 = io(U, { transports: ['websocket'] });
+  await once(h2, 'connect');
+  let s2 = null;
+  h2.on('state', (x) => { s2 = x; });
+  await new Promise((r) => h2.emit('host-join', { gameId: m2.gameId, hostKey: m2.hostKey }, (x) => { s2 = x.state; r(); }));
+  const ps2 = [];
+  for (const name of ['A', 'B', 'C']) {
+    const sk = io(U, { transports: ['websocket'] });
+    await once(sk, 'connect');
+    const p = { name, sk, token: null };
+    await new Promise((r) => sk.emit('join', { gameId: m2.gameId, name }, (x) => { p.token = x.token; r(); }));
+    ps2.push(p);
+  }
+  await wait(150);
+  h2.emit('start-match');
+  await wait(200);
+
+  let guard = 0;
+  while (s2.phase === 'live' && guard++ < 60) {
+    const open = [];
+    s2.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) open.push([si, x.row]); }));
+    const [slot, row] = open[open.length - 1];          // biggest clues, fastest bleed
+    h2.emit('pick-clue', { slot, row });
+    await wait(90);
+    h2.emit('activate');
+    await wait(120);
+    const alive = s2.live.map((p) => p.token);
+    const who = ps2.find((p) => p.token === alive[0]);
+    if (who) who.sk.emit('buzz', { ms: 400, status: 'good' });
+    await wait(110);
+    const on = s2.race && s2.race.buzzes[0];
+    h2.emit('resolve', { winnerToken: on ? on.token : null });
+    await wait(160);
+  }
+  check('match ended on its own', s2.phase === 'over', `after ${guard} clues`);
+  const w2 = (s2.standings || []).filter((p) => p.winner);
+  check('exactly one winner crowned', w2.length === 1, w2.map((p) => p.name).join(',') || 'none');
+  check('the winner is still shown in the ring',
+    s2.live.length === 1 && w2.length === 1 && s2.live[0].token === w2[0].token,
+    `ring has ${s2.live.length}`);
+  h2.close(); ps2.forEach((p) => p.sk.close());
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); back.close(); players.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);
