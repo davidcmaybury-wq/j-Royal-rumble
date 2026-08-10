@@ -27,6 +27,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .sp{margin-left:auto;display:flex;gap:6px;align-items:center}
 .tb{padding:4px 10px;border:1px solid var(--line);border-radius:var(--r);font-size:12.5px;color:var(--slate)}
 .tb:hover:not(:disabled){border-color:var(--slate);color:var(--chalk)}
+.ver{font-size:10.5px;color:var(--slate);letter-spacing:.06em}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--alarm)}
 .dot.on{background:var(--live)}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:1px;background:var(--line);min-height:0}
@@ -123,6 +124,7 @@ animation:rise .22s cubic-bezier(.2,.8,.3,1);cursor:pointer}
       <button class="tb" id="admin" title="Opens on your unshared screen">Pop out answers &#8599;</button>
       <button class="tb" id="mute">Sound on</button>
       <button class="tb" id="endm">End match</button>
+      <span class="ver num" id="ver" title="build version"></span>
     </span>
   </header>
   <div class="main">
@@ -231,6 +233,7 @@ function render() {
   $('s-field').textContent = live.length;
   $('s-q').textContent = q.length;
   $('s-ceil').textContent = S.ceiling ? fmt(S.ceiling) : '—';
+  if (S.version) $('ver').textContent = 'v' + S.version;
   if (S.phase === 'lobby') return renderLobby();
   if (S.clue) renderClue(); else renderBoard();
 

@@ -68,7 +68,33 @@ blend them by weight. Archive material comes from a public dataset rather than
 from j-archive directly, at the maintainer's request. Media-dependent clues are
 filtered out; a category is only playable if all five rows survive.
 
+## Adding your own boards
+
+Drop a folder of boards into the repo and merge them into the library:
+
+    node tools/build-library.mjs add ./my-boards     # j-trivia JSON or jparty CSV, subfolders walked
+    node tools/build-library.mjs list                # what's in the library now
+
+Categories already present are skipped, so re-running is safe. Commit the
+changed `data/library.ndjson.gz` and push.
+
+Archive seasons come from the public clue dataset:
+
+    node tools/build-library.mjs seasons ./seasons   # season*.tsv files
+
 ## Deploying
+
+**This app must run exactly one machine.** Matches live in memory, so a second
+machine means a host can create a match on one and have players land on the
+other — which surfaces as "bad host key" and "no such game". After any
+`fly launch`, check and fix with:
+
+    fly status
+    fly scale count 1
+
+`GET /api/health` reports the version, machine id, uptime and live match count.
+Hit it twice: if the machine id changes, you are running more than one.
+
 
 Pushes to `main` run the simulation harness, then deploy to fly.io. Requires a
 `FLY_API_TOKEN` repository secret.

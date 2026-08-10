@@ -14,11 +14,16 @@ const PORT = process.env.PORT || 8080;
 
 // 45k categories decompress to ~90MB of JS objects. Loaded once at boot and
 // held in memory; the alternative is a per-draw disk read on every category.
+const PKG = JSON.parse(readFileSync(join(__dir, '../package.json'), 'utf8'));
+export const VERSION = PKG.version;
+const BOOTED = Date.now();
+const MACHINE = process.env.FLY_MACHINE_ID || 'local';
+
 const LIBRARY = gunzipSync(readFileSync(join(__dir, '../data/library.ndjson.gz')))
   .toString('utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
 
 const SEASONS = [...new Set(LIBRARY.map((c) => c.provenance?.season).filter(Boolean))].sort();
-console.log(`library: ${LIBRARY.length} categories, seasons ${SEASONS[0]}-${SEASONS.at(-1)}`);
+console.log(`v${VERSION} · machine ${MACHINE} · library ${LIBRARY.length} categories, seasons ${SEASONS[0]}-${SEASONS.at(-1)}`);
 
 const app = express();
 app.use(express.json({ limit: '12mb' }));
@@ -117,7 +122,7 @@ class Match {
   hostView() {
     const g = this.game;
     return {
-      phase: this.phase, gameId: this.id,
+      phase: this.phase, gameId: this.id, version: VERSION,
       settings: this.settings,
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected })),
@@ -167,7 +172,7 @@ class Match {
 
   setupView() {
     return {
-      gameId: this.id, phase: this.phase,
+      gameId: this.id, phase: this.phase, version: VERSION,
       settings: this.settings, blend: this.blend,
       seasons: [SEASONS[0], SEASONS.at(-1)],
       available: this.available(),
@@ -305,10 +310,24 @@ app.delete('/api/match/:id/material/:idx', (req, res) => {
   res.json(m.setupView());
 });
 
+// Matches live in this process's memory. If two machines are running, a host
+// can create a match on one and have players land on the other — which shows
+// up as "bad host key" and "no such game". Hitting this twice and seeing the
+// machine id change is the tell.
+app.get('/api/health', (_req, res) => {
+  res.json({
+    version: VERSION, machine: MACHINE,
+    uptimeSeconds: Math.round((Date.now() - BOOTED) / 1000),
+    liveMatches: matches.size,
+    library: LIBRARY.length,
+  });
+});
+
 app.get('/api/library', (_req, res) => {
   const by = {};
   for (const c of LIBRARY) by[c.source] = (by[c.source] || 0) + 1;
-  res.json({ total: LIBRARY.length, bySource: by, seasons: [SEASONS[0], SEASONS.at(-1)] });
+  res.json({ total: LIBRARY.length, bySource: by, seasons: [SEASONS[0], SEASONS.at(-1)],
+    version: VERSION });
 });
 
 app.get('/', (_req, res) => res.sendFile(join(__dir, '../public/setup.html')));
@@ -333,8 +352,10 @@ io.on('connection', (socket) => {
   const pushAll = () => { pushHost(); pushPlayers(); };
 
   socket.on('host-join', ({ gameId, hostKey }, ack) => {
-    const m = matches.get(gameId);
-    if (!m || m.hostKey !== hostKey) return ack?.({ error: 'bad host key' });
+    const m = matches.get((gameId || '').toUpperCase());
+    if (!m) return ack?.({ error: `no match ${gameId} on this server (machine ${MACHINE}). ` +
+      `If the app is running more than one machine, run: fly scale count 1` });
+    if (m.hostKey !== hostKey) return ack?.({ error: 'that host key does not match this game' });
     match = m; isHost = true;
     socket.join(`${m.id}:host`);
     ack?.({ ok: true, state: m.hostView() });
@@ -344,7 +365,8 @@ io.on('connection', (socket) => {
   // reconnect keeps their score, draw number and place in the queue.
   socket.on('join', ({ gameId, token: t, name }, ack) => {
     const m = matches.get((gameId || '').toUpperCase());
-    if (!m) return ack?.({ error: 'no such match' });
+    if (!m) return ack?.({ error: `No game with the code ${(gameId || '').toUpperCase()}. ` +
+      `Check the code with your host — it's four letters.` });
     match = m;
     token = t && m.roster.has(t) ? t : (t || randomUUID());
     const existing = m.roster.get(token);
@@ -390,7 +412,8 @@ io.on('connection', (socket) => {
   // The setup page watches the lobby fill without claiming the host socket.
   socket.on('watch-setup', ({ gameId, hostKey }, ack) => {
     const m = matches.get((gameId || '').toUpperCase());
-    if (!m || m.hostKey !== hostKey) return ack?.({ error: 'bad host key' });
+    if (!m) return ack?.({ error: `no match ${gameId} on this server (machine ${MACHINE})` });
+    if (m.hostKey !== hostKey) return ack?.({ error: 'that host key does not match this game' });
     match = m; isHost = true;
     socket.join(`${m.id}:host`);
     ack?.({ ok: true, setup: m.setupView() });

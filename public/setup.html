@@ -48,6 +48,13 @@ select{font-family:"IBM Plex Sans",sans-serif}
 .src.off input[type=range]{opacity:.3}
 .up{border:1px dashed var(--line);border-radius:var(--r);padding:16px;text-align:center;color:var(--slate);font-size:13px}
 .up.drag{border-color:var(--brass);color:var(--chalk)}
+.queued{margin-top:10px;display:flex;flex-wrap:wrap;gap:5px}
+.qf{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
+border-radius:20px;padding:5px 12px;font-size:12.5px}
+.qf .x{color:var(--slate);padding:0 2px}.qf .x:hover{color:var(--alarm)}
+.upbtn{padding:9px 22px;border:1px solid var(--brass);color:var(--brass);border-radius:var(--r);font-size:14px}
+.upbtn:disabled{opacity:.3;border-color:var(--line);color:var(--slate);cursor:default}
+.upbtn.busy{opacity:.6;cursor:progress}
 .files{margin-top:10px;display:flex;flex-direction:column;gap:5px}
 .file{display:flex;align-items:center;gap:10px;background:var(--ink);border-radius:var(--r);padding:7px 11px;font-size:13px}
 .file .n{color:var(--slate);font-size:12px;margin-left:auto}
@@ -231,6 +238,11 @@ function render() {
       <input type="file" id="file" multiple accept=".json,.csv" hidden></label><br>
       <span style="font-size:11.5px">j-trivia.org JSON &nbsp;·&nbsp; jparty.tv CSV</span>
     </div>
+    <div class="queued" id="queued"></div>
+    <div class="row" style="margin-top:10px;align-items:center">
+      <button class="upbtn" id="upbtn" disabled>Upload</button>
+      <span class="note" id="qnote">Nothing waiting.</span>
+    </div>
     <div class="files" id="files"></div>
     <div class="msg" id="msg"></div>
   </div>
@@ -279,6 +291,7 @@ function render() {
     <button class="go" id="start" ${S.roster.length < 3 ? 'disabled' : ''}>Start the Rumble</button>
     <button class="alt" id="save">Save settings</button>
     <span class="note" id="savemsg"></span>
+    <span class="note num" style="margin-left:auto">v${S.version || '?'} &middot; room ${code}</span>
   </div>`;
 
   renderRoster(); renderWarnings(); renderFiles(); wire();
@@ -385,12 +398,14 @@ function wire() {
   };
 
   const drop = document.getElementById('drop'), file = document.getElementById('file');
-  file.onchange = () => upload([...file.files]);
+  file.onchange = () => queueFiles([...file.files]);
   ['dragenter', 'dragover'].forEach((e) => drop.addEventListener(e, (ev) => {
     ev.preventDefault(); drop.classList.add('drag'); }));
   ['dragleave', 'drop'].forEach((e) => drop.addEventListener(e, (ev) => {
     ev.preventDefault(); drop.classList.remove('drag'); }));
-  drop.addEventListener('drop', (ev) => upload([...ev.dataTransfer.files]));
+  drop.addEventListener('drop', (ev) => queueFiles([...ev.dataTransfer.files]));
+  document.getElementById('upbtn').onclick = () => upload();
+  renderQueue();
 
   document.getElementById('start').onclick = async () => {
     if (!await save(true)) return;
@@ -399,19 +414,55 @@ function wire() {
   };
 }
 
-async function upload(files) {
-  const m = document.getElementById('msg');
+// Dropping a file only queues it. Uploading is a button press, so the host
+// always knows whether their boards were actually processed.
+let pending = [];
+
+function queueFiles(files) {
+  const fresh = files.filter((f) => !pending.some((p) => p.name === f.name && p.size === f.size));
+  pending = pending.concat(fresh);
+  renderQueue();
+}
+
+function renderQueue() {
+  const q = document.getElementById('queued'), b = document.getElementById('upbtn'),
+        n = document.getElementById('qnote');
+  if (!q) return;
+  q.innerHTML = pending.map((f, i) =>
+    `<span class="qf">${f.name}<button class="x" data-q="${i}" aria-label="Remove ${f.name}">&times;</button></span>`).join('');
+  q.querySelectorAll('[data-q]').forEach((x) => x.onclick = () => {
+    pending.splice(Number(x.dataset.q), 1); renderQueue();
+  });
+  b.disabled = pending.length === 0;
+  b.textContent = pending.length ? `Upload ${pending.length} file${pending.length > 1 ? 's' : ''}` : 'Upload';
+  n.textContent = pending.length
+    ? 'Nothing is added until you press upload.'
+    : 'Nothing waiting.';
+}
+
+async function upload() {
+  const m = document.getElementById('msg'), b = document.getElementById('upbtn');
+  const files = pending.slice();
+  if (!files.length) return;
+  b.disabled = true; b.classList.add('busy'); b.textContent = 'Uploading…';
+  let added = 0, failed = 0;
   for (const f of files) {
     m.textContent = `Reading ${f.name}…`; m.className = 'msg';
     try {
       const content = await f.text();
       const r = await api(`/api/match/${code}/material`, { method: 'POST',
         body: JSON.stringify({ name: f.name, content, format: /\.csv$/i.test(f.name) ? 'csv' : 'json' }) });
-      S = r;
-      m.textContent = `${f.name}: ${r.added} categories added.`; m.className = 'msg good';
+      S = r; added += r.added;
+      pending = pending.filter((p) => p !== f);
     } catch (e) {
+      failed++;
       m.textContent = `${f.name}: ${e.message}`; m.className = 'msg bad';
     }
+  }
+  b.classList.remove('busy');
+  if (!failed) {
+    m.textContent = `${added} categories added from ${files.length} file${files.length > 1 ? 's' : ''}.`;
+    m.className = 'msg good';
   }
   render();
 }
