@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble — set up a match</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;
+--chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:4px}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--ink);color:var(--chalk);font:400 15px/1.55 "IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums lining-nums}
+.mq{font-family:"Anton",Impact,sans-serif}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.wrap{max-width:840px;margin:0 auto;padding:26px 20px 70px}
+h1{font:400 clamp(30px,6vw,50px)/1 "Anton",Impact,sans-serif;margin:0 0 4px;color:var(--brass)}
+.tag{font-size:12.5px;color:var(--slate);margin-bottom:24px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:14px}
+.card h2{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);margin:0 0 14px;font-weight:500}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f label{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.f .hint{font-size:11px;color:var(--slate);font-style:italic}
+input[type=number],input[type=text],select{background:var(--ink);border:1px solid var(--line);border-radius:var(--r);
+color:var(--chalk);padding:8px 10px;font:400 14px "IBM Plex Mono",monospace;min-width:0}
+input[type=text].wide{font-family:"IBM Plex Sans",sans-serif}
+select{font-family:"IBM Plex Sans",sans-serif}
+.code{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.code .big{font:400 clamp(46px,12vw,86px)/.9 "Anton",Impact,sans-serif;color:var(--brass);letter-spacing:.09em}
+.code .side{font-size:12.5px;color:var(--slate);line-height:1.7}
+.code .side code{font-family:"IBM Plex Mono",monospace;color:var(--chalk);background:var(--ink);padding:2px 7px;border-radius:var(--r)}
+.who{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 12px;background:var(--panel2);border-radius:20px;font-size:13px;border:1px solid var(--line)}
+.chip.off{opacity:.4}
+.mix{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.src{border:1px solid var(--line);border-radius:var(--r);padding:12px;background:var(--ink)}
+.src.on{border-color:var(--brass)}
+.src .t{display:flex;align-items:center;gap:8px;font-size:14px}
+.src .n{font-size:11px;color:var(--slate);margin-top:3px}
+.src input[type=range]{width:100%;margin-top:9px}
+.src.off input[type=range]{opacity:.3}
+.up{border:1px dashed var(--line);border-radius:var(--r);padding:16px;text-align:center;color:var(--slate);font-size:13px}
+.up.drag{border-color:var(--brass);color:var(--chalk)}
+.files{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.file{display:flex;align-items:center;gap:10px;background:var(--ink);border-radius:var(--r);padding:7px 11px;font-size:13px}
+.file .n{color:var(--slate);font-size:12px;margin-left:auto}
+.file .x{color:var(--slate);padding:0 4px}.file .x:hover{color:var(--alarm)}
+.msg{font-size:12.5px;margin-top:9px}
+.msg.bad{color:var(--alarm)}.msg.good{color:var(--live)}
+.foot{position:sticky;bottom:0;background:linear-gradient(transparent,var(--ink) 24%);padding:22px 0 0;margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.go{padding:14px 32px;border:1px solid var(--brass);color:var(--brass);border-radius:var(--r);font-size:16px}
+.go:disabled{opacity:.32;border-color:var(--line);color:var(--slate);cursor:default}
+.alt{padding:12px 18px;border:1px solid var(--line);border-radius:var(--r);font-size:14px;color:var(--slate)}
+.alt:hover{color:var(--chalk);border-color:var(--slate)}
+.note{font-size:12px;color:var(--slate)}
+.est{font-size:12.5px;color:var(--slate)}
+.est b{color:var(--brass);font-weight:400}
+.start{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"><p class="note">Loading…</p></div>
+<script src="/socket.io/socket.io.js"></script>
+<script type="module">
+const socket = io({ transports: ['websocket'] });
+let code = location.pathname.split('/')[2] || '';
+let hostKey = location.hash.slice(1);
+let S = null, msg = null;
+const root = document.getElementById('root');
+const fmt = (n) => (n ?? 0).toLocaleString();
+
+const api = async (path, opts = {}) => {
+  const r = await fetch(path, { ...opts,
+    headers: { 'content-type': 'application/json', 'x-host-key': hostKey, ...(opts.headers || {}) } });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || 'request failed');
+  return j;
+};
+
+async function boot() {
+  if (!code) {
+    const m = await (await fetch('/api/match', { method: 'POST',
+      headers: { 'content-type': 'application/json' }, body: '{}' })).json();
+    code = m.gameId; hostKey = m.hostKey;
+    history.replaceState(null, '', `/setup/${code}#${hostKey}`);
+  }
+  S = await api(`/api/match/${code}`);
+  socket.emit('watch-setup', { gameId: code, hostKey }, () => {});
+  socket.on('state', (s) => { if (s.roster) { S.roster = s.roster; renderRoster(); } });
+  render();
+}
+
+// --- estimate -----------------------------------------------------------
+// Mirrors autoEntryInterval so the host sees the consequence of the roster
+// size before committing to it.
+function estimate() {
+  const n = S.roster.length, s = S.settings;
+  if (n < 3) return null;
+  const iv = s.entryInterval ?? Math.min(15, Math.max(2,
+    Math.round((s.targetMinutes * 60 / s.secondsPerClue) * 0.6 / (n - 3))));
+  const clues = (n - 3) * iv / 0.6;
+  return { iv, mins: Math.round(clues * s.secondsPerClue / 60) };
+}
+
+const SRC = [
+  ['archive', 'Jeopardy! archive', 'Seasons 22–41, media clues removed'],
+  ['original', 'TTG & LearningMan', 'Your existing written boards'],
+  ['upload', 'Uploaded this match', 'Fresh material you add below'],
+];
+
+function render() {
+  const est = estimate(), s = S.settings;
+  root.innerHTML = `
+  <h1>Set up a Rumble</h1>
+  <div class="tag">Read the room code aloud. Only people who have it can join.</div>
+
+  <div class="card"><h2>Room code</h2>
+    <div class="code">
+      <span class="big" id="rc">${code}</span>
+      <div class="side">
+        Players go to <code>${location.origin}/join</code> and enter this code.<br>
+        Or send them <code>${location.origin}/j/${code}</code> — the code is filled in, they still confirm it.
+      </div>
+    </div>
+  </div>
+
+  <div class="card"><h2>Signed up <span id="rn" style="color:var(--brass)">${S.roster.length}</span></h2>
+    <div class="who" id="who"></div>
+    ${est ? `<p class="est" style="margin:14px 0 0">With ${S.roster.length} players: entry every <b>${est.iv}</b> clues, roughly <b>${est.mins} minutes</b>.</p>`
+      : `<p class="note" style="margin:14px 0 0">Three players minimum.</p>`}
+  </div>
+
+  <div class="card"><h2>Clue material</h2>
+    <div class="mix">${SRC.map(([k, t, d]) => {
+      const w = S.blend[k] ?? 0, avail = S.available[k] || 0;
+      return `<div class="src ${w > 0 ? 'on' : 'off'}" data-src="${k}">
+        <label class="t"><input type="checkbox" data-k="${k}" ${w > 0 ? 'checked' : ''} ${avail ? '' : 'disabled'}>
+          <span>${t}</span></label>
+        <div class="n">${avail ? fmt(avail) + ' categories' : 'none available'} — ${d}</div>
+        <input type="range" min="1" max="10" value="${w || 1}" data-w="${k}" ${w > 0 ? '' : 'disabled'}>
+      </div>`; }).join('')}</div>
+    <div class="row" style="margin-top:14px">
+      <div class="f"><label>Archive seasons</label>
+        <div class="row" style="gap:6px">
+          <input type="number" id="s-lo" value="${(s.seasonRange || S.seasons)[0]}" min="${S.seasons[0]}" max="${S.seasons[1]}" style="width:78px">
+          <input type="number" id="s-hi" value="${(s.seasonRange || S.seasons)[1]}" min="${S.seasons[0]}" max="${S.seasons[1]}" style="width:78px">
+        </div>
+        <span class="hint">season ${S.seasons[0]} is 2005, ${S.seasons[1]} is 2025</span></div>
+      <button class="alt" id="mine">Use only my own material</button>
+    </div>
+  </div>
+
+  <div class="card"><h2>Add fresh material</h2>
+    <div class="up" id="drop">
+      Drop files here, or <label style="color:var(--brass);cursor:pointer;text-decoration:underline">choose
+      <input type="file" id="file" multiple accept=".json,.csv" hidden></label><br>
+      <span style="font-size:11.5px">j-trivia.org JSON &nbsp;·&nbsp; jparty.tv CSV</span>
+    </div>
+    <div class="files" id="files"></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card"><h2>Rules</h2>
+    <div class="row">
+      ${num('startScore', 'Starting score', s.startScore, 'what every entrant walks in with')}
+      ${num('ceiling', 'Score ceiling', s.ceiling, 'clips every live score')}
+      ${num('ceilingDecayPerClue', 'Ceiling change / clue', s.ceilingDecayPerClue, 'negative decays; keeps late draws honest')}
+      ${num('ceilingFloor', 'Ceiling floor', s.ceilingFloor, 'decay stops here')}
+    </div>
+    <div class="row" style="margin-top:14px">
+      ${num('entryInterval', 'Entry every N clues', s.entryInterval ?? '', 'blank = scale from roster')}
+      ${num('targetMinutes', 'Target length (min)', s.targetMinutes, 'used when entry is automatic')}
+      <div class="f"><label>Stumper deduction</label>
+        <select id="stumperFraction">
+          ${[['0','off'],['0.25','quarter value'],['0.5','half value'],['1','full value']]
+            .map(([v, t]) => `<option value="${v}" ${Number(s.stumperFraction) === Number(v) ? 'selected' : ''}>${t}</option>`).join('')}
+        </select><span class="hint">when nobody gets a clue</span></div>
+      <div class="f"><label>Scoring</label>
+        <select id="potScoring">
+          <option value="true" ${s.potScoring ? 'selected' : ''}>Collect from each opponent</option>
+          <option value="false" ${s.potScoring ? '' : 'selected'}>Flat clue value</option>
+        </select><span class="hint">flat scoring hands the win to the last draw</span></div>
+    </div>
+  </div>
+
+  <div class="card"><h2>Timing</h2>
+    <div class="row">
+      ${num('delay', 'Zoom delay (ms)', s.delay, 'holds the buzzers to match your audio')}
+      ${num('lockout', 'Early-buzz lockout (ms)', s.lockout, 'penalty for jumping the lights')}
+      ${num('secondsPerClue', 'Seconds per clue', s.secondsPerClue, 'your pace, used for estimates')}
+    </div>
+    <p class="note" style="margin:12px 0 0">Sockets beat Zoom audio by roughly 150&ndash;200&nbsp;ms. The delay holds every
+    buzzer until your voice actually arrives, and it anchors spectator times to the same instant.</p>
+  </div>
+
+  <div class="foot">
+    <button class="go" id="start" ${S.roster.length < 3 ? 'disabled' : ''}>Start the Rumble</button>
+    <button class="alt" id="save">Save settings</button>
+    <span class="note" id="savemsg"></span>
+  </div>`;
+
+  renderRoster(); renderFiles(); wire();
+}
+
+const num = (k, label, val, hint) =>
+  `<div class="f"><label>${label}</label>
+    <input type="number" id="${k}" value="${val}" style="width:118px">
+    <span class="hint">${hint}</span></div>`;
+
+function renderRoster() {
+  const w = document.getElementById('who'), n = document.getElementById('rn');
+  if (!w) return;
+  n.textContent = S.roster.length;
+  w.innerHTML = S.roster.length
+    ? S.roster.map((p) => `<span class="chip${p.connected ? '' : ' off'}">${p.name}</span>`).join('')
+    : '<span class="note">Nobody yet. Read them the code.</span>';
+  const b = document.getElementById('start');
+  if (b) b.disabled = S.roster.length < 3;
+}
+
+function renderFiles() {
+  const f = document.getElementById('files');
+  if (!f) return;
+  f.innerHTML = (S.uploads || []).map((u, i) =>
+    `<div class="file"><span>${u.name}</span><span class="n">${u.categories} categories</span>
+     <button class="x" data-del="${i}" aria-label="Remove ${u.name}">&times;</button></div>`).join('');
+  f.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
+    S = await api(`/api/match/${code}/material/${b.dataset.del}`, { method: 'DELETE' });
+    render();
+  });
+}
+
+function collect() {
+  const g = (id) => document.getElementById(id);
+  const iv = g('entryInterval').value.trim();
+  return {
+    settings: {
+      startScore: +g('startScore').value, ceiling: +g('ceiling').value,
+      ceilingDecayPerClue: +g('ceilingDecayPerClue').value, ceilingFloor: +g('ceilingFloor').value,
+      entryInterval: iv === '' ? null : +iv, targetMinutes: +g('targetMinutes').value,
+      stumperFraction: +g('stumperFraction').value, potScoring: g('potScoring').value === 'true',
+      delay: +g('delay').value, lockout: +g('lockout').value, secondsPerClue: +g('secondsPerClue').value,
+      seasonRange: [+g('s-lo').value, +g('s-hi').value],
+    },
+    blend: Object.fromEntries(SRC.map(([k]) => {
+      const on = document.querySelector(`input[data-k="${k}"]`).checked;
+      const w = +document.querySelector(`input[data-w="${k}"]`).value;
+      return [k, on ? w : 0];
+    })),
+  };
+}
+
+async function save(quiet) {
+  const m = document.getElementById('savemsg');
+  try {
+    S = await api(`/api/match/${code}`, { method: 'PATCH', body: JSON.stringify(collect()) });
+    if (!quiet && m) { m.textContent = 'Saved.'; m.style.color = 'var(--live)'; setTimeout(() => m.textContent = '', 2200); }
+    return true;
+  } catch (e) {
+    if (m) { m.textContent = e.message; m.style.color = 'var(--alarm)'; }
+    return false;
+  }
+}
+
+function wire() {
+  document.querySelectorAll('input[data-k]').forEach((cb) => cb.onchange = () => {
+    const box = cb.closest('.src'), slider = box.querySelector('input[type=range]');
+    box.classList.toggle('on', cb.checked); box.classList.toggle('off', !cb.checked);
+    slider.disabled = !cb.checked;
+  });
+  document.getElementById('mine').onclick = () => {
+    document.querySelector('input[data-k="archive"]').checked = false;
+    document.querySelectorAll('input[data-k="original"],input[data-k="upload"]')
+      .forEach((cb) => { if (!cb.disabled) cb.checked = true; });
+    document.querySelectorAll('input[data-k]').forEach((cb) => cb.onchange());
+    save();
+  };
+  document.getElementById('save').onclick = () => save();
+
+  const drop = document.getElementById('drop'), file = document.getElementById('file');
+  file.onchange = () => upload([...file.files]);
+  ['dragenter', 'dragover'].forEach((e) => drop.addEventListener(e, (ev) => {
+    ev.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach((e) => drop.addEventListener(e, (ev) => {
+    ev.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', (ev) => upload([...ev.dataTransfer.files]));
+
+  document.getElementById('start').onclick = async () => {
+    if (!await save(true)) return;
+    socket.emit('start-match');
+    setTimeout(() => { location.href = `/host/${code}#${hostKey}`; }, 350);
+  };
+}
+
+async function upload(files) {
+  const m = document.getElementById('msg');
+  for (const f of files) {
+    m.textContent = `Reading ${f.name}…`; m.className = 'msg';
+    try {
+      const content = await f.text();
+      const r = await api(`/api/match/${code}/material`, { method: 'POST',
+        body: JSON.stringify({ name: f.name, content, format: /\.csv$/i.test(f.name) ? 'csv' : 'json' }) });
+      S = r;
+      m.textContent = `${f.name}: ${r.added} categories added.`; m.className = 'msg good';
+    } catch (e) {
+      m.textContent = `${f.name}: ${e.message}`; m.className = 'msg bad';
+    }
+  }
+  render();
+}
+
+boot().catch((e) => { root.innerHTML = `<p class="msg bad">${e.message}</p>`; });
+</script>
+</body>
+</html>

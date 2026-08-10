@@ -7,7 +7,7 @@ import { gunzipSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, DEFAULT_SETTINGS } from './engine.js';
-import { makeWeightedPool } from './sources.js';
+import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv } from './sources.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -21,7 +21,7 @@ const SEASONS = [...new Set(LIBRARY.map((c) => c.provenance?.season).filter(Bool
 console.log(`library: ${LIBRARY.length} categories, seasons ${SEASONS[0]}-${SEASONS.at(-1)}`);
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '12mb' }));
 app.use(express.static(join(__dir, '../public')));
 
 const http = createServer(app);
@@ -32,8 +32,19 @@ const io = new Server(http, { cors: { origin: false } });
 const matches = new Map();   // gameId -> Match
 
 class Match {
+  // Four letters, spoken aloud over Zoom. Ambiguous pairs are left in — the
+  // host reads it out, and a wrong code just fails to find a match.
+  static newCode() {
+    let c;
+    do {
+      c = Array.from({ length: 4 }, () =>
+        'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random() * 24)]).join('');
+    } while (matches.has(c));
+    return c;
+  }
+
   constructor(settings = {}) {
-    this.id = randomBytes(3).toString('hex').toUpperCase();
+    this.id = Match.newCode();
     this.hostKey = randomUUID();
     this.settings = { ...DEFAULT_SETTINGS, ...settings };
     this.blend = settings.blend || { original: 1, archive: 1 };
@@ -45,6 +56,7 @@ class Match {
     this.vetoLog = [];
     this.fastest = null;
     this.stats = new Map();      // token -> buzzer + drain stats
+    this.uploads = [];           // { name, categories: [...] }
   }
 
   stat(token) {
@@ -54,17 +66,34 @@ class Match {
     return this.stats.get(token);
   }
 
+  uploadedCategories() {
+    return this.uploads.flatMap((u) => u.categories);
+  }
+
+  available() {
+    const [lo, hi] = this.settings.seasonRange || [SEASONS[0], SEASONS.at(-1)];
+    return {
+      archive: LIBRARY.filter((c) => c.source === 'archive'
+        && c.provenance.season >= lo && c.provenance.season <= hi).length,
+      original: LIBRARY.filter((c) => c.source === 'original').length,
+      upload: this.uploadedCategories().length,
+    };
+  }
+
   pool() {
     const buckets = {};
     const [lo, hi] = this.settings.seasonRange || [SEASONS[0], SEASONS.at(-1)];
+    const sets = {
+      archive: LIBRARY.filter((c) => c.source === 'archive'
+        && c.provenance.season >= lo && c.provenance.season <= hi),
+      original: LIBRARY.filter((c) => c.source === 'original'),
+      upload: this.uploadedCategories(),
+    };
     for (const [name, weight] of Object.entries(this.blend)) {
-      const cats = LIBRARY.filter((c) => c.source === name
-        && (name !== 'archive' || (c.provenance.season >= lo && c.provenance.season <= hi)));
+      const cats = sets[name] || [];
       if (cats.length && weight > 0) buckets[name] = { weight, categories: cats };
     }
-    if (!Object.keys(buckets).length) {
-      buckets.all = { weight: 1, categories: LIBRARY };
-    }
+    if (!Object.keys(buckets).length) throw new Error('no clue material selected');
     return makeWeightedPool(buckets, this.rng);
   }
 
@@ -136,6 +165,18 @@ class Match {
     };
   }
 
+  setupView() {
+    return {
+      gameId: this.id, phase: this.phase,
+      settings: this.settings, blend: this.blend,
+      seasons: [SEASONS[0], SEASONS.at(-1)],
+      available: this.available(),
+      uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
+      roster: [...this.roster.values()].map((p) => ({
+        token: p.token, name: p.name, connected: p.connected })),
+    };
+  }
+
   standings() {
     const g = this.game;
     if (!g) return [];
@@ -199,7 +240,69 @@ app.post('/api/match', (req, res) => {
   const m = new Match(req.body?.settings || {});
   matches.set(m.id, m);
   res.json({ gameId: m.id, hostKey: m.hostKey,
+    setupUrl: `/setup/${m.id}#${m.hostKey}`,
     joinUrl: `/j/${m.id}`, consoleUrl: `/host/${m.id}#${m.hostKey}` });
+});
+
+const auth = (req) => {
+  const m = matches.get((req.params.id || '').toUpperCase());
+  const key = req.get('x-host-key') || req.body?.hostKey;
+  return m && m.hostKey === key ? m : null;
+};
+
+app.get('/api/match/:id', (req, res) => {
+  const m = auth(req);
+  if (!m) return res.status(403).json({ error: 'bad host key' });
+  res.json(m.setupView());
+});
+
+app.patch('/api/match/:id', (req, res) => {
+  const m = auth(req);
+  if (!m) return res.status(403).json({ error: 'bad host key' });
+  if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
+  Object.assign(m.settings, req.body.settings || {});
+  if (req.body.blend) m.blend = req.body.blend;
+  res.json(m.setupView());
+});
+
+// Uploaded material lives on the match, not in the shared library — one
+// host's fresh boards shouldn't leak into somebody else's game.
+app.post('/api/match/:id/material', (req, res) => {
+  const m = auth(req);
+  if (!m) return res.status(403).json({ error: 'bad host key' });
+  if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
+  const { name, content, format } = req.body || {};
+  if (!name || !content) return res.status(400).json({ error: 'name and content required' });
+  let categories = [];
+  try {
+    if (format === 'csv' || /\.csv$/i.test(name)) {
+      categories = fromJpartyCsv(parseCsv(content), { label: name });
+    } else {
+      const doc = JSON.parse(content);
+      if (!Array.isArray(doc.rounds)) {
+        return res.status(400).json({ error:
+          "that JSON isn't in j-trivia.org format — it needs a top-level \"rounds\" array of category lists" });
+      }
+      categories = fromTtgJson(doc).map((c) => ({ ...c, source: 'upload',
+        provenance: { file: name, title: doc.title, author: doc.author || null } }));
+    }
+  } catch (e) {
+    return res.status(400).json({ error: /JSON/i.test(e.message)
+      ? "that file isn't valid JSON — if it's a spreadsheet export, save it as CSV"
+      : 'could not read that file: ' + e.message });
+  }
+  if (!categories.length) {
+    return res.status(400).json({ error: 'no complete categories found — every category needs all five rows and no media-dependent clues' });
+  }
+  m.uploads.push({ name, categories });
+  res.json({ ...m.setupView(), added: categories.length });
+});
+
+app.delete('/api/match/:id/material/:idx', (req, res) => {
+  const m = auth(req);
+  if (!m) return res.status(403).json({ error: 'bad host key' });
+  m.uploads.splice(Number(req.params.idx), 1);
+  res.json(m.setupView());
 });
 
 app.get('/api/library', (_req, res) => {
@@ -208,7 +311,10 @@ app.get('/api/library', (_req, res) => {
   res.json({ total: LIBRARY.length, bySource: by, seasons: [SEASONS[0], SEASONS.at(-1)] });
 });
 
+app.get('/', (_req, res) => res.sendFile(join(__dir, '../public/setup.html')));
+app.get('/setup/:id', (_req, res) => res.sendFile(join(__dir, '../public/setup.html')));
 app.get('/j/:id', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
+app.get('/join', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
 app.get('/host/:id', (_req, res) => res.sendFile(join(__dir, '../public/console.html')));
 app.get('/admin/:id', (_req, res) => res.sendFile(join(__dir, '../public/admin.html')));
 
@@ -237,7 +343,7 @@ io.on('connection', (socket) => {
   // Players identify by a durable token stored on their own device, so a
   // reconnect keeps their score, draw number and place in the queue.
   socket.on('join', ({ gameId, token: t, name }, ack) => {
-    const m = matches.get(gameId);
+    const m = matches.get((gameId || '').toUpperCase());
     if (!m) return ack?.({ error: 'no such match' });
     match = m;
     token = t && m.roster.has(t) ? t : (t || randomUUID());
@@ -271,7 +377,24 @@ io.on('connection', (socket) => {
     try { fn(...args); } catch (e) { socket.emit('error-msg', e.message); }
   };
 
-  socket.on('start-match', hostOnly(() => { match.start(); pushAll(); }));
+  socket.on('start-match', hostOnly(() => {
+    match.start();
+    io.to(`${match.id}:players`).emit('rumble-starting', {
+      entryInterval: match.settings.entryInterval,
+      startScore: match.settings.startScore,
+      players: match.roster.size,
+    });
+    pushAll();
+  }));
+
+  // The setup page watches the lobby fill without claiming the host socket.
+  socket.on('watch-setup', ({ gameId, hostKey }, ack) => {
+    const m = matches.get((gameId || '').toUpperCase());
+    if (!m || m.hostKey !== hostKey) return ack?.({ error: 'bad host key' });
+    match = m; isHost = true;
+    socket.join(`${m.id}:host`);
+    ack?.({ ok: true, setup: m.setupView() });
+  });
 
   socket.on('pick-clue', hostOnly(({ slot, row }) => {
     const g = match.game;

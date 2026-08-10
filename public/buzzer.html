@@ -25,6 +25,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-
 .join{height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
 .join h1{font:400 clamp(30px,9vw,46px)/1 "Anton",Impact,sans-serif;margin:0;color:var(--brass)}
 .join .sub{font-size:13px;color:var(--slate);max-width:30ch}
+.join .code4{font-family:"IBM Plex Mono",monospace;font-size:30px;letter-spacing:.34em;
+text-indent:.34em;max-width:220px;color:var(--brass)}
 .join input{width:100%;max-width:300px;padding:13px 15px;background:var(--panel);border:1px solid var(--line);
 border-radius:var(--r);color:var(--chalk);font:400 17px "IBM Plex Sans",sans-serif;text-align:center}
 .join input::placeholder{color:var(--slate)}
@@ -128,8 +130,12 @@ white-space:nowrap;border-bottom:1px solid var(--line);z-index:2}
 
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
-import { socket, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
+import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
          startLatencyReports, fmt, ord } from '/rumble.js';
+
+// /j/CODE prefills the code; /join leaves it blank. Either way the player
+// confirms it, so a stray link can't drop somebody into the wrong room.
+setGameId((location.pathname.split('/')[2] || '').toUpperCase());
 
 let V = null, prev = null, joined = false, joinErr = '';
 let armTimer = null, armed = false, early = false, earlyTimer = null;
@@ -140,27 +146,33 @@ const say = (m) => { document.getElementById('sr').textContent = m; };
 function renderJoin() {
   root.innerHTML = `<div class="join">
     <h1>J! Royal Rumble</h1>
-    <div class="sub">Enter the name you want on the board. Keep this page open — it's your buzzer.</div>
+    <div class="sub">Enter the room code your host read out, and the name you want on the board.</div>
+    <input id="cd" class="code4" placeholder="CODE" maxlength="4" autocomplete="off"
+      autocapitalize="characters" spellcheck="false" value="${gameId() || ''}">
     <input id="nm" placeholder="Your name" maxlength="18" autocomplete="off" autocapitalize="words">
     <button id="go" disabled>Join</button>
     ${joinErr ? `<div class="err">${joinErr}</div>` : ''}
+    <div class="sub" style="font-size:11.5px">Keep this page open — it's your buzzer.</div>
   </div>`;
-  const nm = document.getElementById('nm'), go = document.getElementById('go');
-  const saved = localStorage.getItem(`rumble:${gameId}:name`);
-  if (saved) { nm.value = saved; go.disabled = false; }
-  nm.oninput = () => { go.disabled = !nm.value.trim(); };
-  nm.onkeydown = (e) => { if (e.key === 'Enter' && nm.value.trim()) go.click(); };
+  const cd = document.getElementById('cd'), nm = document.getElementById('nm'), go = document.getElementById('go');
+  const saved = localStorage.getItem(`rumble:name`);
+  if (saved) nm.value = saved;
+  const ok = () => cd.value.trim().length === 4 && nm.value.trim().length > 0;
+  const sync = () => { go.disabled = !ok(); };
+  cd.oninput = () => { cd.value = cd.value.toUpperCase().replace(/[^A-Z]/g, ''); sync(); };
+  nm.oninput = sync; sync();
+  [cd, nm].forEach((el) => el.onkeydown = (e) => { if (e.key === 'Enter' && ok()) go.click(); });
   go.onclick = () => {
+    setGameId(cd.value.trim().toUpperCase());
     const name = nm.value.trim();
-    if (!name) return;
-    try { localStorage.setItem(`rumble:${gameId}:name`, name); } catch (e) {}
+    try { localStorage.setItem('rumble:name', name); } catch (e) {}
     doJoin(name);
   };
-  setTimeout(() => nm.focus(), 60);
+  setTimeout(() => (cd.value ? nm : cd).focus(), 60);
 }
 
 function doJoin(name) {
-  socket.emit('join', { gameId, token: myToken(), name }, (r) => {
+  socket.emit('join', { gameId: gameId(), token: myToken(), name }, (r) => {
     if (r && r.error) { joinErr = r.error; joined = false; return renderJoin(); }
     if (r && r.token) saveToken(r.token);
     joined = true; joinErr = '';
@@ -173,11 +185,22 @@ function doJoin(name) {
 socket.on('connect', () => {
   // A stored token means we've joined this match before — rejoin silently so
   // a refresh or a dropped connection doesn't cost anyone their place.
-  const t = myToken(), n = localStorage.getItem(`rumble:${gameId}:name`);
-  if (t && n) doJoin(n); else renderJoin();
+  const t = myToken(), n = localStorage.getItem('rumble:name');
+  if (gameId() && t && n) doJoin(n); else renderJoin();
 });
 socket.on('disconnect', () => { armed = false; disarm(); render(); });
 socket.on('state', (v) => { prev = V; V = v; if (joined) render(); });
+
+socket.on('rumble-starting', (d) => {
+  const o = document.createElement('div'); o.className = 'gone';
+  o.innerHTML = `<div class="h mq" style="color:var(--brass)">HERE WE GO</div>
+    <div class="s">${d.players} players. Three start, the rest come in every ${d.entryInterval} clues.
+    Everyone enters with ${fmt(d.startScore)}.</div>`;
+  o.onclick = () => o.remove();
+  document.body.appendChild(o);
+  setTimeout(() => o.remove(), 5000);
+  say('The Rumble is beginning');
+});
 
 socket.on('clue-shown', () => { armed = false; early = false; disarm(); render(); });
 socket.on('activate-buzzers', ({ at, lockout }) => {

@@ -19,12 +19,15 @@ The winner is the last one standing. Every other statistic is for fun.
 
 ## Layout
 
+    public/setup.html host setup: room code, roster, material, rules
     src/engine.js     rules, headless and framework-free
     src/sources.js    adapters: TTG/LearningMan JSON, seven-column CSV, clue TSV
     src/server.js     Socket.IO v4 server, authoritative on scoring and timing
     public/           console (host + shared screen), buzzer (player), admin
     data/library.json seed clue library, tagged by source
     test/harness.js   Monte Carlo verification of the tuning presets
+    test/e2e.mjs      a real match played over sockets
+    test/setup.mjs    room codes, uploads, blend, start alert
 
 ## Running it
 
@@ -33,8 +36,10 @@ The winner is the last one standing. Every other statistic is for fun.
 
     npm run sim         # verify rules changes against the tuning targets
 
-Create a match with `POST /api/match`, which returns a join link for players and
-a console URL carrying the host key in the fragment.
+Open `/` to set up a match. You get a four-letter room code to read out, a
+lobby that fills as players join, controls for clue material and rules, and a
+place to upload fresh boards in j-trivia.org JSON or jparty.tv CSV. Players go
+to `/join` and enter the code.
 
 ## Tuning
 

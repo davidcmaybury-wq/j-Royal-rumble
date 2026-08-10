@@ -120,7 +120,7 @@ animation:rise .22s cubic-bezier(.2,.8,.3,1);cursor:pointer}
     <span class="st ceil"><span class="k">Ceiling</span><span class="v num" id="s-ceil">&mdash;</span></span>
     <span class="sp">
       <span class="dot" id="conn" title="server connection"></span>
-      <button class="tb" id="admin">Admin window</button>
+      <button class="tb" id="admin" title="Opens on your unshared screen">Pop out answers &#8599;</button>
       <button class="tb" id="mute">Sound on</button>
       <button class="tb" id="endm">End match</button>
     </span>
@@ -142,6 +142,7 @@ animation:rise .22s cubic-bezier(.2,.8,.3,1);cursor:pointer}
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { socket, gameId, hostKey, fmt } from '/rumble.js';
+const GID = gameId();
 
 let S = null, prev = null, muted = false;
 const $ = (id) => document.getElementById(id);
@@ -181,7 +182,7 @@ const sfxElim = (n) => { if (muted) return; const a = ac(); if (!a) return; cons
 
 socket.on('connect', () => {
   $('conn').classList.add('on');
-  socket.emit('host-join', { gameId: gameId, hostKey: hostKey }, (r) => {
+  socket.emit('host-join', { gameId: GID, hostKey: hostKey }, (r) => {
     if (r && r.error) return say('Host key rejected — check the console URL');
     if (r && r.state) apply(r.state);
   });
@@ -363,8 +364,14 @@ addEventListener('keydown', (e) => {
   else if (k === 'x') { e.preventDefault(); socket.emit('resolve', { winnerToken: null }); }
 });
 
-$('admin').onclick = () => window.open('/admin/' + gameId + '#' + hostKey,
-  'rumble-admin', 'width=520,height=640');
+// Answers live in a separate window so the shared screen never shows them.
+let adminWin = null;
+$('admin').onclick = () => {
+  if (adminWin && !adminWin.closed) { adminWin.focus(); return; }
+  adminWin = window.open('/admin/' + GID + '#' + hostKey, 'rumble-admin',
+    'width=540,height=660,menubar=no,toolbar=no');
+  if (!adminWin) say('Popup blocked — allow popups for this site');
+};
 $('mute').onclick = (e) => { muted = !muted;
   e.target.textContent = muted ? 'Sound off' : 'Sound on'; if (!muted) ac(); };
 $('endm').onclick = () => { if (confirm('End the match now?')) socket.emit('end-match'); };

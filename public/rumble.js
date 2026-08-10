@@ -1,7 +1,11 @@
 // Shared client: connection, durable identity, and buzz timing.
 // Loaded by both console.html and buzzer.html.
 
-export const gameId = location.pathname.split('/')[2] || '';
+// The host console and admin window take the code from the path. The player
+// buzzer sets it once the player has typed and confirmed it.
+let _gameId = (location.pathname.split('/')[2] || '').toUpperCase();
+export const gameId = () => _gameId;
+export const setGameId = (v) => { _gameId = (v || '').toUpperCase(); };
 export const hostKey = location.hash.slice(1);
 
 export const socket = io({ transports: ['websocket'] });
@@ -12,12 +16,12 @@ export const socket = io({ transports: ['websocket'] });
 // them their score and their place in the draw. So identity lives in a
 // token on their own device, scoped per match.
 
-const KEY = `rumble:${gameId}:token`;
+const key = () => `rumble:${_gameId}:token`;
 export function myToken() {
-  try { return localStorage.getItem(KEY) || null; } catch { return null; }
+  try { return localStorage.getItem(key()) || null; } catch { return null; }
 }
 export function saveToken(t) {
-  try { localStorage.setItem(KEY, t); } catch { /* private mode: session only */ }
+  try { localStorage.setItem(key(), t); } catch { /* private mode: session only */ }
 }
 
 // --- buzz timing ------------------------------------------------------

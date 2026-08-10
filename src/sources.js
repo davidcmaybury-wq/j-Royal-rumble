@@ -64,28 +64,60 @@ export function fromTtgJson(doc, { includeFinal = false } = {}) {
   return out.filter(Boolean);
 }
 
-// --- adapter 2: seven-column CSV --------------------------------------
-// columns: game, round, category, row, value, clue, response
+// --- adapter 2: jparty.tv seven-column CSV ---------------------------
+// Real header: Round, Value, Daily Double, Category, Response, Clue, Media
+// Note the order: Response comes BEFORE Clue. Media holds an asset URL.
 
-export function fromSevenColumnCsv(rows) {
+export function fromJpartyCsv(rows, { label = 'upload' } = {}) {
+  const LADDER = { 'Jeopardy': [200,400,600,800,1000], 'Double Jeopardy': [400,800,1200,1600,2000] };
   const groups = new Map();
   for (const r of rows) {
-    const key = `${r.game}|${r.round}|${r.category}`;
+    const round = (r['Round'] || '').trim();
+    if (!LADDER[round]) continue;               // drops Final Jeopardy
+    const category = (r['Category'] || '').trim();
+    const key = `${round}|${category}`;
     if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push({
-      row: Number(r.row),
-      text: stripMediaLinks(r.clue),
-      answer: stripMediaLinks(r.response),
-    });
+    groups.get(key).push(r);
   }
-  return [...groups.entries()].map(([key, clues]) => {
-    const [game, round, category] = key.split('|');
-    return finalize({
-      id: `csv:${slug(game)}:${slug(round)}:${slug(category)}`,
-      title: category, note: null, source: 'csv',
-      provenance: { game, round }, clues,
-    });
-  }).filter(Boolean);
+  const out = [];
+  for (const [key, rs] of groups) {
+    const [round, category] = key.split('|');
+    const ladder = LADDER[round];
+    out.push(finalize({
+      id: `csv:${slug(label)}:${slug(round)}:${slug(category)}`,
+      title: category, note: null, source: 'upload',
+      provenance: { file: label, round },
+      clues: rs.map((r) => ({
+        row: ladder.indexOf(Number(String(r['Value']).replace(/[$,]/g, ''))) + 1,
+        text: stripMediaLinks(r['Clue'] || ''),
+        answer: stripMediaLinks(r['Response'] || ''),
+        wasDailyDouble: /true|yes|1/i.test(r['Daily Double'] || ''),
+      })),
+    }));
+  }
+  return out.filter(Boolean);
+}
+
+// Minimal RFC4180 parser — clue text is full of commas and quoted quotes.
+export function parseCsv(text) {
+  const rows = [];
+  let row = [], field = '', q = false;
+  const t = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (q) {
+      if (c === '"') { if (t[i + 1] === '"') { field += '"'; i++; } else q = false; }
+      else field += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else field += c;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  if (!rows.length) return [];
+  const head = rows[0].map((h) => h.trim());
+  return rows.slice(1).filter((r) => r.length > 1)
+    .map((r) => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ''])));
 }
 
 // --- adapter 3: public 216k dataset -----------------------------------
