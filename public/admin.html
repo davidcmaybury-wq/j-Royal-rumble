@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rumble admin — keep this window unshared</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--line:#2A3556;--chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F;--live:#4FB286;--alarm:#E24A3C}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--ink);color:var(--chalk);font:400 16px/1.55 "IBM Plex Sans",system-ui,sans-serif;display:flex;flex-direction:column}
+.warn{background:var(--brass);color:#0A0E1C;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:7px 14px;text-align:center;font-weight:500}
+main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px;gap:18px}
+.k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate)}
+.cat{font-size:13px;color:var(--slate)}
+.cat b{color:var(--brass);font-weight:400}
+.clue{font-size:clamp(17px,2.4vw,25px);line-height:1.4;color:var(--slate)}
+.ans{font-size:clamp(28px,4.6vw,52px);line-height:1.15;color:var(--live);font-family:"Anton",Impact,sans-serif}
+.row{display:flex;gap:26px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+.row div span{display:block}
+.row .v{font-size:20px;font-family:"IBM Plex Mono",monospace}
+.locked{color:var(--alarm);font-size:13px}
+.idle{color:var(--slate);text-align:center;font-size:15px}
+</style></head><body>
+<div class="warn">Admin window — do not share this screen</div>
+<main id="m"><p class="idle">Waiting for the host to put a clue up.</p></main>
+<script src="/socket.io/socket.io.js"></script>
+<script type="module">
+import { socket, gameId, hostKey } from '/rumble.js';
+socket.emit('host-join', { gameId, hostKey }, (r) => { if (r?.state) render(r.state); });
+socket.on('state', render);
+function render(s){
+  const m=document.getElementById('m');
+  if(!s.clue){m.innerHTML='<p class="idle">Waiting for the host to put a clue up.</p>';return}
+  const c=s.clue, locked=(s.race?.lockedOut||[]);
+  const names=(s.live||[]).filter(p=>locked.includes(p.token)).map(p=>p.name);
+  m.innerHTML=`
+    <div><span class="k">Clue ${s.clues+1} · $${c.value}</span>
+      <div class="cat"><b>${c.category}</b>${c.note?` — ${c.note}`:''}</div></div>
+    <div class="clue">${c.text}</div>
+    <div><span class="k">Correct response</span><div class="ans">${c.answer}</div></div>
+    <div class="row">
+      <div><span class="k">In the ring</span><span class="v">${(s.live||[]).length}</span></div>
+      <div><span class="k">Ceiling</span><span class="v">${(s.ceiling||0).toLocaleString()}</span></div>
+      <div><span class="k">Next entry in</span><span class="v">${s.cluesUntilNextEntry ?? '—'}</span></div>
+      ${names.length?`<div><span class="k">Locked out</span><span class="locked">${names.join(', ')}</span></div>`:''}
+    </div>`;
+}
+</script></body></html>
