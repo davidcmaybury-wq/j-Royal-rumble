@@ -6,7 +6,7 @@
 <title>J! Royal Rumble — host console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;
 --chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:4px}
@@ -20,7 +20,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .wrap{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100vh}
 .top{display:flex;align-items:center;gap:16px;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
-.brand{font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass)}
+.brand{display:flex;align-items:center;line-height:0}
+.brand svg{display:block;border-radius:50%}
 .st{display:flex;align-items:baseline;gap:6px}
 .st .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
 .st .v{font-size:16px}.ceil .v{color:var(--brass)}
@@ -56,12 +57,15 @@ display:flex;flex-direction:column;justify-content:center;gap:2px;position:relat
 .join{font-size:13px;color:var(--slate)}
 .join code{font-family:"IBM Plex Mono",monospace;color:var(--chalk);background:var(--panel);padding:3px 8px;border-radius:var(--r)}
 .who{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:640px}
-.chip{padding:5px 11px;background:var(--panel);border-radius:20px;font-size:13px;border:1px solid var(--line)}
+.chip{padding:4px 12px 4px 4px;background:var(--panel);border-radius:20px;font-size:13px;
+border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px}
+.chip img{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block}
+.chip:not(:has(img)){padding-left:12px}
 .chip.off{opacity:.45}
 .go{padding:11px 26px;border:1px solid var(--brass);color:var(--brass);border-radius:var(--r);font-size:15px}
 .go:disabled{opacity:.35;border-color:var(--line);color:var(--slate);cursor:default}
 .sect{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate);display:flex;justify-content:space-between;margin-bottom:6px}
-.pl{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:7px;
+.pl{display:grid;grid-template-columns:22px 24px minmax(0,1fr) auto;align-items:center;gap:7px;
 padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px;border-left:2px solid transparent}
 .pl.hot{border-left-color:var(--alarm)}
 .pl.capped .sc{color:var(--brass)}
@@ -73,6 +77,9 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .pl .nm{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl .sc{font-size:14.5px}
 .pl.out{opacity:.5}.pl.out .sc{font-size:13px}
+.av{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block;border:1px solid var(--line)}
+.av.ph{background:var(--panel2)}
+.tko{color:var(--slate);font-size:11px}
 .pl.out .sub{font-size:10px;color:var(--slate);display:block;line-height:1.3}
 .clock{border:1px solid var(--line);border-radius:var(--r);padding:10px;text-align:center;background:var(--panel)}
 .clock.soon{border-color:var(--brass)}
@@ -117,6 +124,14 @@ align-items:center;justify-content:center;padding:26px;gap:4px;animation:fin .5s
 .fin .stats div{text-align:center}
 .fin .stats .v{font-size:30px}
 .fin .stats .k{font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--slate)}
+.finmark{margin-bottom:22px;opacity:.95}
+.finav{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--brass);margin-bottom:12px}
+.shmenu{position:fixed;z-index:99;background:var(--panel);border:1px solid var(--brass);
+border-radius:8px;padding:6px;box-shadow:0 16px 40px #000b;min-width:290px}
+.shmenu button{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:var(--r)}
+.shmenu button:hover{background:var(--panel2)}
+.shmenu button b{display:block;font-weight:400;font-size:14px}
+.shmenu button span{display:block;font-size:11.5px;color:var(--slate);margin-top:2px}
 .fin .more{margin-top:30px;display:flex;gap:8px}
 .fin .more button{padding:10px 20px;border:1px solid var(--line);border-radius:var(--r);font-size:13.5px;color:var(--slate)}
 .fin .more button:hover{color:var(--chalk);border-color:var(--slate)}
@@ -160,7 +175,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 <body>
 <div class="wrap">
   <header class="top">
-    <span class="brand mq">J! Royal Rumble</span>
+    <span class="brand" id="brand"></span>
     <span class="st"><span class="k">Clue</span><span class="v num" id="s-clue">0</span></span>
     <span class="st"><span class="k">In</span><span class="v num" id="s-field">0</span></span>
     <span class="st"><span class="k">Queue</span><span class="v num" id="s-q">0</span></span>
@@ -192,6 +207,9 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 <script type="module">
 import { socket, gameId, hostKey, fmt } from '/rumble.js';
 import { scoreChart } from '/chart.js';
+import { markSmall, markFull, wordmark } from '/brand.js';
+import * as sfx from '/sound.js';
+import { summaryImage, fullStatsImage, statsCsv } from '/share.js';
 const GID = gameId();
 
 let S = null, prev = null, muted = false;
@@ -202,33 +220,14 @@ const say = (m, cls) => { const f = $('feed'), e = document.createElement('div')
   while (f.children.length > 4) f.firstChild.remove();
   $('sr').textContent = m; };
 
-let AC = null;
-const ac = () => { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
-  if (AC && AC.state === 'suspended') AC.resume(); return AC; };
-function tone(f, t0, dur, g0, type, slide) { const a = ac(); if (!a) return;
-  const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sawtooth';
-  o.frequency.setValueAtTime(f, t0);
-  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + dur);
-  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(g0, t0 + 0.012);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.05); }
-function noise(t0, dur, g0) { const a = ac(); if (!a) return;
-  const n = a.sampleRate * dur, b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
-  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
-  const s = a.createBufferSource(); s.buffer = b;
-  const f = a.createBiquadFilter(); f.type = 'lowpass';
-  f.frequency.setValueAtTime(1400, t0); f.frequency.exponentialRampToValueAtTime(180, t0 + dur);
-  const g = a.createGain(); g.gain.setValueAtTime(g0, t0);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  s.connect(f); f.connect(g); g.connect(a.destination); s.start(t0); }
-const sfxEntry = () => { if (muted) return; const a = ac(); if (!a) return; const t = a.currentTime;
-  [0, 0.16].forEach((o, i) => { const f = i ? 415.3 : 311.1;
-    tone(f, t + o, 0.30, 0.16); tone(f * 2, t + o, 0.26, 0.07, 'square'); });
-  tone(207.7, t, 0.55, 0.10, 'triangle'); };
-const sfxElim = (n) => { if (muted) return; const a = ac(); if (!a) return; const t = a.currentTime;
-  noise(t, 0.5, 0.34); tone(146.8, t, 0.62, 0.30, 'sawtooth', 73.4); tone(73.4, t + 0.02, 0.75, 0.24, 'square');
-  if (n > 1) setTimeout(() => { const b = ac(); if (b) { noise(b.currentTime, 0.42, 0.26);
-    tone(130.8, b.currentTime, 0.5, 0.22, 'sawtooth', 65); } }, 170); };
+// Cues are sample files now — see tools/make-audio.py. Synthesis got us to
+// 'arcade'; a room and a reverb tail were what 'arena' needed.
+const ac = () => sfx.unlock();
+const sfxEntry = () => sfx.play('entry');
+const sfxElim = (n) => sfx.chops(n);
+const sfxWin = () => { sfx.play('entry'); setTimeout(() => sfx.play('entry'), 620); };
+
+$('brand').innerHTML = markSmall(28);
 
 socket.on('connect', () => {
   $('conn').classList.add('on');
@@ -301,9 +300,11 @@ function render() {
       + (p.connected ? '' : ' gone');
     d.dataset.token = p.token; d.dataset.name = p.name; d.tabIndex = 0;
     d.title = 'Click to correct this score';
-    d.innerHTML = '<span class="dr num">' + p.draw + '</span><span class="nm">' + p.name
+    d.innerHTML = '<span class="dr num">' + p.draw + '</span>'
+      + (p.avatar ? '<img class="av" src="' + p.avatar + '" alt="">' : '<span class="av ph"></span>')
+      + '<span class="nm">' + p.name
       + (p.connected ? '' : ' <span style="color:var(--alarm);font-size:10px">&#9676;</span>')
-      + (p.pins ? ' <span style="color:var(--slate);font-size:11px">&#9670;' + p.pins + '</span>' : '')
+      + (p.pins ? ' <span class="tko" title="toss outs">&#9670;' + p.pins + '</span>' : '')
       + '</span><span class="sc num">' + fmt(p.score) + '</span>';
     d.onclick = () => openCorrect(p);
     d.onkeydown = (e) => { if (e.key === 'Enter') openCorrect(p); };
@@ -321,7 +322,7 @@ function render() {
   const o = $('out'); o.innerHTML = '';
   out.slice().sort((a, b) => b.tenure - a.tenure).slice(0, 7).forEach((p, i) => {
     const d = document.createElement('div'); d.className = 'pl out';
-    d.innerHTML = '<span class="dr num">' + (i + 1) + '</span><span class="nm">' + p.name
+    d.innerHTML = '<span class="dr num">' + (i + 1) + '</span><span class="av ph"></span><span class="nm">' + p.name
       + '<span class="sub num">' + p.tenure + ' clues</span></span>'
       + '<span class="sc num">' + p.tenure + '</span>';
     o.appendChild(d);
@@ -339,18 +340,19 @@ function showFinish() {
   const rows = S.standings || [];
   const champ = rows.find((p) => p.winner);
   const d = document.createElement('div'); d.className = 'fin';
-  d.innerHTML = champ
-    ? `<div class="lbl">Last one standing</div>
+  d.innerHTML = `<div class="finmark">${wordmark(460)}</div>` + (champ
+    ? `${champ.avatar ? `<img class="finav" src="${champ.avatar}" alt="">` : ''}
+       <div class="lbl">Last one standing</div>
        <div class="nm mq">${champ.name}</div>
        <div class="sub">entry number ${champ.draw} &middot; ${S.clues} clues played</div>
        <div class="stats">
          <div><div class="v num">${champ.tenure}</div><div class="k">clues survived</div></div>
          <div><div class="v num">${champ.correct}</div><div class="k">correct</div></div>
-         <div><div class="v num">${champ.pins}</div><div class="k">pins</div></div>
+         <div><div class="v num">${champ.pins}</div><div class="k">toss outs</div></div>
          <div><div class="v num">${fmt(champ.drained)}</div><div class="k">drained</div></div>
        </div>`
     : `<div class="lbl">Match ended</div><div class="nm mq">No winner</div>
-       <div class="sub">the match was ended before anyone was left standing</div>`;
+       <div class="sub">the match was ended before anyone was left standing</div>`);
   const more = document.createElement('div'); more.className = 'more';
   const b1 = document.createElement('button'); b1.textContent = 'Full standings';
   b1.onclick = showStandings;
@@ -359,25 +361,45 @@ function showFinish() {
     b0.onclick = () => window.open(`/api/match/${GID}/record?key=${encodeURIComponent(hostKey)}`, '_blank');
     more.appendChild(b0);
   }
+  const bs = document.createElement('button'); bs.textContent = 'Share results \u25BE';
+  bs.onclick = (e) => { e.stopPropagation(); shareMenu(bs); };
   const b2 = document.createElement('button'); b2.textContent = 'Hide';
   b2.onclick = () => d.remove();
-  more.append(b1, b2); d.appendChild(more);
+  more.append(bs, b1, b2); d.appendChild(more);
   document.body.appendChild(d);
   $('sr').textContent = champ ? `${champ.name} is the last one standing` : 'Match ended';
   if (champ) sfxWin();
 }
 
-const sfxWin = () => { if (muted) return; const a = ac(); if (!a) return; const t = a.currentTime;
-  [311.1, 415.3, 466.2, 622.3].forEach((f, i) => {
-    tone(f, t + i * 0.13, 0.42, 0.15);
-    tone(f * 2, t + i * 0.13, 0.36, 0.06, 'square');
+function shareMenu(anchor) {
+  document.querySelectorAll('.shmenu').forEach((n) => n.remove());
+  const r = anchor.getBoundingClientRect();
+  const m = document.createElement('div'); m.className = 'shmenu';
+  m.style.left = r.left + 'px';
+  m.style.top = (r.bottom + 8) + 'px';
+  m.innerHTML = `
+    <button data-a="sum"><b>Summary image</b><span>the winner, the graph, the top of each board</span></button>
+    <button data-a="full"><b>Full stats image</b><span>graph and both tables, every player</span></button>
+    <button data-a="csv"><b>Full stats data</b><span>one wide CSV, a row per player</span></button>`;
+  document.body.appendChild(m);
+  const close = () => { m.remove(); removeEventListener('pointerdown', close, true); };
+  setTimeout(() => addEventListener('pointerdown', close, true), 0);
+  m.querySelectorAll('[data-a]').forEach((b) => b.onclick = async (e) => {
+    e.stopPropagation();
+    b.disabled = true; b.querySelector('b').textContent = 'Working\u2026';
+    try {
+      if (b.dataset.a === 'sum') await summaryImage(S);
+      else if (b.dataset.a === 'full') await fullStatsImage(S);
+      else statsCsv(S);
+    } catch (err) { say('Could not build that file: ' + err.message); }
+    close();
   });
-  tone(155.6, t, 1.5, 0.10, 'triangle'); };
+}
 
 let sTab = 'match', sKey = 'tenure', sDir = -1;
 const SCOLS = {
   match: [['draw','Draw'],['name','Player'],['tenure','Clues'],['outOrder','Out'],
-    ['correct','Correct'],['missed','Missed'],['pins','Pins'],['drained','Drained'],['peak','Peak']],
+    ['correct','Correct'],['missed','Missed'],['pins','Toss outs'],['drained','Drained'],['peak','Peak']],
   buzz: [['draw','Draw'],['name','Player'],['att','Attempts'],['early','Early'],
     ['won','Won'],['rate','Win rate'],['avg','Avg ms'],['best','Best ms']],
 };
@@ -449,10 +471,11 @@ function openCorrect(p) {
 function renderLobby() {
   const roster = S.roster || [];
   const url = location.origin + '/j/' + S.gameId;
-  $('stage').innerHTML = '<div class="lobby"><h1>J! Royal Rumble</h1>'
+  $('stage').innerHTML = '<div class="lobby">' + markFull(150)
     + '<div class="join">Players join at <code>' + url + '</code></div>'
     + '<div class="who">' + (roster.length
-      ? roster.map((p) => '<span class="chip' + (p.connected ? '' : ' off') + '">' + p.name + '</span>').join('')
+      ? roster.map((p) => '<span class="chip' + (p.connected ? '' : ' off') + '">'
+          + (p.avatar ? '<img src="' + p.avatar + '" alt="">' : '') + p.name + '</span>').join('')
       : '<span class="idle">Waiting for players&hellip;</span>') + '</div>'
     + '<button class="go" id="start"' + (roster.length < 3 ? ' disabled' : '') + '>Start with '
       + roster.length + ' player' + (roster.length === 1 ? '' : 's') + '</button>'
@@ -546,13 +569,15 @@ $('admin').onclick = () => {
     'width=540,height=660,menubar=no,toolbar=no');
   if (!adminWin) say('Popup blocked — allow popups for this site');
 };
-$('mute').onclick = (e) => { muted = !muted;
-  e.target.textContent = muted ? 'Sound off' : 'Sound on'; if (!muted) ac(); };
+$('mute').onclick = (e) => { muted = !muted; sfx.setMuted(muted);
+  e.target.textContent = muted ? 'Sound off' : 'Sound on'; if (!muted) sfx.unlock(); };
 $('undo').onclick = () => socket.emit('undo-clue');
 $('endm').onclick = () => { if (confirm('End the match now?')) socket.emit('end-match'); };
 socket.on('undone', (d) => say(`Took back ${d.category} $${d.value}`));
 socket.on('adjusted', (d) => say(`${d.name} corrected by ${d.delta > 0 ? '+' : ''}${fmt(d.delta)} to ${fmt(d.to)}`));
-addEventListener('pointerdown', () => ac(), { once: true });
+sfx.preload();
+addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+addEventListener('keydown', () => sfx.unlock(), { once: true });
 </script>
 </body>
 </html>

@@ -6,7 +6,7 @@
 <title>J! Royal Rumble</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;
 --chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:4px}
@@ -19,11 +19,26 @@ body{background:var(--ink);color:var(--chalk);font:400 15px/1.5 "IBM Plex Sans",
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.app{display:grid;grid-template-rows:auto auto minmax(0,1fr);height:100dvh;max-width:520px;margin:0 auto;position:relative}
+.app{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);height:100dvh;max-width:520px;margin:0 auto;position:relative;transition:background .5s}
+.app.soon{background:linear-gradient(180deg,#2A1D06 0%,#0A0E1C 46%)}
+.app.soon1{background:linear-gradient(180deg,#4A2E06 0%,#0A0E1C 52%)}
+.callup{background:var(--brass);color:#0A0E1C;text-align:center;padding:9px 12px;
+font:400 15px/1.25 "Anton",Impact,sans-serif;letter-spacing:.06em}
+.callup.p{animation:cpulse 1s ease-in-out infinite}
+@keyframes cpulse{0%,100%{opacity:1}50%{opacity:.62}}
+@media (prefers-reduced-motion:reduce){.callup.p{animation:none}}
 
 /* join */
 .join{height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
 .join h1{font:400 clamp(30px,9vw,46px)/1 "Anton",Impact,sans-serif;margin:0;color:var(--brass)}
+.brandmark{margin-bottom:2px;filter:drop-shadow(0 6px 18px #0009)}
+.pic{width:92px;height:92px;border-radius:50%;border:2px dashed var(--line);display:flex;
+align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--panel);flex:none}
+.pic:hover{border-color:var(--brass)}
+.pic.set{border-style:solid;border-color:var(--brass)}
+.picinner{color:var(--slate);font-size:22px;line-height:1.1;text-align:center}
+.pict{font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
 .join .sub{font-size:13px;color:var(--slate);max-width:30ch}
 .join .code4{font-family:"IBM Plex Mono",monospace;font-size:30px;letter-spacing:.34em;
 text-indent:.34em;max-width:220px;color:var(--brass)}
@@ -142,12 +157,15 @@ white-space:nowrap;border-bottom:1px solid var(--line);z-index:2}
 import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
          lockoutRemaining, startLatencyReports, fmt, ord } from '/rumble.js';
 import { scoreChart } from '/chart.js';
+import { markFull } from '/brand.js';
+import * as sfx from '/sound.js';
 
 // /j/CODE prefills the code; /join leaves it blank. Either way the player
 // confirms it, so a stray link can't drop somebody into the wrong room.
 setGameId((location.pathname.split('/')[2] || '').toUpperCase());
 
 let V = null, prev = null, joined = false, joinErr = '';
+let lastCountdown = null;
 let armTimer = null, armed = false, early = false, earlyTimer = null;
 const root = document.getElementById('root');
 const say = (m) => { document.getElementById('sr').textContent = m; };
@@ -155,10 +173,14 @@ const say = (m) => { document.getElementById('sr').textContent = m; };
 // ---------------- join ----------------
 function renderJoin() {
   root.innerHTML = `<div class="join">
-    <h1>J! Royal Rumble</h1>
+    <div class="brandmark">${markFull(104)}</div>
     <div class="sub">Enter the room code your host read out, and the name you want on the board.</div>
     <input id="cd" class="code4" placeholder="CODE" maxlength="4" autocomplete="off"
       autocapitalize="characters" spellcheck="false" value="${gameId() || ''}">
+    <label class="pic" id="piclab">
+      <input type="file" id="pic" accept="image/*" hidden>
+      <span class="picinner" id="picinner">+<br><span class="pict">photo</span></span>
+    </label>
     <input id="nm" placeholder="Your name" maxlength="18" autocomplete="off" autocapitalize="words">
     <button id="go" disabled>Join</button>
     ${joinErr ? `<div class="err">${joinErr}</div>` : ''}
@@ -191,14 +213,68 @@ function renderJoin() {
     try { localStorage.setItem('rumble:name', name); } catch (e) {}
     doJoin(name);
   };
+  const cached = localStorage.getItem('rumble:avatar');
+  if (cached) setPicPreview(cached);
+  document.getElementById('pic').onchange = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+      const url = await squareThumb(f, 128);
+      try { localStorage.setItem('rumble:avatar', url); } catch (err) {}
+      setPicPreview(url);
+    } catch (err) { joinErr = "couldn't read that image"; sfx.preload();
+addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+addEventListener('keydown', () => sfx.unlock(), { once: true });
+renderJoin(); }
+  };
   setTimeout(() => (cd.value ? nm : cd).focus(), 60);
+}
+
+function setPicPreview(url) {
+  const lab = document.getElementById('piclab');
+  if (!lab) return;
+  lab.classList.add('set');
+  lab.innerHTML = `<input type="file" id="pic" accept="image/*" hidden><img src="${url}" alt="">`;
+  lab.querySelector('#pic').onchange = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const u = await squareThumb(f, 128);
+    try { localStorage.setItem('rumble:avatar', u); } catch (err) {}
+    setPicPreview(u);
+  };
+}
+
+// Phone cameras produce multi-megabyte images. Crop to a square and scale to
+// 128px on the device, so what crosses the wire is a few kilobytes.
+function squareThumb(file, size) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const side = Math.min(img.width, img.height);
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const g = c.getContext('2d');
+      g.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+      resolve(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+    img.src = url;
+  });
 }
 
 function doJoin(name) {
   socket.emit('join', { gameId: gameId(), token: myToken(), name }, (r) => {
-    if (r && r.error) { joinErr = r.error; joined = false; return renderJoin(); }
+    if (r && r.error) { joinErr = r.error; joined = false; return sfx.preload();
+addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+addEventListener('keydown', () => sfx.unlock(), { once: true });
+renderJoin(); }
     if (r && r.token) saveToken(r.token);
     joined = true; joinErr = '';
+    sfx.unlock();
+    const av = localStorage.getItem('rumble:avatar');
+    if (av) socket.emit('avatar', { dataUrl: av });
     V = r.state; render();
     startLatencyReports();
   });
@@ -209,10 +285,30 @@ socket.on('connect', () => {
   // A stored token means we've joined this match before — rejoin silently so
   // a refresh or a dropped connection doesn't cost anyone their place.
   const t = myToken(), n = localStorage.getItem('rumble:name');
-  if (gameId() && t && n) doJoin(n); else renderJoin();
+  if (gameId() && t && n) doJoin(n); else sfx.preload();
+addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+addEventListener('keydown', () => sfx.unlock(), { once: true });
+renderJoin();
 });
 socket.on('disconnect', () => { armed = false; disarm(); render(); });
-socket.on('state', (v) => { prev = V; V = v; if (joined) render(); });
+socket.on('state', (v) => { prev = V; V = v; if (joined) { cues(); render(); } });
+
+socket.on('rumble-starting', () => sfx.unlock());
+
+// Sound and colour are driven off state transitions, so a reconnect can't
+// replay a horn that already sounded.
+function cues() {
+  const you = V.you || {}, was = prev && prev.you ? prev.you : null;
+  if (!was) return;
+  if (was.state === 'queued' && you.state === 'live') { sfx.play('entry'); lastCountdown = null; }
+  if (was.state === 'live' && you.state === 'eliminated') sfx.chops(1);
+  const n = you.state === 'queued' ? you.cluesToEntry : null;
+  if (n !== null && n <= 3 && n >= 1 && n !== lastCountdown) {
+    lastCountdown = n;
+    sfx.play('count' + (4 - n));       // 3 clues out is the lowest tone
+  }
+  if (n === null || n > 3) lastCountdown = null;
+}
 
 socket.on('rumble-starting', (d) => {
   const o = document.createElement('div'); o.className = 'gone';
@@ -254,12 +350,18 @@ addEventListener('keydown', (e) => {
 
 // ---------------- render ----------------
 function render() {
-  if (!joined || !V) return renderJoin();
+  if (!joined || !V) return sfx.preload();
+addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+addEventListener('keydown', () => sfx.unlock(), { once: true });
+renderJoin();
   if (V.phase === 'over') return renderResults();
   const you = V.you || {};
   const st = you.state || 'lobby';
 
-  root.innerHTML = `<div class="app">
+  const soon = st === 'queued' && you.cluesToEntry != null && you.cluesToEntry <= 3;
+  root.innerHTML = `<div class="app${soon ? (you.cluesToEntry === 1 ? ' soon1' : ' soon') : ''}">
+    ${soon ? `<div class="callup${you.cluesToEntry === 1 ? ' p' : ''}">ENTERING THE RING IN ${
+      you.cluesToEntry} CLUE${you.cluesToEntry > 1 ? 'S' : ''}</div>` : ''}
     <header class="hd">
       ${st === 'lobby' ? '' : `<span class="dr mq num">${you.draw ?? ''}</span>`}
       <span class="nm">${you.name || ''}</span>
@@ -295,7 +397,7 @@ function renderMeter(st, you) {
   } else if (st === 'eliminated') {
     m.innerHTML = `<span class="k">You're out</span>
       <div class="score mq num">${you.tenure}</div>
-      <div class="ceil">clues survived${you.pins ? ` · ${you.pins} pin${you.pins > 1 ? 's' : ''}` : ''}</div>`;
+      <div class="ceil">clues survived${you.pins ? ` · ${you.pins} toss out${you.pins > 1 ? 's' : ''}` : ''}</div>`;
   } else {
     m.innerHTML = `<span class="k">Your score</span>
       <div class="score mq num" id="sc">${fmt(you.score)}</div>
@@ -357,7 +459,7 @@ function maybeGone(st, you) {
   g.innerHTML = `<div class="h mq">ELIMINATED</div>
     <div class="s">Your score dropped below zero. You can keep buzzing to compare times, but nothing counts now.</div>
     <div class="st"><div><div class="v num">${you.tenure}</div><div class="k">clues survived</div></div>
-    <div><div class="v num">${you.pins || 0}</div><div class="k">pins</div></div></div>`;
+    <div><div class="v num">${you.pins || 0}</div><div class="k">toss outs</div></div></div>`;
   g.onclick = () => g.remove();
   document.querySelector('.app').appendChild(g);
   setTimeout(() => g.remove(), 4600);
@@ -368,7 +470,7 @@ function maybeGone(st, you) {
 let rTab = 'match', rKey = 'tenure', rDir = -1;
 const COLS = {
   match: [['draw','Draw'],['name','Player'],['tenure','Clues'],['outOrder','Out'],
-    ['correct','Correct'],['missed','Missed'],['pins','Pins'],['drained','Drained'],['peak','Peak']],
+    ['correct','Correct'],['missed','Missed'],['pins','Toss outs'],['drained','Drained'],['peak','Peak']],
   buzz: [['draw','Draw'],['name','Player'],['att','Attempts'],['early','Early'],
     ['won','Won'],['rate','Win rate'],['avg','Avg ms'],['best','Best ms']],
 };
@@ -395,7 +497,7 @@ function renderResults() {
     <div class="champ${won ? ' you' : ''}">
       <div class="lbl">${won ? 'You are the last one standing' : 'Last one standing'}</div>
       <div class="cn mq">${champ ? champ.name : '—'}</div>
-      <div class="cs">${champ ? `entry #${champ.draw} · ${champ.tenure} clues survived · ${champ.correct} correct · ${champ.pins} pins` : ''}</div>
+      <div class="cs">${champ ? `entry #${champ.draw} · ${champ.tenure} clues survived · ${champ.correct} correct · ${champ.pins} toss outs` : ''}</div>
     </div>
     ${!won && me ? `<div class="mine">
       <div><span class="k">You survived</span><span class="v num">${me.tenure} clues</span></div>
@@ -429,6 +531,9 @@ function renderResults() {
   if (mine) mine.scrollIntoView({ block: 'center' });
 }
 
+sfx.preload();
+addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+addEventListener('keydown', () => sfx.unlock(), { once: true });
 renderJoin();
 </script>
 </body>

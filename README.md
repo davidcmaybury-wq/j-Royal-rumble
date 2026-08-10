@@ -31,6 +31,7 @@ The winner is the last one standing. Every other statistic is for fun.
     test/estimate.mjs match-length estimates and the setup warnings
     test/buzzer.mjs   buzz arbitration: early presses, lockouts, ordering
     test/record.mjs   undo, corrections, score history, match recording
+    test/avatar.mjs   profile pictures: acceptance, rejection, where they surface
 
 ## Running it
 
@@ -68,6 +69,17 @@ Categories are tagged `original` or `archive` so a match can draw from either or
 blend them by weight. Archive material comes from a public dataset rather than
 from j-archive directly, at the maintainer's request. Media-dependent clues are
 filtered out; a category is only playable if all five rows survive.
+
+## Sound
+
+The cues are synthesised by `tools/make-audio.py` and committed as mp3. They
+are not sampled from anywhere — which keeps the licensing unambiguous, and
+keeps a comfortable distance from WWE's actual Royal Rumble buzzer.
+
+    python3 tools/make-audio.py     rewrites public/audio/*.mp3
+
+Browsers block audio until a page has been interacted with, so both the console
+and the buzzer unlock on the first tap or key press.
 
 ## Fixing a scoring mistake
 

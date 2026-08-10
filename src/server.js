@@ -159,7 +159,7 @@ class Match {
       phase: this.phase, gameId: this.id, version: VERSION,
       settings: this.settings,
       roster: [...this.roster.values()].map((p) => ({
-        token: p.token, name: p.name, connected: p.connected })),
+        token: p.token, name: p.name, connected: p.connected, avatar: p.avatar || null })),
       ...(g ? {
         clues: g.cluesRevealed, ceiling: g.ceiling,
         cluesUntilNextEntry: g.cluesUntilNextEntry(),
@@ -193,6 +193,7 @@ class Match {
       token: p.id, draw: p.drawNumber, name: p.name, score: p.score,
       state: p.state, pins: p.pins, correct: p.correct, missed: p.missed,
       tenure, connected: this.roster.get(p.id)?.connected ?? false,
+      avatar: this.roster.get(p.id)?.avatar || null,
       capped: p.score >= g.ceiling,
     };
   }
@@ -216,7 +217,7 @@ class Match {
       available: this.available(),
       uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
       roster: [...this.roster.values()].map((p) => ({
-        token: p.token, name: p.name, connected: p.connected })),
+        token: p.token, name: p.name, connected: p.connected, avatar: p.avatar || null })),
     };
   }
 
@@ -270,6 +271,7 @@ class Match {
       const times = st.times;
       return {
         token: p.id, draw: p.drawNumber, name: p.name,
+        avatar: this.roster.get(p.id)?.avatar || null,
         // Only the genuine last-one-standing is crowned. A match ended early
         // by the host has no winner, however many are still in the ring.
         winner: p.state === 'winner'
@@ -471,7 +473,8 @@ io.on('connection', (socket) => {
       if (name) existing.name = name;
     } else {
       if (m.phase !== 'lobby') return ack?.({ error: 'match already started' });
-      m.roster.set(token, { token, name: name || 'Player', socketId: socket.id, connected: true });
+      m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
+        connected: true, avatar: null });
     }
     socket.join(`${m.id}:players`);
     ack?.({ ok: true, token, state: m.playerView(token) });
@@ -689,6 +692,19 @@ io.on('connection', (socket) => {
       ? g.rankSpectatorBuzz(rec.ms, liveTimes.filter((t) => t !== rec.ms))
       : { place: liveTimes.filter((t) => t < rec.ms).length + 1, outOf: liveTimes.length };
     pushAll();
+  });
+
+  // The client resizes to 128x128 before sending, so this stays small. It is
+  // held on the match and dies with it — the copy that survives a refresh is
+  // the one cached on the player's own device.
+  socket.on('avatar', ({ dataUrl }) => {
+    if (!match || !token) return;
+    const p = match.roster.get(token);
+    if (!p) return;
+    if (typeof dataUrl !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(dataUrl)) return;
+    if (dataUrl.length > 60000) return;          // ~45KB of image, generous for 128px
+    p.avatar = dataUrl;
+    pushHost();
   });
 
   socket.on('ping-probe', (_d, ack) => ack?.());

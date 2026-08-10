@@ -6,7 +6,7 @@
 <title>J! Royal Rumble — set up a match</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;
 --chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:4px}
@@ -18,7 +18,9 @@ body{background:var(--ink);color:var(--chalk);font:400 15px/1.55 "IBM Plex Sans"
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .wrap{max-width:840px;margin:0 auto;padding:26px 20px 70px}
-h1{font:400 clamp(30px,6vw,50px)/1 "Anton",Impact,sans-serif;margin:0 0 4px;color:var(--brass)}
+h1{font:400 clamp(30px,6vw,50px)/1 "Anton",Impact,sans-serif;margin:0;color:var(--brass)}
+.hero{display:flex;align-items:center;gap:18px;margin-bottom:2px}
+.hero svg{flex:none;border-radius:50%}
 .tag{font-size:12.5px;color:var(--slate);margin-bottom:24px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:14px}
 .card h2{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);margin:0 0 14px;font-weight:500}
@@ -35,7 +37,10 @@ select{font-family:"IBM Plex Sans",sans-serif}
 .code .side{font-size:12.5px;color:var(--slate);line-height:1.7}
 .code .side code{font-family:"IBM Plex Mono",monospace;color:var(--chalk);background:var(--ink);padding:2px 7px;border-radius:var(--r)}
 .who{display:flex;flex-wrap:wrap;gap:6px}
-.chip{padding:5px 12px;background:var(--panel2);border-radius:20px;font-size:13px;border:1px solid var(--line)}
+.chip{padding:4px 12px 4px 4px;background:var(--panel2);border-radius:20px;font-size:13px;
+border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px}
+.chip img{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block}
+.chip:not(:has(img)){padding-left:12px}
 .chip.off{opacity:.4}
 .mix{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .src{border:1px solid var(--line);border-radius:var(--r);padding:12px;background:var(--ink)}
@@ -88,6 +93,7 @@ border-radius:var(--r);padding:5px 11px;font-size:12px;white-space:nowrap}
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { estimate as estimateFor, warnings as warningsFor } from '/estimate.js';
+import { markFull } from '/brand.js';
 const socket = io({ transports: ['websocket'] });
 let code = location.pathname.split('/')[2] || '';
 let hostKey = location.hash.slice(1);
@@ -188,14 +194,14 @@ const warnings = () => warningsFor(S.roster.length, S.settings);
 
 const SRC = [
   ['archive', 'Jeopardy! archive', null],
-  ['original', 'TTG & LearningMan', 'Your existing written boards'],
+  ['original', 'Custom categories', 'Boards written for TTG and LearningMan'],
   ['upload', 'Uploaded this match', 'Fresh material you add below'],
 ];
 
 function render() {
   const est = estimate(), s = S.settings;
   root.innerHTML = `
-  <h1>Set up a Rumble</h1>
+  <div class="hero">${markFull(84)}<h1>Set up a Rumble</h1></div>
   <div class="tag">Read the room code aloud. Only people who have it can join.</div>
 
   <div class="card"><h2>Room code</h2>
@@ -338,7 +344,8 @@ function renderRoster() {
   n.textContent = S.roster.length;
   renderWarnings();
   w.innerHTML = S.roster.length
-    ? S.roster.map((p) => `<span class="chip${p.connected ? '' : ' off'}">${p.name}</span>`).join('')
+    ? S.roster.map((p) => `<span class="chip${p.connected ? '' : ' off'}">${
+        p.avatar ? `<img src="${p.avatar}" alt="">` : ''}${p.name}</span>`).join('')
     : '<span class="note">Nobody yet. Read them the code.</span>';
   const b = document.getElementById('start');
   if (b) b.disabled = S.roster.length < 3;

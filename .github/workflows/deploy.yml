@@ -28,6 +28,7 @@ jobs:
           node test/setup.mjs
           node test/buzzer.mjs
           node test/record.mjs
+          node test/avatar.mjs
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

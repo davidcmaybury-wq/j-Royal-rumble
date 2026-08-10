@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -17,7 +17,9 @@
     "ship": "bash tools/ship.sh",
     "build-library": "node tools/build-library.mjs",
     "refresh-library": "node tools/refresh-library.mjs",
-    "record-test": "node test/record.mjs"
+    "record-test": "node test/record.mjs",
+    "avatar-test": "node test/avatar.mjs",
+    "make-audio": "python3 tools/make-audio.py"
   },
   "dependencies": {
     "express": "^4.21.2",
