@@ -67,17 +67,27 @@ check('and no two are alike',
   arts.map((a) => a.art).join(', '));
 
 // Two players ask for the same shape.
-const want = { art: 'morningstar', colour: 'brass' };
+//
+// The shape has to be chosen from what the room does NOT already have. Naming
+// one outright made this test depend on the random assignment above: locally
+// nobody had drawn the morningstar, on CI somebody had, and the test failed on
+// its own premise rather than on the code.
+const held = new Set(st.roster.map((p) => p.tokenArt && p.tokenArt.art).filter(Boolean));
+const wantArt = TOKEN_NAMES.find((n) => !held.has(n));
+check('there is a free shape to contest over', !!wantArt, wantArt);
+
+const want = { art: wantArt, colour: 'brass' };
 const first = await new Promise((r) => ps[0].s.emit('token-art', want, r));
 const second = await new Promise((r) => ps[1].s.emit('token-art', want, r));
 await wait(200);
 check('the first to ask gets the colour they wanted',
-  first.art === 'morningstar' && first.colour === 'brass', `${first.art} in ${first.colour}`);
+  first.art === wantArt && first.colour === 'brass', `${first.art} in ${first.colour}`);
 check('the second gets the same shape in another colour',
-  second.art === 'morningstar' && second.colour !== 'brass',
+  second.art === wantArt && second.colour !== first.colour,
   `${second.art} in ${second.colour}`);
-check('the console sees both', st.roster.filter((p) => p.tokenArt
-  && p.tokenArt.art === 'morningstar').length === 2);
+check('the console sees both',
+  st.roster.filter((p) => p.tokenArt && p.tokenArt.art === wantArt).length === 2,
+  `${st.roster.filter((p) => p.tokenArt && p.tokenArt.art === wantArt).length} holding it`);
 
 // Junk is refused rather than stored.
 const before = st.roster.find((p) => p.token === ps[2].token).tokenArt;
