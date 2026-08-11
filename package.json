@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -30,7 +30,9 @@
     "handbook": "python3 tools/make-handbook.py",
     "bots-test": "node test/bots.mjs",
     "calibrate-bots": "node tools/calibrate-bots.mjs",
-    "fetch-box-scores": "node tools/fetch-box-scores.mjs"
+    "fetch-box-scores": "node tools/fetch-box-scores.mjs",
+    "boxparse-test": "node test/boxparse.mjs",
+    "boxfetch-test": "node test/boxfetch.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

@@ -212,10 +212,31 @@ for (const r of boxComparison()) {
   console.log(`  model ${r.level.padEnd(10)}${r.att.toFixed(0).padStart(8)}`
     + `${(r.buz.toFixed(0) + '%').padStart(8)}${(r.correct.toFixed(0) + '%').padStart(11)}`);
 }
-console.log('\nCareer BUZ% by wins — the ladder is entirely buzzer, not knowledge:');
-for (const c of BOX.careers) {
-  console.log(`  ${String(c.wins).padStart(2)} wins   BUZ% ${String(c.buzPct).padStart(3)}%`
-    + `   correct ${Math.round(c.cor / (c.cor + c.inc) * 100)}%   ${c.name}`);
+// Tournament rows carry a prize where the win count belongs; drop them.
+const careers = BOX.careers.filter((c) => c.wins != null && c.wins >= 1 && c.wins <= 50
+  && (c.cor + c.inc) > 0);
+const band = (lo, hi) => careers.filter((c) => c.wins >= lo && c.wins <= hi);
+const medianOf = (a, f) => { const v = a.map(f).sort((x, y) => x - y); return v[Math.floor(v.length / 2)]; };
+
+console.log(`\nThe ladder, across ${careers.length} champions:\n`);
+console.log('  wins        n     BUZ%   correct%   index');
+for (const [lo, hi] of [[1, 1], [2, 2], [3, 3], [4, 5], [6, 9], [10, 50]]) {
+  const g = band(lo, hi);
+  if (!g.length) continue;
+  const b = medianOf(g, (c) => c.buzPct);
+  const a = medianOf(g, (c) => c.cor / (c.cor + c.inc) * 100);
+  console.log(`  ${(lo === hi ? String(lo) : lo + '-' + hi).padEnd(10)}${String(g.length).padStart(4)}`
+    + `${(b.toFixed(0) + '%').padStart(9)}${(a.toFixed(0) + '%').padStart(11)}${(b * a / 100).toFixed(1).padStart(8)}`);
+}
+{
+  const one = band(1, 1), top = band(10, 50);
+  const b1 = medianOf(one, (c) => c.buzPct), b2 = medianOf(top, (c) => c.buzPct);
+  const a1 = medianOf(one, (c) => c.cor / (c.cor + c.inc) * 100);
+  const a2 = medianOf(top, (c) => c.cor / (c.cor + c.inc) * 100);
+  console.log(`\n  One win to ten:  BUZ% +${(b2 - b1).toFixed(0)} points (+${((b2 - b1) / b1 * 100).toFixed(0)}%)`
+    + `,  correct% +${(a2 - a1).toFixed(0)} points (+${((a2 - a1) / a1 * 100).toFixed(0)}%)`);
+  console.log('  The buzzer moves about twice as far, but accuracy is not flat —');
+  console.log('  a claim made earlier from six career lines that 519 do not support.');
 }
 
 

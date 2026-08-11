@@ -238,6 +238,16 @@ measured scale gives 46% and 21%.
 
 ### Against the official box scores
 
+Collect with `node tools/fetch-box-scores.mjs --all` — 184 pages, one every two
+seconds. Rows are read by CSS class (`game-totals`, `cumulative-totals`) rather
+than by pattern-matching the markup, and the collector exits non-zero if it
+parses nothing.
+
+`test/boxparse.mjs` runs the parser against real markup; `test/boxfetch.mjs`
+runs the collector itself against a local server serving that markup. The second
+exists because the first passed while the collector still crashed on a renamed
+variable — a test that never calls `main()` cannot catch that.
+
 `data/box-scores.json` holds published game statistics from
 [Jeopardata](https://www.jeopardy.com/track/jeopardata) — ATT, BUZ and COR/INC
 per player per game. `node tools/fetch-box-scores.mjs` collects more, one page

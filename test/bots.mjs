@@ -25,9 +25,18 @@ console.log('THE MODEL');
   check('elite never draws bad hands', !elite.some((b) => b.buzzSkill === 'bad'));
 
   const rookie = byLevel.rookie;
+  // Compared against each other rather than against fixed cutoffs, since the
+  // bands are now pinned to percentiles of real play and will move again when
+  // more box scores are collected.
+  const rate = (arr) => arr.reduce((n, b) => n + b.attemptRate, 0) / arr.length;
   check('a rookie attempts far less often than an elite',
-    rookie[0].attemptRate < 0.4 && elite[0].attemptRate > 0.75,
-    `${Math.round(rookie[0].attemptRate * 100)}% vs ${Math.round(elite[0].attemptRate * 100)}%`);
+    rate(elite) > rate(rookie) * 1.6,
+    `${Math.round(rate(rookie) * 100)}% vs ${Math.round(rate(elite) * 100)}%`);
+  check('the standards rise in order',
+    ['rookie', 'normie', 'champ', 'superchamp', 'elite']
+      .map((l) => rate(byLevel[l])).every((v, i, a) => i === 0 || v > a[i - 1]),
+    ['rookie', 'normie', 'champ', 'superchamp', 'elite']
+      .map((l) => Math.round(rate(byLevel[l]) * 100) + '%').join(' < '));
   check('a rookie can still draw quick hands',
     rookie.some((b) => b.buzzSkill === 'good' || b.buzzSkill === 'jedi'));
 

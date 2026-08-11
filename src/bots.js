@@ -18,15 +18,22 @@ export const LEVELS = ['rookie', 'normie', 'champ', 'superchamp', 'elite'];
 // in the ring for part of it.
 // Fitted against observed play, not the original bands — a recorded rookie
 // averaged 21.7 attempts a game, above the "<20" the spec suggested.
-// Bounded by the official box scores: across 27 sampled player-games, attempts
-// ran 22 to 51 with a median of 38. The old elite band topped out at 58, above
-// anything anyone has actually done.
+// Fitted to 2,784 player-games from the official box scores. Each standard is
+// pinned to a percentile of the real population: rookie at the 10th, normie at
+// the 35th, champ at the 60th, superchamp at the 80th, elite at the 94th.
 const ATTEMPTS_PER_GAME = {
-  rookie:     [20, 28],
-  normie:     [27, 36],
-  champ:      [34, 43],
-  superchamp: [40, 47],
-  elite:      [44, 52],
+  rookie:     [19, 30],
+  normie:     [30, 35],
+  champ:      [35, 40],
+  superchamp: [39, 45],
+  elite:      [43, 51],
+};
+
+// The share of a player's attempts that win the buzz, at each standard. This
+// is the ladder: across 519 champions it climbs from 55% at one win to 65% at
+// ten or more. It is what the buzz profiles have to reproduce.
+export const TARGET_BUZ_PCT = {
+  rookie: 35, normie: 46, champ: 55, superchamp: 62, elite: 72,
 };
 const CLUES_PER_GAME = 61;
 
@@ -96,12 +103,20 @@ export function useProfile(name) {
 // observed data says accuracy once you have won the buzz runs 79% to 88% and
 // barely moves with standard, because a player who does not know a clue mostly
 // does not press. Aggression separates the levels; accuracy hardly does.
+// Fitted to the same population, centred on the correct% at each percentile:
+// 71, 82, 88, 93, 96. Spread across rows so a $500 clue is harder than a $100
+// one while the average lands on the observed figure.
+//
+// Note this corrects something I claimed earlier from six career lines —
+// accuracy is NOT flat across the ladder. Over 519 champions it climbs from
+// 86% at one win to 94% at ten. The buzzer still moves about twice as far in
+// relative terms, so the emphasis was right; the strength of it was not.
 const ACCURACY = {
-  rookie:     [0.84, 0.81, 0.77, 0.73, 0.68],
-  normie:     [0.89, 0.86, 0.83, 0.79, 0.74],
-  champ:      [0.88, 0.85, 0.82, 0.78, 0.73],
-  superchamp: [0.90, 0.87, 0.84, 0.81, 0.76],
-  elite:      [0.93, 0.91, 0.88, 0.85, 0.81],
+  rookie:     [0.80, 0.75, 0.71, 0.67, 0.62],
+  normie:     [0.90, 0.86, 0.82, 0.78, 0.74],
+  champ:      [0.94, 0.91, 0.88, 0.85, 0.81],
+  superchamp: [0.97, 0.95, 0.93, 0.90, 0.87],
+  elite:      [0.99, 0.97, 0.96, 0.94, 0.91],
 };
 
 // Attempt rates are flat across rows in the original. Nudged by row here so a
