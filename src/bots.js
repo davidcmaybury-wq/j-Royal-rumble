@@ -171,7 +171,34 @@ function pick(odds, rng) {
 let EMPIRICAL = null;
 export function loadDistributions(json) {
   EMPIRICAL = {};
-  for (const [level, v] of Object.entries(json.levels)) {
+  const levels = { ...json.levels };
+
+  // The recordings cover rookie through superchamp plus the human who played
+  // against them. There is no elite among them, and borrowing the human's
+  // wholesale gives elite that player's aggression: they jump the lights 20% of
+  // the time against a superchamp's 11%, and our 250ms lockout charges dearly
+  // for it — leaving "elite" winning fewer races than superchamp.
+  //
+  // A real elite player is fast *and* disciplined. So elite takes the human's
+  // speed with a good part of the early mass moved back over the line.
+  if (!levels.elite && levels.human) {
+    const src = levels.human.buckets;
+    const b = {};
+    let recovered = 0;
+    for (const [lo, n] of Object.entries(src)) {
+      if (Number(lo) < 0) {
+        const kept = Math.round(n * 0.45);
+        recovered += n - kept;
+        if (kept) b[lo] = kept;
+      } else {
+        b[lo] = n;
+      }
+    }
+    b['0'] = (b['0'] || 0) + recovered;
+    levels.elite = { attempts: levels.human.attempts, median: levels.human.median, buckets: b };
+  }
+
+  for (const [level, v] of Object.entries(levels)) {
     const entries = Object.entries(v.buckets)
       .map(([lo, n]) => [Number(lo), n])
       .sort((a, b) => a[0] - b[0]);

@@ -113,10 +113,19 @@ await wait(150);
 host.emit('activate');
 await wait(60);
 const early = (st.race?.buzzes || []).length;
-await wait(900);
-const late = (st.race?.buzzes || []).length;
+
+// Poll rather than sleep a fixed span. Buzz times are sampled from real
+// histograms whose tail runs past 900ms — a rookie whiffs beyond half a second
+// 14% of the time — and a loaded CI runner adds scheduling delay on top. A
+// fixed 950ms wait passed locally and failed in CI, which is the worst kind of
+// test: green on the machine that wrote it.
+let late = 0;
+for (let i = 0; i < 60 && late === 0; i++) {
+  await wait(100);
+  late = (st.race?.buzzes || []).length;
+}
 check('the race fills in over time rather than all at once',
-  late >= early, `${early} buzzes at 60ms, ${late} by 950ms`);
+  late >= early, `${early} buzzes at 60ms, ${late} once they land`);
 check('bots actually buzz', late > 0, `${late} buzzes`);
 if (late) {
   const b = st.race.buzzes[0];
@@ -148,6 +157,41 @@ const champ = (st.standings || []).find((p) => p.winner);
 check('and produces a winner', !!champ, champ ? `${champ.name}, ${champ.tenure} clues` : 'none');
 check('with statistics that look real', champ && champ.att > 0 && champ.correct > 0,
   champ ? `${champ.correct} correct of ${champ.att} attempts, best ${champ.best}ms` : '');
+
+// --- the standards form a ladder -----------------------------------------
+// On races won, not on median buzz time. Those differ: an aggressive player
+// jumps the lights more often and pays the lockout, so a fast median can lose
+// to a slower, steadier one. Elite once sat below superchamp for exactly that
+// reason, and a median-based check would have called it fine.
+{
+  const fs2 = await import('fs');
+  const { loadDistributions: load2 } = await import('../src/bots.js');
+  load2(JSON.parse(fs2.readFileSync(new URL('../data/buzz-distributions.json', import.meta.url))));
+  const rng3 = makeRng(13);
+  const rate = (level) => {
+    const me = makeBot(rng3, { level });
+    let att = 0, won = 0;
+    for (let i = 0; i < 12000; i++) {
+      const row = 1 + Math.floor(rng3() * 5);
+      const mine = planClue(me, row, rng3);
+      if (!mine.attempt) continue;
+      att++;
+      let best = mine.ms;
+      for (let k = 0; k < 2; k++) {
+        const o = planClue(makeBot(rng3, { level: 'normie' }), row, rng3);
+        if (o.attempt && o.ms < best) best = o.ms;
+      }
+      if (best === mine.ms) won++;
+    }
+    return won / att * 100;
+  };
+  const ladder = ['rookie', 'normie', 'champ', 'superchamp', 'elite'].map(rate);
+  check('each standard wins more races than the one below it',
+    ladder.every((v, i) => i === 0 || v > ladder[i - 1]),
+    ladder.map((v) => v.toFixed(0) + '%').join(' < '));
+  check('elite is the best of them', ladder[4] === Math.max(...ladder),
+    `elite ${ladder[4].toFixed(0)}%`);
+}
 
 // --- the ring carries what the console draws with ------------------------
 // The console renders a brain for p.isBot at p.level. Both were missing from
