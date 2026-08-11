@@ -91,7 +91,7 @@ border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px}
 .go{padding:11px 26px;border:1px solid var(--brass);color:var(--brass);border-radius:var(--r);font-size:15px}
 .go:disabled{opacity:.35;border-color:var(--line);color:var(--slate);cursor:default}
 .sect{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate);display:flex;justify-content:space-between;margin-bottom:6px}
-.pl{display:grid;grid-template-columns:22px 24px minmax(0,1fr) auto;align-items:center;gap:7px;
+.pl{display:grid;grid-template-columns:9px 22px 24px minmax(0,1fr) auto;align-items:center;gap:7px;
 padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px;border-left:2px solid transparent}
 .pl.hot{border-left-color:var(--alarm)}
 .pl.capped .sc{color:var(--brass)}
@@ -115,7 +115,8 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .mk.bot{color:var(--slate);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
 .av.brain{width:24px;height:24px;line-height:0;display:block}
 .av.brain svg{display:block;border-radius:50%}
-.mk.ctrl{color:var(--chalk)}
+.ctrl{width:7px;height:7px;border-radius:50%;background:transparent}
+.ctrl.on{background:var(--chalk);box-shadow:0 0 7px #EEEBE1AA}
 .mk.lat{color:#4A5680;font-family:"IBM Plex Mono",monospace;font-size:9.5px}
 .mk.lat.slow{color:var(--alarm)}
 .latwarn{font-size:11px;color:var(--alarm);line-height:1.5;margin-top:6px}
@@ -406,7 +407,9 @@ function render() {
       + (S.control === p.token ? ' control' : '');
     d.dataset.token = p.token; d.dataset.name = p.name; d.tabIndex = 0;
     d.title = 'Click to correct this score';
-    d.innerHTML = '<span class="dr num">' + p.draw + '</span>'
+    d.innerHTML = '<span class="ctrl' + (S.control === p.token ? ' on' : '') + '"'
+      + (S.control === p.token ? ' title="picks the next clue"' : '') + '></span>'
+      + '<span class="dr num">' + p.draw + '</span>'
       + (p.isBot ? '<span class="av brain" title="' + (p.level || 'robot') + '">'
             + brainAvatar(p.level || 'normie', 24) + '</span>'
           : avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">'
@@ -421,7 +424,6 @@ function render() {
       + (p.bounty ? ' <span class="mk bty" title="bounty on their head">' + fmt(p.bounty) + '</span>' : '')
       + (p.isBot ? ' <span class="mk bot" title="robot player">' + (p.level || 'bot') + '</span>' : '')
       + (p.revivals ? ' <span class="mk rev" title="second life">&#8635;</span>' : '')
-      + (S.control === p.token ? ' <span class="mk ctrl" title="picks the next clue">&#9679;</span>' : '')
       + (p.latency != null ? ' <span class="mk lat' + (p.latency > 120 ? ' slow' : '')
           + '" title="one-way latency">' + Math.round(p.latency) + '</span>' : '')
       + '</span><span class="sc num">' + fmt(p.score) + '</span>';
@@ -460,7 +462,11 @@ function render() {
   const o = $('out'); o.innerHTML = '';
   out.slice().sort((a, b) => b.tenure - a.tenure).slice(0, 7).forEach((p, i) => {
     const d = document.createElement('div'); d.className = 'pl out';
-    d.innerHTML = '<span class="dr num">' + (i + 1) + '</span><span class="av ph"></span><span class="nm">' + p.name
+    d.innerHTML = '<span class="ctrl"></span><span class="dr num">' + (i + 1) + '</span>'
+      + (p.isBot ? '<span class="av brain">' + brainAvatar(p.level || 'normie', 24) + '</span>'
+         : avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">'
+         : '<span class="av ph"></span>')
+      + '<span class="nm">' + p.name
       + '<span class="sub num">' + p.tenure + ' clues</span></span>'
       + '<span class="sc num">' + p.tenure + '</span>';
     o.appendChild(d);

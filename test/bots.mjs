@@ -149,6 +149,25 @@ check('and produces a winner', !!champ, champ ? `${champ.name}, ${champ.tenure} 
 check('with statistics that look real', champ && champ.att > 0 && champ.correct > 0,
   champ ? `${champ.correct} correct of ${champ.att} attempts, best ${champ.best}ms` : '');
 
+// --- the ring carries what the console draws with ------------------------
+// The console renders a brain for p.isBot at p.level. Both were missing from
+// the row the server sends for a live player, so every robot showed an empty
+// circle — with no error anywhere, because a missing field is just undefined.
+{
+  const inRing = st.live[0];
+  check('a live row says whether the player is a robot', 'isBot' in inRing,
+    Object.keys(inRing).join(', ').slice(0, 90));
+  check('and which standard it is', inRing.isBot ? !!inRing.level : true,
+    String(inRing.level));
+  check('and its measured latency', 'latency' in inRing);
+  for (const field of ['token', 'draw', 'name', 'score', 'connected', 'hasAvatar',
+                       'capped', 'topRope', 'target', 'bounty', 'revivals', 'tenure']) {
+    if (!(field in inRing)) check(`a live row carries ${field}`, false);
+  }
+  check('a live row carries every field the console draws with', true,
+    `${Object.keys(inRing).length} fields`);
+}
+
 // --- the recorded distributions, and the shared read jitter ---------------
 {
   const fs = await import('fs');

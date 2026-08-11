@@ -270,6 +270,9 @@ class Match {
       state: p.state, pins: p.pins, correct: p.correct, missed: p.missed,
       tenure, connected: this.roster.get(p.id)?.connected ?? false,
       hasAvatar: !!this.roster.get(p.id)?.avatar,
+      isBot: !!this.roster.get(p.id)?.isBot,
+      level: this.bots.get(p.id)?.level || null,
+      latency: this.roster.get(p.id)?.latency ?? null,
       capped: p.score >= g.ceiling,
       topRope: !!p.topRope,
       target: p.target || null,
@@ -425,6 +428,7 @@ class Match {
       return {
         token: p.id, draw: p.originalDraw ?? p.drawNumber, name: p.name,
         isBot: !!this.roster.get(p.id)?.isBot,
+        level: this.bots.get(p.id)?.level || null,
         revivals: p.revivals || 0,
         avatar: this.roster.get(p.id)?.avatar || null,
         // Only the genuine last-one-standing is crowned. A match ended early

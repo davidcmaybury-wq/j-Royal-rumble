@@ -18,23 +18,34 @@ export const LEVELS = ['rookie', 'normie', 'champ', 'superchamp', 'elite'];
 // in the ring for part of it.
 // Fitted against observed play, not the original bands — a recorded rookie
 // averaged 21.7 attempts a game, above the "<20" the spec suggested.
-// Fitted to 2,784 player-games from the official box scores. Each standard is
-// pinned to a percentile of the real population: rookie at the 10th, normie at
-// the 35th, champ at the 60th, superchamp at the 80th, elite at the 94th.
+// Fitted to 3,339 player-games from J!ometry's box CSV, which carries per-round
+// splits and stable contestant ids. Each standard is pinned to a percentile of
+// the real population: rookie at the 10th, normie 35th, champ 60th,
+// superchamp 80th, elite 94th.
 const ATTEMPTS_PER_GAME = {
-  rookie:     [19, 30],
-  normie:     [30, 35],
-  champ:      [35, 40],
-  superchamp: [39, 45],
-  elite:      [43, 51],
+  rookie:     [20, 29],
+  normie:     [29, 35],
+  champ:      [34, 40],
+  superchamp: [39, 44],
+  elite:      [43, 50],
 };
 
 // The share of a player's attempts that win the buzz, at each standard. This
 // is the ladder: across 519 champions it climbs from 55% at one win to 65% at
 // ten or more. It is what the buzz profiles have to reproduce.
 export const TARGET_BUZ_PCT = {
-  rookie: 35, normie: 46, champ: 55, superchamp: 62, elite: 72,
+  rookie: 35, normie: 47, champ: 55, superchamp: 62, elite: 72,
 };
+
+// Grouped by stable contestant id across 1,772 people, the ladder runs:
+//   appearances   BUZ%   accuracy
+//   1             46.3%    81.8%
+//   2             52.1%    86.7%
+//   4-5           54.3%    87.0%
+//   6-9           56.3%    87.6%
+//   10+           56.3%    89.3%
+// Ten points of buzzer against seven and a half of accuracy — both matter, the
+// buzzer rather more, and neither is flat.
 const CLUES_PER_GAME = 61;
 
 // How likely each level is to have each pair of hands. Elite is from the
@@ -103,25 +114,29 @@ export function useProfile(name) {
 // observed data says accuracy once you have won the buzz runs 79% to 88% and
 // barely moves with standard, because a player who does not know a clue mostly
 // does not press. Aggression separates the levels; accuracy hardly does.
-// Fitted to the same population, centred on the correct% at each percentile:
-// 71, 82, 88, 93, 96. Spread across rows so a $500 clue is harder than a $100
-// one while the average lands on the observed figure.
+// Nearly flat across rows, which took real per-round data to discover.
 //
-// Note this corrects something I claimed earlier from six career lines —
-// accuracy is NOT flat across the ladder. Over 519 champions it climbs from
-// 86% at one win to 94% at ten. The buzzer still moves about twice as far in
-// relative terms, so the emphasis was right; the strength of it was not.
+// J!ometry's box CSV splits every game into its two rounds. Double Jeopardy
+// clues average four times the value of single Jeopardy ones, and accuracy
+// falls by just 1.9 points between them — about one point per doubling. Across
+// a single round, $100 to $500, that is roughly two points in total.
+//
+// Earlier versions of this table spanned eighteen. The mistake was assuming a
+// hard clue makes a player wrong; it does not. It makes them not buzz at all.
+// Difficulty lives in the attempt rate, and the attempt rate alone.
 const ACCURACY = {
-  rookie:     [0.80, 0.75, 0.71, 0.67, 0.62],
-  normie:     [0.90, 0.86, 0.82, 0.78, 0.74],
-  champ:      [0.94, 0.91, 0.88, 0.85, 0.81],
-  superchamp: [0.97, 0.95, 0.93, 0.90, 0.87],
-  elite:      [0.99, 0.97, 0.96, 0.94, 0.91],
+  rookie:     [0.72, 0.72, 0.71, 0.70, 0.70],
+  normie:     [0.83, 0.83, 0.82, 0.81, 0.81],
+  champ:      [0.89, 0.89, 0.88, 0.87, 0.87],
+  superchamp: [0.94, 0.94, 0.93, 0.92, 0.92],
+  elite:      [0.97, 0.96, 0.96, 0.95, 0.95],
 };
 
-// Attempt rates are flat across rows in the original. Nudged by row here so a
-// hard clue draws fewer takers, which is what actually happens. (guess)
-const ATTEMPT_BY_ROW = [1.15, 1.06, 1.0, 0.92, 0.82];
+// This is where difficulty actually shows up. Attempts fall 15% relative
+// between single and double Jeopardy, a four-fold rise in value — about 7.7%
+// per doubling, giving a 1.20x spread from the cheapest row to the dearest.
+// The old figures spread 1.40x, which was too steep by half.
+const ATTEMPT_BY_ROW = [1.09, 1.05, 1.0, 0.96, 0.91];
 
 const NAMES = [
   'Bront', 'Vex', 'Marlo', 'Sable', 'Kip', 'Onyx', 'Dell', 'Roux', 'Tibbs', 'Wex',
