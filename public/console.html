@@ -267,6 +267,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, wordmark, brainAvatar } from '/brand.js';
+import { weaponToken } from '/tokens.js';
 import * as sfx from '/sound.js';
 import { summaryImage, fullStatsImage, statsCsv } from '/share.js';
 const GID = gameId();
@@ -413,6 +414,8 @@ function render() {
       + (p.isBot ? '<span class="av brain" title="' + (p.level || 'robot') + '">'
             + brainAvatar(p.level || 'normie', 24) + '</span>'
           : avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">'
+          : p.tokenArt ? '<span class="av brain">'
+            + weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) + '</span>'
           : '<span class="av ph"></span>')
       + '<span class="nm">' + p.name
       + (p.connected ? '' : ' <span style="color:var(--alarm);font-size:10px">&#9676;</span>')
@@ -465,6 +468,8 @@ function render() {
     d.innerHTML = '<span class="ctrl"></span><span class="dr num">' + (i + 1) + '</span>'
       + (p.isBot ? '<span class="av brain">' + brainAvatar(p.level || 'normie', 24) + '</span>'
          : avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">'
+         : p.tokenArt ? '<span class="av brain">'
+           + weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) + '</span>'
          : '<span class="av ph"></span>')
       + '<span class="nm">' + p.name
       + '<span class="sub num">' + p.tenure + ' clues</span></span>'
@@ -664,7 +669,8 @@ function renderLobby() {
       ? roster.map((p) => '<span class="chip' + (p.connected ? '' : ' off')
           + (p.isBot ? ' bot' : '') + '"' + (p.bot ? ' title="' + p.bot + '"' : '') + '>'
           + (p.isBot ? brainAvatar(p.level || 'normie', 24)
-             : avatarOf(p) ? '<img src="' + avatarOf(p) + '" alt="">' : '')
+             : avatarOf(p) ? '<img src="' + avatarOf(p) + '" alt="">'
+             : p.tokenArt ? weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) : '')
           + p.name + (p.isBot ? '<em class="lvl">' + (p.level || '') + '</em>' : '')
           + '</span>').join('')
       : '<span class="idle">Waiting for players&hellip;</span>') + '</div>'

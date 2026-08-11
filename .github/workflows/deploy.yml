@@ -45,6 +45,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/tokens.mjs
           node test/bots.mjs
           node test/setup-bots.mjs
       - uses: superfly/flyctl-actions/setup-flyctl@master

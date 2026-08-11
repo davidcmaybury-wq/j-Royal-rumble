@@ -186,33 +186,73 @@ people.
 Since the host cannot adjudicate a robot, each bot buzz carries whether it is
 about to be right, shown on the console chip.
 
-### Recorded buzz distributions
+### The model
 
-`data/buzz-distributions.json` holds real buzz histograms from play of the
-original model — 2,493 buzzes across four standards plus a strong human. Robots
-sample those histograms directly rather than drawing from a fitted curve,
-because no gaussian reproduces their shape: they are strongly right-skewed with
-a tail of whiffs, and the thing separating a superchamp from a rookie is as much
-consistency as speed. Their middle 50% spans 37-87 ms against the rookie's
--13 to 362.
+`src/bots.js` now uses Matt Schiffler's actual generator parameters rather than
+my reconstruction of them from screenshots. Checked against 3,339 real
+player-games from J!ometry's box data, his intuition holds up well:
 
-Sampled medians land within a few ms of the recorded ones, and early-buzz rates
-within a point.
+| Standard | His attempt band | Share of real games in it | He draws it |
+|---|---|---|---|
+| rookie | 23–35% | 3.1% | 5% |
+| normie | 37–61% | 55.8% | 60% |
+| champ | 63–70% | 17.5% | 23% |
+| superchamp | 72–88% | 12.8% | 11% |
+| elite | 89–96% | 0.1% | 1% |
 
-Two adjustments sit on top:
+His population's mean attempt rate is 56% against a real median of 57%.
 
-**Read jitter** — one shared offset per clue, because the host activates by hand
-at the end of a spoken read and players are timing that read rather than
-reacting to a light. When a read runs long, everybody anticipating it is early
-together. Independent errors are not how a room behaves.
+**The biggest thing the reconstruction had wrong was the population.** I drew
+standards uniformly, so one robot in five was elite. Matt weights them, and the
+real data agrees: elite is one in a hundred. A test field of 20% elites is not a
+test of anything.
 
-**Field matching** — robots were recorded against one particular field on one
-particular setup. Rather than assume that scale transfers, they shift by the
-difference between the humans actually playing and the human they were recorded
-against, so they stay competitive with whoever turned up. Off with
-`botMatchField: false`.
+I had also thought his accuracy bands too narrow — his population spans 9 points
+where raw per-game figures span 25. That was the wrong comparison. Per-game
+numbers carry night-to-night noise; between *players* the spread really is about
+9 points, measured on contestants with five or more games. His width was right.
 
-### Buzzer scales
+### What this project adds
+
+Three things his model does not have, each measured rather than assumed:
+
+**Row-level difficulty.** Matt's formulation, which is better than the one I
+first wrote. I had a per-level table of multipliers on the attempt rate; he
+raises the rate to a power instead — `rate_row = rate ^ exponent_row`. The
+power form grades itself, because a fraction raised to a power above 1 falls
+away much faster when the fraction is small:
+
+| Base rate | On the dearest row | Lost |
+|---|---|---|
+| 30% | 13% | 17 points |
+| 60% | 42% | 18 points |
+| 90% | 84% | 6 points |
+
+A weak player loses far more to a hard clue than a strong one, and no per-level
+table is needed to make it happen. In play, a rookie goes for the cheapest row
+3.6x as often as the dearest; an elite 1.1x.
+
+His exponents are `0.45, 0.83, 1.00, 1.10, 1.40` for Single Jeopardy. For the
+Double Jeopardy set this project shifts them by 0.22 — his shape kept exactly,
+only the gap between rounds moved. As written his model has players carrying
+89–96% of their aggression from the cheap round into the dear one, where 1,772
+real contestants carry 77–88%.
+
+Accuracy, by contrast, falls only 1.9 points between the rounds. A hard clue
+does not make a player wrong, it makes them not buzz.
+
+**Nightly form.** Both generators drew one accuracy per opponent and held it
+forever. Across 199 players with four or more games, the same person swings 6.3
+points of accuracy and 3.7 attempts game to game. Robots now draw a form for
+each match, so they are not perfectly predictable.
+
+**Recorded buzz histograms.** `data/buzz-distributions.json` holds real timing
+data from play of his model — 2,493 buzzes. Sampling those directly reproduces
+the shape a gaussian cannot: strongly right-skewed with a tail of whiffs, and a
+consistency gap between standards (a superchamp's middle 50% spans 60ms, a
+rookie's spans 406).
+
+### Buzzer scales### Buzzer scales
 
 Robot timing is expressed three ways, selectable when adding them. The unit
 that matters is J!ometry's **Time%** — the chance of winning a buzz when all
@@ -290,6 +330,27 @@ game.
 
 The middle standards still come in 15-25% light on races won. Closing that
 properly needs the original module.
+
+## Player tokens
+
+Twenty-four line-art weapons — crowbar, morningstar, dinosaur bone, folding
+chair, brick — in the app's palette, drawn as bold single-weight outlines
+because they render at 24px in the ring, where detail vanishes and only the
+silhouette survives.
+
+Everyone is given one on arrival. They can pick a different one, or upload a
+photograph instead, which overrides it.
+
+**Collisions are settled by colour, not refusal.** Only the server sees the
+whole roster, so assignment happens there: every shape is used once before any
+shape repeats, and a player asking for a taken shape gets that shape in another
+colourway. Twenty-four shapes across six colourways is 144 combinations, so a
+field of thirty never repeats.
+
+Four of the first drawings did not survive review at thumbnail size — the axe
+read as a magnifying glass, the boot as a chess pawn, the morningstar as a
+blob, and the bone as a dumbbell. `tools/` has no generator for these; they are
+hand-drawn paths in `public/tokens.js`.
 
 ## Advanced mechanics
 

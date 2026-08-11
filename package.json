@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.22.1",
+  "version": "0.27.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -34,7 +34,8 @@
     "boxparse-test": "node test/boxparse.mjs",
     "boxfetch-test": "node test/boxfetch.mjs",
     "pagerefs-test": "node test/pagerefs.mjs",
-    "setupbots-test": "node test/setup-bots.mjs"
+    "setupbots-test": "node test/setup-bots.mjs",
+    "tokens-test": "node test/tokens.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

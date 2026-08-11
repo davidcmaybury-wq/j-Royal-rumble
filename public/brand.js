@@ -4,12 +4,19 @@
 // toolbar that detail renders to mush, so small placements get a stripped
 // version: the J!, the ropes, and nothing else.
 
-const BRASS = `<linearGradient id="bg-%ID%" gradientUnits="userSpaceOnUse" x1="488" y1="163" x2="536" y2="430">
-  <stop offset="0%" stop-color="#8A6318"/><stop offset="13%" stop-color="#E9C978"/>
-  <stop offset="29%" stop-color="#FFF6D2"/><stop offset="44%" stop-color="#D9A93C"/>
-  <stop offset="53%" stop-color="#7C5411"/><stop offset="60%" stop-color="#6A4509"/>
-  <stop offset="70%" stop-color="#D2A03A"/><stop offset="84%" stop-color="#FBEEC0"/>
-  <stop offset="94%" stop-color="#B8862A"/><stop offset="100%" stop-color="#6E4A0D"/>
+// Chrome for the badge and an ember ramp for the wordmark — the two-material
+// convention of an 80s arena poster. The hard horizon in the middle of the
+// chrome ramp is what makes it read as metal rather than as a gradient.
+const BRASS = `<linearGradient id="ch-%ID%" gradientUnits="userSpaceOnUse" x1="470" y1="148" x2="470" y2="372">
+  <stop offset="0%" stop-color="#FFFDF4"/><stop offset="18%" stop-color="#E4EAF6"/>
+  <stop offset="46%" stop-color="#9FB0D0"/><stop offset="55%" stop-color="#43547C"/>
+  <stop offset="57%" stop-color="#8A6318"/><stop offset="68%" stop-color="#F0D48A"/>
+  <stop offset="80%" stop-color="#D6A93F"/><stop offset="100%" stop-color="#7C5411"/>
+</linearGradient>`;
+const EMBER = `<linearGradient id="em-%ID%" gradientUnits="userSpaceOnUse" x1="512" y1="452" x2="512" y2="668">
+  <stop offset="0%" stop-color="#FFF8E2"/><stop offset="22%" stop-color="#F4D888"/>
+  <stop offset="46%" stop-color="#D6A93F"/><stop offset="66%" stop-color="#A8701C"/>
+  <stop offset="84%" stop-color="#6E3F0C"/><stop offset="100%" stop-color="#B5551C"/>
 </linearGradient>`;
 
 const RED = `<linearGradient id="rg-%ID%" gradientUnits="userSpaceOnUse" x1="500" y1="468" x2="524" y2="598">
@@ -40,48 +47,76 @@ function ticks() {
 // Full circular artwork — lobby, splash, join screen.
 export function markFull(size = 120) {
   const id = uid();
+  const R = [['R', 176, 337.5], ['U', 132, 410.7], ['M', 132, 491.2],
+             ['B', 132, 572.0], ['L', 132, 629.8], ['E', 176, 692.3]];
+  const word = (fill, dy, extra) => R.map(([c, fs, x]) =>
+    `<text x="${x}" y="${644 + dy}" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+      font-size="${fs}" fill="${fill}" ${extra}>${c}</text>`).join('');
   return `<svg viewBox="0 0 1024 1024" width="${size}" height="${size}" role="img"
     aria-label="J! Royal Rumble"><defs>
-    <radialGradient id="sk-${id}" cx="50%" cy="40%" r="72%">
-      <stop offset="0%" stop-color="#243259"/><stop offset="55%" stop-color="#131A30"/>
-      <stop offset="100%" stop-color="#070A14"/></radialGradient>
-    ${BRASS.replace('%ID%', id)}${RED.replace('%ID%', id)}${ROPE.replace('%ID%', id)}
+    <radialGradient id="sk-${id}" cx="50%" cy="34%" r="78%">
+      <stop offset="0%" stop-color="#2A3A66"/><stop offset="52%" stop-color="#1B2444"/>
+      <stop offset="100%" stop-color="#05070F"/></radialGradient>
+    ${BRASS.replace('%ID%', id)}${EMBER.replace('%ID%', id)}${ROPE.replace('%ID%', id)}
+    <radialGradient id="gl-${id}" cx="50%" cy="26%" r="62%">
+      <stop offset="0%" stop-color="#D6A93F" stop-opacity="0.30"/>
+      <stop offset="65%" stop-color="#D6A93F" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#D6A93F" stop-opacity="0"/></radialGradient>
     <clipPath id="cp-${id}"><circle cx="512" cy="512" r="512"/></clipPath></defs>
     <g clip-path="url(#cp-${id})">
       <rect width="1024" height="1024" fill="url(#sk-${id})"/>
+      <ellipse cx="512" cy="300" rx="400" ry="330" fill="url(#gl-${id})"/>
       <circle cx="512" cy="512" r="470" fill="none" stroke="#2A3556" stroke-width="3"/>
       <g stroke="#5E6B95" stroke-width="7" stroke-linecap="round">${ticks()}</g>
-      <rect x="72" y="742" width="880" height="13" rx="6" fill="url(#pg-${id})"/>
-      <rect x="72" y="812" width="880" height="13" rx="6" fill="url(#pg-${id})"/>
-      <rect x="72" y="882" width="880" height="13" rx="6" fill="url(#pg-${id})"/>
-      <rect x="150" y="718" width="26" height="210" rx="8" fill="#4A5680"/>
-      <rect x="848" y="718" width="26" height="210" rx="8" fill="#4A5680"/>
-      <text x="512" y="428" text-anchor="middle" font-family="Anton,Impact,sans-serif"
-        font-size="360" fill="#05070E" opacity="0.72" transform="translate(0,10)">J!</text>
-      <text x="512" y="428" text-anchor="middle" font-family="Anton,Impact,sans-serif"
-        font-size="360" fill="url(#bg-${id})" stroke="#2A1D05" stroke-width="7"
+      <path d="M512 120 L664 184 L664 306 Q664 368 512 408 Q360 368 360 306 L360 184 Z"
+        fill="#0E1526" stroke="#D6A93F" stroke-width="5"/>
+      <path d="M512 137 L649 194 L649 304 Q649 355 512 391 Q375 355 375 304 L375 194 Z"
+        fill="none" stroke="#3C486E" stroke-width="2"/>
+      <text x="512" y="351" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+        font-size="212" fill="#04060C" opacity="0.8">J!</text>
+      <text x="512" y="344" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+        font-size="212" fill="url(#ch-${id})" stroke="#1E1608" stroke-width="5"
         paint-order="stroke">J!</text>
-      <g transform="rotate(-3 512 560)">
-        <text x="512" y="574" text-anchor="middle" font-family="Permanent Marker,cursive"
-          font-size="128" fill="url(#rg-${id})" stroke="#2A0708" stroke-width="6"
-          paint-order="stroke">Royal Rumble</text></g>
+      <text x="512" y="505" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+        font-size="82" letter-spacing="6" fill="#2A1204" opacity="0.85">ROYAL</text>
+      <text x="512" y="500" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+        font-size="82" letter-spacing="6" fill="url(#em-${id})" stroke="#3A1E06"
+        stroke-width="4" paint-order="stroke">ROYAL</text>
+      ${word('#2A1204', 8, 'opacity="0.85"')}
+      ${word(`url(#em-${id})`, 0, 'stroke="#3A1E06" stroke-width="6" paint-order="stroke"')}
+      <rect x="72" y="770" width="880" height="13" rx="6" fill="url(#pg-${id})"/>
+      <rect x="72" y="838" width="880" height="13" rx="6" fill="url(#pg-${id})"/>
+      <rect x="72" y="906" width="880" height="13" rx="6" fill="url(#pg-${id})"/>
+      <rect x="150" y="748" width="26" height="200" rx="8" fill="#4A5680"/>
+      <rect x="848" y="748" width="26" height="200" rx="8" fill="#4A5680"/>
     </g></svg>`;
 }
 
-// Stripped for toolbars and small chips.
+// Stripped for toolbars and small chips: the badge alone, since the wordmark
+// renders to mush below about 40px.
 export function markSmall(size = 26) {
   const id = uid();
+  // Its own ramp: the shared one is pinned to the large mark's coordinates,
+  // and this glyph sits lower and much larger, so it fell entirely below the
+  // horizon and came out dark.
+  const ramp = `<linearGradient id="ch-${id}" gradientUnits="userSpaceOnUse"
+      x1="512" y1="300" x2="512" y2="640">
+      <stop offset="0%" stop-color="#FFFDF4"/><stop offset="18%" stop-color="#E4EAF6"/>
+      <stop offset="46%" stop-color="#9FB0D0"/><stop offset="55%" stop-color="#43547C"/>
+      <stop offset="57%" stop-color="#8A6318"/><stop offset="68%" stop-color="#F0D48A"/>
+      <stop offset="80%" stop-color="#D6A93F"/><stop offset="100%" stop-color="#7C5411"/>
+    </linearGradient>`;
   return `<svg viewBox="0 0 1024 1024" width="${size}" height="${size}" role="img"
     aria-label="J! Royal Rumble"><defs>
-    ${BRASS.replace('%ID%', id)}${ROPE.replace('%ID%', id)}
+    ${ramp}
     <clipPath id="cs-${id}"><circle cx="512" cy="512" r="512"/></clipPath></defs>
     <g clip-path="url(#cs-${id})">
       <circle cx="512" cy="512" r="512" fill="#131A30"/>
       <circle cx="512" cy="512" r="486" fill="none" stroke="#2A3556" stroke-width="26"/>
-      <rect x="40" y="790" width="944" height="34" fill="url(#pg-${id})"/>
-      <rect x="40" y="880" width="944" height="34" fill="url(#pg-${id})"/>
+      <path d="M512 150 L836 288 L836 560 Q836 700 512 790 Q188 700 188 560 L188 288 Z"
+        fill="#0E1526" stroke="#D6A93F" stroke-width="22"/>
       <text x="512" y="620" text-anchor="middle" font-family="Anton,Impact,sans-serif"
-        font-size="620" fill="url(#bg-${id})" stroke="#2A1D05" stroke-width="14"
+        font-size="440" fill="url(#ch-${id})" stroke="#1E1608" stroke-width="12"
         paint-order="stroke">J!</text>
     </g></svg>`;
 }
@@ -89,27 +124,33 @@ export function markSmall(size = 26) {
 // The wide lockup, for the champion splash.
 export function wordmark(width = 620) {
   const id = uid();
-  return `<svg viewBox="0 0 1920 340" width="${width}" role="img"
+  const R = [['R', 196, 907.5], ['U', 146, 988.5], ['M', 146, 1077.6],
+             ['B', 146, 1167.0], ['L', 146, 1230.9], ['E', 196, 1300.1]];
+  const word = (fill, dy, extra) => R.map(([c, fs, x]) =>
+    `<text x="${x}" y="${324 + dy}" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+      font-size="${fs}" fill="${fill}" ${extra}>${c}</text>`).join('');
+  return `<svg viewBox="0 0 1920 400" width="${width}" role="img"
     aria-label="J! Royal Rumble"><defs>
-    <linearGradient id="wb-${id}" gradientUnits="userSpaceOnUse" x1="374" y1="76" x2="412" y2="290">
-      <stop offset="0%" stop-color="#8A6318"/><stop offset="13%" stop-color="#E9C978"/>
-      <stop offset="29%" stop-color="#FFF6D2"/><stop offset="44%" stop-color="#D9A93C"/>
-      <stop offset="53%" stop-color="#7C5411"/><stop offset="60%" stop-color="#6A4509"/>
-      <stop offset="70%" stop-color="#D2A03A"/><stop offset="84%" stop-color="#FBEEC0"/>
-      <stop offset="94%" stop-color="#B8862A"/><stop offset="100%" stop-color="#6E4A0D"/></linearGradient>
-    <linearGradient id="wr-${id}" gradientUnits="userSpaceOnUse" x1="1196" y1="74" x2="1226" y2="252">
-      <stop offset="0%" stop-color="#6E0C10"/><stop offset="14%" stop-color="#C81E20"/>
-      <stop offset="30%" stop-color="#FF6A57"/><stop offset="46%" stop-color="#D8302B"/>
-      <stop offset="58%" stop-color="#7E1114"/><stop offset="72%" stop-color="#E24A3C"/>
-      <stop offset="88%" stop-color="#FF8A72"/><stop offset="100%" stop-color="#8E1013"/></linearGradient>
+    <linearGradient id="wc-${id}" gradientUnits="userSpaceOnUse" x1="300" y1="96" x2="300" y2="300">
+      <stop offset="0%" stop-color="#FFFDF4"/><stop offset="18%" stop-color="#E4EAF6"/>
+      <stop offset="46%" stop-color="#9FB0D0"/><stop offset="55%" stop-color="#43547C"/>
+      <stop offset="57%" stop-color="#8A6318"/><stop offset="68%" stop-color="#F0D48A"/>
+      <stop offset="80%" stop-color="#D6A93F"/><stop offset="100%" stop-color="#7C5411"/></linearGradient>
+    <linearGradient id="wf-${id}" gradientUnits="userSpaceOnUse" x1="1130" y1="116" x2="1130" y2="340">
+      <stop offset="0%" stop-color="#FFF8E2"/><stop offset="22%" stop-color="#F4D888"/>
+      <stop offset="46%" stop-color="#D6A93F"/><stop offset="66%" stop-color="#A8701C"/>
+      <stop offset="84%" stop-color="#6E3F0C"/><stop offset="100%" stop-color="#B5551C"/></linearGradient>
     </defs>
-    <text x="392" y="286" text-anchor="middle" font-family="Anton,Impact,sans-serif"
-      font-size="286" fill="url(#wb-${id})" stroke="#2A1D05" stroke-width="6"
+    <path d="M300 78 L432 132 L432 240 Q432 292 300 326 Q168 292 168 240 L168 132 Z"
+      fill="#0E1526" stroke="#D6A93F" stroke-width="4"/>
+    <text x="300" y="272" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+      font-size="182" fill="url(#wc-${id})" stroke="#1E1608" stroke-width="4"
       paint-order="stroke">J!</text>
-    <g transform="rotate(-2.5 1210 194)">
-      <text x="1210" y="216" text-anchor="middle" font-family="Permanent Marker,cursive"
-        font-size="176" fill="url(#wr-${id})" stroke="#2A0708" stroke-width="7"
-        paint-order="stroke">Royal Rumble</text></g></svg>`;
+    <text x="1130" y="180" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+      font-size="82" letter-spacing="20" fill="url(#wf-${id})" stroke="#3A1E06"
+      stroke-width="4" paint-order="stroke">ROYAL</text>
+    ${word(`url(#wf-${id})`, 0, 'stroke="#3A1E06" stroke-width="6" paint-order="stroke"')}
+  </svg>`;
 }
 
 // ---------------------------------------------------------------------------

@@ -127,6 +127,7 @@ border-radius:var(--r);font-size:13px;color:var(--slate);background:none;cursor:
 <script type="module">
 import { estimate as estimateFor, warnings as warningsFor } from '/estimate.js';
 import { markFull, brainAvatar } from '/brand.js';
+import { weaponToken } from '/tokens.js';
 const socket = io({ transports: ['websocket'] });
 let code = location.pathname.split('/')[2] || '';
 let hostKey = location.hash.slice(1);
@@ -298,9 +299,9 @@ function render(keepEdits) {
         <span class="hint">up to 30 in the room altogether</span></div>
       <div class="f"><label>Buzzer scale</label>
         <select id="botprofile">
-          <option value="broadcast" selected>Show statistics (3,339 real games)</option>
+          <option value="observed" selected>Matt's model (as written)</option>
+          <option value="broadcast">Show statistics (3,339 real games)</option>
           <option value="measured">This game's own players</option>
-          <option value="observed">Original model</option>
         </select><span class="hint">click a robot below to change its standard</span></div>
       <div class="f"><label>Standard</label>
         <select id="botlevel">
@@ -474,7 +475,8 @@ function renderRoster() {
         p.isBot ? ` data-bot="${p.token}" tabindex="0" role="button"` : ''}${
         p.bot ? ` title="${p.bot} — click to change"` : ''}>${
         p.isBot ? brainAvatar(p.level || 'normie', 24)
-          : avatarOf(p) ? `<img src="${avatarOf(p)}" alt="">` : ''}${p.name}${
+          : avatarOf(p) ? `<img src="${avatarOf(p)}" alt="">`
+          : p.tokenArt ? weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) : ''}${p.name}${
         p.isBot ? `<em class="lvl">${p.level || ''}</em>` : ''}</span>`).join('')
     : '<span class="note">Nobody yet. Read them the code.</span>';
   const b = document.getElementById('start');

@@ -1,7 +1,8 @@
 // Robot players: that they fill a roster, buzz on a real clock, and behave
 // the way the model says they should.
 import { io } from 'socket.io-client';
-import { makeBot, planClue, BUZZ_PROFILE, PROFILES, LEVELS, useProfile, timingOf } from '../src/bots.js';
+import { makeBot, planClue, BUZZ_PROFILE, PROFILES, LEVELS, useProfile, timingOf,
+         drawLevel, nightlyForm } from '../src/bots.js';
 import { makeRng } from '../src/engine.js';
 const U = process.env.URL || 'http://127.0.0.1:8080';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -18,11 +19,22 @@ console.log('THE MODEL');
   check('every level gets generated', Object.keys(byLevel).length === LEVELS.length,
     Object.keys(byLevel).join(', '));
 
-  const elite = byLevel.elite;
+  // Force the level: elite is drawn about once in a hundred now, so sampling
+  // it out of a random population measures noise rather than the weights.
+  const elite = Array.from({ length: 4000 }, () => makeBot(rng, { level: 'elite' }));
   const jedi = elite.filter((b) => b.buzzSkill === 'jedi').length / elite.length;
-  check('elite draws jedi hands about 80% of the time', jedi > 0.75 && jedi < 0.85,
+  check('elite draws jedi hands about 80% of the time', jedi > 0.76 && jedi < 0.84,
     `${Math.round(jedi * 100)}%`);
   check('elite never draws bad hands', !elite.some((b) => b.buzzSkill === 'bad'));
+
+  // The population is weighted, not uniform — this was the biggest thing the
+  // reconstruction had wrong, and a mixed field of 20% elites is not a test.
+  const pop = {};
+  for (let i = 0; i < 40000; i++) { const l = drawLevel(rng); pop[l] = (pop[l] || 0) + 1; }
+  check('a mixed field is mostly ordinary players',
+    Math.abs(pop.normie / 40000 - 0.60) < 0.02, `${Math.round(pop.normie / 400)}% normie`);
+  check('and an elite is rare',
+    pop.elite / 40000 < 0.02, `${(pop.elite / 400).toFixed(1)}% elite`);
 
   const rookie = byLevel.rookie;
   // Compared against each other rather than against fixed cutoffs, since the
@@ -37,8 +49,21 @@ console.log('THE MODEL');
       .map((l) => rate(byLevel[l])).every((v, i, a) => i === 0 || v > a[i - 1]),
     ['rookie', 'normie', 'champ', 'superchamp', 'elite']
       .map((l) => Math.round(rate(byLevel[l]) * 100) + '%').join(' < '));
-  check('a rookie can still draw quick hands',
-    rookie.some((b) => b.buzzSkill === 'good' || b.buzzSkill === 'jedi'));
+  // In Matt's model a rookie draws bad or mid hands and nothing better. I had
+  // assumed otherwise; his weights are [0.75, 0.25, 0, 0].
+  const rk = Array.from({ length: 3000 }, () => makeBot(rng, { level: 'rookie' }));
+  check('a rookie never has quick hands',
+    !rk.some((b) => b.buzzSkill === 'good' || b.buzzSkill === 'jedi'));
+  check('but a champ sometimes does',
+    Array.from({ length: 2000 }, () => makeBot(rng, { level: 'champ' }))
+      .some((b) => b.buzzSkill === 'jedi'));
+
+  // Two robots of the same standard should not be the same robot.
+  const pair = Array.from({ length: 400 }, () => makeBot(rng, { level: 'champ' }));
+  const spread = Math.max(...pair.map((b) => b.attemptRate))
+    - Math.min(...pair.map((b) => b.attemptRate));
+  check('two robots of one standard differ from each other', spread > 0.04,
+    `attempt rates span ${Math.round(spread * 100)} points`);
 
   // buzz times
   // Buzz times are checked against the profile in force rather than a fixed
@@ -56,17 +81,16 @@ console.log('THE MODEL');
   check('and a jedi jumps the lights sometimes', early > 0.005 && early < 0.25,
     `${Math.round(early * 100)}% early`);
 
-  // The scales, translated into the terms real contestants are measured in.
+  // Within each scale the hands must rank in order. Comparing Time% across
+  // scales is meaningless, since each is measured against its own middle.
   for (const set of ['observed', 'broadcast', 'measured']) {
     useProfile(set);
-    const t = timingOf({ buzz: PROFILES[set].jedi });
-    const plausible = set === 'observed' ? t > 60 : (t > 40 && t < 60);
-    check(`${set} jedi sits where expected on the J!ometry scale`, plausible, `Time% ${t}`);
+    const t = ['bad', 'mid', 'good', 'jedi'].map((k) => timingOf({ buzz: PROFILES[set][k] }));
+    check(`${set}: better hands win more buzzes`,
+      t.every((v, i) => i === 0 || v > t[i - 1]),
+      t.map((v) => v + '%').join(' < '));
   }
-  useProfile('measured');
-  check('the default scale keeps its best hands within reach of a real champion',
-    timingOf({ buzz: PROFILES.measured.jedi }) < 60,
-    `Time% ${timingOf({ buzz: PROFILES.measured.jedi })} against ~46 for a career champion`);
+  useProfile('observed');
 
   // the lockout quirk, made explicit
   const marginal = planClue({ ...jb, buzz: { mean: -10, sd: 0 } }, 3, makeRng(2));
@@ -75,6 +99,49 @@ console.log('THE MODEL');
     check('a marginal early press costs more than a wild one',
       marginal.ms > wild.ms, `10ms early -> buzz at ${marginal.ms}, 240ms early -> ${wild.ms}`);
   }
+}
+
+// Form varies between matches, the way a real player's does.
+{
+  const rngF = makeRng(77);
+  const b = makeBot(rngF, { level: 'champ' });
+  const nights = Array.from({ length: 500 }, () => nightlyForm(b, rngF));
+  const accs = nights.map((n) => n.accuracy[2]);
+  const mean = accs.reduce((a, c) => a + c, 0) / accs.length;
+  // Report the standard deviation, not the range: across 500 draws the range
+  // is roughly six standard deviations and reads far more alarming than it is.
+  const sd = Math.sqrt(accs.reduce((s2, x) => s2 + (x - mean) ** 2, 0) / accs.length);
+  check('the same robot has better and worse nights', sd > 0.03 && sd < 0.10,
+    `accuracy sd ${(sd * 100).toFixed(1)} points, against 6.3 measured on real players`);
+  check('but stays recognisably itself', Math.abs(mean - b.accuracy[2]) < 0.03,
+    `averages ${(mean * 100).toFixed(0)}% against a base of ${(b.accuracy[2] * 100).toFixed(0)}%`);
+}
+
+// Row exponents, Matt's formulation: the attempt rate is raised to a power
+// per row rather than multiplied by one. The grading falls out of the
+// arithmetic — a fraction raised to a power above 1 collapses much faster
+// when the fraction is small — so a weak player loses far more to a hard
+// clue than a strong one with no per-level table anywhere.
+{
+  const rngR = makeRng(5);
+  const spread = (level) => {
+    const b = makeBot(rngR, { level });
+    const at = (row) => {
+      let n = 0;
+      for (let i = 0; i < 20000; i++) if (planClue(b, row, rngR).attempt) n++;
+      return n / 20000;
+    };
+    return at(1) / at(5);
+  };
+  const s5 = ['rookie', 'normie', 'champ', 'superchamp', 'elite'].map(spread);
+  check('a weak player chases the cheap clues and shies off the dear ones',
+    s5[0] > 2, `rookie goes ${s5[0].toFixed(2)}x as often for the cheapest row`);
+  check('a strong player barely varies by row', s5[4] < 1.3,
+    `elite ${s5[4].toFixed(2)}x`);
+  check('and the grading is monotonic across the standards',
+    s5.every((v, i) => i === 0 || v < s5[i - 1]),
+    s5.map((v) => v.toFixed(2) + 'x').join(' > '));
+  check('every standard still prefers the cheaper row', s5.every((v) => v > 1));
 }
 
 console.log('\nIN A MATCH');

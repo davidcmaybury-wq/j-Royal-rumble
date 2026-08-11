@@ -8,8 +8,10 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS } from './engine.js';
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
+import { assignToken, resolveChoice } from './tokens-server.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS,
-         loadDistributions, drawReadJitter, referenceHumanMedian } from './bots.js';
+         loadDistributions, drawReadJitter, referenceHumanMedian,
+         nightlyForm } from './bots.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -183,6 +185,12 @@ class Match {
     this.settings = { ...this.settings, ...this.game.s };
     this.phase = 'live';
     this.startedAt = Date.now();
+    // Give every robot its form for the night. Real contestants swing about
+    // six points of accuracy between games; without this a robot plays its
+    // exact average every single match.
+    for (const [tok, brain] of this.bots) {
+      this.bots.set(tok, nightlyForm(brain, this.rng || makeRng(1)));
+    }
     this.history = [{ clue: 0, ceiling: this.game.ceiling,
       scores: Object.fromEntries(this.game.live().map((p) => [p.id, p.score])) }];
     if (this.settings.recordMatch) {
@@ -221,6 +229,7 @@ class Match {
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
         hasAvatar: !!p.avatar, latency: p.latency ?? null,
+        tokenArt: p.tokenArt || null,
         isBot: !!p.isBot, level: this.bots.get(p.token)?.level || null,
         bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
       ...(g ? {
@@ -270,6 +279,7 @@ class Match {
       state: p.state, pins: p.pins, correct: p.correct, missed: p.missed,
       tenure, connected: this.roster.get(p.id)?.connected ?? false,
       hasAvatar: !!this.roster.get(p.id)?.avatar,
+      tokenArt: this.roster.get(p.id)?.tokenArt || null,
       isBot: !!this.roster.get(p.id)?.isBot,
       level: this.bots.get(p.id)?.level || null,
       latency: this.roster.get(p.id)?.latency ?? null,
@@ -306,7 +316,7 @@ class Match {
       uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
-        hasAvatar: !!p.avatar, isBot: !!p.isBot,
+        hasAvatar: !!p.avatar, tokenArt: p.tokenArt || null, isBot: !!p.isBot,
         level: this.bots.get(p.token)?.level || null,
         bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
     };
@@ -469,6 +479,7 @@ class Match {
         entryStake: Math.min(
           (p.revivals ? Math.round(this.settings.startScore * this.settings.revivalFraction)
             : this.settings.startScore) - (p.bountyPlaced || 0), g.ceiling),
+        tokenArt: this.roster.get(token)?.tokenArt || null,
         topRope: !!p.topRope,
         target: p.target || null,
         targetedBy: [...g.players.values()].filter((x) => x.target === token && x.state === 'live')
@@ -546,7 +557,7 @@ app.post('/api/match/:id/bots', (req, res) => {
   // Default to the televised distribution: 3,339 real player-games beats a
   // sample of two people until this game has accumulated its own.
   const profile = ['measured', 'broadcast', 'observed'].includes(req.body?.profile)
-    ? req.body.profile : 'broadcast';
+    ? req.body.profile : 'observed';
   const rng = m.rng || makeRng(Date.now() & 0x7fffffff);
   const taken = new Set([...m.roster.values()].map((p) => p.name));
   const added = [];
@@ -577,7 +588,7 @@ app.patch('/api/match/:id/bots/:token', (req, res) => {
   const level = LEVELS.includes(req.body?.level) ? req.body.level : null;
   if (!level) return res.status(400).json({ error: 'unknown standard' });
   const rng = m.rng || makeRng(Date.now() & 0x7fffffff);
-  m.bots.set(token, makeBot(rng, { level, profile: brain.profile || 'broadcast' }));
+  m.bots.set(token, makeBot(rng, { level, profile: brain.profile || 'observed' }));
   res.json(m.setupView());
 });
 
@@ -743,8 +754,11 @@ io.on('connection', (socket) => {
       if (name) existing.name = name;
     } else {
       if (m.phase !== 'lobby') return ack?.({ error: 'match already started' });
+      // Everyone gets a token on arrival rather than a blank circle. Chosen
+      // to avoid whatever the room is already using.
+      const art = assignToken([...m.roster.values()].map((x) => x.tokenArt), m.rng || Math.random);
       m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
-        connected: true, avatar: null });
+        connected: true, avatar: null, tokenArt: art });
     }
     socket.join(`${m.id}:players`);
     ack?.({ ok: true, token, state: m.playerView(token) });
@@ -1098,6 +1112,22 @@ io.on('connection', (socket) => {
   // The client resizes to 128x128 before sending, so this stays small. It is
   // held on the match and dies with it — the copy that survives a refresh is
   // the one cached on the player's own device.
+  // A weapon token, chosen from the library. Cheap to carry — two short
+  // strings — so unlike the photographs these ride along on the state push.
+  socket.on('token-art', ({ art, colour }, ack) => {
+    if (!match || !token) return;
+    const p = match.roster.get(token);
+    if (!p) return;
+    // Everyone except this player — their own token should not block them.
+    const others = [...match.roster.values()]
+      .filter((x) => x.token !== token).map((x) => x.tokenArt);
+    const resolved = resolveChoice(art, colour, others);
+    if (!resolved) return;
+    p.tokenArt = resolved;
+    ack?.(resolved);
+    pushAll();
+  });
+
   socket.on('avatar', ({ dataUrl }) => {
     if (!match || !token) return;
     const p = match.roster.get(token);

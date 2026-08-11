@@ -18,16 +18,40 @@ export const LEVELS = ['rookie', 'normie', 'champ', 'superchamp', 'elite'];
 // in the ring for part of it.
 // Fitted against observed play, not the original bands — a recorded rookie
 // averaged 21.7 attempts a game, above the "<20" the spec suggested.
-// Fitted to 3,339 player-games from J!ometry's box CSV, which carries per-round
-// splits and stable contestant ids. Each standard is pinned to a percentile of
-// the real population: rookie at the 10th, normie 35th, champ 60th,
-// superchamp 80th, elite 94th.
-const ATTEMPTS_PER_GAME = {
-  rookie:     [20, 29],
-  normie:     [29, 35],
-  champ:      [34, 40],
-  superchamp: [39, 44],
-  elite:      [43, 50],
+// These are Matt Schiffler's, from the generator he wrote for his own game —
+// not my reconstruction of them. Checked against 3,339 real player-games from
+// J!ometry's box data, his intuition holds up remarkably well:
+//
+//   tier         his band     share of real games in it     he draws it
+//   rookie       23-35%              3.1%                       5%
+//   normie       37-61%             55.8%                      60%
+//   champ        63-70%             17.5%                      23%
+//   superchamp   72-88%             12.8%                      11%
+//   elite        89-96%              0.1%                       1%
+//
+// His population's mean attempt rate is 56% against a real median of 57%.
+//
+// Expressed as a fraction of the 61 clues in a game, since a Rumble runs any
+// number of clues and a player is only in the ring for part of it.
+const BUZZ_RATE = {
+  rookie:     [0.23, 0.35],
+  normie:     [0.37, 0.61],
+  champ:      [0.63, 0.70],
+  superchamp: [0.72, 0.88],
+  elite:      [0.89, 0.96],
+};
+
+// How often each standard turns up when the host asks for a mixed field.
+// This was the biggest thing I had wrong: I drew uniformly, so one robot in
+// five was elite. On the show it is one in a hundred, and Matt's weights say
+// the same. A test field of 20% elites is not a test of anything real.
+export const LEVEL_WEIGHTS = {
+  rookie: 0.05, normie: 0.60, champ: 0.23, superchamp: 0.11, elite: 0.01,
+};
+
+// A returning champion should skew stronger than a fresh challenger.
+export const RETURNING_WEIGHTS = {
+  rookie: 0.01, normie: 0.15, champ: 0.65, superchamp: 0.15, elite: 0.04,
 };
 
 // The share of a player's attempts that win the buzz, at each standard. This
@@ -48,13 +72,15 @@ export const TARGET_BUZ_PCT = {
 // buzzer rather more, and neither is flat.
 const CLUES_PER_GAME = 61;
 
-// How likely each level is to have each pair of hands. Elite is from the
-// original (80% jedi, 20% good); the rest are (guess), interpolated.
+// Matt's, exactly. A rookie is three-quarters likely to have bad hands; an
+// elite never does. Note that a rookie can still draw mid, and a champ can
+// draw jedi — which is what keeps two same-standard robots from playing
+// identically, and is the point of the whole design.
 const BUZZ_SKILL_ODDS = {
-  rookie:     { bad: 0.30, mid: 0.50, good: 0.18, jedi: 0.02 },
-  normie:     { bad: 0.03, mid: 0.33, good: 0.50, jedi: 0.14 },
-  champ:      { bad: 0.00, mid: 0.12, good: 0.52, jedi: 0.36 },
-  superchamp: { bad: 0.00, mid: 0.04, good: 0.36, jedi: 0.60 },
+  rookie:     { bad: 0.75, mid: 0.25, good: 0.00, jedi: 0.00 },
+  normie:     { bad: 0.30, mid: 0.50, good: 0.20, jedi: 0.00 },
+  champ:      { bad: 0.05, mid: 0.45, good: 0.45, jedi: 0.05 },
+  superchamp: { bad: 0.00, mid: 0.15, good: 0.60, jedi: 0.25 },
   elite:      { bad: 0.00, mid: 0.00, good: 0.20, jedi: 0.80 },
 };
 
@@ -75,11 +101,15 @@ const BUZZ_SKILL_ODDS = {
 // cheating": don't speed them up beyond human, stop the human being so far
 // ahead of them.
 export const PROFILES = {
+  // Matt's actual figures, replacing my fit to them. The standard deviations
+  // are far wider than I had guessed — his `bad` has a spread larger than its
+  // own mean, so a bad buzzer jumps the lights about a fifth of the time. That
+  // overlap is deliberate and it is why his fields feel unpredictable.
   observed: {
-    jedi: { mean: 50, sd: 35 },     // from the original model
-    good: { mean: 88, sd: 42 },
-    mid:  { mean: 150, sd: 62 },
-    bad:  { mean: 275, sd: 115 },
+    jedi: { mean: 50, sd: 25 },
+    good: { mean: 80, sd: 60 },
+    mid:  { mean: 125, sd: 120 },
+    bad:  { mean: 250, sd: 300 },
   },
   broadcast: {
     jedi: { mean: 122, sd: 52 },    // Time% ~46, a strong champion
@@ -114,29 +144,71 @@ export function useProfile(name) {
 // observed data says accuracy once you have won the buzz runs 79% to 88% and
 // barely moves with standard, because a player who does not know a clue mostly
 // does not press. Aggression separates the levels; accuracy hardly does.
-// Nearly flat across rows, which took real per-round data to discover.
+// Matt's bands. I had thought these too narrow — his population spans 9 points
+// against 25 in the raw per-game data — but that was the wrong comparison. Per
+// game figures carry night-to-night noise; between *players* the spread really
+// is about 9 points, measured on contestants with five or more games. His
+// centres and his width are both right.
 //
-// J!ometry's box CSV splits every game into its two rounds. Double Jeopardy
-// clues average four times the value of single Jeopardy ones, and accuracy
-// falls by just 1.9 points between them — about one point per doubling. Across
-// a single round, $100 to $500, that is roughly two points in total.
-//
-// Earlier versions of this table spanned eighteen. The mistake was assuming a
-// hard clue makes a player wrong; it does not. It makes them not buzz at all.
-// Difficulty lives in the attempt rate, and the attempt rate alone.
-const ACCURACY = {
-  rookie:     [0.72, 0.72, 0.71, 0.70, 0.70],
-  normie:     [0.83, 0.83, 0.82, 0.81, 0.81],
-  champ:      [0.89, 0.89, 0.88, 0.87, 0.87],
-  superchamp: [0.94, 0.94, 0.93, 0.92, 0.92],
-  elite:      [0.97, 0.96, 0.96, 0.95, 0.95],
+// Kept nearly flat across rows, which the per-round data settled: Double
+// Jeopardy clues average four times the value of Single Jeopardy ones and
+// accuracy falls only 1.9 points between them. A hard clue does not make a
+// player wrong, it makes them not buzz.
+const ACCURACY_BAND = {
+  rookie:     [0.70, 0.80],
+  normie:     [0.77, 0.87],
+  champ:      [0.79, 0.89],
+  superchamp: [0.83, 0.90],
+  elite:      [0.87, 0.95],
 };
 
-// This is where difficulty actually shows up. Attempts fall 15% relative
-// between single and double Jeopardy, a four-fold rise in value — about 7.7%
-// per doubling, giving a 1.20x spread from the cheapest row to the dearest.
-// The old figures spread 1.40x, which was too steep by half.
-const ATTEMPT_BY_ROW = [1.09, 1.05, 1.0, 0.96, 0.91];
+// Row-to-row falloff applied to whichever accuracy a player drew: about one
+// point per doubling of clue value, so roughly two points across a round.
+const ACCURACY_BY_ROW = [1.010, 1.005, 1.0, 0.995, 0.990];
+
+// The same player is not the same every night. Measured across 199 players
+// with four or more games: accuracy swings 6.3 points and attempts 3.7 clues,
+// game to game. Neither generator modelled this — both drew one number per
+// opponent and held it. A robot that plays its exact average every match is
+// more predictable than a person.
+const NIGHTLY_ACCURACY_SD = 0.063;
+const NIGHTLY_ATTEMPT_SD = 0.06;
+
+// Difficulty shows up in the attempt, and Matt's formulation of it is better
+// than the one I first wrote.
+//
+// I had a per-level table of multipliers on the attempt rate. He raises the
+// rate to a power instead:  rate_row = rate ^ exponent_row.  The difference
+// matters, because the power form grades itself — a fraction raised to a
+// power above 1 falls away much faster when the fraction is small. So a weak
+// player loses far more to a hard clue than a strong one without anybody
+// writing a per-level table at all:
+//
+//   base rate   on the dearest row   lost
+//        30%              13%        17 points
+//        60%              42%        18 points
+//        90%              84%         6 points
+//
+// His exponents, which sit either side of 1 rather than being small fractions
+// as mine were:
+const ROW_EXPONENT_J  = [0.45, 0.83, 1.00, 1.10, 1.40];
+
+// The harder round is shifted by 0.22 from the figures he uses. His shape is
+// kept exactly; only the gap between the rounds moves. As written, his model
+// has players carrying 89-96% of their aggression from Single into Double
+// Jeopardy, where 1,772 real contestants carry 77-88%. The shift lines the two
+// up without touching the within-round curve:
+//
+//   band            observed   his as written   shifted
+//   weakest 20%        77.3%           89.4%     73.8%
+//   middle             83.7%           93.4%     83.4%
+//   strongest 20%      87.8%           95.9%     89.8%
+const ROW_EXPONENT_DJ = [0.82, 1.12, 1.22, 1.52, 1.92];
+
+// A Rumble board is one round of five rows, so it uses the Single Jeopardy
+// curve. The Double figures are kept for when a board is drawn from a Double
+// Jeopardy category, and for anyone porting this back to a two-round game.
+export const ROW_EXPONENTS = { single: ROW_EXPONENT_J, double: ROW_EXPONENT_DJ };
 
 const NAMES = [
   'Bront', 'Vex', 'Marlo', 'Sable', 'Kip', 'Onyx', 'Dell', 'Roux', 'Tibbs', 'Wex',
@@ -225,24 +297,54 @@ function sampleEmpirical(level, rng) {
   return d.median;
 }
 
+// Draw a standard from the weighted population rather than uniformly. This is
+// what makes a mixed field look like a real room: mostly ordinary players,
+// with an elite turning up about once in a hundred.
+export function drawLevel(rng, returning = false) {
+  const w = returning ? RETURNING_WEIGHTS : LEVEL_WEIGHTS;
+  let r = rng();
+  for (const l of LEVELS) { r -= w[l]; if (r <= 0) return l; }
+  return 'normie';
+}
+
 export function makeBot(rng, opts = {}) {
   const profile = opts.profile ? (PROFILES[opts.profile] || BUZZ_PROFILE) : BUZZ_PROFILE;
-  const level = opts.level
-    || LEVELS[Math.floor(rng() * LEVELS.length)];
+  const level = opts.level || drawLevel(rng, opts.returning);
   const skill = opts.buzzSkill || pick(BUZZ_SKILL_ODDS[level], rng);
-  const [lo, hi] = ATTEMPTS_PER_GAME[level];
-  const attempts = lo + rng() * (hi - lo);
+
+  // Every trait drawn independently within the standard's range, so two
+  // robots of the same standard are comparably good without being identical.
+  const [bLo, bHi] = BUZZ_RATE[level];
+  const [aLo, aHi] = ACCURACY_BAND[level];
+  const baseAccuracy = aLo + rng() * (aHi - aLo);
+
   return {
     isBot: true,
     level,
     buzzSkill: skill,
-    attemptRate: attempts / CLUES_PER_GAME,
-    accuracy: ACCURACY[level],
+    attemptRate: bLo + rng() * (bHi - bLo),
+    baseAccuracy,
+    accuracy: ACCURACY_BY_ROW.map((f) => Math.min(0.99, baseAccuracy * f)),
     buzz: profile[skill],
-    profile: opts.profile || 'measured',
+    profile: opts.profile || 'observed',
     // Sample the real histogram for this standard when we have one, unless the
     // caller has asked for a parametric profile explicitly.
     empirical: opts.empirical !== false && !!EMPIRICAL && !!EMPIRICAL[level],
+  };
+}
+
+// A robot that plays its exact average every match is more predictable than a
+// person. Call this once per match, per robot: it nudges their form for the
+// night by the amount real contestants actually vary game to game.
+export function nightlyForm(bot, rng) {
+  const acc = Math.max(0.35, Math.min(0.99,
+    bot.baseAccuracy + gaussian(rng) * NIGHTLY_ACCURACY_SD));
+  const att = Math.max(0.05, Math.min(0.98,
+    bot.attemptRate * (1 + gaussian(rng) * NIGHTLY_ATTEMPT_SD)));
+  return {
+    ...bot,
+    attemptRate: att,
+    accuracy: ACCURACY_BY_ROW.map((f) => Math.min(0.99, acc * f)),
   };
 }
 
@@ -262,7 +364,11 @@ export function botName(i, taken = new Set()) {
 // anticipating it is early together. Without this the robots' errors are
 // independent, which is not how a room behaves.
 export function planClue(bot, row, rng, lockoutMs = 250, readJitter = 0, offset = 0) {
-  const attempt = rng() < Math.min(0.97, bot.attemptRate * ATTEMPT_BY_ROW[row - 1]);
+  // The power form, not a multiplier: a weak player's aggression collapses on
+  // the hard rows while a strong player's barely moves.
+  const exps = bot.doubleRound ? ROW_EXPONENT_DJ : ROW_EXPONENT_J;
+  const rate = Math.pow(bot.attemptRate, exps[row - 1]);
+  const attempt = rng() < Math.min(0.97, rate);
   if (!attempt) return { attempt: false };
 
   const base = bot.empirical
