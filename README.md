@@ -232,11 +232,28 @@ A weak player loses far more to a hard clue than a strong one, and no per-level
 table is needed to make it happen. In play, a rookie goes for the cheapest row
 3.6x as often as the dearest; an elite 1.1x.
 
-His exponents are `0.45, 0.83, 1.00, 1.10, 1.40` for Single Jeopardy. For the
-Double Jeopardy set this project shifts them by 0.22 — his shape kept exactly,
-only the gap between rounds moved. As written his model has players carrying
-89–96% of their aggression from the cheap round into the dear one, where 1,772
-real contestants carry 77–88%.
+The exponents are his Monte Carlo set: `0.48, 0.67, 0.85, 1.10, 1.40` for
+Single Jeopardy and `0.60, 0.87, 1.12, 1.40, 1.80` for Double.
+
+**A correction of mine, now withdrawn.** I had measured 1,772 contestants
+carrying only 77–88% of their aggression from the cheap round into the dear
+one, against 89–96% in his model, and shifted his Double exponents by 0.22 to
+close the gap.
+
+The gap was mostly my measurement. Double Jeopardy boards are not always
+finished — in 40% of games players rang in on at least three fewer clues in the
+second round — and an unplayed clue looks exactly like reticence in this data.
+Restricted to the 649 games where both boards were clearly worked through:
+
+| Band | Observed | First set | Monte Carlo | My shift |
+|---|---|---|---|---|
+| weakest 20% | 85.7% | 89.2% | 81.6% | 73.4% |
+| middle | 88.7% | 92.9% | 87.6% | 82.2% |
+| strongest 20% | 91.8% | 95.4% | 92.0% | 88.6% |
+| **rms error** | — | 3.61 | **2.82** | 8.31 |
+
+The shift made things eight points worse, correcting for a bias that was in my
+measurement rather than in his model.
 
 Accuracy, by contrast, falls only 1.9 points between the rounds. A hard clue
 does not make a player wrong, it makes them not buzz.

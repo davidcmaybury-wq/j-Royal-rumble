@@ -189,21 +189,31 @@ const NIGHTLY_ATTEMPT_SD = 0.06;
 //        60%              42%        18 points
 //        90%              84%         6 points
 //
-// His exponents, which sit either side of 1 rather than being small fractions
-// as mine were:
-const ROW_EXPONENT_J  = [0.45, 0.83, 1.00, 1.10, 1.40];
+// His Monte Carlo figures, which fit the show data best of the three sets we
+// tried:
+const ROW_EXPONENT_J  = [0.48, 0.67, 0.85, 1.10, 1.40];
+const ROW_EXPONENT_DJ = [0.60, 0.87, 1.12, 1.40, 1.80];
 
-// The harder round is shifted by 0.22 from the figures he uses. His shape is
-// kept exactly; only the gap between the rounds moves. As written, his model
-// has players carrying 89-96% of their aggression from Single into Double
-// Jeopardy, where 1,772 real contestants carry 77-88%. The shift lines the two
-// up without touching the within-round curve:
+// A correction I made earlier and have now withdrawn. I had measured 1,772
+// contestants carrying only 77-88% of their aggression from Single into Double
+// Jeopardy, against 89-96% in his model, and shifted his Double exponents by
+// 0.22 to close the gap.
 //
-//   band            observed   his as written   shifted
-//   weakest 20%        77.3%           89.4%     73.8%
-//   middle             83.7%           93.4%     83.4%
-//   strongest 20%      87.8%           95.9%     89.8%
-const ROW_EXPONENT_DJ = [0.82, 1.12, 1.22, 1.52, 1.92];
+// The gap was mostly my own measurement. Double Jeopardy boards are not always
+// finished — 40% of games saw players ring in on at least three fewer clues in
+// the second round — and unplayed clues look exactly like reticence in this
+// data. Restricted to the 649 games where both boards were clearly worked
+// through, the real carry-over is 86-92%, and his numbers land on it:
+//
+//   band            observed   first given   monte carlo   my shift
+//   weakest 20%        85.7%         89.2%         81.6%      73.4%
+//   middle             88.7%         92.9%         87.6%      82.2%
+//   strongest 20%      91.8%         95.4%         92.0%      88.6%
+//
+//   rms error           —            3.61          2.82       8.31
+//
+// So the shift made things worse by eight points, correcting for a bias that
+// was in my measurement rather than in his model.
 
 // A Rumble board is one round of five rows, so it uses the Single Jeopardy
 // curve. The Double figures are kept for when a board is drawn from a Double
