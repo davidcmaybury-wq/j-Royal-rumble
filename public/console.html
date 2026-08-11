@@ -107,7 +107,9 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .mk.hunted{color:var(--alarm)}
 .mk.bty{color:var(--brass);font-family:"IBM Plex Mono",monospace;font-size:10px}
 .mk.rev{color:var(--live)}
-.mk.bot{color:var(--brass)}
+.mk.bot{color:var(--slate);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
+.av.brain{width:24px;height:24px;line-height:0;display:block}
+.av.brain svg{display:block;border-radius:50%}
 .mk.ctrl{color:var(--chalk)}
 .mk.lat{color:#4A5680;font-family:"IBM Plex Mono",monospace;font-size:9.5px}
 .mk.lat.slow{color:var(--alarm)}
@@ -251,7 +253,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 <script type="module">
 import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
-import { markSmall, markFull, wordmark } from '/brand.js';
+import { markSmall, markFull, wordmark, brainAvatar } from '/brand.js';
 import * as sfx from '/sound.js';
 import { summaryImage, fullStatsImage, statsCsv } from '/share.js';
 const GID = gameId();
@@ -393,7 +395,10 @@ function render() {
     d.dataset.token = p.token; d.dataset.name = p.name; d.tabIndex = 0;
     d.title = 'Click to correct this score';
     d.innerHTML = '<span class="dr num">' + p.draw + '</span>'
-      + (avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">' : '<span class="av ph"></span>')
+      + (p.isBot ? '<span class="av brain" title="' + (p.level || 'robot') + '">'
+            + brainAvatar(p.level || 'normie', 24) + '</span>'
+          : avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">'
+          : '<span class="av ph"></span>')
       + '<span class="nm">' + p.name
       + (p.connected ? '' : ' <span style="color:var(--alarm);font-size:10px">&#9676;</span>')
       + (p.pins ? ' <span class="tko" title="toss outs">&#9670;' + p.pins + '</span>' : '')
@@ -402,7 +407,7 @@ function render() {
           + ((S.live || []).find((x) => x.token === p.target) || {}).name + '">&#9678;</span>' : '')
       + ((p.targetedBy || []).length ? ' <span class="mk hunted" title="in someone\'s sights">&#9679;</span>' : '')
       + (p.bounty ? ' <span class="mk bty" title="bounty on their head">' + fmt(p.bounty) + '</span>' : '')
-      + (p.isBot ? ' <span class="mk bot" title="robot player">&#9635;</span>' : '')
+      + (p.isBot ? ' <span class="mk bot" title="robot player">' + (p.level || 'bot') + '</span>' : '')
       + (p.revivals ? ' <span class="mk rev" title="second life">&#8635;</span>' : '')
       + (S.control === p.token ? ' <span class="mk ctrl" title="picks the next clue">&#9679;</span>' : '')
       + (p.latency != null ? ' <span class="mk lat' + (p.latency > 120 ? ' slow' : '')

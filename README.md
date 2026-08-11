@@ -186,6 +186,32 @@ people.
 Since the host cannot adjudicate a robot, each bot buzz carries whether it is
 about to be right, shown on the console chip.
 
+### Recorded buzz distributions
+
+`data/buzz-distributions.json` holds real buzz histograms from play of the
+original model — 2,493 buzzes across four standards plus a strong human. Robots
+sample those histograms directly rather than drawing from a fitted curve,
+because no gaussian reproduces their shape: they are strongly right-skewed with
+a tail of whiffs, and the thing separating a superchamp from a rookie is as much
+consistency as speed. Their middle 50% spans 37-87 ms against the rookie's
+-13 to 362.
+
+Sampled medians land within a few ms of the recorded ones, and early-buzz rates
+within a point.
+
+Two adjustments sit on top:
+
+**Read jitter** — one shared offset per clue, because the host activates by hand
+at the end of a spoken read and players are timing that read rather than
+reacting to a light. When a read runs long, everybody anticipating it is early
+together. Independent errors are not how a room behaves.
+
+**Field matching** — robots were recorded against one particular field on one
+particular setup. Rather than assume that scale transfers, they shift by the
+difference between the humans actually playing and the human they were recorded
+against, so they stay competitive with whoever turned up. Off with
+`botMatchField: false`.
+
 ### Buzzer scales
 
 Robot timing is expressed three ways, selectable when adding them. The unit
@@ -209,6 +235,30 @@ over 63 buzzes, median 198 ms, sd 97. Against a player at that speed, the
 original scale leaves a human winning **24%** of contested clues in a three-way
 and **4%** in a ring of eight — the robots are unbeatable, not harmless. The
 measured scale gives 46% and 21%.
+
+### Against the official box scores
+
+`data/box-scores.json` holds published game statistics from
+[Jeopardata](https://www.jeopardy.com/track/jeopardata) — ATT, BUZ and COR/INC
+per player per game. `node tools/fetch-box-scores.mjs` collects more, one page
+every two seconds; `--all` walks the whole 184-page archive.
+
+The career lines settle the question the model kept circling:
+
+| Wins | BUZ% | Correct% |
+|---|---|---|
+| 12 | 67% | 91% |
+| 5 | 57% | 89% |
+| 2 | 56% | 90% |
+| 1 | 47–55% | 86–92% |
+
+**Accuracy is flat. Everything separating a twelve-day champion from a one-day
+champion is winning the buzz.** The robot standards now line up against it:
+normie 51% BUZ, champ 60%, superchamp 65%, elite 68%, against a real median of
+50% and a real ceiling of 67%.
+
+Attempt bands are bounded by the same data — 22 to 51 per game, median 38.
+The previous elite band topped out at 58, above anything anyone has done.
 
 ### Calibration
 

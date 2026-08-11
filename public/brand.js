@@ -111,3 +111,54 @@ export function wordmark(width = 620) {
         font-size="176" fill="url(#wr-${id})" stroke="#2A0708" stroke-width="7"
         paint-order="stroke">Royal Rumble</text></g></svg>`;
 }
+
+// ---------------------------------------------------------------------------
+// Robot avatars: an escalating glow, in the spirit of the galaxy-brain
+// progression. Drawn rather than borrowed — the meme itself is a set of
+// copyrighted stock photographs.
+
+const BRAIN_TIERS = {
+  rookie:     { glow: 0, halo: 0,   core: '#4A5680', ring: '#2A3556', spark: 0 },
+  normie:     { glow: 1, halo: 0.18, core: '#6E7CA8', ring: '#3C486E', spark: 0 },
+  champ:      { glow: 2, halo: 0.34, core: '#9AA8D0', ring: '#5A6A9E', spark: 4 },
+  superchamp: { glow: 3, halo: 0.52, core: '#E9C978', ring: '#8A6318', spark: 8 },
+  elite:      { glow: 4, halo: 0.78, core: '#FFF6D2', ring: '#D6A93F', spark: 14 },
+};
+
+export function brainAvatar(level = 'normie', size = 26) {
+  const t = BRAIN_TIERS[level] || BRAIN_TIERS.normie;
+  const id = uid();
+  const sparks = Array.from({ length: t.spark }, (_, i) => {
+    const a = (i / Math.max(1, t.spark)) * Math.PI * 2 + 0.4;
+    const r = 40 + (i % 3) * 5;
+    return `<circle cx="${(50 + Math.cos(a) * r).toFixed(1)}" cy="${(50 + Math.sin(a) * r).toFixed(1)}"
+      r="${1.6 + (i % 2)}" fill="${t.core}" opacity="${0.35 + t.halo * 0.5}"/>`;
+  }).join('');
+
+  // A folded-brain silhouette: two lobes and a couple of sulci. Simple enough
+  // to survive at 26px, which is the size it actually gets used at.
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" role="img"
+    aria-label="${level} robot"><defs>
+    <radialGradient id="h-${id}" cx="50%" cy="50%" r="50%">
+      <stop offset="55%" stop-color="${t.core}" stop-opacity="${t.halo}"/>
+      <stop offset="100%" stop-color="${t.core}" stop-opacity="0"/>
+    </radialGradient></defs>
+    <circle cx="50" cy="50" r="49" fill="#131A30"/>
+    ${t.glow ? `<circle cx="50" cy="50" r="46" fill="url(#h-${id})"/>` : ''}
+    ${sparks}
+    <g fill="none" stroke="${t.core}" stroke-width="4.6" stroke-linecap="round">
+      <path d="M50 26 C36 26 28 34 28 44 C22 47 22 57 28 60 C28 70 37 76 50 76"/>
+      <path d="M50 26 C64 26 72 34 72 44 C78 47 78 57 72 60 C72 70 63 76 50 76"/>
+    </g>
+    <g fill="none" stroke="${t.ring}" stroke-width="2.9" stroke-linecap="round" opacity="1">
+      <path d="M50 30 L50 74"/>
+      <path d="M38 40 C44 43 44 49 38 52"/>
+      <path d="M62 40 C56 43 56 49 62 52"/>
+      <path d="M38 58 C44 60 44 65 39 67"/>
+      <path d="M62 58 C56 60 56 65 61 67"/>
+    </g>
+    <circle cx="50" cy="50" r="47" fill="none" stroke="${t.ring}" stroke-width="2"/>
+  </svg>`;
+}
+
+export const BRAIN_LEVELS = Object.keys(BRAIN_TIERS);

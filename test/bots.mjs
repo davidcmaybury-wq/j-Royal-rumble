@@ -140,6 +140,41 @@ check('and produces a winner', !!champ, champ ? `${champ.name}, ${champ.tenure} 
 check('with statistics that look real', champ && champ.att > 0 && champ.correct > 0,
   champ ? `${champ.correct} correct of ${champ.att} attempts, best ${champ.best}ms` : '');
 
+// --- the recorded distributions, and the shared read jitter ---------------
+{
+  const fs = await import('fs');
+  const { loadDistributions, drawReadJitter } = await import('../src/bots.js');
+  const dist = JSON.parse(fs.readFileSync(new URL('../data/buzz-distributions.json', import.meta.url)));
+  loadDistributions(dist);
+  const rng2 = makeRng(31);
+  const want = { rookie: 173, normie: 112, champ: 62, superchamp: 58 };
+  const medianOf = (lvl, offset = 0) => {
+    const b = makeBot(rng2, { level: lvl });
+    const raw = Array.from({ length: 12000 },
+      () => planClue({ ...b, attemptRate: 1 }, 3, rng2, 250, 0, offset))
+      .filter((d) => d.attempt).map((d) => (d.early ? d.earlyAt : d.ms)).sort((a, c) => a - c);
+    return { med: raw[Math.floor(raw.length / 2)],
+             iqr: raw[Math.floor(raw.length * 0.75)] - raw[Math.floor(raw.length * 0.25)] };
+  };
+  for (const [lvl, median] of Object.entries(want)) {
+    const { med } = medianOf(lvl);
+    check(lvl + ' reproduces its recorded median', Math.abs(med - median) < 15,
+      Math.round(med) + 'ms against ' + median + 'ms recorded');
+  }
+  const r = medianOf('rookie'), sc = medianOf('superchamp');
+  check('a rookie is far less consistent than a superchamp', r.iqr > sc.iqr * 3,
+    'middle 50% spans ' + Math.round(r.iqr) + 'ms against ' + Math.round(sc.iqr) + 'ms');
+
+  const j = Array.from({ length: 4000 }, () => drawReadJitter(rng2, 45));
+  const jm = j.reduce((a, x) => a + x, 0) / j.length;
+  check('read jitter is centred on zero', Math.abs(jm) < 6, jm.toFixed(1) + 'ms');
+
+  const shifted = medianOf('champ', 120);
+  check('a field offset moves the whole distribution',
+    Math.abs(shifted.med - (62 + 120)) < 25,
+    'median ' + Math.round(shifted.med) + 'ms with a +120ms offset');
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close();
 process.exit(fails ? 1 : 0);

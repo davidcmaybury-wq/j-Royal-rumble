@@ -12,6 +12,7 @@
 // the parameters are right; if it doesn't, they aren't.
 
 import { makeBot, planClue, BUZZ_PROFILE, useProfile, timingOf, PROFILES } from '../src/bots.js';
+import { readFileSync } from 'fs';
 
 // This reproduces the original author's recorded games, so it runs on his
 // scale. The game's own default is `measured`, anchored on real buzz times.
@@ -149,8 +150,77 @@ useProfile('observed');
 console.log('\nThe original scale spreads far wider than real contestants do — a jedi at');
 console.log('85% would be twice the best champion on record. That is only invisible while');
 console.log('the human it is measured against is equally superhuman.');
-// A guard rather than a target. The middle standards still come in 15-25%
-// light on races won, which would need the original module to close properly.
+
+
+// ---------------------------------------------------------------------------
+// Against the official box scores
+//
+// The show publishes ATT, BUZ and COR/INC per player per game. Two things fall
+// straight out of the career lines, and they point the same way as the
+// original model's own data:
+//
+//   wins   BUZ%   correct%
+//     12    67%      91%     Caleb Groen
+//      5    57%      89%     Luigi de Guzman
+//      2    56%      90%     Matthew Riggle
+//      1    47-55%   86-92%  three one-day champions
+//
+// Accuracy is flat. Everything that separates a twelve-day champion from a
+// one-day champion is winning the buzz.
+
+const BOX = JSON.parse(readFileSync(new URL('../data/box-scores.json', import.meta.url)));
+
+function boxComparison() {
+  const rng = makeRng(41);
+  const rows = [];
+  for (const level of ['rookie', 'normie', 'champ', 'superchamp', 'elite']) {
+    let att = 0, won = 0, cor = 0, inc = 0, games = 600;
+    for (let g = 0; g < games; g++) {
+      // Three comparable players, which is what a televised game is. Putting
+      // the superhuman proxy in this table is what made BUZ% read low: it wins
+      // races that in reality are split between three people.
+      const me = makeBot(rng, { level, profile: 'observed' });
+      const table = [me,
+        makeBot(rng, { level: drawLevel(rng), profile: 'observed' }),
+        makeBot(rng, { level: drawLevel(rng), profile: 'observed' })];
+      const st = playGame(table, rng);
+      att += st[0].att; won += st[0].right + st[0].wrong;
+      cor += st[0].right; inc += st[0].wrong;
+    }
+    rows.push({ level, att: att / games, buz: won / att * 100,
+                correct: cor / (cor + inc) * 100 });
+  }
+  return rows;
+}
+
+const pg = BOX.games.flatMap((g) => g.players);
+const realAtt = pg.map((p) => p.att).sort((a, b) => a - b);
+const realBuz = pg.map((p) => p.buz / p.att * 100).sort((a, b) => a - b);
+const realCor = pg.map((p) => p.cor / (p.cor + p.inc) * 100).sort((a, b) => a - b);
+const mid = (a) => a[Math.floor(a.length / 2)];
+
+console.log('\n\nAgainst the official box scores');
+console.log(`${pg.length} player-games, ${BOX.careers.length} career lines\n`);
+console.log('                 attempts    BUZ%   correct%');
+console.log(`  real, median   ${String(mid(realAtt)).padStart(8)}${String(Math.round(mid(realBuz)) + '%').padStart(8)}`
+  + `${String(Math.round(mid(realCor)) + '%').padStart(11)}`);
+console.log(`  real, range    ${String(realAtt[0] + '-' + realAtt.at(-1)).padStart(8)}`
+  + `${String(Math.round(realBuz[0]) + '-' + Math.round(realBuz.at(-1)) + '%').padStart(8)}`
+  + `${String(Math.round(realCor[0]) + '-' + Math.round(realCor.at(-1)) + '%').padStart(11)}`);
+console.log('');
+for (const r of boxComparison()) {
+  console.log(`  model ${r.level.padEnd(10)}${r.att.toFixed(0).padStart(8)}`
+    + `${(r.buz.toFixed(0) + '%').padStart(8)}${(r.correct.toFixed(0) + '%').padStart(11)}`);
+}
+console.log('\nCareer BUZ% by wins — the ladder is entirely buzzer, not knowledge:');
+for (const c of BOX.careers) {
+  console.log(`  ${String(c.wins).padStart(2)} wins   BUZ% ${String(c.buzPct).padStart(3)}%`
+    + `   correct ${Math.round(c.cor / (c.cor + c.inc) * 100)}%   ${c.name}`);
+}
+
+
+// A guard rather than a target. The middle standards still come in light on
+// races won, which would need the original module to close properly.
 if (worst > 0.35) {
   console.log(`\nFAIL a standard drifted more than 35% from observed play`);
   process.exit(1);

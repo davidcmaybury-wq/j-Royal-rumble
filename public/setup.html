@@ -41,7 +41,10 @@ select{font-family:"IBM Plex Sans",sans-serif}
 border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px}
 .chip img{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block}
 .chip.bot{border-style:dashed;color:var(--slate)}
-.chip.bot::before{content:"\25A3";margin-right:2px;color:var(--brass)}
+.chip.bot{padding-left:4px}
+.chip .lvl{font-style:normal;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+color:var(--slate);margin-left:2px}
+.chip.bot svg{flex:none;border-radius:50%}
 .botlist{margin-top:12px;display:flex;flex-wrap:wrap;gap:5px}
 .botlist span{font-size:11.5px;color:var(--slate);background:var(--ink);
 border:1px solid var(--line);border-radius:var(--r);padding:4px 9px}
@@ -100,7 +103,7 @@ border-radius:var(--r);padding:5px 11px;font-size:12px;white-space:nowrap}
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { estimate as estimateFor, warnings as warningsFor } from '/estimate.js';
-import { markFull } from '/brand.js';
+import { markFull, brainAvatar } from '/brand.js';
 const socket = io({ transports: ['websocket'] });
 let code = location.pathname.split('/')[2] || '';
 let hostKey = location.hash.slice(1);
@@ -236,6 +239,35 @@ function render() {
     <div id="warn"></div>
   </div>
 
+  <div class="card"><h2>Robot players</h2>
+    <p class="note" style="margin:-4px 0 12px">For testing, or for filling out a thin roster.
+    They buzz on a real clock with reaction times drawn from their skill, so the race fills in
+    the way it does with people. The console tells you whether each one is about to be right.</p>
+    <div class="row">
+      <div class="f"><label>How many</label>
+        <input type="number" id="botcount" value="6" min="1" max="30" style="width:78px">
+        <span class="hint">up to 30 in the room altogether</span></div>
+      <div class="f"><label>Buzzer scale</label>
+        <select id="botprofile">
+          <option value="measured">Measured (this game's real players)</option>
+          <option value="broadcast">Broadcast (real Jeopardy! spread)</option>
+          <option value="observed">Original model</option>
+        </select><span class="hint">measured is anchored on buzz times recorded here</span></div>
+      <div class="f"><label>Standard</label>
+        <select id="botlevel">
+          <option value="">Mixed</option>
+          <option value="rookie">All rookie</option>
+          <option value="normie">All normie</option>
+          <option value="champ">All champ</option>
+          <option value="superchamp">All superchamp</option>
+          <option value="elite">All elite</option>
+        </select><span class="hint">mixed draws across the range</span></div>
+      <button class="alt" id="addbots">Add robots</button>
+      ${(S.roster || []).some((p) => p.isBot) ? '<button class="alt" id="rmbots">Remove all robots</button>' : ''}
+    </div>
+    <div class="botlist" id="botlist"></div>
+  </div>
+
   <div class="card"><h2>Clue material</h2>
     <div class="mix">${SRC.map(([k, t, d]) => {
       const pct = mix[k] ?? 0, avail = S.available[k] || 0;
@@ -317,35 +349,6 @@ function render() {
           <option value="false" ${s.potScoring ? '' : 'selected'}>Flat clue value</option>
         </select><span class="hint">flat scoring hands the win to the last draw</span></div>
     </div>
-  </div>
-
-  <div class="card"><h2>Robot players</h2>
-    <p class="note" style="margin:-4px 0 12px">For testing, or for filling out a thin roster.
-    They buzz on a real clock with reaction times drawn from their skill, so the race fills in
-    the way it does with people. The console tells you whether each one is about to be right.</p>
-    <div class="row">
-      <div class="f"><label>How many</label>
-        <input type="number" id="botcount" value="6" min="1" max="30" style="width:78px">
-        <span class="hint">up to 30 in the room altogether</span></div>
-      <div class="f"><label>Buzzer scale</label>
-        <select id="botprofile">
-          <option value="measured">Measured (this game's real players)</option>
-          <option value="broadcast">Broadcast (real Jeopardy! spread)</option>
-          <option value="observed">Original model</option>
-        </select><span class="hint">measured is anchored on buzz times recorded here</span></div>
-      <div class="f"><label>Standard</label>
-        <select id="botlevel">
-          <option value="">Mixed</option>
-          <option value="rookie">All rookie</option>
-          <option value="normie">All normie</option>
-          <option value="champ">All champ</option>
-          <option value="superchamp">All superchamp</option>
-          <option value="elite">All elite</option>
-        </select><span class="hint">mixed draws across the range</span></div>
-      <button class="alt" id="addbots">Add robots</button>
-      ${(S.roster || []).some((p) => p.isBot) ? '<button class="alt" id="rmbots">Remove all robots</button>' : ''}
-    </div>
-    <div class="botlist" id="botlist"></div>
   </div>
 
   <div class="card"><h2>Advanced mechanics</h2>

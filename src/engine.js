@@ -32,6 +32,9 @@ export const DEFAULT_SETTINGS = {
   overtimeAt: 2,             // players left in the ring that starts it
   overtimeEvery: 6,          // clues between each escalation
   overtimeMax: 8,            // never beyond this multiple
+  botReadJitter: 45,         // ms, shared per clue: the host activates by hand
+  botMatchField: true,       // shift robots to sit alongside the humans present
+  botOffset: 0,              // used when botMatchField is off
   delay: 200,                // ms held back so buzzers arm with Zoom audio
   lockout: 250,              // ms penalty for buzzing before the lights
   seasonRange: null,         // [lo, hi] archive seasons; null = all

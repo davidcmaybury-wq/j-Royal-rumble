@@ -8,7 +8,8 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS } from './engine.js';
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
-import { makeBot, botName, planClue, describe as describeBot, LEVELS } from './bots.js';
+import { makeBot, botName, planClue, describe as describeBot, LEVELS,
+         loadDistributions, drawReadJitter, referenceHumanMedian } from './bots.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -19,6 +20,13 @@ const PKG = JSON.parse(readFileSync(join(__dir, '../package.json'), 'utf8'));
 export const VERSION = PKG.version;
 const BOOTED = Date.now();
 const MACHINE = process.env.FLY_MACHINE_ID || 'local';
+
+// Real buzz histograms, recorded from play of the original model.
+try {
+  loadDistributions(JSON.parse(readFileSync(join(__dir, '../data/buzz-distributions.json'), 'utf8')));
+} catch (e) {
+  console.log('no buzz distributions found; robots will use parametric profiles');
+}
 
 const LIBRARY = gunzipSync(readFileSync(join(__dir, '../data/library.ndjson.gz')))
   .toString('utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
@@ -117,6 +125,7 @@ class Match {
     this.control = null;         // who picks the next clue
     this.latency = new Map();    // token -> [{ at, ms }] one-way samples
     this.bots = new Map();       // token -> bot brain
+    this.humanBuzzes = new Map();// token -> [ms] for the live-field offset
     this.botTimers = [];
   }
 
@@ -212,12 +221,14 @@ class Match {
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
         hasAvatar: !!p.avatar, latency: p.latency ?? null,
-        isBot: !!p.isBot, bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
+        isBot: !!p.isBot, level: this.bots.get(p.token)?.level || null,
+        bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
       ...(g ? {
         clues: g.cluesRevealed, ceiling: g.ceiling,
         cluesUntilNextEntry: g.cluesUntilNextEntry(),
         control: this.control,
         delay: this.settings.delay,
+        botOffset: this.bots.size ? this.botOffset() : null,
         overtime: g.overtime ? g.overtime() : null,
         board: g.board.map((c) => ({
           title: c.title, note: c.note, source: c.source,
@@ -293,8 +304,26 @@ class Match {
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
         hasAvatar: !!p.avatar, isBot: !!p.isBot,
+        level: this.bots.get(p.token)?.level || null,
         bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
     };
+  }
+
+  // Robots were recorded against one particular field on one particular setup.
+  // Rather than assume that scale transfers, shift them by the difference
+  // between the humans actually playing and the human they were recorded
+  // against — so they stay competitive with whoever turned up.
+  botOffset() {
+    if (this.settings.botMatchField === false) return this.settings.botOffset || 0;
+    const times = [];
+    for (const [tok, arr] of this.humanBuzzes || []) {
+      if (this.roster.get(tok)?.isBot) continue;
+      times.push(...arr);
+    }
+    if (times.length < 8) return this.settings.botOffset || 0;
+    times.sort((a, b) => a - b);
+    const median = times[Math.floor(times.length / 2)];
+    return Math.round(median - referenceHumanMedian());
   }
 
   note(type, data) {
@@ -767,11 +796,16 @@ io.on('connection', (socket) => {
     clearBotTimers();
     const rng = match.rng || makeRng(Date.now() & 0x7fffffff);
     const armAt = match.race.activatedAt;
+    // One offset for the whole clue: the host activates by hand at the end of a
+    // spoken read, so when a read runs long everybody anticipating it is early
+    // together.
+    const jitter = drawReadJitter(rng, match.settings.botReadJitter ?? 45);
+    const offset = match.botOffset();
     for (const p of match.game.live()) {
       const brain = match.bots.get(p.id);
       if (!brain) continue;
       if (match.race.lockedOut.has(p.id)) continue;
-      const plan = planClue(brain, match.clue.row, rng, match.settings.lockout);
+      const plan = planClue(brain, match.clue.row, rng, match.settings.lockout, jitter, offset);
       if (!plan.attempt) continue;
 
       if (plan.early) {
@@ -1005,6 +1039,10 @@ io.on('connection', (socket) => {
     };
     const st = match.stat(token);
     st.att++; st.times.push(rec.ms);
+    if (!match.roster.get(token)?.isBot) {
+      if (!match.humanBuzzes.has(token)) match.humanBuzzes.set(token, []);
+      match.humanBuzzes.get(token).push(rec.ms);
+    }
     match.race.buzzes.push(rec);
     match.race.buzzes.sort((a, b) => a.ms - b.ms);
 

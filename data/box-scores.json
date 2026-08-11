@@ -1,0 +1,303 @@
+{
+ "source": "Official Jeopardy! daily box scores, https://www.jeopardy.com/track/jeopardata",
+ "note": "Published game statistics. ATT = attempts to buzz in, BUZ = times they won the buzz, COR/INC = correct and incorrect responses. BUZ% is BUZ/ATT. Sampled by hand from two pages of the archive; tools/fetch-box-scores.mjs collects more.",
+ "sampled": [
+  "2026-07-20 to 2026-07-24",
+  "2022-09-12 to 2022-09-15"
+ ],
+ "games": [
+  {
+   "date": "2026-07-24",
+   "players": [
+    {
+     "name": "Matthew Riggle",
+     "att": 44,
+     "buz": 20,
+     "cor": 19,
+     "inc": 3
+    },
+    {
+     "name": "Sophia Suazo",
+     "att": 34,
+     "buz": 13,
+     "cor": 11,
+     "inc": 2
+    },
+    {
+     "name": "Devin Weinberg",
+     "att": 36,
+     "buz": 22,
+     "cor": 22,
+     "inc": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-07-23",
+   "players": [
+    {
+     "name": "Dean Zach",
+     "att": 37,
+     "buz": 11,
+     "cor": 11,
+     "inc": 2
+    },
+    {
+     "name": "Matthew Riggle",
+     "att": 42,
+     "buz": 28,
+     "cor": 27,
+     "inc": 2
+    },
+    {
+     "name": "Jacqueline Ziegler",
+     "att": 39,
+     "buz": 18,
+     "cor": 17,
+     "inc": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-07-22",
+   "players": [
+    {
+     "name": "Grace Biermann",
+     "att": 38,
+     "buz": 18,
+     "cor": 17,
+     "inc": 1
+    },
+    {
+     "name": "Jennifer Canterbury",
+     "att": 23,
+     "buz": 6,
+     "cor": 4,
+     "inc": 2
+    },
+    {
+     "name": "Dean Zach",
+     "att": 45,
+     "buz": 34,
+     "cor": 32,
+     "inc": 5
+    }
+   ]
+  },
+  {
+   "date": "2026-07-21",
+   "players": [
+    {
+     "name": "Sam Ryan",
+     "att": 39,
+     "buz": 17,
+     "cor": 14,
+     "inc": 3
+    },
+    {
+     "name": "Grace Biermann",
+     "att": 42,
+     "buz": 26,
+     "cor": 25,
+     "inc": 3
+    },
+    {
+     "name": "Joey Sisk",
+     "att": 22,
+     "buz": 12,
+     "cor": 12,
+     "inc": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-07-20",
+   "players": [
+    {
+     "name": "Caleb Groen",
+     "att": 40,
+     "buz": 20,
+     "cor": 17,
+     "inc": 3
+    },
+    {
+     "name": "Tatiana Chichilla",
+     "att": 37,
+     "buz": 20,
+     "cor": 15,
+     "inc": 6
+    },
+    {
+     "name": "Sam Ryan",
+     "att": 36,
+     "buz": 18,
+     "cor": 20,
+     "inc": 0
+    }
+   ]
+  },
+  {
+   "date": "2022-09-15",
+   "players": [
+    {
+     "name": "Luigi de Guzman",
+     "att": 51,
+     "buz": 31,
+     "cor": 28,
+     "inc": 5
+    },
+    {
+     "name": "Annabel Osburn",
+     "att": 29,
+     "buz": 18,
+     "cor": 16,
+     "inc": 2
+    },
+    {
+     "name": "Gilad Avrahami",
+     "att": 32,
+     "buz": 12,
+     "cor": 11,
+     "inc": 2
+    }
+   ]
+  },
+  {
+   "date": "2022-09-14",
+   "players": [
+    {
+     "name": "Luigi de Guzman",
+     "att": 48,
+     "buz": 31,
+     "cor": 29,
+     "inc": 4
+    },
+    {
+     "name": "Winston Li",
+     "att": 34,
+     "buz": 18,
+     "cor": 16,
+     "inc": 3
+    },
+    {
+     "name": "Harriet Wagner",
+     "att": 43,
+     "buz": 11,
+     "cor": 10,
+     "inc": 1
+    }
+   ]
+  },
+  {
+   "date": "2022-09-13",
+   "players": [
+    {
+     "name": "Luigi de Guzman",
+     "att": 50,
+     "buz": 21,
+     "cor": 19,
+     "inc": 3
+    },
+    {
+     "name": "April Marquet",
+     "att": 36,
+     "buz": 18,
+     "cor": 15,
+     "inc": 4
+    },
+    {
+     "name": "Justin Tarbox",
+     "att": 39,
+     "buz": 19,
+     "cor": 18,
+     "inc": 2
+    }
+   ]
+  },
+  {
+   "date": "2022-09-12",
+   "players": [
+    {
+     "name": "Luigi de Guzman",
+     "att": 50,
+     "buz": 33,
+     "cor": 34,
+     "inc": 2
+    },
+    {
+     "name": "Tim Faulkner",
+     "att": 32,
+     "buz": 11,
+     "cor": 9,
+     "inc": 2
+    },
+    {
+     "name": "Katherine May",
+     "att": 22,
+     "buz": 12,
+     "cor": 8,
+     "inc": 4
+    }
+   ]
+  }
+ ],
+ "careers": [
+  {
+   "name": "Caleb Groen",
+   "wins": 12,
+   "buzPct": 67,
+   "cor": 356,
+   "inc": 35
+  },
+  {
+   "name": "Luigi de Guzman",
+   "wins": 5,
+   "buzPct": 57,
+   "cor": 134,
+   "inc": 16
+  },
+  {
+   "name": "Matthew Riggle",
+   "wins": 2,
+   "buzPct": 56,
+   "cor": 46,
+   "inc": 5
+  },
+  {
+   "name": "Dean Zach",
+   "wins": 1,
+   "buzPct": 55,
+   "cor": 43,
+   "inc": 7
+  },
+  {
+   "name": "Grace Biermann",
+   "wins": 1,
+   "buzPct": 55,
+   "cor": 42,
+   "inc": 4
+  },
+  {
+   "name": "Sam Ryan",
+   "wins": 1,
+   "buzPct": 47,
+   "cor": 34,
+   "inc": 3
+  }
+ ],
+ "classes": {
+  "note": "A superchamp is more than five wins. Elite is a named list of the very best.",
+  "superchampMinWins": 6,
+  "elite": [
+   "James Holzhauer",
+   "Amy Schneider",
+   "Andrew He",
+   "Juveria Zaheer",
+   "Yogesh Raut",
+   "Victoria Groce",
+   "Long Nguyen"
+  ]
+ },
+ "collected": "2026-08-11T14:33:45.667Z",
+ "pagesFetched": 40
+}

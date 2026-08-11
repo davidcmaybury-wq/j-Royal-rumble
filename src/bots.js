@@ -18,12 +18,15 @@ export const LEVELS = ['rookie', 'normie', 'champ', 'superchamp', 'elite'];
 // in the ring for part of it.
 // Fitted against observed play, not the original bands — a recorded rookie
 // averaged 21.7 attempts a game, above the "<20" the spec suggested.
+// Bounded by the official box scores: across 27 sampled player-games, attempts
+// ran 22 to 51 with a median of 38. The old elite band topped out at 58, above
+// anything anyone has actually done.
 const ATTEMPTS_PER_GAME = {
-  rookie:     [16, 27],
-  normie:     [24, 34],
+  rookie:     [20, 28],
+  normie:     [27, 36],
   champ:      [34, 43],
-  superchamp: [41, 49],
-  elite:      [50, 58],
+  superchamp: [40, 47],
+  elite:      [44, 52],
 };
 const CLUES_PER_GAME = 61;
 
@@ -127,6 +130,44 @@ function pick(odds, rng) {
   return Object.keys(odds)[Object.keys(odds).length - 1];
 }
 
+// --- empirical buzz timing -------------------------------------------------
+// Real histograms beat a fitted curve. The observed distributions are strongly
+// right-skewed with a long tail of whiffs, and the thing that separates a
+// superchamp from a rookie is as much consistency as speed: their middle 50%
+// spans 37-87ms against the rookie's -13 to 362. No gaussian reproduces that.
+//
+// So we sample the histogram directly: pick a bucket by weight, then a point
+// within it.
+let EMPIRICAL = null;
+export function loadDistributions(json) {
+  EMPIRICAL = {};
+  for (const [level, v] of Object.entries(json.levels)) {
+    const entries = Object.entries(v.buckets)
+      .map(([lo, n]) => [Number(lo), n])
+      .sort((a, b) => a[0] - b[0]);
+    const total = entries.reduce((s, [, n]) => s + n, 0);
+    EMPIRICAL[level] = { entries, total, median: v.median, width: json.bucketWidth || 25 };
+  }
+  return EMPIRICAL;
+}
+export const hasDistributions = () => !!EMPIRICAL;
+
+function sampleEmpirical(level, rng) {
+  const d = EMPIRICAL[level] || EMPIRICAL.normie;
+  let roll = rng() * d.total;
+  for (const [lo, n] of d.entries) {
+    roll -= n;
+    if (roll <= 0) {
+      // The bottom and top buckets are open-ended; give them a plausible tail
+      // rather than pretending everything landed on the boundary.
+      if (lo <= -999) return -260 - rng() * 220;
+      if (lo >= 500) return 500 + rng() * 400;
+      return lo + rng() * d.width;
+    }
+  }
+  return d.median;
+}
+
 export function makeBot(rng, opts = {}) {
   const profile = opts.profile ? (PROFILES[opts.profile] || BUZZ_PROFILE) : BUZZ_PROFILE;
   const level = opts.level
@@ -141,7 +182,10 @@ export function makeBot(rng, opts = {}) {
     attemptRate: attempts / CLUES_PER_GAME,
     accuracy: ACCURACY[level],
     buzz: profile[skill],
-    profile: opts.profile || 'observed',
+    profile: opts.profile || 'measured',
+    // Sample the real histogram for this standard when we have one, unless the
+    // caller has asked for a parametric profile explicitly.
+    empirical: opts.empirical !== false && !!EMPIRICAL && !!EMPIRICAL[level],
   };
 }
 
@@ -155,11 +199,19 @@ export function botName(i, taken = new Set()) {
 
 // What this bot does with one clue. Decided in advance, the way a person has
 // already decided whether they know it before they reach for the button.
-export function planClue(bot, row, rng, lockoutMs = 250) {
+// `readJitter` is a single offset shared by every robot on a clue. The host
+// activates by hand at the end of a spoken read, and players are timing that
+// read rather than reacting to a light — so when a read runs long, everybody
+// anticipating it is early together. Without this the robots' errors are
+// independent, which is not how a room behaves.
+export function planClue(bot, row, rng, lockoutMs = 250, readJitter = 0, offset = 0) {
   const attempt = rng() < Math.min(0.97, bot.attemptRate * ATTEMPT_BY_ROW[row - 1]);
   if (!attempt) return { attempt: false };
 
-  const raw = bot.buzz.mean + gaussian(rng) * bot.buzz.sd;
+  const base = bot.empirical
+    ? sampleEmpirical(bot.level, rng)
+    : bot.buzz.mean + gaussian(rng) * bot.buzz.sd;
+  const raw = base + readJitter + offset;
   const correct = rng() < bot.accuracy[row - 1];
 
   if (raw >= 0) return { attempt: true, correct, ms: Math.round(raw * 10) / 10, early: false };
@@ -181,9 +233,23 @@ export function planClue(bot, row, rng, lockoutMs = 250) {
 }
 
 export function describe(bot) {
+  const timing = bot.empirical
+    ? `median ${EMPIRICAL[bot.level].median}ms, from recorded play`
+    : `~${bot.buzz.mean}ms`;
   return `${bot.level} · ${bot.buzzSkill} hands · `
-    + `${Math.round(bot.attemptRate * 100)}% attempt · ~${bot.buzz.mean}ms`;
+    + `${Math.round(bot.attemptRate * 100)}% attempt · ${timing}`;
 }
+
+// A shared per-clue offset, in ms. Small compared with the spread of an
+// individual buzz, but enough that a long read catches everybody together.
+export function drawReadJitter(rng, sd = 45) {
+  return gaussian(rng) * sd;
+}
+
+// The median of the human distribution these robots were recorded against.
+// Comparing it with the live field is how the bots stay competitive with
+// whoever actually turned up rather than with whoever was recorded.
+export const referenceHumanMedian = () => (EMPIRICAL?.human?.median ?? 43);
 
 // ---------------------------------------------------------------------------
 // Timing expressed the way J!ometry expresses it
