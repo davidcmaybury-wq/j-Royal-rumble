@@ -296,6 +296,19 @@ export class RumbleGame {
     return iv - (this.cluesRevealed % iv);
   }
 
+  // When does *this* player come in — not when does the next person come in.
+  // Everyone in the queue was being shown the same countdown, so the sixth
+  // draw watched a "2 clues" timer that belonged to the fourth.
+  cluesUntilEntryFor(token) {
+    const q = this.queued();
+    if (!q.length) return null;
+    const place = q.findIndex((p) => p.id === token);
+    if (place < 0) return null;
+    const next = this.cluesUntilNextEntry();
+    if (next == null) return null;
+    return next + place * this.s.entryInterval;
+  }
+
   boardRemainingValue() {
     return this.board.reduce(
       (sum, cat) => sum + cat.clues.filter((c) => !c.revealed)

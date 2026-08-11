@@ -544,9 +544,14 @@ function renderMeter(st, you) {
       <span class="n mq num">${V.roster || 0}</span>
       <span class="sub">${V.roster === 1 ? 'player' : 'players'} in the lobby</span></div>`;
   } else if (st === 'queued') {
+    // The number is this player's own entry, not the next entry in the match.
+    // Showing the queue position alongside it makes that unambiguous.
+    const ahead = (you.queuePlace ?? 1) - 1;
     m.innerHTML = `<div class="cd"><span class="k">Clues until you're in</span>
       <span class="n mq num">${you.cluesToEntry ?? '—'}</span>
-      <span class="sub">You enter with ${fmt(you.entryStake)} · warm up below</span></div>`;
+      <span class="sub">${ahead > 0
+        ? `${ahead} ${ahead === 1 ? 'player goes' : 'players go'} in before you &middot; `
+        : "you're next in &middot; "}you enter with ${fmt(you.entryStake)}</span></div>`;
   } else if (st === 'eliminated') {
     m.innerHTML = `<span class="k">You're out</span>
       <div class="score mq num">${you.tenure}</div>

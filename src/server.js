@@ -475,7 +475,12 @@ class Match {
         token, name: p.name, draw: p.drawNumber, score: p.score, state: p.state,
         tenure, pins: p.pins, capped: p.score >= g.ceiling,
         lockedOut: this.race?.lockedOut.has(token) ?? false,
-        cluesToEntry: p.state === 'queued' ? g.cluesUntilNextEntry() : null,
+        cluesToEntry: p.state === 'queued' ? g.cluesUntilEntryFor(token) : null,
+        // Where they stand in the queue, so the wait reads as a wait and not
+        // as an imminent entry.
+        queuePlace: p.state === 'queued'
+          ? g.queued().findIndex((x) => x.id === token) + 1 : null,
+        queueLength: p.state === 'queued' ? g.queued().length : null,
         entryStake: Math.min(
           (p.revivals ? Math.round(this.settings.startScore * this.settings.revivalFraction)
             : this.settings.startScore) - (p.bountyPlaced || 0), g.ceiling),
