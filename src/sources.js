@@ -25,16 +25,27 @@ export function isUnanswerableWithoutMedia(text) {
   return MEDIA_PATTERNS.some((re) => re.test(text));
 }
 
+export function unescapeRepeatedly(text) {
+  let out = String(text);
+  for (let i = 0; i < 4; i++) {
+    const next = out.replace(/\\(["'\\])/g, '$1');
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
 export function stripMediaLinks(text) {
   if (text == null) return '';
   if (typeof text !== 'string') text = String(text);
+  text = unescapeRepeatedly(text);
   return text
     .replace(/<a\s[^>]*>(.*?)<\/a>/gis, '$1')
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<\/?i>|<\/?em>|<\/?b>/gi, '')
     // Boards that have been through a converter arrive with escapes intact —
-    // \" and \' render literally on screen unless they're undone here.
-    .replace(/\\(["'\\])/g, '$1')
+    // \" and \' render literally on screen unless they're undone here. Some
+    // have been through twice, so this repeats until it stops changing.
     .replace(/\\n/g, ' ')
     .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
     .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
@@ -212,8 +223,10 @@ function finalize(cat) {
   if (byRow.size !== 5) return null;
   return {
     id: cat.id,
-    title: cat.title,
-    note: cat.note ?? null,
+    // Titles and notes go on screen just like clue text, so they need the same
+    // treatment. Missing this is why \"B\" MOVIES rendered with its escapes.
+    title: stripMediaLinks(cat.title),
+    note: cat.note ? stripMediaLinks(cat.note) : null,
     source: cat.source,
     provenance: cat.provenance,
     clues: [1, 2, 3, 4, 5].map((row) => {

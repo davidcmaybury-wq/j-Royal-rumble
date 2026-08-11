@@ -70,10 +70,25 @@ let lockoutMs = 250;
 let earlyUntil = 0;
 let sent = false;
 
+// A personal nudge on top of the host's delay. Everyone's audio path is a
+// little different — different Zoom client, different buffer, headphones or
+// speakers — and only the player can feel whether theirs is early or late.
+let personalLag = 0;
+export function getLag() { return personalLag; }
+export function setLag(ms) {
+  personalLag = Math.max(-500, Math.min(1000, Math.round(ms / 10) * 10));
+  try { localStorage.setItem('rumble:lag', String(personalLag)); } catch (e) {}
+  return personalLag;
+}
+try {
+  const stored = Number(localStorage.getItem('rumble:lag'));
+  if (!isNaN(stored)) personalLag = stored;
+} catch (e) {}
+
 export function armAt(serverInstant, lockout = 250) {
   lockoutMs = lockout;
   sent = false;
-  const waitMs = serverInstant - serverNow();
+  const waitMs = serverInstant + personalLag - serverNow();
   const target = performance.now() + waitMs;
   armedAt = target;
   return Math.max(0, waitMs);

@@ -46,6 +46,13 @@ align-items:center;justify-content:center;gap:10px;animation:fade .2s ease-out;c
 .ot .s2{font-size:15px;color:var(--slate);max-width:34ch;text-align:center;line-height:1.6}
 .otbadge{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--alarm);
 border:1px solid var(--alarm);border-radius:20px;padding:3px 9px}
+.delayctl{display:flex;align-items:center;gap:4px}
+.delayctl .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.dstep{width:22px;height:22px;border:1px solid var(--line);border-radius:var(--r);
+color:var(--slate);font-size:14px;line-height:1}
+.dstep:hover{border-color:var(--brass);color:var(--brass)}
+.dval{width:56px;background:var(--ink);border:1px solid var(--line);border-radius:var(--r);
+color:var(--chalk);padding:3px 5px;font-size:13px;text-align:center;font-family:"IBM Plex Mono",monospace}
 .rail{background:var(--ink);overflow:auto;min-height:0;padding:10px;display:flex;flex-direction:column;gap:10px}
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
 .cat{font-size:10px;line-height:1.25;letter-spacing:.04em;text-transform:uppercase;text-align:center;
@@ -59,6 +66,7 @@ display:flex;flex-direction:column;justify-content:center;gap:2px;position:relat
 .cell{width:100%;padding:12px 3px;background:var(--panel);border-radius:var(--r);font-size:17px;color:var(--brass);text-align:center}
 .cell:hover:not(:disabled){background:var(--panel2)}
 .cell:disabled{background:#0C1120;color:#1C2440;cursor:default}
+.cell.raised{color:var(--alarm);font-size:15px}
 .clue{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:16px 4%;gap:14px}
 .cmeta{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
 .cmeta .v{color:var(--brass)}
@@ -357,6 +365,8 @@ function render() {
     if (o) ot.textContent = `Overtime \u00D7${o.multiplier}`
       + (o.nextIn ? ` \u00B7 doubles in ${o.nextIn}` : ' \u00B7 max');
   }
+  const dv = $('s-delay');
+  if (dv && !delayDirty && document.activeElement !== dv && S.delay != null) dv.value = S.delay;
   if (S.version) $('ver').textContent = 'v' + S.version
     + (S.recording ? ' \u25CF rec' : '') + (S.corrections ? ' \u00B7 ' + S.corrections + ' fixed' : '');
   const u = $('undo'); if (u) u.disabled = !S.canUndo;
@@ -646,7 +656,9 @@ function renderBoard() {
     const st = document.createElement('div'); st.className = 'stack';
     cat.clues.forEach((c) => {
       const b = document.createElement('button'); b.className = 'cell num';
-      b.textContent = c.revealed ? '' : '$' + [100, 200, 300, 400, 500][c.row - 1];
+      const worth = c.value ?? [100, 200, 300, 400, 500][c.row - 1];
+      b.textContent = c.revealed ? '' : '$' + worth.toLocaleString();
+      if (!c.revealed && worth > [100, 200, 300, 400, 500][c.row - 1]) b.classList.add('raised');
       b.disabled = !!c.revealed;
       b.onclick = () => socket.emit('pick-clue', { slot: ci, row: c.row });
       st.appendChild(b);
@@ -699,6 +711,8 @@ function renderDock() {
 
 addEventListener('keydown', (e) => {
   if (document.querySelector('.entry')) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
   if (!S || !S.clue) return;
   const race = S.race || {}, buzzes = race.buzzes || [], on = buzzes[0];
   const k = (e.key || '').toLowerCase();
@@ -718,6 +732,22 @@ $('admin').onclick = () => {
 };
 $('mute').onclick = (e) => { muted = !muted; sfx.setMuted(muted);
   e.target.textContent = muted ? 'Sound off' : 'Sound on'; if (!muted) sfx.unlock(); };
+// Adjustable mid-match: nobody can tell you the delay is wrong until they have
+// tried to buzz on a real clue.
+let delayDirty = false;
+const sendDelay = (v) => {
+  const n = Math.max(0, Math.min(2000, Math.round(v)));
+  $('s-delay').value = n;
+  delayDirty = false;
+  socket.emit('set-delay', { delay: n });
+};
+document.querySelectorAll('.dstep').forEach((b) => b.onclick = () => {
+  sendDelay(Number($('s-delay').value || 0) + Number(b.dataset.d));
+});
+$('s-delay').oninput = () => { delayDirty = true; };
+$('s-delay').onchange = () => sendDelay(Number($('s-delay').value || 0));
+$('s-delay').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('s-delay').blur(); } };
+
 $('undo').onclick = () => socket.emit('undo-clue');
 $('endm').onclick = () => { if (confirm('End the match now?')) socket.emit('end-match'); };
 socket.on('undone', (d) => say(`Took back ${d.category} $${d.value}`));

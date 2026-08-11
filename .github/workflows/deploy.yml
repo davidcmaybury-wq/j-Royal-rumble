@@ -35,6 +35,8 @@ jobs:
           node test/avatar.mjs
           node test/mechanics-live.mjs
           node test/perf.mjs
+          node test/delay.mjs
+          node test/escapes.mjs
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

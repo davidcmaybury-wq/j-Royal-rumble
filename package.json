@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.14.3",
+  "version": "0.15.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -24,7 +24,9 @@
     "mechanics-test": "node test/mechanics.mjs",
     "sim-mechanics": "node tools/sim-mechanics.mjs",
     "overtime-test": "node test/overtime.mjs",
-    "perf-test": "node test/perf.mjs"
+    "perf-test": "node test/perf.mjs",
+    "delay-test": "node test/delay.mjs",
+    "escapes-test": "node test/escapes.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

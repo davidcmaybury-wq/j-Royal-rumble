@@ -22,6 +22,37 @@ const MACHINE = process.env.FLY_MACHINE_ID || 'local';
 const LIBRARY = gunzipSync(readFileSync(join(__dir, '../data/library.ndjson.gz')))
   .toString('utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
 
+// Categories imported before the title fix carry their escapes. Cleaning them
+// at load costs a few milliseconds once and saves a library rebuild.
+// Categories imported before the escape fix carry their escapes — and some
+// carry them twice, having been through two converters. Cleaning at load costs
+// a second at boot and saves rebuilding a 47,000-category library.
+const unescapeText = (t) => {
+  if (typeof t !== 'string') return t;
+  let out = t;
+  for (let i = 0; i < 4; i++) {
+    const next = out.replace(/\\(["'\\])/g, '$1');
+    if (next === out) break;
+    out = next;
+  }
+  return out.replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+};
+let fixedCats = 0, fixedClues = 0;
+for (const c of LIBRARY) {
+  const t = unescapeText(c.title), n = unescapeText(c.note);
+  if (t !== c.title || n !== c.note) fixedCats++;
+  c.title = t; c.note = n;
+  for (const x of c.clues) {
+    const tx = unescapeText(x.text), an = unescapeText(x.answer);
+    if (tx !== x.text || an !== x.answer) fixedClues++;
+    x.text = tx; x.answer = an;
+  }
+}
+if (fixedCats || fixedClues) {
+  console.log(`repaired escapes: ${fixedCats} categories, ${fixedClues} clues`);
+}
+
 const SEASONS = [...new Set(LIBRARY.map((c) => c.provenance?.season).filter(Boolean))].sort();
 console.log(`v${VERSION} · machine ${MACHINE} · library ${LIBRARY.length} categories, seasons ${SEASONS[0]}-${SEASONS.at(-1)}`);
 
@@ -182,10 +213,13 @@ class Match {
         clues: g.cluesRevealed, ceiling: g.ceiling,
         cluesUntilNextEntry: g.cluesUntilNextEntry(),
         control: this.control,
+        delay: this.settings.delay,
         overtime: g.overtime ? g.overtime() : null,
         board: g.board.map((c) => ({
           title: c.title, note: c.note, source: c.source,
-          clues: c.clues.map((x) => ({ row: x.row, revealed: x.revealed })) })),
+          clues: c.clues.map((x) => ({ row: x.row, revealed: x.revealed,
+            // What it will actually cost, not what the row says.
+            value: [100, 200, 300, 400, 500][x.row - 1] * g.overtimeMultiplier() })) })),
         // The engine flips the last player's state to 'winner', which would
         // drop them out of the ring at the exact moment they win it.
         live: [...g.players.values()]
@@ -414,6 +448,7 @@ class Match {
       lockout: this.settings.lockout,
       roster: this.roster.size,
       control: this.control,
+      delay: this.settings.delay,
       overtime: g.overtime ? g.overtime() : null,
       myBuzz: mine ? { ms: mine.ms, early: mine.early, ...(mine.ranked || {}) } : null,
       ...(this.phase === 'over'
@@ -754,6 +789,18 @@ io.on('connection', (socket) => {
     match.race.activatedAt = Date.now() + match.settings.delay;
     io.to(`${match.id}:players`).emit('activate-buzzers',
       { at: match.race.activatedAt, lockout: match.settings.lockout });
+    pushAll();
+  }));
+
+  // Players can't tell you the delay is wrong until they've played a clue, so
+  // this can't be a setup-only setting.
+  socket.on('set-delay', hostOnly(({ delay }) => {
+    const d = Math.max(0, Math.min(2000, Math.round(Number(delay) || 0)));
+    match.settings.delay = d;
+    if (match.game) match.game.s.delay = d;
+    match.note('delay', { delay: d });
+    match.corrections.push({ at: match.elapsed(), clue: match.game?.cluesRevealed ?? 0,
+      type: 'delay', to: d });
     pushAll();
   }));
 

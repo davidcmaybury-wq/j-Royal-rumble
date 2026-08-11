@@ -112,6 +112,14 @@ animation:breathe 1.6s ease-in-out infinite}
 .mbtn.on{border-color:var(--brass);color:var(--brass);background:#3A2E0C}
 .mbtn .k{opacity:.55;margin-left:5px;font-size:10.5px}
 .mbtn:disabled{opacity:.3;cursor:default}
+.lagbox{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;
+padding:8px 12px;border:1px solid var(--line);border-radius:20px;margin-top:2px}
+.lagbox .lt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.lagbox .lg{width:24px;height:24px;border:1px solid var(--line);border-radius:var(--r);color:var(--slate);font-size:15px;line-height:1}
+.lagbox .lg:hover{border-color:var(--brass);color:var(--brass)}
+.lagbox .lv{width:58px;background:var(--ink);border:1px solid var(--line);border-radius:var(--r);
+color:var(--chalk);padding:3px 5px;font-size:13px;text-align:center;font-family:"IBM Plex Mono",monospace}
+.lagbox .lh{width:100%;text-align:center;font-size:10.5px;color:var(--slate)}
 .lockon{border-color:var(--alarm)!important;color:var(--alarm)!important;background:#3E1A17!important}
 .hunted{background:var(--alarm);color:#0A0E1C;text-align:center;padding:7px 12px;
 font:400 13px/1.2 "Anton",Impact,sans-serif;letter-spacing:.1em;animation:hpulse .9s ease-in-out infinite}
@@ -180,7 +188,8 @@ white-space:nowrap;border-bottom:1px solid var(--line);z-index:2}
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
-         lockoutRemaining, startLatencyReports, syncClock, clockInfo, fmt, ord } from '/rumble.js';
+         lockoutRemaining, startLatencyReports, syncClock, clockInfo,
+         getLag, setLag, fmt, ord } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markFull } from '/brand.js';
 import * as sfx from '/sound.js';
@@ -372,6 +381,8 @@ function press() {
 }
 addEventListener('keydown', (e) => {
   if (!joined || document.querySelector('.results') || document.querySelector('.picker')) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
   if (e.code === 'Space') { e.preventDefault(); press(); return; }
   const you = (V && V.you) || {}, M = (V && V.mechanics) || {};
   const k = (e.key || '').toLowerCase();
@@ -526,11 +537,28 @@ function renderMech(st, you) {
   if (you.revivals > 0) {
     parts.push(`<span class="mbtn" style="cursor:default">Second life</span>`);
   }
-  m.innerHTML = parts.join('');
+  m.innerHTML = parts.join('') + `
+    <div class="lagbox">
+      <span class="lt">Lag compensation</span>
+      <button class="lg" id="lag-">&minus;</button>
+      <input class="lv" id="lagv" type="number" step="10" value="${getLag()}">
+      <button class="lg" id="lag+">+</button>
+      <span class="lt">ms</span>
+      <span class="lh">${getLag() > 0 ? 'buzzers arm later for you'
+        : getLag() < 0 ? 'buzzers arm sooner for you' : 'buzzing too early? raise this'}</span>
+    </div>`;
   const q = (id) => document.getElementById(id);
   if (q('m-rope')) q('m-rope').onclick = () => socket.emit('top-rope', { on: !you.topRope });
   if (q('m-target')) q('m-target').onclick = () => pickTarget(you);
   if (q('m-bounty')) q('m-bounty').onclick = () => pickBounty(you);
+  const lv = q('lagv');
+  const applyLag = (v) => { setLag(v); renderMech(st, you); };
+  if (q('lag-')) q('lag-').onclick = () => applyLag(getLag() - 10);
+  if (q('lag+')) q('lag+').onclick = () => applyLag(getLag() + 10);
+  if (lv) {
+    lv.onchange = () => applyLag(Number(lv.value) || 0);
+    lv.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); lv.blur(); } };
+  }
 }
 
 // Numbered so it can be driven from the keyboard as well as tapped — the

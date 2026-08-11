@@ -94,6 +94,17 @@ is tuned for latency over throughput — websocket only, no compression, Nagle
 off — and state pushes are coalesced over 25 ms so a burst of buzzes can't
 crowd out the messages that matter.
 
+Measured on the socket path in a real match from `ord`: 7 ms, 13 ms and 29 ms
+one way for four players spread across the country, and steady — min, median
+and p90 within a few ms of each other for everyone. Zoom audio runs 150–300 ms,
+so the socket beats the voice by roughly 120–290 ms. That gap is what the delay
+setting exists to close.
+
+The delay is adjustable **during** a match from the console, because nobody can
+tell you it's wrong until they've tried to buzz on a real clue. Players also get
+their own ±10 ms trim on the buzzer, since audio paths differ by client, buffer
+and whether they're on headphones.
+
 Each player's measured one-way latency shows beside their name in the ring, and
 the console warns when anyone is over 120 ms. Every sample is kept in the match
 record, per player, so a slow evening can be told apart from a slow field.
@@ -190,6 +201,18 @@ console offers a JSON download containing every clue, every buzz time, the
 score of everyone in the ring before and after, entries, eliminations,
 corrections, and a comparison of the predicted length against the real one.
 Off by default.
+
+## Escaped text
+
+Boards that have been through a converter arrive with their escapes intact, and
+some have been through two — `\\"` as well as `\"`. Left alone these render
+literally on screen. The importer unescapes repeatedly until the text stops
+changing, and the server repairs anything already in the library at boot, so no
+rebuild is needed.
+
+The scale is worth knowing: of 47,473 categories, **3,215 titles and 45,170
+clues** needed repair. `test/escapes.mjs` samples what the server actually
+serves and fails if anything escaped reaches the screen.
 
 ## Adding your own boards
 
