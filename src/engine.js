@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS = {
   stumperFraction: 0.5,      // 0 disables the universal-stumper deduction
   potScoring: true,          // winner collects the value from EACH opponent
   secondsPerClue: 17.5,
-  targetMinutes: 60,
+  targetMinutes: 30,
   recordMatch: false,        // keep a detailed log of the match
   // --- advanced mechanics, all off unless the host turns them on ---
   topRope: false,            // double your stakes both ways for one clue

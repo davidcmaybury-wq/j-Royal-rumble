@@ -543,8 +543,10 @@ app.post('/api/match/:id/bots', (req, res) => {
   if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
   const count = Math.max(1, Math.min(30, Number(req.body?.count) || 1));
   const level = LEVELS.includes(req.body?.level) ? req.body.level : null;
+  // Default to the televised distribution: 3,339 real player-games beats a
+  // sample of two people until this game has accumulated its own.
   const profile = ['measured', 'broadcast', 'observed'].includes(req.body?.profile)
-    ? req.body.profile : 'measured';
+    ? req.body.profile : 'broadcast';
   const rng = m.rng || makeRng(Date.now() & 0x7fffffff);
   const taken = new Set([...m.roster.values()].map((p) => p.name));
   const added = [];
@@ -563,11 +565,37 @@ app.post('/api/match/:id/bots', (req, res) => {
     buzzSkill: b.buzzSkill, describe: describeBot(b) })) });
 });
 
+// The draw can be unkind — five rookies and no champion makes a poor test.
+// Any robot's standard can be changed until the match starts.
+app.patch('/api/match/:id/bots/:token', (req, res) => {
+  const m = auth(req);
+  if (!m) return res.status(403).json({ error: 'bad host key' });
+  if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
+  const token = decodeURIComponent(req.params.token);
+  const brain = m.bots.get(token);
+  if (!brain) return res.status(404).json({ error: 'no such robot' });
+  const level = LEVELS.includes(req.body?.level) ? req.body.level : null;
+  if (!level) return res.status(400).json({ error: 'unknown standard' });
+  const rng = m.rng || makeRng(Date.now() & 0x7fffffff);
+  m.bots.set(token, makeBot(rng, { level, profile: brain.profile || 'broadcast' }));
+  res.json(m.setupView());
+});
+
 app.delete('/api/match/:id/bots', (req, res) => {
   const m = auth(req);
   if (!m) return res.status(403).json({ error: 'bad host key' });
   if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
   for (const t of [...m.bots.keys()]) { m.bots.delete(t); m.roster.delete(t); }
+  res.json(m.setupView());
+});
+
+app.delete('/api/match/:id/bots/:token', (req, res) => {
+  const m = auth(req);
+  if (!m) return res.status(403).json({ error: 'bad host key' });
+  if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
+  const token = decodeURIComponent(req.params.token);
+  if (!m.bots.has(token)) return res.status(404).json({ error: 'no such robot' });
+  m.bots.delete(token); m.roster.delete(token);
   res.json(m.setupView());
 });
 
@@ -643,6 +671,11 @@ app.get('/api/match/:id/record', (req, res) => {
     `attachment; filename="rumble-${m.id}-${new Date().toISOString().slice(0, 10)}.json"`);
   res.json(rec);
 });
+
+// The handbook, so the setup page can link to it.
+app.get('/handbook', (_req, res) =>
+  res.sendFile(join(__dir, '../docs/j-royal-rumble-handbook.pdf')));
+app.get('/rules', (_req, res) => res.sendFile(join(__dir, '../RULES.md')));
 
 app.get('/j/:id', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
 app.get('/join', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));

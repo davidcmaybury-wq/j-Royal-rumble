@@ -134,7 +134,13 @@ async function boot() {
 // Pictures arrive once and are cached here; state pushes only say whether a
 // player has one. Thirty data URLs on every push was most of the traffic.
 const AVATARS = new Map();
-socket.on('avatar', ({ token, dataUrl }) => { AVATARS.set(token, dataUrl); render && render(); });
+// Repaint only the roster. A full render() rebuilds every input from the last
+// saved state, which silently discarded anything the host had typed — so a
+// player uploading a photo could wipe your settings mid-edit.
+socket.on('avatar', ({ token, dataUrl }) => {
+  AVATARS.set(token, dataUrl);
+  if (typeof renderRoster === 'function') renderRoster();
+});
 const avatarOf = (p) => (p && p.hasAvatar ? AVATARS.get(p.token) : null) || null;
 socket.on('state', (s) => { if (s.roster) { S.roster = s.roster; renderRoster(); } });
   render();
@@ -215,11 +221,31 @@ const SRC = [
   ['upload', 'Uploaded this match', 'Fresh material you add below'],
 ];
 
-function render() {
+// Anything the host has typed but not saved. Applied after a repaint so a
+// roster change can't roll their edits back.
+function captureEdits() {
+  const out = {};
+  document.querySelectorAll('#root input, #root select').forEach((el) => {
+    if (!el.id) return;
+    out[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+  return out;
+}
+function restoreEdits(saved) {
+  for (const [id, v] of Object.entries(saved || {})) {
+    const el = document.getElementById(id);
+    if (!el || el.type === 'file') continue;
+    if (el.type === 'checkbox') el.checked = v; else el.value = v;
+  }
+}
+
+function render(keepEdits) {
+  const edits = keepEdits ? captureEdits() : null;
   const est = estimate(), s = S.settings;
   root.innerHTML = `
   <div class="hero">${markFull(84)}<h1>Set up a Rumble</h1></div>
-  <div class="tag">Read the room code aloud. Only people who have it can join.</div>
+  <div class="tag">Read the room code aloud. Only people who have it can join.
+    <a class="manual" href="/handbook" target="_blank" rel="noopener">Handbook &mdash; rules, mechanics and the design behind them &#8599;</a></div>
 
   <div class="card"><h2>Room code</h2>
     <div class="code">
@@ -249,10 +275,10 @@ function render() {
         <span class="hint">up to 30 in the room altogether</span></div>
       <div class="f"><label>Buzzer scale</label>
         <select id="botprofile">
-          <option value="measured">Measured (this game's real players)</option>
-          <option value="broadcast">Broadcast (real Jeopardy! spread)</option>
+          <option value="broadcast" selected>Show statistics (3,339 real games)</option>
+          <option value="measured">This game's own players</option>
           <option value="observed">Original model</option>
-        </select><span class="hint">measured is anchored on buzz times recorded here</span></div>
+        </select><span class="hint">click a robot below to change its standard</span></div>
       <div class="f"><label>Standard</label>
         <select id="botlevel">
           <option value="">Mixed</option>
@@ -403,6 +429,7 @@ function render() {
   </div>`;
 
   renderRoster(); renderWarnings(); renderFiles(); wire();
+  if (edits) restoreEdits(edits);
 }
 
 const adv = (k, label, on, blurb) =>
@@ -421,7 +448,8 @@ function renderRoster() {
   renderWarnings();
   w.innerHTML = S.roster.length
     ? S.roster.map((p) => `<span class="chip${p.connected ? '' : ' off'}${p.isBot ? ' bot' : ''}"${
-        p.bot ? ` title="${p.bot}"` : ''}>${
+        p.isBot ? ` data-bot="${p.token}" tabindex="0" role="button"` : ''}${
+        p.bot ? ` title="${p.bot} — click to change"` : ''}>${
         p.isBot ? brainAvatar(p.level || 'normie', 24)
           : avatarOf(p) ? `<img src="${avatarOf(p)}" alt="">` : ''}${p.name}${
         p.isBot ? `<em class="lvl">${p.level || ''}</em>` : ''}</span>`).join('')
@@ -480,11 +508,60 @@ function collect() {
   };
 }
 
+const LEVEL_BLURB = {
+  rookie: 'quiet, and slow on the buzzer',
+  normie: 'an ordinary contestant',
+  champ: 'wins about as often as not',
+  superchamp: 'six wins or more',
+  elite: 'the very best',
+};
+
+// The draw is random, so a test field can come out all rookies. Any robot's
+// standard can be changed until the match starts.
+function editBot(token) {
+  const p = (S.roster || []).find((x) => x.token === token);
+  if (!p) return;
+  document.querySelectorAll('.botedit').forEach((n) => n.remove());
+  const el = document.createElement('div'); el.className = 'botedit';
+  el.innerHTML = `<div class="bebox">
+    <h3>${p.name}</h3>
+    <div class="cur">${p.bot || ''}</div>
+    ${['rookie', 'normie', 'champ', 'superchamp', 'elite'].map((l) =>
+      `<button class="belvl${p.level === l ? ' on' : ''}" data-l="${l}">
+        <span>${l}</span><span class="bd">${LEVEL_BLURB[l]}</span></button>`).join('')}
+    <button class="rm" data-rm="1">Remove this robot</button>
+  </div>`;
+  document.body.appendChild(el);
+  const close = () => el.remove();
+  el.onclick = (e) => { if (e.target === el) close(); };
+  el.querySelectorAll('[data-l]').forEach((b) => b.onclick = async () => {
+    b.disabled = true;
+    try {
+      S = await api(`/api/match/${code}/bots/${encodeURIComponent(token)}`,
+        { method: 'PATCH', body: JSON.stringify({ level: b.dataset.l }) });
+    } catch (err) { el.querySelector('.cur').textContent = err.message; }
+    close(); render(true);
+  });
+  el.querySelector('[data-rm]').onclick = async () => {
+    try {
+      S = await api(`/api/match/${code}/bots/${encodeURIComponent(token)}`, { method: 'DELETE' });
+    } catch (err) { el.querySelector('.cur').textContent = err.message; }
+    close(); render(true);
+  };
+  addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') { close(); removeEventListener('keydown', esc); }
+  });
+}
+
 async function save(quiet) {
   const m = document.getElementById('savemsg');
   try {
     S = await api(`/api/match/${code}`, { method: 'PATCH', body: JSON.stringify(collect()) });
-    if (!quiet && m) { m.textContent = 'Saved.'; m.style.color = 'var(--live)'; setTimeout(() => m.textContent = '', 2200); }
+    if (!quiet && m) {
+      m.textContent = '\u2713 Settings saved';
+      m.style.color = 'var(--live)';
+      setTimeout(() => { m.textContent = ''; }, 2600);
+    }
     return true;
   } catch (e) {
     if (m) { m.textContent = e.message; m.style.color = 'var(--alarm)'; }
@@ -514,11 +591,16 @@ function wire() {
       S = r;
       lastBots = r.added || [];
     } catch (e) { document.getElementById('msg').textContent = e.message; }
-    render();
+    render(true);
   };
+  document.querySelectorAll('[data-bot]').forEach((el) => {
+    const open = () => editBot(el.dataset.bot);
+    el.onclick = open;
+    el.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
+  });
   const rb = document.getElementById('rmbots');
   if (rb) rb.onclick = async () => { S = await api(`/api/match/${code}/bots`, { method: 'DELETE' });
-    lastBots = []; render(); };
+    lastBots = []; render(true); };
   const bl = document.getElementById('botlist');
   if (bl) bl.innerHTML = lastBots.map((b) => `<span>${b.name} &mdash; ${b.describe}</span>`).join('');
 

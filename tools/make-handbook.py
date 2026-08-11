@@ -411,6 +411,11 @@ A(B('Undo takes back an entire clue &mdash; scores, eliminations, entries, the '
 A(B('The audio delay is adjustable mid-match, because nobody can tell you it is '
     'wrong until they have tried to buzz on a real clue.'))
 
+A(P('Robots and testing', 'h2'))
+A(B('Add robots from the setup screen, mixed across the five standards or all of one.'))
+A(B('Click any robot to change its standard, or remove it, before the match starts.'))
+A(B('Their buzz distributions come from real recorded play rather than a fitted curve.'))
+
 A(P('Timing', 'h2'))
 A(P('The sockets are much faster than the call audio, so buzzers are deliberately '
     'held back to arm when the host\u2019s voice actually arrives. Measured on a '
@@ -448,6 +453,41 @@ A(callout('What a recording changed',
           'seconds dragged the average. It also exposed two broken statistics and '
           'an endgame that could not end. Three rules and four bugs came out of one '
           'file.'))
+
+A(H('ROBOT PLAYERS', P('Thirty humans are hard to assemble for a test. Robots fill a roster and '
+    'play the match themselves \u2014 buzzing on a real clock, with reaction times '
+    'drawn per clue, so the race fills in the way it does with people. The host '
+    'sees whether each one is about to be right, since there is no way to '
+    'adjudicate a machine.')))
+A(P('Five standards, drawn at random or forced, and any of them can be changed '
+    'by clicking the robot before the match starts.'))
+
+A(table([
+    ['Standard', 'Attempts/game', 'Wins the buzz', 'Correct'],
+    ['rookie', '20 \u2013 29', '35%', '71%'],
+    ['normie', '29 \u2013 35', '47%', '82%'],
+    ['champ', '34 \u2013 40', '55%', '88%'],
+    ['superchamp', '39 \u2013 44', '62%', '93%'],
+    ['elite', '43 \u2013 50', '72%', '96%'],
+], [34 * mm, 34 * mm, 32 * mm, 26 * mm], align=[1, 2, 3]))
+A(P('Each standard is pinned to a percentile of 3,339 real player-games from '
+    'J!ometry\u2019s published box data \u2014 the 10th, 35th, 60th, 80th and 94th.', 'caption'))
+
+A(P('What the real data changed', 'h2'))
+A(P('That file splits each game into its two rounds, and Double Jeopardy clues '
+    'average four times the value of Single Jeopardy ones. Between the rounds, '
+    'accuracy falls 1.9 points while attempts fall 15 per cent.'))
+
+A(callout('Difficulty lives in the attempt, not the answer',
+          'A hard clue does not make a player wrong. It makes them not buzz at '
+          'all. Earlier versions of this model spread accuracy eighteen points '
+          'across the five rows; the real figure is about two. Weak players are '
+          'quiet rather than mistaken, which is a different thing to play '
+          'against and a more accurate one.'))
+
+A(P('Grouped by contestant across 1,772 people, the ladder from one appearance '
+    'to ten or more runs 46.3% to 56.3% on winning the buzz, and 81.8% to 89.3% '
+    'on accuracy. Both matter. The buzzer matters more.'))
 
 A(H('METHOD', P('The rules engine is a plain module with no framework and no network, driven '
     'by a Monte Carlo harness that plays hundreds of matches per configuration '
