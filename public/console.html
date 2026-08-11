@@ -83,6 +83,11 @@ border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px}
 .chip img{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block}
 .chip:not(:has(img)){padding-left:12px}
 .chip.off{opacity:.45}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:4px 12px 4px 5px}
+.chip:not(:has(img)):not(:has(svg)){padding-left:12px}
+.chip img,.chip svg{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block;flex:none}
+.chip.bot{border-style:dashed}
+.chip .lvl{font-style:normal;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate)}
 .go{padding:11px 26px;border:1px solid var(--brass);color:var(--brass);border-radius:var(--r);font-size:15px}
 .go:disabled{opacity:.35;border-color:var(--line);color:var(--slate);cursor:default}
 .sect{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate);display:flex;justify-content:space-between;margin-bottom:6px}
@@ -228,6 +233,13 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
       <button class="tb" id="mute">Sound on</button>
       <button class="tb" id="undo" disabled title="Take back the last scored clue">Undo clue</button>
       <button class="tb" id="endm">End match</button>
+      <span class="delayctl">
+        <span class="k">Delay</span>
+        <button class="dstep" data-d="-25" aria-label="less delay">&minus;</button>
+        <input class="dval num" id="s-delay" type="number" step="25" min="0" max="2000" value="200">
+        <button class="dstep" data-d="25" aria-label="more delay">+</button>
+        <span class="k">ms</span>
+      </span>
       <span class="ver num" id="ver" title="build version"></span>
     </span>
   </header>
@@ -590,6 +602,10 @@ function showStandings() {
       <span class="tabs2"><button data-t="match" class="${sTab === 'match' ? 'on' : ''}">Match</button>
       <button data-t="buzz" class="${sTab === 'buzz' ? 'on' : ''}">Buzzers</button>
       <button id="close2">Close</button></span></div>
+    ${S.history && S.history.length > 2 ? `<div class="chart">${
+      scoreChart(S.history, (S.standings || []).map((p) => ({ token: p.token, name: p.name })),
+        { winnerToken: (S.standings || []).find((p) => p.winner)?.token,
+          width: 780, height: 250 })}</div>` : ''}
     <div class="tw2"><table><thead><tr>${cols.map(([k, l]) =>
       `<th data-k="${k}" class="${sKey === k ? 's' : ''}">${l}${sKey === k ? (sDir < 0 ? ' \u25BE' : ' \u25B4') : ''}</th>`).join('')}</tr></thead>
       <tbody>${rows.map((p) => `<tr class="${p.winner ? 'win' : ''}">${
@@ -639,8 +655,12 @@ function renderLobby() {
   $('stage').innerHTML = '<div class="lobby">' + markFull(150)
     + '<div class="join">Players join at <code>' + url + '</code></div>'
     + '<div class="who">' + (roster.length
-      ? roster.map((p) => '<span class="chip' + (p.connected ? '' : ' off') + '">'
-          + (avatarOf(p) ? '<img src="' + avatarOf(p) + '" alt="">' : '') + p.name + '</span>').join('')
+      ? roster.map((p) => '<span class="chip' + (p.connected ? '' : ' off')
+          + (p.isBot ? ' bot' : '') + '"' + (p.bot ? ' title="' + p.bot + '"' : '') + '>'
+          + (p.isBot ? brainAvatar(p.level || 'normie', 24)
+             : avatarOf(p) ? '<img src="' + avatarOf(p) + '" alt="">' : '')
+          + p.name + (p.isBot ? '<em class="lvl">' + (p.level || '') + '</em>' : '')
+          + '</span>').join('')
       : '<span class="idle">Waiting for players&hellip;</span>') + '</div>'
     + '<button class="go" id="start"' + (roster.length < 3 ? ' disabled' : '') + '>Start with '
       + roster.length + ' player' + (roster.length === 1 ? '' : 's') + '</button>'
@@ -738,32 +758,43 @@ addEventListener('keydown', (e) => {
 
 // Answers live in a separate window so the shared screen never shows them.
 let adminWin = null;
-$('admin').onclick = () => {
+on('admin', 'onclick', () => {
   if (adminWin && !adminWin.closed) { adminWin.focus(); return; }
   adminWin = window.open('/admin/' + GID + '#' + hostKey, 'rumble-admin',
     'width=540,height=660,menubar=no,toolbar=no');
   if (!adminWin) say('Popup blocked — allow popups for this site');
-};
-$('mute').onclick = (e) => { muted = !muted; sfx.setMuted(muted);
-  e.target.textContent = muted ? 'Sound off' : 'Sound on'; if (!muted) sfx.unlock(); };
+});
+on('mute', 'onclick', (e) => { muted = !muted; sfx.setMuted(muted);
+  e.target.textContent = muted ? 'Sound off' : 'Sound on'; if (!muted) sfx.unlock(); });
 // Adjustable mid-match: nobody can tell you the delay is wrong until they have
 // tried to buzz on a real clue.
 let delayDirty = false;
 const sendDelay = (v) => {
+  const el = $('s-delay');
   const n = Math.max(0, Math.min(2000, Math.round(v)));
-  $('s-delay').value = n;
+  if (el) el.value = n;
   delayDirty = false;
   socket.emit('set-delay', { delay: n });
 };
-document.querySelectorAll('.dstep').forEach((b) => b.onclick = () => {
-  sendDelay(Number($('s-delay').value || 0) + Number(b.dataset.d));
-});
-$('s-delay').oninput = () => { delayDirty = true; };
-$('s-delay').onchange = () => sendDelay(Number($('s-delay').value || 0));
-$('s-delay').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('s-delay').blur(); } };
 
-$('undo').onclick = () => socket.emit('undo-clue');
-$('endm').onclick = () => { if (confirm('End the match now?')) socket.emit('end-match'); };
+// Bind through a helper. A missing element used to throw here and take every
+// binding below it with it — which is how one absent input silently disabled
+// the End match button.
+function on(id, event, fn) {
+  const el = $(id);
+  if (!el) { console.warn('no element #' + id); return; }
+  el[event] = fn;
+}
+
+document.querySelectorAll('.dstep').forEach((b) => b.onclick = () => {
+  sendDelay(Number(($('s-delay') || {}).value || 0) + Number(b.dataset.d));
+});
+on('s-delay', 'oninput', () => { delayDirty = true; });
+on('s-delay', 'onchange', () => sendDelay(Number($('s-delay').value || 0)));
+on('s-delay', 'onkeydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('s-delay').blur(); } });
+
+on('undo', 'onclick', () => socket.emit('undo-clue'));
+on('endm', 'onclick', () => { if (confirm('End the match now?')) socket.emit('end-match'); });
 socket.on('undone', (d) => say(`Took back ${d.category} $${d.value}`));
 socket.on('adjusted', (d) => say(`${d.name} corrected by ${d.delta > 0 ? '+' : ''}${fmt(d.delta)} to ${fmt(d.to)}`));
 sfx.preload();

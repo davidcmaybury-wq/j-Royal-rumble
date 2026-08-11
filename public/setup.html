@@ -39,7 +39,7 @@ select{font-family:"IBM Plex Sans",sans-serif}
 .who{display:flex;flex-wrap:wrap;gap:6px}
 .chip{padding:4px 12px 4px 4px;background:var(--panel2);border-radius:20px;font-size:13px;
 border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px}
-.chip img{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block}
+.chip img,.chip svg{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block;flex:none}
 .chip.bot{border-style:dashed;color:var(--slate)}
 .chip.bot{padding-left:4px}
 .chip .lvl{font-style:normal;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
@@ -422,7 +422,9 @@ function renderRoster() {
   w.innerHTML = S.roster.length
     ? S.roster.map((p) => `<span class="chip${p.connected ? '' : ' off'}${p.isBot ? ' bot' : ''}"${
         p.bot ? ` title="${p.bot}"` : ''}>${
-        p.avatar ? `<img src="${p.avatar}" alt="">` : ''}${p.name}</span>`).join('')
+        p.isBot ? brainAvatar(p.level || 'normie', 24)
+          : avatarOf(p) ? `<img src="${avatarOf(p)}" alt="">` : ''}${p.name}${
+        p.isBot ? `<em class="lvl">${p.level || ''}</em>` : ''}</span>`).join('')
     : '<span class="note">Nobody yet. Read them the code.</span>';
   const b = document.getElementById('start');
   if (b) b.disabled = S.roster.length < 3;

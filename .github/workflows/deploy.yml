@@ -21,6 +21,8 @@ jobs:
         run: node test/harness.js
       - name: Length estimates and setup warnings
         run: node test/estimate.mjs
+      - name: Pages bind only to elements that exist
+        run: node test/pagerefs.mjs
       - name: Box score parser
         run: node test/boxparse.mjs
       - name: Box score collector, end to end
