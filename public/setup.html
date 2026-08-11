@@ -96,6 +96,29 @@ border-radius:var(--r);font-size:12.5px;line-height:1.5;border-left:2px solid va
 border-radius:var(--r);padding:5px 11px;font-size:12px;white-space:nowrap}
 .wfix:hover{background:#3A2E0C}
 .start{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px}
+
+.manual{display:inline-block;margin-top:7px;color:var(--brass);text-decoration:none;
+border-bottom:1px solid #6A4509;font-size:13px}
+.manual:hover{border-bottom-color:var(--brass)}
+
+/* robot editor */
+.chip.bot{cursor:pointer}
+.chip.bot:hover{border-color:var(--brass)}
+.botedit{position:fixed;inset:0;background:#0A0E1CE8;z-index:60;display:flex;
+align-items:center;justify-content:center;padding:18px}
+.bebox{background:var(--panel);border:1px solid var(--brass);border-radius:10px;
+padding:16px 18px;width:100%;max-width:340px;box-shadow:0 20px 60px #000b}
+.bebox h3{margin:0 0 3px;font:400 18px "IBM Plex Sans",sans-serif;color:var(--chalk)}
+.bebox .cur{font-size:12px;color:var(--slate);margin-bottom:13px;line-height:1.5}
+.belvl{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;
+border-radius:var(--r);background:var(--ink);margin-bottom:5px;font-size:14px;
+border:1px solid var(--line);text-align:left;color:var(--chalk);cursor:pointer}
+.belvl:hover{border-color:var(--brass)}
+.belvl.on{border-color:var(--brass);color:var(--brass)}
+.belvl .bd{font-size:11px;color:var(--slate);margin-left:auto;text-align:right}
+.bebox .rm{width:100%;margin-top:9px;padding:10px;border:1px solid var(--line);
+border-radius:var(--r);font-size:13px;color:var(--slate);background:none;cursor:pointer}
+.bebox .rm:hover{border-color:var(--alarm);color:var(--alarm)}
 </style>
 </head>
 <body>

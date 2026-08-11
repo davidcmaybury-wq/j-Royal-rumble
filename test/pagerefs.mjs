@@ -56,5 +56,39 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html']) 
     unused.length ? unused.join(', ') : `${imports.length} imports`);
 }
 
+// Every class the script puts on an element must exist in the stylesheet.
+//
+// A patch once inserted a dialog's markup but not its CSS, because the anchor
+// it matched on had changed. The dialog rendered as unstyled text at the foot
+// of the page — valid HTML, valid JS, no error anywhere, and completely
+// unusable. Checking ids was not enough; classes carry the layout.
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html']) {
+  const html = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
+  const i = html.indexOf('<script type="module">');
+  const js = html.slice(i, html.lastIndexOf('</script>'));
+  const style = (html.match(/<style>([\s\S]*?)<\/style>/) || [, ''])[1];
+
+  // Classes the script assigns, from className= and class="..." in templates.
+  const used = new Set();
+  // Only literal, complete class attributes. Anything containing a template
+  // expression or a concatenation is skipped rather than guessed at — the
+  // point is to catch a missing stylesheet rule, not to parse JavaScript.
+  const CLASS_NAME = /^[a-z][a-z0-9_-]*$/i;
+  const add = (raw) => {
+    for (const c of raw.split(/\s+/)) if (CLASS_NAME.test(c)) used.add(c);
+  };
+  for (const m of js.matchAll(/className\s*=\s*'([^'`$+]+)'\s*;/g)) add(m[1]);
+  for (const m of js.matchAll(/class="([^"`${}+]*)"/g)) add(m[1]);
+
+  // Classes the stylesheet knows about, plus anything in the static markup
+  // that is presumably styled by an ancestor rule.
+  const styled = new Set();
+  for (const m of style.matchAll(/\.([a-zA-Z][a-zA-Z0-9_-]*)/g)) styled.add(m[1]);
+
+  const unstyled = [...used].filter((c) => !styled.has(c));
+  check(`${page}: every class the script applies is styled`, unstyled.length === 0,
+    unstyled.length ? unstyled.join(', ') : `${used.size} classes`);
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);
