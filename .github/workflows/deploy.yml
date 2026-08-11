@@ -21,6 +21,8 @@ jobs:
         run: node test/harness.js
       - name: Length estimates and setup warnings
         run: node test/estimate.mjs
+      - name: Robot players match observed play
+        run: node tools/calibrate-bots.mjs
       - name: Advanced mechanics arithmetic
         run: node test/mechanics.mjs
       - name: Overtime resolves a stalled endgame
@@ -37,6 +39,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/bots.mjs
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

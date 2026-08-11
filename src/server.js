@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS } from './engine.js';
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
+import { makeBot, botName, planClue, describe as describeBot, LEVELS } from './bots.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -115,6 +116,8 @@ class Match {
     this.corrections = [];
     this.control = null;         // who picks the next clue
     this.latency = new Map();    // token -> [{ at, ms }] one-way samples
+    this.bots = new Map();       // token -> bot brain
+    this.botTimers = [];
   }
 
   stat(token) {
@@ -208,7 +211,8 @@ class Match {
       settings: this.settings,
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
-        hasAvatar: !!p.avatar, latency: p.latency ?? null })),
+        hasAvatar: !!p.avatar, latency: p.latency ?? null,
+        isBot: !!p.isBot, bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
       ...(g ? {
         clues: g.cluesRevealed, ceiling: g.ceiling,
         cluesUntilNextEntry: g.cluesUntilNextEntry(),
@@ -272,7 +276,10 @@ class Match {
       lockedOut: [...this.race.lockedOut],
       buzzes: this.race.buzzes
         .filter((b) => !b.spectator)
-        .map((b) => ({ token: b.token, name: b.name, ms: b.ms, early: b.early })),
+        .map((b) => ({ token: b.token, name: b.name, ms: b.ms, early: b.early,
+          // A robot knows whether it is about to be right; the host has no way
+          // to adjudicate one, so the console is told.
+          bot: !!b.bot, botCorrect: b.bot ? b.botCorrect : undefined })),
     };
   }
 
@@ -285,7 +292,8 @@ class Match {
       uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
-        hasAvatar: !!p.avatar })),
+        hasAvatar: !!p.avatar, isBot: !!p.isBot,
+        bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
     };
   }
 
@@ -387,6 +395,7 @@ class Match {
       const times = st.times;
       return {
         token: p.id, draw: p.originalDraw ?? p.drawNumber, name: p.name,
+        isBot: !!this.roster.get(p.id)?.isBot,
         revivals: p.revivals || 0,
         avatar: this.roster.get(p.id)?.avatar || null,
         // Only the genuine last-one-standing is crowned. A match ended early
@@ -492,6 +501,43 @@ app.patch('/api/match/:id', (req, res) => {
 
 // Uploaded material lives on the match, not in the shared library — one
 // host's fresh boards shouldn't leak into somebody else's game.
+// Robot players. They sit in the roster like anyone else so the console, the
+// scoring and the record treat them identically — the only difference is that
+// their buzzes are generated rather than received.
+app.post('/api/match/:id/bots', (req, res) => {
+  const m = auth(req);
+  if (!m) return res.status(403).json({ error: 'bad host key' });
+  if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
+  const count = Math.max(1, Math.min(30, Number(req.body?.count) || 1));
+  const level = LEVELS.includes(req.body?.level) ? req.body.level : null;
+  const profile = ['measured', 'broadcast', 'observed'].includes(req.body?.profile)
+    ? req.body.profile : 'measured';
+  const rng = m.rng || makeRng(Date.now() & 0x7fffffff);
+  const taken = new Set([...m.roster.values()].map((p) => p.name));
+  const added = [];
+  for (let i = 0; i < count; i++) {
+    if (m.roster.size >= 30) break;
+    const token = 'bot:' + randomUUID();
+    const brain = makeBot(rng, { ...(level ? { level } : {}), profile });
+    const name = botName(m.bots.size + i, taken);
+    taken.add(name);
+    m.bots.set(token, brain);
+    m.roster.set(token, { token, name, socketId: null, connected: true,
+      avatar: null, isBot: true });
+    added.push({ name, ...brain });
+  }
+  res.json({ ...m.setupView(), added: added.map((b) => ({ name: b.name, level: b.level,
+    buzzSkill: b.buzzSkill, describe: describeBot(b) })) });
+});
+
+app.delete('/api/match/:id/bots', (req, res) => {
+  const m = auth(req);
+  if (!m) return res.status(403).json({ error: 'bad host key' });
+  if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
+  for (const t of [...m.bots.keys()]) { m.bots.delete(t); m.roster.delete(t); }
+  res.json(m.setupView());
+});
+
 app.post('/api/match/:id/material', (req, res) => {
   const m = auth(req);
   if (!m) return res.status(403).json({ error: 'bad host key' });
@@ -644,7 +690,7 @@ io.on('connection', (socket) => {
     const p = match.roster.get(token);
     // Harsh and simple: a disconnected player keeps bleeding and can be
     // eliminated while offline. We only mark them so the host can see it.
-    if (p) { p.connected = false; p.socketId = null; }
+    if (p && !p.isBot) { p.connected = false; p.socketId = null; }
     pushHost();
   });
 
@@ -708,8 +754,56 @@ io.on('connection', (socket) => {
     // precisely wrong for the one signal that must reach everybody.
     io.to(`${match.id}:players`).emit('activate-lights', { at });
     io.to(`${match.id}:players`).emit('activate-buzzers', { at, lockout: match.settings.lockout });
+    runBots();
     pushAll();
   }));
+
+  // Bots buzz by the clock rather than by hand. Each one is scheduled at the
+  // moment its drawn reaction time lands, so the race fills in on the console
+  // the way it would with people — rather than all at once the instant the
+  // buzzers open.
+  function runBots() {
+    if (!match?.game || !match.race || !match.clue) return;
+    clearBotTimers();
+    const rng = match.rng || makeRng(Date.now() & 0x7fffffff);
+    const armAt = match.race.activatedAt;
+    for (const p of match.game.live()) {
+      const brain = match.bots.get(p.id);
+      if (!brain) continue;
+      if (match.race.lockedOut.has(p.id)) continue;
+      const plan = planClue(brain, match.clue.row, rng, match.settings.lockout);
+      if (!plan.attempt) continue;
+
+      if (plan.early) {
+        const at = armAt + plan.earlyAt;
+        match.botTimers.push(setTimeout(() => {
+          const st = match.stat(p.id); st.early++; st.att++;
+          pushHost();
+        }, Math.max(0, at - Date.now())));
+      }
+      const fireAt = armAt + plan.ms;
+      match.botTimers.push(setTimeout(() => {
+        if (!match.race || !match.race.open) return;
+        if (match.race.lockedOut.has(p.id)) return;
+        if (match.race.buzzes.some((b) => b.token === p.id)) return;
+        const st = match.stat(p.id);
+        st.att++; st.times.push(plan.ms);
+        match.race.buzzes.push({ token: p.id, name: p.name, ms: plan.ms,
+          early: false, spectator: false, bot: true, botCorrect: plan.correct });
+        match.race.buzzes.sort((a, b) => a.ms - b.ms);
+        if (!match.fastest || plan.ms < match.fastest.ms) {
+          match.fastest = { ms: plan.ms, name: p.name, clue: match.game.cluesRevealed + 1,
+            category: match.clue?.category, value: match.clue?.value };
+        }
+        pushAll();
+      }, Math.max(0, fireAt - Date.now())));
+    }
+  }
+  function clearBotTimers() {
+    if (!match) return;
+    match.botTimers.forEach(clearTimeout);
+    match.botTimers = [];
+  }
 
   socket.on('resolve', hostOnly(({ winnerToken }) => {
     const { slot, row } = match.clue;
@@ -764,6 +858,7 @@ io.on('connection', (socket) => {
       });
     }
 
+    clearBotTimers();
     match.clue = null; match.race = null;
     pushAll();
     io.to(`${match.id}:host`).emit('resolved', entry);
@@ -789,6 +884,7 @@ io.on('connection', (socket) => {
     match.race.activatedAt = Date.now() + match.settings.delay;
     io.to(`${match.id}:players`).emit('activate-buzzers',
       { at: match.race.activatedAt, lockout: match.settings.lockout });
+    runBots();
     pushAll();
   }));
 

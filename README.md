@@ -144,6 +144,93 @@ rise. On by default; `overtime: false` turns it off.
 A perfectly alternating two-player stall runs forever without it, and ends in
 about 22 clues with it — see `test/overtime.mjs`.
 
+## Robot players
+
+For testing, or for filling a thin roster. Added from the setup page, mixed
+across five standards or all forced to one.
+
+The model follows the one Dave Maybury's friend built for his own game: an
+aggression level (rookie through elite) sets how often a player attempts a clue,
+and a separate buzzing skill (bad, mid, good, jedi) sets how fast they are.
+Higher levels draw better hands but not deterministically — elite is 80% jedi,
+a rookie can still have quick fingers.
+
+Buzz times are drawn per clue from a gaussian. A negative draw means they jumped
+the lights, which is where early-buzz behaviour comes from rather than being
+bolted on. Bots buzz on a real clock, scheduled at the moment their drawn time
+lands, so the race fills in on the console the way it does with people.
+
+Since the host cannot adjudicate a robot, each bot buzz carries whether it is
+about to be right, shown on the console chip.
+
+Only the jedi buzz profile and the attempts-per-game bands came from the
+original. Everything marked  in  is a placeholder.
+
+## Robot players
+
+For testing, or for filling a thin roster. Added from the setup page, mixed
+across five standards or all forced to one.
+
+The model follows the one built for another game: an aggression level (rookie
+through elite) sets how often a player attempts a clue, and a separate buzzing
+skill (bad, mid, good, jedi) sets how fast they are when they do. Higher levels
+draw better hands but not deterministically -- elite is 80% jedi, and a rookie
+can still have quick fingers.
+
+Buzz times are drawn per clue from a gaussian. A negative draw means they jumped
+the lights, which is where the early-buzz behaviour comes from rather than being
+bolted on separately. Bots buzz on a real clock, scheduled at the moment their
+drawn time lands, so the race fills in on the console the way it does with
+people.
+
+Since the host cannot adjudicate a robot, each bot buzz carries whether it is
+about to be right, shown on the console chip.
+
+### Buzzer scales
+
+Robot timing is expressed three ways, selectable when adding them. The unit
+that matters is J!ometry's **Time%** — the chance of winning a buzz when all
+three players attempt, where 33.3 is average and roughly 46 is a strong
+champion across a career.
+
+| Scale | jedi | good | mid | bad |
+|---|---|---|---|---|
+| observed | 85% | 66% | 33% | 10% |
+| broadcast | 47% | 39% | 33% | 23% |
+| **measured** (default) | 51% | 43% | 33% | 21% |
+
+`observed` reproduces the original model. Its spread is far wider than real
+contestants occupy — a jedi at 85% would be twice the best champion on record.
+That is invisible in the original game because the human it is measured against
+is equally superhuman, at 88%.
+
+`measured` is anchored on buzz times actually recorded here: two strong players
+over 63 buzzes, median 198 ms, sd 97. Against a player at that speed, the
+original scale leaves a human winning **24%** of contested clues in a three-way
+and **4%** in a ring of eight — the robots are unbeatable, not harmless. The
+measured scale gives 46% and 21%.
+
+### Calibration
+
+The parameters are fitted against real recorded play — 22 solo games of one
+strong human against two robots — rather than guessed.
+`node tools/calibrate-bots.mjs` reproduces that table and fails if any standard
+drifts more than 35%.
+
+Two things the data corrected. Accuracy was far too low in the first pass:
+observed accuracy once a player wins the buzz runs 79-88% and barely moves with
+standard, because someone who doesn't know a clue mostly doesn't press.
+Aggression separates the standards; accuracy hardly does.
+
+And a superchamp differs from a strong human by 83% against 90% accuracy, but by
+50% against 74% on share of presses that win the race. **Robots are beaten on
+the buzzer, not on knowledge** — so making the good ones harder means faster
+hands, not a bigger brain, which is also what happens at the top of the real
+game.
+
+The middle standards still come in 15-25% light on races won. Closing that
+properly needs the original module.
+
 ## Advanced mechanics
 
 Four optional rules, off by default, toggled per match on the setup page. They
@@ -201,6 +288,17 @@ console offers a JSON download containing every clue, every buzz time, the
 score of everyone in the ring before and after, entries, eliminations,
 corrections, and a comparison of the predicted length against the real one.
 Off by default.
+
+## Documentation
+
+    RULES-SHORT.md                     one paste for Discord, 1,507 characters
+    RULES.md                           the full rules in postable sections
+    docs/j-royal-rumble-handbook.pdf   design and rules, with the numbers
+
+    python3 tools/make-handbook.py     rebuilds the PDF
+
+The handbook is generated, not hand-written, so the figures in it stay tied to
+the simulator and the recorded matches they came from.
 
 ## Escaped text
 

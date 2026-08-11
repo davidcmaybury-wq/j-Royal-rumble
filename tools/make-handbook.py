@@ -1,0 +1,472 @@
+#!/usr/bin/env python3
+"""Builds the J! Royal Rumble design and rules document.
+
+    python3 tools/make-handbook.py
+
+Every figure in here comes from either the simulator (tools/sim-mechanics.mjs,
+test/harness.js) or a recorded match. Nothing is illustrative.
+"""
+import os, subprocess
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.units import mm
+from reportlab.lib import colors
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_LEFT
+from reportlab.platypus import (BaseDocTemplate, PageTemplate, Frame, Paragraph,
+                                Spacer, Table, TableStyle, KeepTogether, PageBreak)
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, '..', 'docs', 'j-royal-rumble-handbook.pdf')
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
+
+INK    = colors.HexColor('#0A0E1C')
+PANEL  = colors.HexColor('#141B33')
+LINE   = colors.HexColor('#C9CEDD')
+BRASS  = colors.HexColor('#9A6E1C')
+BLOOD  = colors.HexColor('#A8201C')
+SLATE  = colors.HexColor('#5A6480')
+PAPER  = colors.HexColor('#FBFAF6')
+
+# Anton and IBM Plex were fetched for the logo work; reuse them here so the
+# document and the game look like the same thing.
+FONTS = os.path.join(os.path.expanduser('~'), '.fonts')
+def try_font(name, filename):
+    path = os.path.join(FONTS, filename)
+    if os.path.exists(path):
+        pdfmetrics.registerFont(TTFont(name, path))
+        return name
+    return None
+
+DISPLAY = try_font('Anton', 'Anton-Regular.ttf') or 'Helvetica-Bold'
+SCRIPT  = try_font('Marker', 'PermanentMarker-Regular.ttf') or 'Helvetica-Bold'
+BODY    = 'Helvetica'
+BOLD    = 'Helvetica-Bold'
+MONO    = 'Courier'
+
+S = {}
+S['title']   = ParagraphStyle('title', fontName=DISPLAY, fontSize=64, leading=60,
+                              textColor=BRASS, spaceAfter=0)
+S['sub']     = ParagraphStyle('sub', fontName=SCRIPT, fontSize=38, leading=44,
+                              textColor=BLOOD, spaceAfter=6)
+S['kicker']  = ParagraphStyle('kicker', fontName=BODY, fontSize=9.5, leading=13,
+                              textColor=SLATE, spaceAfter=18)
+S['h1']      = ParagraphStyle('h1', fontName=DISPLAY, fontSize=19, leading=23,
+                              textColor=INK, spaceBefore=16, spaceAfter=7)
+S['h2']      = ParagraphStyle('h2', fontName=BOLD, fontSize=11.5, leading=15,
+                              textColor=BRASS, spaceBefore=12, spaceAfter=4)
+S['body']    = ParagraphStyle('body', fontName=BODY, fontSize=10, leading=14.6,
+                              textColor=INK, spaceAfter=7, alignment=TA_LEFT)
+S['lede']    = ParagraphStyle('lede', fontName=BODY, fontSize=11.5, leading=16.5,
+                              textColor=colors.HexColor('#2A3556'), spaceAfter=10)
+S['small']   = ParagraphStyle('small', fontName=BODY, fontSize=8.6, leading=12,
+                              textColor=SLATE, spaceAfter=6)
+S['bullet']  = ParagraphStyle('bullet', parent=S['body'], leftIndent=13,
+                              bulletIndent=3, spaceAfter=3.5)
+S['pull']    = ParagraphStyle('pull', fontName=BODY, fontSize=10.5, leading=15.5,
+                              textColor=INK, leftIndent=11, spaceBefore=5, spaceAfter=9,
+                              borderPadding=(7, 0, 7, 9), borderColor=BRASS, borderWidth=0)
+S['caption'] = ParagraphStyle('caption', fontName=BODY, fontSize=8.4, leading=11.4,
+                              textColor=SLATE, spaceBefore=3, spaceAfter=12)
+
+def P(t, s='body'): return Paragraph(t, S[s])
+def H(title, *paras):
+    """A heading glued to the start of its section, so no heading is ever
+    stranded at the foot of a page."""
+    return KeepTogether([Paragraph(title, S['h1'])] + list(paras))
+def B(t): return Paragraph(t, S['bullet'], bulletText='\u2022')
+
+def table(data, widths, align=None, head=True):
+    t = Table(data, colWidths=widths, hAlign='LEFT')
+    st = [
+        ('FONT', (0, 0), (-1, -1), BODY, 9),
+        ('TEXTCOLOR', (0, 0), (-1, -1), INK),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 7),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 7),
+        ('LINEBELOW', (0, 0), (-1, -2), 0.4, colors.HexColor('#E2E0D8')),
+    ]
+    if head:
+        st += [('FONT', (0, 0), (-1, 0), BOLD, 8.2),
+               ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+               ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2A3556')),
+               ('TOPPADDING', (0, 0), (-1, 0), 6),
+               ('BOTTOMPADDING', (0, 0), (-1, 0), 6)]
+    for col in (align or []):
+        st.append(('ALIGN', (col, 0), (col, -1), 'RIGHT'))
+    t.setStyle(TableStyle(st))
+    return t
+
+def callout(title, body_text):
+    inner = [[Paragraph(f'<b>{title}</b>', S['h2']), ],
+             [Paragraph(body_text, S['body'])]]
+    t = Table(inner, colWidths=[152 * mm], hAlign='LEFT')
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F3F1E8')),
+        ('LINEBEFORE', (0, 0), (0, -1), 2.2, BRASS),
+        ('LEFTPADDING', (0, 0), (-1, -1), 11),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 11),
+        ('TOPPADDING', (0, 0), (-1, 0), 7),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
+    ]))
+    return KeepTogether([Spacer(1, 4), t, Spacer(1, 10)])
+
+# ---------------------------------------------------------------- page frame
+def decorate(canvas, doc):
+    canvas.saveState()
+    w, h = LETTER
+    canvas.setFillColor(PAPER)
+    canvas.rect(0, 0, w, h, stroke=0, fill=1)
+    if doc.page > 1:
+        canvas.setFillColor(BRASS)
+        canvas.setFont(DISPLAY, 11)
+        canvas.drawString(20 * mm, h - 13 * mm, 'J!')
+        canvas.setFillColor(BLOOD)
+        canvas.setFont(SCRIPT, 9.5)
+        canvas.drawString(27 * mm, h - 13 * mm, 'Royal Rumble')
+        canvas.setStrokeColor(colors.HexColor('#DDDACE'))
+        canvas.setLineWidth(0.5)
+        canvas.line(20 * mm, h - 15.5 * mm, w - 20 * mm, h - 15.5 * mm)
+    canvas.setFillColor(SLATE)
+    canvas.setFont(BODY, 8)
+    canvas.drawRightString(w - 20 * mm, 12 * mm, str(doc.page))
+    canvas.drawString(20 * mm, 12 * mm, 'Design and rules')
+    canvas.restoreState()
+
+doc = BaseDocTemplate(OUT, pagesize=LETTER,
+                      leftMargin=20 * mm, rightMargin=20 * mm,
+                      topMargin=22 * mm, bottomMargin=20 * mm,
+                      title='J! Royal Rumble — design and rules',
+                      author='Built for TTG')
+frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='f')
+doc.addPageTemplates([PageTemplate(id='main', frames=[frame], onPage=decorate)])
+
+s = []
+A = s.append
+
+# ---------------------------------------------------------------- cover
+A(Spacer(1, 24 * mm))
+A(P('J!', 'title'))
+A(P('Royal Rumble', 'sub'))
+A(P('DESIGN AND RULES', 'kicker'))
+A(P('A thirty-player elimination trivia format built on the Jeopardy! clue '
+    'structure and the entry mechanic of the 1980s Royal Rumble. This document '
+    'covers the rules in full, the optional mechanics, and the design work '
+    'underneath &mdash; including the two problems that nearly broke the format '
+    'and what the numbers said about fixing them.', 'lede'))
+A(Spacer(1, 4))
+A(P('Every figure here comes from the simulator or from a recorded match. '
+    'None of it is illustrative.', 'small'))
+A(Spacer(1, 8))
+
+A(P('THE SHAPE OF IT', 'h1'))
+A(P('Three players start. The rest wait in draw order and enter one at a time as '
+    'the match runs. Answer a clue correctly and every other player in the ring '
+    'pays you its value. Miss and you pay, and the clue goes back out to everyone '
+    'else. Fall below zero and you are gone. The last player standing wins, and '
+    'nothing else counts as a result.'))
+A(P('A full field takes about an hour. The board is six Jeopardy! categories at a '
+    'time, drawn from an archive of 47,000 categories or from boards written in '
+    'house, in whatever ratio the host sets.'))
+
+A(callout('The one number that matters',
+          'Under the obvious scoring rule &mdash; a correct answer is worth the '
+          'clue value, the way it works on television &mdash; the player who drew '
+          'the last entry number won <b>100%</b> of simulated matches. Not most. '
+          'All of them. Everything in the section on scoring exists because of '
+          'that number.'))
+
+A(PageBreak())
+
+# ---------------------------------------------------------------- core rules
+A(H('THE RULES', P('The board', 'h2')))
+A(P('Six categories are live at once, five clues each, $100 to $500 by row. Row '
+    'position sets the value regardless of where the category came from &mdash; a '
+    'category lifted from a Double Jeopardy round plays at the same values as any '
+    'other, and is simply harder. When a category is used up it is replaced '
+    'immediately, so the board never runs out.'))
+A(P('The host can reroll any category before or during play. Three rerolls of the '
+    'same category retires it permanently.'))
+
+A(P('Entering', 'h2'))
+A(P('Every player draws an entry number before the match. Numbers one to three '
+    'open the match; the rest enter on a fixed clue interval, which the host sets '
+    'or lets the app scale to the size of the field. Each entrant walks in with '
+    'the same stake.'))
+
+A(P('Scoring', 'h2'))
+A(P('<b>Correct.</b> Every other player in the ring pays you the clue value. You '
+    'collect all of it. With five in the ring a $500 clue is $2,000 to you and '
+    '$500 from each of the other four; heads-up it is worth $500.'))
+A(P('<b>Wrong.</b> You lose the value and you are locked out of that clue. Nobody '
+    'else is affected by your miss.'))
+A(P('<b>The re-toss.</b> A missed clue immediately goes back out to everyone still '
+    'eligible as a fresh buzzer race. If somebody else converts it you pay them '
+    'along with everyone else, so a miss followed by a conversion costs you twice.'))
+A(P('<b>Nobody gets it.</b> Every player in the ring loses half the value. Passing '
+    'is not free.'))
+
+A(P('Elimination', 'h2'))
+A(P('Below zero and you are out; exactly zero survives. If one answer sinks '
+    'several players they all go together, and the player whose answer did it is '
+    'credited with a <b>toss out</b> for each. If a clue would wipe the entire '
+    'ring, the highest score survives.'))
+
+A(P('The ceiling', 'h2'))
+A(P('There is a maximum score, and it falls across the match. Anything above it is '
+    'clipped. It never drops below the amount a new entrant carries in, so nobody '
+    'arrives already capped.'))
+
+A(P('Clearing the field', 'h2'))
+A(P('Eliminate everyone in the ring while players are still queued and you take a '
+    'bonus equal to every clue left on the board. The board is replaced entirely '
+    'and two fresh players enter rather than one.'))
+
+A(P('Buzzing', 'h2'))
+A(P('The host reads the clue, then arms the buzzers. Fastest reaction takes it, '
+    'one buzz per player per race. Buzzing before the lights costs a 250 '
+    'millisecond lockout, and the penalty runs even if the buzzers open while it '
+    'is being served.'))
+A(P('Players still in the queue, and players already eliminated, can buzz on every '
+    'clue. It does not score and cannot affect the match, but it reports their '
+    'time and where they would have placed against the live field. Arriving with '
+    'your timing already calibrated is a real advantage.'))
+
+A(callout('Times under 150 milliseconds are normal',
+          'Strong players do not react to the lights. They learn the rhythm of the '
+          "host's read and time the buzzer to land the instant it opens. A "
+          'perfectly judged buzz reads 0.0. In the first recorded match, the two '
+          'active players buzzed a median of 197 and 207 milliseconds with best '
+          'times of 8 and 17 &mdash; and one of them jumped the lights on a third '
+          'of his presses. That is the trade the lockout exists to price.'))
+
+# ---------------------------------------------------------------- the maths
+A(H('WHY THE SCORING WORKS THIS WAY', P('The draw-position problem', 'h2')))
+A(P('The natural rule is the televised one: a correct answer is worth the clue '
+    'value to the player who gets it, and the format supplies the drain by taking '
+    'that value off everyone else. Simulated across four thousand thirty-player '
+    'matches, that rule produced this:'))
+
+A(table([
+    ['Draw numbers', 'Share of wins', 'Fair share'],
+    ['1 \u2013 10', '0.0%', '33.3%'],
+    ['11 \u2013 20', '0.0%', '33.3%'],
+    ['21 \u2013 25', '3.1%', '16.7%'],
+    ['26 \u2013 30', '96.9%', '16.7%'],
+    ['\u2014 of which draw 30 alone', '46.7%', '3.3%'],
+], [58 * mm, 34 * mm, 30 * mm], align=[1, 2]))
+A(P('Four thousand simulated matches. Draws 1 through 21 did not win once.', 'caption'))
+
+A(P('The cause is arithmetic rather than luck. Under flat scoring a player\u2019s '
+    'expected change per clue is V(2&nbsp;&minus;&nbsp;P)/P, where V is the clue '
+    'value and P the number of players in the ring. For any P above two that is '
+    'negative for everybody. Nobody can accumulate; the whole field drifts '
+    'downward at roughly the same rate. Across an entire thirty-player match the '
+    'highest score anyone reached was around 5,950 against a 5,000 starting '
+    'stake &mdash; so the score ceiling never bound, the field-clear bonus almost '
+    'never triggered, and a fresh entrant arriving on 5,000 simply outlasted '
+    'incumbents who had been grinding down for half an hour.'))
+
+A(P('The fix: collect from each opponent', 'h2'))
+A(P('The loss side is left alone &mdash; it is what makes the format an '
+    'elimination game. The gain side changes: the answerer collects the clue value '
+    'from <i>every</i> opponent rather than once. Elimination pace is untouched, '
+    'but a strong player can now build a wall, which is what allows an early '
+    'entrant to survive long enough to face the last numbers.'))
+A(P('It is also the more natural sentence to say out loud at the table: '
+    '<i>everyone else pays you.</i>'))
+
+A(P('The ceiling, and why it falls', 'h2'))
+A(P('Letting players accumulate reintroduces a different problem: a runaway leader. '
+    'A fixed ceiling solves that but hands the advantage straight back to the late '
+    'draws, because it clamps exactly the players who have been building. A '
+    '<i>rising</i> ceiling is worse still &mdash; it is tight while the early '
+    'entrants need room and generous by the time the last numbers arrive.'))
+
+A(table([
+    ['Ceiling', 'Match length', 'Back-half draws win'],
+    ['Fixed 6,000', '67 min', '72%'],
+    ['Fixed 10,000', '118 min', '55%'],
+    ['Rising, 4,000 +40/clue', '100 min', '73%'],
+    ['Falling, 15,000 \u221250/clue', '76 min', '53%'],
+], [58 * mm, 32 * mm, 38 * mm], align=[1, 2]))
+A(P('A falling ceiling reaches near-perfect draw fairness at 76 minutes, where a '
+    'fixed one needs 118 minutes to get there. 50% is fair.', 'caption'))
+
+A(P('So the ceiling decays. Early entrants get room to build; by the time the last '
+    'numbers walk in, the ceiling has compressed and there is no worn-down field '
+    'to exploit. The floor is the entry stake, so a late arrival is never capped '
+    'on the way in.'))
+
+A(P('What the tuning produced', 'h2'))
+A(table([
+    ['Field', 'Entry every', 'Start', 'Ceiling', 'Decay', 'Length', 'Back-half'],
+    ['10', '10 clues', '3,000', '7,500', '\u221240', '35 min', '57%'],
+    ['16', '7 clues', '3,000', '7,500', '\u221225', '46 min', '62%'],
+    ['20', '6 clues', '3,000', '7,500', '\u221225', '48 min', '64%'],
+    ['30', '5 clues', '3,000', '11,000', '\u221240', '60 min', '63%'],
+], [16 * mm, 24 * mm, 20 * mm, 21 * mm, 19 * mm, 22 * mm, 24 * mm],
+    align=[2, 3, 4, 5, 6]))
+A(P('Back-half is the win rate of players drawing in the second half of the field. '
+    'It started at 100%.', 'caption'))
+
+A(P('A late number is still worth having, and that is deliberate &mdash; it is true '
+    'to the source material, where entrants 27 through 30 genuinely do '
+    'overperform. What it is no longer is a guarantee.'))
+
+# ---------------------------------------------------------------- overtime
+A(H('OVERTIME', P('Two evenly matched players trade the same points back and forth indefinitely. '
+    'Heads-up, a correct answer is worth exactly what the opponent loses, so a '
+    'field of two with similar ability is a random walk with no drift. It showed '
+    'up in the first recorded match: the last fourteen clues oscillated without '
+    'either player getting meaningfully closer to going out.')))
+A(P('Once the queue is empty and the ring is down to two, clue values double every '
+    'six clues, capped at eight times face. The board displays the raised values, '
+    'and the room gets a full-screen announcement at each step.'))
+
+A(table([
+    ['Endgame', 'Result'],
+    ['Perfectly alternating stall, no overtime', 'Still running at 400 clues'],
+    ['Perfectly alternating stall, with overtime', 'Resolved in 22 clues'],
+], [72 * mm, 62 * mm]))
+A(P('The pathological case, since real players are never quite this symmetrical.', 'caption'))
+
+# ---------------------------------------------------------------- advanced
+A(H('OPTIONAL MECHANICS', P('Four rules that change how the game is played rather than how it looks. All '
+    'off by default, each toggled separately, and all of them lean on keyboard '
+    'controls &mdash; worth leaving off if the field is mostly on phones.')))
+
+A(P('Top rope', 'h2'))
+A(P('Declared between clues, never once a clue is on the board &mdash; otherwise '
+    'you would only ever climb up when you already knew the answer. That clue is '
+    'worth double in both directions to the player who declared, and their '
+    'winnings ignore the ceiling. That last part matters: without it the top rope '
+    'is strictly bad for anyone near the cap, since the downside is uncapped and '
+    'the upside is not.'))
+
+A(P('Targeting', 'h2'))
+A(P('Aim at one player, visible to the room, with an alert on their buzzer. Win '
+    'the clue and the entire pot comes out of them alone and everyone else is '
+    'spared. Lose the clue to them and you pay the whole pot yourself while the '
+    'rest of the ring walks. A finishing move and a kamikaze on the same button.'))
+
+A(P('Bounties', 'h2'))
+A(P('A player waiting in the queue stakes part of their own entry on a head, up to '
+    'half. Whoever eliminates the target collects. If the target survives to the '
+    'end they keep it &mdash; and if the target eliminates the player who placed '
+    'it, they keep that too. Placing a bounty is a declaration, not a free shot.'))
+
+A(P('Revival', 'h2'))
+A(P('An eliminated player returns to the queue at a fraction of the stake with a '
+    'new entry number, once by default.'))
+
+A(table([
+    ['Setting', 'Length', 'Back-half draws win'],
+    ['None (baseline)', '64 min', '53%'],
+    ['Top rope', '62 min', '54%'],
+    ['Targeting', '63 min', '63%'],
+    ['Bounties', '64 min', '48%'],
+    ['Revival', '95 min', '52%'],
+    ['All four', '88 min', '63%'],
+], [58 * mm, 32 * mm, 38 * mm], align=[1, 2]))
+A(P('400 simulated thirty-player matches per row.', 'caption'))
+
+A(P('Three of the four barely move the clock. Revival runs half again as long, '
+    'because nearly every player spends their second life &mdash; the setup screen '
+    'says so before the match starts. It is also the fairest setting on the list, '
+    'which was not the expectation: a second chance is worth most to whoever went '
+    'in first, so it works against the same late-draw advantage the falling ceiling '
+    'exists to fight.'))
+
+A(callout('A measurement trap worth recording',
+          'Revival first showed a 94% back-half win rate, which looked alarming. It '
+          'was an artefact: revived players receive a fresh entry number, so the '
+          'winner is a late draw almost by definition. Measured against the number '
+          'each player <i>actually drew</i>, it is 52%. Players now carry both '
+          'numbers and the standings report the drawn one.'))
+
+# ---------------------------------------------------------------- operations
+A(H('RUNNING A MATCH', P('Before', 'h2')))
+A(P('The setup screen mints a four-letter room code to read aloud, and fills a '
+    'lobby as players join. Clue material is mixed by percentage across the '
+    'archive, boards written in house, and anything uploaded for that match; the '
+    'archive can be narrowed by season. Fresh boards can be dropped in as '
+    'j-trivia.org JSON or jparty.tv CSV.'))
+A(P('The screen estimates the length from the roster and warns when the numbers do '
+    'not work &mdash; a six-player field cannot be stretched to an hour by entry '
+    'pacing alone, and it says so, with a button that sets a target it can '
+    'actually reach.'))
+
+A(P('During', 'h2'))
+A(B('The clue takes over the shared screen. Correct responses appear only in a '
+    'separate admin window, kept on an unshared display.'))
+A(B('Three keys resolve everything: correct, wrong with automatic re-toss, and '
+    'nobody got it.'))
+A(B('A five-second lectern countdown runs after the buzzers arm.'))
+A(B('Undo takes back an entire clue &mdash; scores, eliminations, entries, the '
+    'board. Clicking any player adjusts their score directly. Both are logged.'))
+A(B('The audio delay is adjustable mid-match, because nobody can tell you it is '
+    'wrong until they have tried to buzz on a real clue.'))
+
+A(P('Timing', 'h2'))
+A(P('The sockets are much faster than the call audio, so buzzers are deliberately '
+    'held back to arm when the host\u2019s voice actually arrives. Measured on a '
+    'real match with players spread across the country:'))
+
+A(table([
+    ['Path', 'One way'],
+    ['Socket, fastest player', '7 ms'],
+    ['Socket, median player', '14 ms'],
+    ['Socket, slowest player', '29 ms'],
+    ['Zoom audio, typical', '150 \u2013 300 ms'],
+], [72 * mm, 36 * mm], align=[1]))
+A(P('Socket figures from a recorded match; the spread within each player was only '
+    'a few milliseconds. Zoom is the industry-typical range.', 'caption'))
+
+A(P('So the socket beats the voice by roughly 120 to 290 milliseconds, and that gap '
+    'is what the delay setting closes. Players also get their own trim in ten '
+    'millisecond steps, since audio paths differ by client, buffer, and whether '
+    'somebody is on headphones.'))
+
+A(P('After', 'h2'))
+A(P('The winner gets the screen. Everything else &mdash; clues survived, toss outs, '
+    'points drained, peak score, buzzer attempts, win rate, average and best '
+    'times, the single fastest buzz of the match &mdash; goes into sortable '
+    'standings and a score graph, shareable as a summary card, a full stats sheet, '
+    'or one wide CSV.'))
+A(P('With recording switched on, the match also produces a detailed log: every '
+    'clue, every buzz time and the connection it arrived over, scores before and '
+    'after, entries, eliminations, corrections, and a comparison of the predicted '
+    'length against the real one. That file is how the model gets better.'))
+
+A(callout('What a recording changed',
+          'The first recorded match produced a median pace of 15.0 seconds per clue '
+          'against a mean of 21.2 &mdash; six discussion breaks between 30 and 57 '
+          'seconds dragged the average. It also exposed two broken statistics and '
+          'an endgame that could not end. Three rules and four bugs came out of one '
+          'file.'))
+
+A(H('METHOD', P('The rules engine is a plain module with no framework and no network, driven '
+    'by a Monte Carlo harness that plays hundreds of matches per configuration '
+    'using a simple model of player ability. Every figure in this document comes '
+    'from that harness or from a recorded match.')))
+A(P('The harness runs before every deployment. It has already caught a scoring '
+    'change that pushed non-pot matches from 57 minutes to 746 &mdash; a '
+    'regression that was invisible in ordinary play and would have been found '
+    'on a Saturday night otherwise.'))
+A(P('Clue material comes from a public dataset rather than from j-archive directly. '
+    'The archive\u2019s maintainer asked not to be crawled, and a slow crawler is '
+    'still a crawler.', 'small'))
+
+doc.build(s)
+print('wrote', os.path.relpath(OUT, os.path.join(HERE, '..')))
+try:
+    pages = subprocess.run(['pdfinfo', OUT], capture_output=True, text=True).stdout
+    for line in pages.splitlines():
+        if line.startswith(('Pages', 'Page size', 'File size')):
+            print(' ', line)
+except FileNotFoundError:
+    pass

@@ -40,6 +40,11 @@ select{font-family:"IBM Plex Sans",sans-serif}
 .chip{padding:4px 12px 4px 4px;background:var(--panel2);border-radius:20px;font-size:13px;
 border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px}
 .chip img{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block}
+.chip.bot{border-style:dashed;color:var(--slate)}
+.chip.bot::before{content:"\25A3";margin-right:2px;color:var(--brass)}
+.botlist{margin-top:12px;display:flex;flex-wrap:wrap;gap:5px}
+.botlist span{font-size:11.5px;color:var(--slate);background:var(--ink);
+border:1px solid var(--line);border-radius:var(--r);padding:4px 9px}
 .chip:not(:has(img)){padding-left:12px}
 .chip.off{opacity:.4}
 .mix{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
@@ -99,6 +104,7 @@ import { markFull } from '/brand.js';
 const socket = io({ transports: ['websocket'] });
 let code = location.pathname.split('/')[2] || '';
 let hostKey = location.hash.slice(1);
+let lastBots = [];
 let S = null, msg = null, mix = { archive: 100, original: 0, upload: 0 };
 const root = document.getElementById('root');
 const fmt = (n) => (n ?? 0).toLocaleString();
@@ -313,6 +319,35 @@ function render() {
     </div>
   </div>
 
+  <div class="card"><h2>Robot players</h2>
+    <p class="note" style="margin:-4px 0 12px">For testing, or for filling out a thin roster.
+    They buzz on a real clock with reaction times drawn from their skill, so the race fills in
+    the way it does with people. The console tells you whether each one is about to be right.</p>
+    <div class="row">
+      <div class="f"><label>How many</label>
+        <input type="number" id="botcount" value="6" min="1" max="30" style="width:78px">
+        <span class="hint">up to 30 in the room altogether</span></div>
+      <div class="f"><label>Buzzer scale</label>
+        <select id="botprofile">
+          <option value="measured">Measured (this game's real players)</option>
+          <option value="broadcast">Broadcast (real Jeopardy! spread)</option>
+          <option value="observed">Original model</option>
+        </select><span class="hint">measured is anchored on buzz times recorded here</span></div>
+      <div class="f"><label>Standard</label>
+        <select id="botlevel">
+          <option value="">Mixed</option>
+          <option value="rookie">All rookie</option>
+          <option value="normie">All normie</option>
+          <option value="champ">All champ</option>
+          <option value="superchamp">All superchamp</option>
+          <option value="elite">All elite</option>
+        </select><span class="hint">mixed draws across the range</span></div>
+      <button class="alt" id="addbots">Add robots</button>
+      ${(S.roster || []).some((p) => p.isBot) ? '<button class="alt" id="rmbots">Remove all robots</button>' : ''}
+    </div>
+    <div class="botlist" id="botlist"></div>
+  </div>
+
   <div class="card"><h2>Advanced mechanics</h2>
     <p class="note" style="margin:-4px 0 14px">All off by default. They change how the game plays,
     not just how it looks — and they lean on keyboard controls, so think twice if the field is on phones.</p>
@@ -382,7 +417,8 @@ function renderRoster() {
   n.textContent = S.roster.length;
   renderWarnings();
   w.innerHTML = S.roster.length
-    ? S.roster.map((p) => `<span class="chip${p.connected ? '' : ' off'}">${
+    ? S.roster.map((p) => `<span class="chip${p.connected ? '' : ' off'}${p.isBot ? ' bot' : ''}"${
+        p.bot ? ` title="${p.bot}"` : ''}>${
         p.avatar ? `<img src="${p.avatar}" alt="">` : ''}${p.name}</span>`).join('')
     : '<span class="note">Nobody yet. Read them the code.</span>';
   const b = document.getElementById('start');
@@ -462,6 +498,25 @@ function wire() {
     setPct('archive', 0);
     save();
   };
+  const ab = document.getElementById('addbots');
+  if (ab) ab.onclick = async () => {
+    ab.disabled = true; ab.textContent = 'Adding\u2026';
+    try {
+      const r = await api(`/api/match/${code}/bots`, { method: 'POST', body: JSON.stringify({
+        count: Number(document.getElementById('botcount').value) || 1,
+        profile: document.getElementById('botprofile').value,
+        level: document.getElementById('botlevel').value || undefined }) });
+      S = r;
+      lastBots = r.added || [];
+    } catch (e) { document.getElementById('msg').textContent = e.message; }
+    render();
+  };
+  const rb = document.getElementById('rmbots');
+  if (rb) rb.onclick = async () => { S = await api(`/api/match/${code}/bots`, { method: 'DELETE' });
+    lastBots = []; render(); };
+  const bl = document.getElementById('botlist');
+  if (bl) bl.innerHTML = lastBots.map((b) => `<span>${b.name} &mdash; ${b.describe}</span>`).join('');
+
   document.getElementById('save').onclick = () => save();
   const rev = document.getElementById('revival');
   rev.onchange = () => {

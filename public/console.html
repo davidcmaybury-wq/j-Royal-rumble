@@ -107,6 +107,7 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .mk.hunted{color:var(--alarm)}
 .mk.bty{color:var(--brass);font-family:"IBM Plex Mono",monospace;font-size:10px}
 .mk.rev{color:var(--live)}
+.mk.bot{color:var(--brass)}
 .mk.ctrl{color:var(--chalk)}
 .mk.lat{color:#4A5680;font-family:"IBM Plex Mono",monospace;font-size:9.5px}
 .mk.lat.slow{color:var(--alarm)}
@@ -129,6 +130,10 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .bz.on{box-shadow:inset 0 0 0 1px var(--brass);background:#243259}
 .bz .t{font-size:12px;color:var(--slate)}
 .bz .e{font-size:10px;color:var(--alarm)}
+.bz.isbot{border:1px dashed var(--line)}
+.bhint{font-size:10px;margin-left:5px;letter-spacing:.04em}
+.bhint.yes{color:var(--live)}
+.bhint.no{color:var(--alarm)}
 .acts{display:flex;gap:6px}
 .act{padding:9px 15px;border-radius:var(--r);font-size:13.5px;border:1px solid var(--line);text-align:center;white-space:nowrap}
 .act .kb{display:block;font-size:9.5px;color:var(--slate);margin-top:2px;letter-spacing:.08em}
@@ -397,6 +402,7 @@ function render() {
           + ((S.live || []).find((x) => x.token === p.target) || {}).name + '">&#9678;</span>' : '')
       + ((p.targetedBy || []).length ? ' <span class="mk hunted" title="in someone\'s sights">&#9679;</span>' : '')
       + (p.bounty ? ' <span class="mk bty" title="bounty on their head">' + fmt(p.bounty) + '</span>' : '')
+      + (p.isBot ? ' <span class="mk bot" title="robot player">&#9635;</span>' : '')
       + (p.revivals ? ' <span class="mk rev" title="second life">&#8635;</span>' : '')
       + (S.control === p.token ? ' <span class="mk ctrl" title="picks the next clue">&#9679;</span>' : '')
       + (p.latency != null ? ' <span class="mk lat' + (p.latency > 120 ? ' slow' : '')
@@ -692,9 +698,12 @@ function renderDock() {
     $('arm').onclick = () => socket.emit('activate');
     return;
   }
-  const chips = buzzes.map((b, i) => '<span class="bz' + (i === 0 ? ' on' : '') + '"><span>' + b.name
-    + (b.early ? ' <span class="e">EARLY</span>' : '') + '</span><span class="t num">'
-    + b.ms.toFixed(1) + '</span></span>').join('');
+  const chips = buzzes.map((b, i) => '<span class="bz' + (i === 0 ? ' on' : '')
+    + (b.bot ? ' isbot' : '') + '"><span>' + b.name
+    + (b.early ? ' <span class="e">EARLY</span>' : '')
+    + (b.bot ? ' <span class="bhint ' + (b.botCorrect ? 'yes' : 'no') + '">'
+        + (b.botCorrect ? 'will be right' : 'will be wrong') + '</span>' : '')
+    + '</span><span class="t num">' + b.ms.toFixed(1) + '</span></span>').join('');
   const acts = on
     ? '<button class="act good" id="ok">Correct<span class="kb">Y</span></button>'
       + '<button class="act bad" id="no">Wrong &middot; re-toss<span class="kb">N</span></button>'

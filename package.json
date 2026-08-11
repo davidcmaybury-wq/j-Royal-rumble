@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.15.1",
+  "version": "0.17.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -26,7 +26,10 @@
     "overtime-test": "node test/overtime.mjs",
     "perf-test": "node test/perf.mjs",
     "delay-test": "node test/delay.mjs",
-    "escapes-test": "node test/escapes.mjs"
+    "escapes-test": "node test/escapes.mjs",
+    "handbook": "python3 tools/make-handbook.py",
+    "bots-test": "node test/bots.mjs",
+    "calibrate-bots": "node tools/calibrate-bots.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",
