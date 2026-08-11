@@ -90,5 +90,124 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html']) 
     unstyled.length ? unstyled.join(', ') : `${used.size} classes`);
 }
 
+// Run each page's script in a stub DOM, then actually call its render
+// functions with plausible state.
+//
+// Static analysis is not enough, and this is the case that proved it: a patch
+// put the avatar cache inside boot(), so `avatarOf` existed in the file but was
+// invisible to renderRoster. Nothing was misspelled and nothing was missing —
+// every other check here passed. Loading the module was not enough either,
+// because the error only happens when the roster is drawn. So the probe seeds
+// the page's state object and calls the renderers.
+
+function stubEl() {
+  const node = {
+    style: {}, dataset: {}, value: '', checked: false, disabled: false,
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    children: [], tagName: 'DIV',
+    set innerHTML(v) { this._h = v; }, get innerHTML() { return this._h || ''; },
+    set textContent(v) { this._t = v; }, get textContent() { return this._t || ''; },
+    appendChild(){}, removeChild(){}, remove(){}, insertBefore(){},
+    setAttribute(){}, getAttribute(){ return null; }, hasAttribute(){ return false; },
+    addEventListener(){}, removeEventListener(){}, focus(){}, blur(){}, click(){},
+    querySelector: () => stubEl(), querySelectorAll: () => [],
+    closest: () => null, cloneNode: () => stubEl(),
+    getBoundingClientRect: () => ({ top:0,left:0,width:0,height:0,bottom:0,right:0 }),
+  };
+  return node;
+}
+
+const SEED = {
+  roster: [
+    { token: 'p1', name: 'A', connected: true, hasAvatar: false, isBot: false,
+      tokenArt: { art: 'crowbar', colour: 'brass' } },
+    { token: 'b1', name: 'Bront', connected: true, hasAvatar: false, isBot: true,
+      level: 'normie', bot: 'normie hands', tokenArt: null },
+  ],
+  settings: { targetMinutes: 30, secondsPerClue: 17.5, entryInterval: null,
+    startScore: 3000, ceiling: 11000, ceilingFloor: null, ceilingDecayPerClue: null,
+    stumperFraction: 0.5, potScoring: true, delay: 200, lockout: 250,
+    recordMatch: false, topRope: false, targeting: false, bounties: false,
+    revival: false, revivalLimit: 1, revivalFraction: 0.5, seasonRange: [22, 42] },
+  blend: { archive: 50, original: 50, upload: 0 },
+  available: { archive: 100, original: 100, upload: 0 },
+  seasons: [22, 42], version: '0.0.0', roomCode: 'AAAA', phase: 'lobby',
+  live: [], queue: [], out: [], board: [], clues: 0, uploads: [],
+  you: { token: 'p1', name: 'A', state: 'live', score: 3000, tokenArt: { art: 'crowbar', colour: 'brass' } },
+  mechanics: {}, ring: [], history: [], standings: [],
+};
+
+for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) {
+  const html = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
+  const i = html.indexOf('<script type="module">');
+  let js = html.slice(i + '<script type="module">'.length, html.lastIndexOf('</script>'));
+
+  const imported = [];
+  js = js.replace(/import\s*\{([^}]+)\}\s*from\s*'[^']+';?/g, (_, names) => {
+    for (const n of names.split(',')) {
+      const c = n.trim().split(/\s+as\s+/).pop().trim();
+      if (c) imported.push(c);
+    }
+    return '';
+  }).replace(/import\s+[\w$]+\s+from\s*'[^']+';?/g, '');
+
+  // Every module-level function declaration whose name suggests it paints.
+  const painters = [...js.matchAll(/^function\s+([A-Za-z_$][\w$]*)\s*\(\s*\)/gm)]
+    .map((m) => m[1]).filter((n) => /^render|^paint|^draw/.test(n));
+
+  // Which state variable this page keeps its view in.
+  const stateVar = /\bS\s*=\s*(null|await)/.test(js) ? 'S' : (/\bV\s*=/.test(js) ? 'V' : null);
+
+  const probe = `
+    ;globalThis.__refErrors = [];
+    ${stateVar ? `try { ${stateVar} = globalThis.__seed; } catch (e) {}` : ''}
+    ${painters.map((fn) => `
+    try { ${fn}(); } catch (e) {
+      if (/is not defined|before initialization/.test(e.message))
+        globalThis.__refErrors.push('${fn}: ' + e.message);
+    }`).join('')}
+  `;
+
+  // Stubs return an empty array rather than an empty string: it coerces to ''
+  // in a template, and it also survives .map/.join/.length, which a string does
+  // not. A stub that throws stops the probe before it reaches the code we care
+  // about — which is exactly what happened on the first attempt at this.
+  const stubs = imported.map((n) => `var ${n} = function(){ return []; };`).join('\n');
+  const header = `
+    var document = arguments[0], window = arguments[1], location = arguments[2];
+    var localStorage = { getItem(){ return null; }, setItem(){}, removeItem(){} };
+    var io = function(){ return { on(){}, emit(){}, close(){}, timeout(){ return this; } }; };
+    var fetch = function(){ return Promise.resolve({ json: () => ({}), ok: true }); };
+    var navigator = { userAgent: '', clipboard: { writeText(){} } };
+    var performance = { now: () => 0 };
+    var Audio = function(){ return { play(){ return Promise.resolve(); }, pause(){} }; };
+    var Image = function(){ return {}; };
+    var alert = function(){}, confirm = function(){ return true; };
+    ${stubs}
+  `;
+
+  globalThis.__seed = JSON.parse(JSON.stringify(SEED));
+  globalThis.__refErrors = [];
+  let loadError = null;
+  try {
+    const doc = {
+      getElementById: () => stubEl(), querySelector: () => stubEl(),
+      querySelectorAll: () => [], createElement: () => stubEl(),
+      body: stubEl(), head: stubEl(), addEventListener(){}, removeEventListener(){},
+    };
+    // eslint-disable-next-line no-new-func
+    new Function(header + '\n' + js + '\n' + probe)(
+      doc,
+      { addEventListener(){}, removeEventListener(){}, open(){}, matchMedia: () => ({ matches: false, addEventListener(){} }) },
+      { origin: '', hash: '#k', pathname: '/setup/AAAA', href: '' });
+  } catch (e) {
+    if (/is not defined|before initialization/.test(e.message)) loadError = e.message;
+  }
+  const errs = [loadError, ...(globalThis.__refErrors || [])].filter(Boolean);
+  check(`${page}: every reference resolves when its renderers run`,
+    errs.length === 0,
+    errs.length ? errs[0] : `${painters.length} renderers exercised`);
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

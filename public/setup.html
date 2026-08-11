@@ -154,21 +154,26 @@ async function boot() {
   S = await api(`/api/match/${code}`);
   mix = toPct(S.blend, S.available);
   socket.emit('watch-setup', { gameId: code, hostKey }, () => {});
-  
-// Pictures arrive once and are cached here; state pushes only say whether a
-// player has one. Thirty data URLs on every push was most of the traffic.
-const AVATARS = new Map();
-// Repaint only the roster. A full render() rebuilds every input from the last
-// saved state, which silently discarded anything the host had typed — so a
-// player uploading a photo could wipe your settings mid-edit.
-socket.on('avatar', ({ token, dataUrl }) => {
-  AVATARS.set(token, dataUrl);
-  if (typeof renderRoster === 'function') renderRoster();
-});
-const avatarOf = (p) => (p && p.hasAvatar ? AVATARS.get(p.token) : null) || null;
-socket.on('state', (s) => { if (s.roster) { S.roster = s.roster; renderRoster(); } });
+  socket.on('state', (s) => { if (s.roster) { S.roster = s.roster; renderRoster(); } });
   render();
 }
+
+// Pictures arrive once and are cached here; state pushes only say whether a
+// player has one — thirty data URLs on every push was most of the traffic.
+//
+// These live at module scope on purpose. An earlier patch inserted them inside
+// boot(), which put avatarOf out of reach of renderRoster: the roster silently
+// stopped drawing, and because renderRoster threw, wire() never ran either and
+// the start button went dead with it.
+const AVATARS = new Map();
+const avatarOf = (p) => (p && p.hasAvatar ? AVATARS.get(p.token) : null) || null;
+
+// Repaint only the roster. A full render() rebuilds every input from the last
+// saved state, which would discard anything the host had typed.
+socket.on('avatar', ({ token, dataUrl }) => {
+  AVATARS.set(token, dataUrl);
+  renderRoster();
+});
 
 // Blend weights on the server are relative; the host thinks in percentages.
 function toPct(blend, avail) {
