@@ -14,6 +14,8 @@ main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24
 .cat b{color:var(--brass);font-weight:400}
 .clue{font-size:clamp(17px,2.4vw,25px);line-height:1.4;color:var(--slate)}
 .ans{font-size:clamp(28px,4.6vw,52px);line-height:1.15;color:var(--live);font-family:"Anton",Impact,sans-serif}
+main.done .ans{color:var(--slate)}
+main.done .clue{opacity:.6}
 .row{display:flex;gap:26px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
 .row div span{display:block}
 .row .v{font-size:20px;font-family:"IBM Plex Mono",monospace}
@@ -28,13 +30,20 @@ import { socket, gameId, hostKey } from '/rumble.js';
 const GID = gameId();
 socket.emit('host-join', { gameId: GID, hostKey }, (r) => { if (r?.state) render(r.state); });
 socket.on('state', render);
+// The answer stays up after the clue resolves. On a stumper the host still has
+// to read it out, and a window that blanks the moment you score is useless
+// exactly when you need it.
+let lastClue = null;
 function render(s){
   const m=document.getElementById('m');
-  if(!s.clue){m.innerHTML='<p class="idle">Waiting for the host to put a clue up.</p>';return}
-  const c=s.clue, locked=(s.race?.lockedOut||[]);
+  const c0 = s.clue || lastClue;
+  if(!c0){m.innerHTML='<p class="idle">Waiting for the host to put a clue up.</p>';return}
+  if (s.clue) lastClue = s.clue;
+  const c=c0, resolved=!s.clue, locked=(s.race?.lockedOut||[]);
   const names=(s.live||[]).filter(p=>locked.includes(p.token)).map(p=>p.name);
+  m.className = resolved ? 'done' : '';
   m.innerHTML=`
-    <div><span class="k">Clue ${s.clues+1} · $${c.value}</span>
+    <div><span class="k">${resolved ? 'Just played' : 'Clue ' + (s.clues+1)} · $${c.value}</span>
       <div class="cat"><b>${c.category}</b>${c.note?` — ${c.note}`:''}</div></div>
     <div class="clue">${c.text}</div>
     <div><span class="k">Correct response</span><div class="ans">${c.answer}</div></div>

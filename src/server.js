@@ -30,9 +30,24 @@ app.use(express.json({ limit: '12mb' }));
 app.use(express.static(join(__dir, '../public')));
 
 const http = createServer(app);
-const io = new Server(http, { cors: { origin: false } });
+// Tuned for latency rather than throughput. Every message here is tiny, so
+// compression costs more in CPU than it saves on the wire, and the polling
+// fallback only adds a handshake we never want to pay for.
+const io = new Server(http, {
+  cors: { origin: false },
+  transports: ['websocket'],
+  perMessageDeflate: false,
+  httpCompression: false,
+  pingInterval: 20000,
+  pingTimeout: 25000,
+});
+// Nagle batches small writes, which is exactly wrong for a buzzer.
+http.on('connection', (sock) => sock.setNoDelay(true));
 
 // ---------------------------------------------------------------- matches
+
+// Long enough to collapse a burst of buzzes, short enough that nobody sees it.
+const PUSH_COALESCE_MS = 25;
 
 const matches = new Map();   // gameId -> Match
 
@@ -67,6 +82,8 @@ class Match {
     this.record = null;          // detailed log, only when the host asks for it
     this.startedAt = null;
     this.corrections = [];
+    this.control = null;         // who picks the next clue
+    this.latency = new Map();    // token -> [{ at, ms }] one-way samples
   }
 
   stat(token) {
@@ -159,10 +176,13 @@ class Match {
       phase: this.phase, gameId: this.id, version: VERSION,
       settings: this.settings,
       roster: [...this.roster.values()].map((p) => ({
-        token: p.token, name: p.name, connected: p.connected, avatar: p.avatar || null })),
+        token: p.token, name: p.name, connected: p.connected,
+        hasAvatar: !!p.avatar, latency: p.latency ?? null })),
       ...(g ? {
         clues: g.cluesRevealed, ceiling: g.ceiling,
         cluesUntilNextEntry: g.cluesUntilNextEntry(),
+        control: this.control,
+        overtime: g.overtime ? g.overtime() : null,
         board: g.board.map((c) => ({
           title: c.title, note: c.note, source: c.source,
           clues: c.clues.map((x) => ({ row: x.row, revealed: x.revealed })) })),
@@ -181,7 +201,10 @@ class Match {
         clue: this.clue,
         race: this.raceView(),
         fastest: this.fastest,
-        history: this.history,
+        // The history is only needed once, at the end. Pushing every point of
+        // it on every state change was the bulk of the traffic.
+        ...(this.phase === 'over' ? { history: this.history } : {}),
+        historyLength: this.history.length,
         recording: !!this.record,
         corrections: this.corrections.length,
         canUndo: this.undoStack.length > 0,
@@ -197,7 +220,7 @@ class Match {
       token: p.id, draw: p.drawNumber, name: p.name, score: p.score,
       state: p.state, pins: p.pins, correct: p.correct, missed: p.missed,
       tenure, connected: this.roster.get(p.id)?.connected ?? false,
-      avatar: this.roster.get(p.id)?.avatar || null,
+      hasAvatar: !!this.roster.get(p.id)?.avatar,
       capped: p.score >= g.ceiling,
       topRope: !!p.topRope,
       target: p.target || null,
@@ -227,7 +250,8 @@ class Match {
       available: this.available(),
       uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
       roster: [...this.roster.values()].map((p) => ({
-        token: p.token, name: p.name, connected: p.connected, avatar: p.avatar || null })),
+        token: p.token, name: p.name, connected: p.connected,
+        hasAvatar: !!p.avatar })),
     };
   }
 
@@ -248,11 +272,27 @@ class Match {
     const clues = g?.cluesRevealed || 0;
     const e = this.record.estimate;
     this.record.finishedAt = new Date().toISOString();
+    const gaps = this.record.clues.map((c) => c.seconds).filter((n) => n > 0).sort((a, b) => a - b);
+    const median = gaps.length ? gaps[Math.floor(gaps.length / 2)] : null;
+    const brisk = gaps.filter((n) => n <= 45);
     this.record.actual = {
       clues,
       seconds: Math.round(secs),
       minutes: Math.round(secs / 60),
       secondsPerClue: clues ? Math.round(secs / clues * 10) / 10 : null,
+      // The mean counts every pause for discussion. The median is the pace you
+      // actually play at, and it's the one the estimates should be built on.
+      secondsPerClueMedian: median,
+      secondsPerClueExcludingBreaks: brisk.length
+        ? Math.round(brisk.reduce((a, b) => a + b, 0) / brisk.length * 10) / 10 : null,
+      longestGap: gaps.length ? gaps[gaps.length - 1] : null,
+      breaksOver45s: gaps.filter((n) => n > 45).length,
+      // Buzzes under 150ms can't be reactions to the lights — they're players
+      // timing the host's cadence. Worth tracking: it says how the field plays.
+      anticipated: (() => {
+        const all = this.record.clues.flatMap((c) => c.buzzes.map((b) => b.ms));
+        return { buzzes: all.length, under150ms: all.filter((m) => m < 150).length };
+      })(),
       fieldClears: g?.fieldClears ?? 0,
       corrections: this.corrections.length,
     };
@@ -263,7 +303,39 @@ class Match {
       minutesOffBy: this.record.actual.minutes - e.expectedMinutes,
       secondsPerCluePredicted: e.secondsPerClue,
       secondsPerClueActual: this.record.actual.secondsPerClue,
+      secondsPerClueMedian: this.record.actual.secondsPerClueMedian,
     };
+    // Latency is the thing that decides whether the Zoom delay is pointing the
+    // right way. Without it a slow match is indistinguishable from a slow field.
+    const summary = (arr) => {
+      if (!arr || !arr.length) return null;
+      const v = arr.map((x) => x.ms).sort((a, b) => a - b);
+      return {
+        samples: v.length,
+        median: v[Math.floor(v.length / 2)],
+        min: v[0], max: v[v.length - 1],
+        p90: v[Math.floor(v.length * 0.9)],
+      };
+    };
+    this.record.latency = {
+      byPlayer: Object.fromEntries([...this.latency.entries()].map(([tok, arr]) =>
+        [this.roster.get(tok)?.name || tok, summary(arr)])),
+      overall: summary([...this.latency.values()].flat()),
+      samples: [...this.latency.entries()].map(([tok, arr]) => ({
+        player: this.roster.get(tok)?.name || tok,
+        points: arr.map((x) => [x.at, x.ms]),
+      })),
+      delaySetting: this.settings.delay,
+      note: 'One-way estimates in ms, sampled every 8s from each client. '
+        + 'The Zoom delay assumes the socket path beats the call audio; if median '
+        + 'latency approaches the delay setting, that assumption is failing.',
+    };
+    this.record.anticipation = (() => {
+      const all = this.record.clues.flatMap((c) => c.buzzes.filter((b) => !b.spectator));
+      const fast = all.filter((b) => b.ms < 150).length;
+      return { buzzes: all.length, under150ms: fast, under50ms: all.filter((b) => b.ms < 50).length,
+        note: 'Buzzes under 150ms are players timing the read, not reacting to the lights.' };
+    })();
     this.record.fieldOverTime = this.history.map((h) => ({
       clue: h.clue, inRing: Object.keys(h.scores).length, ceiling: h.ceiling }));
     this.record.standings = this.standings();
@@ -341,6 +413,8 @@ class Match {
       clueValue: this.clue?.value ?? null,
       lockout: this.settings.lockout,
       roster: this.roster.size,
+      control: this.control,
+      overtime: g.overtime ? g.overtime() : null,
       myBuzz: mine ? { ms: mine.ms, early: mine.early, ...(mine.ranked || {}) } : null,
       ...(this.phase === 'over'
         ? { standings: this.standings(), fastest: this.fastest, history: this.history,
@@ -466,14 +540,32 @@ app.get('/admin/:id', (_req, res) => res.sendFile(join(__dir, '../public/admin.h
 io.on('connection', (socket) => {
   let match = null, token = null, isHost = false;
 
-  const pushHost = () => match && io.to(`${match.id}:host`).emit('state', match.hostView());
-  const pushPlayers = () => {
+  const pushHostNow = () => match && io.to(`${match.id}:host`).emit('state', match.hostView());
+  const pushPlayersNow = () => {
     if (!match) return;
     for (const p of match.roster.values()) {
       if (p.socketId) io.to(p.socketId).emit('state', match.playerView(p.token));
     }
   };
-  const pushAll = () => { pushHost(); pushPlayers(); };
+
+  // A burst of buzzes would otherwise fan out one full state push per buzz,
+  // per player. Coalescing them costs a few milliseconds of staleness and
+  // keeps the socket clear for the messages that are actually time-critical.
+  const pushHost = () => schedule(match, 'host');
+  const pushPlayers = () => schedule(match, 'players');
+  const pushAll = () => schedule(match, 'all');
+
+  function schedule(m, what) {
+    if (!m) return;
+    m._pending = m._pending === 'all' || m._pending !== what ? (m._pending ? 'all' : what) : what;
+    if (m._pushTimer) return;
+    m._pushTimer = setTimeout(() => {
+      const kind = m._pending;
+      m._pushTimer = null; m._pending = null;
+      if (kind === 'host' || kind === 'all') pushHostNow();
+      if (kind === 'players' || kind === 'all') pushPlayersNow();
+    }, PUSH_COALESCE_MS);
+  }
 
   socket.on('host-join', ({ gameId, hostKey }, ack) => {
     const m = matches.get((gameId || '').toUpperCase());
@@ -482,6 +574,10 @@ io.on('connection', (socket) => {
     if (m.hostKey !== hostKey) return ack?.({ error: 'that host key does not match this game' });
     match = m; isHost = true;
     socket.join(`${m.id}:host`);
+    // Send the pictures once; state pushes only carry a flag from here on.
+    for (const p of m.roster.values()) {
+      if (p.avatar) socket.emit('avatar', { token: p.token, dataUrl: p.avatar });
+    }
     ack?.({ ok: true, state: m.hostView() });
   });
 
@@ -541,6 +637,9 @@ io.on('connection', (socket) => {
     if (m.hostKey !== hostKey) return ack?.({ error: 'that host key does not match this game' });
     match = m; isHost = true;
     socket.join(`${m.id}:host`);
+    for (const p of m.roster.values()) {
+      if (p.avatar) socket.emit('avatar', { token: p.token, dataUrl: p.avatar });
+    }
     ack?.({ ok: true, setup: m.setupView() });
   });
 
@@ -568,6 +667,10 @@ io.on('connection', (socket) => {
     const at = Date.now() + match.settings.delay;
     match.race.open = true;
     match.race.activatedAt = at;
+    // Sent before anything else and deliberately tiny. This is the one message
+    // in the whole app where a few milliseconds are worth protecting.
+    // NOT volatile: volatile packets are dropped rather than queued, which is
+    // precisely wrong for the one signal that must reach everybody.
     io.to(`${match.id}:players`).emit('activate-lights', { at });
     io.to(`${match.id}:players`).emit('activate-buzzers', { at, lockout: match.settings.lockout });
     pushAll();
@@ -584,10 +687,21 @@ io.on('connection', (socket) => {
     const t0 = match.lastClueAt || match.startedAt;
     match.lastClueAt = Date.now();
 
+    // Whoever was actually on the clock when the race closed took it — not
+    // whoever happened to be fastest at the instant they pressed.
+    const tookIt = (match.race?.buzzes || []).filter((b) => !b.spectator)[0];
+    if (tookIt) match.stat(tookIt.token).won++;
+
     const entry = match.game.resolveClue(slot, row, { winnerId: winnerToken ?? null, missedIds: missed });
     match.undoStack.push({ snap, statsSnap, fastest: match.fastest, clue: clueMeta });
     if (match.undoStack.length > 60) match.undoStack.shift();
     if (winnerToken && entry.gain) match.stat(winnerToken).drained += entry.gain;
+    // Whoever took the clue calls the next one, as at a real lectern.
+    if (winnerToken && match.game.players.get(winnerToken)?.state === 'live') {
+      match.control = winnerToken;
+    } else if (match.control && match.game.players.get(match.control)?.state !== 'live') {
+      match.control = null;
+    }
     for (const p of match.game.live()) {
       const st = match.stat(p.id);
       if (p.score > st.peak) st.peak = p.score;
@@ -602,7 +716,8 @@ io.on('connection', (socket) => {
         seconds: t0 ? Math.round((Date.now() - t0) / 100) / 10 : null,
         category: clueMeta.category, source: match.game.board[slot]?.source,
         note: clueMeta.note || null, row: clueMeta.row, value: clueMeta.value,
-        buzzes: buzzes.map((b) => ({ name: b.name, ms: b.ms, spectator: b.spectator })),
+        buzzes: buzzes.map((b) => ({ name: b.name, ms: b.ms, spectator: b.spectator,
+          early: !!b.early, latency: match.roster.get(b.token)?.latency ?? null })),
         winner: winnerToken ? match.roster.get(winnerToken)?.name : null,
         missed: missed.map((t) => match.roster.get(t)?.name),
         stumper: !winnerToken,
@@ -723,7 +838,10 @@ io.on('connection', (socket) => {
 
   socket.on('early-buzz', () => {
     if (!match || !token) return;
-    match.stat(token).early++;
+    // Counted as an attempt as well as an early one, so `early` can never
+    // exceed `att` — which is what made the table look broken.
+    const st = match.stat(token);
+    st.early++; st.att++;
   });
 
   socket.on('buzz', ({ ms, status }) => {
@@ -734,7 +852,10 @@ io.on('connection', (socket) => {
     if (!spectator && match.race.lockedOut.has(token)) return;
     if (match.race.buzzes.some((b) => b.token === token)) return;
     // Defensive: a client that reports an early press as a buzz is ignored.
-    if (status === 'early' || !(ms > 0)) return;
+    // Note the bound is >= 0, not > 0. Players time the buzzer to the rhythm of
+    // the read rather than reacting to the lights, so a perfectly judged buzz
+    // legitimately lands at 0.0 — that's the best possible result, not a fault.
+    if (status === 'early' || typeof ms !== 'number' || !isFinite(ms) || ms < 0) return;
     const rec = {
       token, name: match.roster.get(token)?.name || 'Player',
       ms: Math.round(ms * 10) / 10, early: false, spectator,
@@ -743,7 +864,6 @@ io.on('connection', (socket) => {
     st.att++; st.times.push(rec.ms);
     match.race.buzzes.push(rec);
     match.race.buzzes.sort((a, b) => a.ms - b.ms);
-    if (!spectator && match.race.buzzes[0].token === token) st.won++;
 
     if (!spectator && (!match.fastest || rec.ms < match.fastest.ms)) {
       match.fastest = { ms: rec.ms, name: rec.name, clue: g.cluesRevealed + 1,
@@ -767,15 +887,22 @@ io.on('connection', (socket) => {
     if (typeof dataUrl !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(dataUrl)) return;
     if (dataUrl.length > 60000) return;          // ~45KB of image, generous for 128px
     p.avatar = dataUrl;
+    io.to(`${match.id}:host`).emit('avatar', { token, dataUrl });
     pushHost();
   });
 
   socket.on('ping-probe', (_d, ack) => ack?.());
+  socket.on('time-probe', (_d, ack) => ack?.(Date.now()));
 
   socket.on('buzzer-latency', ([ms, ref]) => {
     if (!match || !token) return;
     const p = match.roster.get(token);
-    if (p) { p.latency = ms; p.latencyRef = ref; }
+    if (!p) return;
+    p.latency = ms; p.latencyAt = Date.now();
+    if (!match.latency.has(token)) match.latency.set(token, []);
+    const log = match.latency.get(token);
+    log.push({ at: match.elapsed(), ms });
+    if (log.length > 400) log.shift();
   });
 });
 

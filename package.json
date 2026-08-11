@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.13.0",
+  "version": "0.14.3",
   "private": true,
   "type": "module",
   "engines": {
@@ -22,7 +22,9 @@
     "make-audio": "python3 tools/make-audio.py",
     "build-audio": "python3 tools/build-audio.py sources/",
     "mechanics-test": "node test/mechanics.mjs",
-    "sim-mechanics": "node tools/sim-mechanics.mjs"
+    "sim-mechanics": "node tools/sim-mechanics.mjs",
+    "overtime-test": "node test/overtime.mjs",
+    "perf-test": "node test/perf.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

@@ -23,6 +23,8 @@ jobs:
         run: node test/estimate.mjs
       - name: Advanced mechanics arithmetic
         run: node test/mechanics.mjs
+      - name: Overtime resolves a stalled endgame
+        run: node test/overtime.mjs
       - name: End-to-end match over sockets
         run: |
           node src/server.js & sleep 10
@@ -32,6 +34,7 @@ jobs:
           node test/record.mjs
           node test/avatar.mjs
           node test/mechanics-live.mjs
+          node test/perf.mjs
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

@@ -1,5 +1,9 @@
 app = "j-royal-rumble"
-primary_region = "sjc"
+# Chicago: the lowest worst-case latency for a field spread across the US.
+# From sjc the East Coast pays ~75ms each way; from ord nowhere in the
+# continental US is much over 50ms. Fall back to dfw if ord won't place —
+# not back to sjc, which is often at capacity.
+primary_region = "ord"
 
 [build]
 

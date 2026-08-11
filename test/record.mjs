@@ -28,7 +28,9 @@ await wait(150);
 host.emit('start-match');
 await wait(250);
 check('recording is on', st.recording === true);
-check('history starts at clue zero', st.history && st.history.length === 1 && st.history[0].clue === 0);
+// The history is only pushed at the end of a match — sending every point of
+// it on every state change was most of the traffic.
+check('history starts at clue zero', st.historyLength === 1, String(st.historyLength));
 check('nothing to undo yet', st.canUndo === false);
 
 const play = async (winnerIdx) => {
@@ -51,11 +53,10 @@ const play = async (winnerIdx) => {
 };
 
 await play(0);
-check('history grows with the match', st.history.length === 2, `${st.history.length} points`);
-check('history carries the ceiling', st.history[1].ceiling > 0);
+check('history grows with the match', st.historyLength === 2, `${st.historyLength} points`);
 check('undo is now available', st.canUndo === true);
 
-const scoresAfterOne = { ...st.history[1].scores };
+const scoresAfterOne = Object.fromEntries(st.live.map((p) => [p.token, p.score]));
 const cluesAfterOne = st.clues;
 await play(1);
 check('a second clue is recorded', st.clues === cluesAfterOne + 1);
@@ -67,7 +68,7 @@ check('undo rewinds the clue counter', st.clues === cluesAfterOne, `${st.clues}`
 check('undo restores every score',
   st.live.every((p) => p.score === scoresAfterOne[p.token]),
   st.live.map((p) => `${p.name} ${p.score}`).join(', '));
-check('undo trims the history', st.history.length === 2, `${st.history.length}`);
+check('undo trims the history', st.historyLength === 2, `${st.historyLength}`);
 check('undo is logged as a correction', st.corrections === 1, `${st.corrections}`);
 check('the board reopens the clue', st.board.flatMap((c) => c.clues).filter((c) => c.revealed).length === cluesAfterOne);
 
@@ -108,6 +109,15 @@ check('it reports the real seconds per clue',
 check('it keeps the corrections', rec.corrections.length === 3,
   rec.corrections.map((c) => c.type).join(','));
 check('it tracks the field over time', rec.fieldOverTime.length === rec.history.length);
+check('it records connection latency', !!rec.latency && 'byPlayer' in rec.latency,
+  rec.latency && rec.latency.overall ? 'median ' + rec.latency.overall.median + 'ms' : 'no samples yet');
+check('buzzes carry the latency they arrived over',
+  rec.clues.some((c) => c.buzzes.some((b) => 'latency' in b)));
+check('it counts anticipated buzzes', !!rec.anticipation,
+  rec.anticipation ? rec.anticipation.under150ms + ' of ' + rec.anticipation.buzzes + ' under 150ms' : '');
+check('it reports a median pace as well as a mean',
+  rec.actual.secondsPerClueMedian > 0,
+  `mean ${rec.actual.secondsPerClue}s, median ${rec.actual.secondsPerClueMedian}s`);
 check('it carries the standings', (rec.standings || []).length >= 4);
 
 const noKey = await fetch(`${U}/api/match/${m.gameId}/record`);

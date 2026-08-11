@@ -30,6 +30,41 @@ export function saveToken(t) {
 // reaction clock starts there. One anchor for everyone — live players and
 // spectators alike — or the comparison would be meaningless.
 
+// Wall clocks disagree. A device a second out would measure every reaction a
+// second wrong, which is how a match ends up reporting 8ms buzzes. So we
+// estimate the offset against the server and correct for it.
+let clockOffset = 0;         // add to Date.now() to get server time
+let offsetSamples = [];
+
+export function syncClock(rounds = 5) {
+  let done = 0;
+  const step = () => {
+    if (done++ >= rounds) return;
+    const t0 = Date.now();
+    socket.timeout(4000).emit('time-probe', null, (err, serverNow) => {
+      if (err || !serverNow) return setTimeout(step, 400);
+      const t1 = Date.now();
+      const rtt = t1 - t0;
+      // Assume the reply took half the round trip to reach us.
+      offsetSamples.push({ rtt, offset: serverNow + rtt / 2 - t1 });
+      // Trust the fastest exchanges; a slow one carries the most uncertainty.
+      const best = offsetSamples.slice().sort((a, b) => a.rtt - b.rtt).slice(0, 3);
+      clockOffset = best.reduce((n, x) => n + x.offset, 0) / best.length;
+      setTimeout(step, 250);
+    });
+  };
+  step();
+}
+
+export const serverNow = () => Date.now() + clockOffset;
+export const clockInfo = () => ({
+  offset: Math.round(clockOffset),
+  samples: offsetSamples.length,
+  spread: offsetSamples.length > 1
+    ? Math.round(Math.max(...offsetSamples.map((s) => s.offset))
+      - Math.min(...offsetSamples.map((s) => s.offset))) : 0,
+});
+
 let armedAt = null;        // performance.now() value when buzzers went live
 let lockoutMs = 250;
 let earlyUntil = 0;
@@ -38,7 +73,7 @@ let sent = false;
 export function armAt(serverInstant, lockout = 250) {
   lockoutMs = lockout;
   sent = false;
-  const waitMs = serverInstant - Date.now();
+  const waitMs = serverInstant - serverNow();
   const target = performance.now() + waitMs;
   armedAt = target;
   return Math.max(0, waitMs);
@@ -76,15 +111,18 @@ export function lockoutRemaining() {
 // cycle so the host can see who is on a slow connection.
 
 let latencySamples = [];
-export function startLatencyReports(intervalMs = 15000) {
+export function startLatencyReports(intervalMs = 8000) {
   const ping = () => {
     const t0 = performance.now();
     socket.timeout(5000).emit('ping-probe', null, () => {
       const rtt = (performance.now() - t0) / 2;
       latencySamples.push(rtt);
       if (latencySamples.length > 8) latencySamples.shift();
-      const avg = latencySamples.reduce((a, b) => a + b, 0) / latencySamples.length;
-      socket.emit('buzzer-latency', [Math.round(avg * 10) / 10, latencySamples.length]);
+      // Report the median, not the mean. One slow exchange shouldn't make a
+      // good connection look bad, and the host is using this to set the delay.
+      const sorted = latencySamples.slice().sort((a, b) => a - b);
+      const med = sorted[Math.floor(sorted.length / 2)];
+      socket.emit('buzzer-latency', [Math.round(med * 10) / 10, latencySamples.length]);
     });
   };
   setInterval(ping, intervalMs);

@@ -121,7 +121,13 @@ async function boot() {
   S = await api(`/api/match/${code}`);
   mix = toPct(S.blend, S.available);
   socket.emit('watch-setup', { gameId: code, hostKey }, () => {});
-  socket.on('state', (s) => { if (s.roster) { S.roster = s.roster; renderRoster(); } });
+  
+// Pictures arrive once and are cached here; state pushes only say whether a
+// player has one. Thirty data URLs on every push was most of the traffic.
+const AVATARS = new Map();
+socket.on('avatar', ({ token, dataUrl }) => { AVATARS.set(token, dataUrl); render && render(); });
+const avatarOf = (p) => (p && p.hasAvatar ? AVATARS.get(p.token) : null) || null;
+socket.on('state', (s) => { if (s.roster) { S.roster = s.roster; renderRoster(); } });
   render();
 }
 

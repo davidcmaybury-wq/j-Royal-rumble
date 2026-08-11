@@ -32,7 +32,20 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--alarm)}
 .dot.on{background:var(--live)}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:1px;background:var(--line);min-height:0}
-.stage{background:var(--ink);overflow:auto;min-height:0;padding:10px}
+.stage{background:var(--ink);overflow:auto;min-height:0;padding:10px;position:relative}
+.lectern{position:absolute;left:0;right:250px;bottom:96px;display:flex;gap:6px;
+justify-content:center;pointer-events:none;z-index:20;opacity:0;transition:opacity .12s}
+.lectern.on{opacity:1}
+.lectern i{width:clamp(40px,6vw,84px);height:16px;border-radius:3px;background:#3A1512;
+box-shadow:inset 0 0 0 1px #52201C}
+.lectern i.lit{background:#E24A3C;box-shadow:0 0 14px #E24A3C88,inset 0 0 0 1px #FF8A72}
+.ot{position:fixed;inset:0;background:#0A0E1CF2;z-index:88;display:flex;flex-direction:column;
+align-items:center;justify-content:center;gap:10px;animation:fade .2s ease-out;cursor:pointer}
+.ot .h2{font:400 clamp(56px,13vw,150px)/.9 "Anton",Impact,sans-serif;color:var(--alarm)}
+.ot .m{font:400 clamp(28px,6vw,64px)/1 "Anton",Impact,sans-serif;color:var(--brass)}
+.ot .s2{font-size:15px;color:var(--slate);max-width:34ch;text-align:center;line-height:1.6}
+.otbadge{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--alarm);
+border:1px solid var(--alarm);border-radius:20px;padding:3px 9px}
 .rail{background:var(--ink);overflow:auto;min-height:0;padding:10px;display:flex;flex-direction:column;gap:10px}
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
 .cat{font-size:10px;line-height:1.25;letter-spacing:.04em;text-transform:uppercase;text-align:center;
@@ -86,6 +99,11 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .mk.hunted{color:var(--alarm)}
 .mk.bty{color:var(--brass);font-family:"IBM Plex Mono",monospace;font-size:10px}
 .mk.rev{color:var(--live)}
+.mk.ctrl{color:var(--chalk)}
+.mk.lat{color:#4A5680;font-family:"IBM Plex Mono",monospace;font-size:9.5px}
+.mk.lat.slow{color:var(--alarm)}
+.latwarn{font-size:11px;color:var(--alarm);line-height:1.5;margin-top:6px}
+.pl.control{box-shadow:inset 2px 0 0 var(--chalk)}
 .bounties{font-size:11px;color:var(--slate);line-height:1.6}
 .bounties b{color:var(--brass);font-weight:400}
 .pl.out .sub{font-size:10px;color:var(--slate);display:block;line-height:1.3}
@@ -188,6 +206,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
     <span class="st"><span class="k">In</span><span class="v num" id="s-field">0</span></span>
     <span class="st"><span class="k">Queue</span><span class="v num" id="s-q">0</span></span>
     <span class="st ceil"><span class="k">Ceiling</span><span class="v num" id="s-ceil">&mdash;</span></span>
+    <span class="otbadge" id="s-ot" style="display:none"></span>
     <span class="sp">
       <span class="dot" id="conn" title="server connection"></span>
       <button class="tb" id="admin" title="Opens on your unshared screen">Pop out answers &#8599;</button>
@@ -199,8 +218,10 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
   </header>
   <div class="main">
     <section class="stage" id="stage" aria-label="Board"></section>
+      <div class="lectern" id="lectern" aria-hidden="true"></div>
     <aside class="rail">
-      <div><div class="sect"><span>In the ring</span><span id="ring-n"></span></div><div id="ring"></div></div>
+      <div><div class="sect"><span>In the ring</span><span id="ring-n"></span></div><div id="ring"></div>
+        <div class="latwarn" id="latwarn"></div></div>
       <div class="clock" id="clock"><span class="lbl">Clues to next entry</span>
         <span class="n mq num" id="cd">&mdash;</span><div class="who2" id="who"></div></div>
       <div id="bty-wrap" style="display:none"><div class="sect"><span>Bounties</span><span id="bty-n"></span></div>
@@ -215,7 +236,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
-import { socket, gameId, hostKey, fmt } from '/rumble.js';
+import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, wordmark } from '/brand.js';
 import * as sfx from '/sound.js';
@@ -240,6 +261,7 @@ const sfxWin = () => { sfx.play('entry'); setTimeout(() => sfx.play('entry'), 62
 $('brand').innerHTML = markSmall(28);
 
 socket.on('connect', () => {
+  syncClock();
   $('conn').classList.add('on');
   socket.emit('host-join', { gameId: GID, hostKey: hostKey }, (r) => {
     if (r && r.error) return say('Host key rejected — check the console URL');
@@ -247,9 +269,19 @@ socket.on('connect', () => {
   });
 });
 socket.on('disconnect', () => $('conn').classList.remove('on'));
+
+// Pictures arrive once and are cached here; state pushes only say whether a
+// player has one. Thirty data URLs on every push was most of the traffic.
+const AVATARS = new Map();
+socket.on('avatar', ({ token, dataUrl }) => { AVATARS.set(token, dataUrl); render && render(); });
+const avatarOf = (p) => (p && p.hasAvatar ? AVATARS.get(p.token) : null) || null;
 socket.on('state', apply);
 socket.on('error-msg', (m) => say(m));
 socket.on('resolved', (e) => {
+  if (e.overtimeStarted) overtimeSplash('OVERTIME', 'Stakes start climbing',
+    'Nobody else is coming. From here the clue values double every few clues until somebody breaks.');
+  else if (e.overtimeRaised) overtimeSplash('\u00D7' + e.overtimeRaised.multiplier,
+    'Stakes double', 'Every clue is now worth ' + e.overtimeRaised.multiplier + ' times face value.');
   for (const b of e.bountyCollected || []) {
     const by = (S.live || []).concat(S.out || []).find((p) => p.token === b.by);
     say(`${by ? by.name : 'Someone'} collects a ${fmt(b.amount)} bounty`, 'enter');
@@ -275,7 +307,15 @@ socket.on('resolved', (e) => {
   if (e.totalWipe) say('Total wipe — highest score survives', 'elim');
 });
 
-function apply(next) { if (!next) return; prev = S; S = next; detectEvents(); render(); }
+function apply(next) {
+  if (!next) return;
+  const wasOpen = !!(prev && prev.race && prev.race.open);
+  prev = S; S = next;
+  const isOpen = !!(S.race && S.race.open);
+  if (isOpen && !wasOpen) startLectern();
+  if (!S.clue) stopLectern();
+  detectEvents(); render();
+}
 
 // Entry and elimination are derived from state transitions rather than pushed
 // as their own events, so a reconnect mid-match can't replay a horn.
@@ -310,6 +350,13 @@ function render() {
   $('s-field').textContent = live.length;
   $('s-q').textContent = q.length;
   $('s-ceil').textContent = S.ceiling ? fmt(S.ceiling) : '—';
+  const ot = $('s-ot');
+  if (ot) {
+    const o = S.overtime;
+    ot.style.display = o ? '' : 'none';
+    if (o) ot.textContent = `Overtime \u00D7${o.multiplier}`
+      + (o.nextIn ? ` \u00B7 doubles in ${o.nextIn}` : ' \u00B7 max');
+  }
   if (S.version) $('ver').textContent = 'v' + S.version
     + (S.recording ? ' \u25CF rec' : '') + (S.corrections ? ' \u00B7 ' + S.corrections + ' fixed' : '');
   const u = $('undo'); if (u) u.disabled = !S.canUndo;
@@ -326,11 +373,12 @@ function render() {
       + (locked.indexOf(p.token) >= 0 ? ' miss' : '')
       + (buzzed.has(p.token) ? ' buzzed' : '')
       + (on && on.token === p.token ? ' onclock' : '')
-      + (p.connected ? '' : ' gone');
+      + (p.connected ? '' : ' gone')
+      + (S.control === p.token ? ' control' : '');
     d.dataset.token = p.token; d.dataset.name = p.name; d.tabIndex = 0;
     d.title = 'Click to correct this score';
     d.innerHTML = '<span class="dr num">' + p.draw + '</span>'
-      + (p.avatar ? '<img class="av" src="' + p.avatar + '" alt="">' : '<span class="av ph"></span>')
+      + (avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">' : '<span class="av ph"></span>')
       + '<span class="nm">' + p.name
       + (p.connected ? '' : ' <span style="color:var(--alarm);font-size:10px">&#9676;</span>')
       + (p.pins ? ' <span class="tko" title="toss outs">&#9670;' + p.pins + '</span>' : '')
@@ -340,12 +388,26 @@ function render() {
       + ((p.targetedBy || []).length ? ' <span class="mk hunted" title="in someone\'s sights">&#9679;</span>' : '')
       + (p.bounty ? ' <span class="mk bty" title="bounty on their head">' + fmt(p.bounty) + '</span>' : '')
       + (p.revivals ? ' <span class="mk rev" title="second life">&#8635;</span>' : '')
+      + (S.control === p.token ? ' <span class="mk ctrl" title="picks the next clue">&#9679;</span>' : '')
+      + (p.latency != null ? ' <span class="mk lat' + (p.latency > 120 ? ' slow' : '')
+          + '" title="one-way latency">' + Math.round(p.latency) + '</span>' : '')
       + '</span><span class="sc num">' + fmt(p.score) + '</span>';
     d.onclick = () => openCorrect(p);
     d.onkeydown = (e) => { if (e.key === 'Enter') openCorrect(p); };
     r.appendChild(d);
   });
   $('ring-n').textContent = live.length;
+
+  // If the socket path is slower than the Zoom path, the delay compensation is
+  // pointing the wrong way and players will hear the clue before they can buzz.
+  const lats = live.map((p) => p.latency).filter((n) => n != null);
+  const slow = lats.filter((n) => n > 120).length;
+  const lw = $('latwarn');
+  if (lw) {
+    lw.textContent = slow
+      ? `${slow} player${slow > 1 ? 's' : ''} over 120 ms — consider lowering the Zoom delay`
+      : '';
+  }
 
   const cd = S.cluesUntilNextEntry;
   $('clock').classList.toggle('soon', cd === 1);
@@ -384,7 +446,7 @@ function showFinish() {
   const champ = rows.find((p) => p.winner);
   const d = document.createElement('div'); d.className = 'fin';
   d.innerHTML = `<div class="finmark">${wordmark(460)}</div>` + (champ
-    ? `${champ.avatar ? `<img class="finav" src="${champ.avatar}" alt="">` : ''}
+    ? `${avatarOf(champ) || champ.avatar ? `<img class="finav" src="${avatarOf(champ) || champ.avatar}" alt="">` : ''}
        <div class="lbl">Last one standing</div>
        <div class="nm mq">${champ.name}</div>
        <div class="sub">entry number ${champ.draw} &middot; ${S.clues} clues played</div>
@@ -412,6 +474,45 @@ function showFinish() {
   document.body.appendChild(d);
   $('sr').textContent = champ ? `${champ.name} is the last one standing` : 'Match ended';
   if (champ) sfxWin();
+}
+
+// Two evenly matched players will trade the same points back and forth for
+// as long as you let them. The room needs to see the moment that stops.
+function overtimeSplash(big, mid, sub) {
+  document.querySelectorAll('.ot').forEach((n) => n.remove());
+  const d = document.createElement('div'); d.className = 'ot';
+  d.innerHTML = `<div class="h2 mq">${big}</div><div class="m mq">${mid}</div>
+    <div class="s2">${sub}</div>`;
+  document.body.appendChild(d);
+  sfx.play('chop');
+  $('sr').textContent = mid;
+  const t = setTimeout(kill, 4200);
+  function kill() { d.remove(); clearTimeout(t); removeEventListener('keydown', kill); }
+  addEventListener('keydown', kill); d.onclick = kill;
+}
+
+// Five seconds, counted down the way a lectern does it.
+let lecternTimer = null, lecternFrom = null;
+function startLectern() {
+  stopLectern();
+  lecternFrom = performance.now();
+  const el = $('lectern');
+  el.classList.add('on');
+  const tick = () => {
+    const left = 5 - (performance.now() - lecternFrom) / 1000;
+    const lit = Math.max(0, Math.ceil(left));
+    el.innerHTML = Array.from({ length: 5 },
+      (_, i) => `<i class="${i < lit ? 'lit' : ''}"></i>`).join('');
+    if (lit <= 0) { stopLectern(); return; }
+    lecternTimer = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function stopLectern() {
+  if (lecternTimer) cancelAnimationFrame(lecternTimer);
+  lecternTimer = null;
+  const el = $('lectern');
+  if (el) { el.classList.remove('on'); }
 }
 
 function shareMenu(anchor) {
@@ -518,7 +619,7 @@ function renderLobby() {
     + '<div class="join">Players join at <code>' + url + '</code></div>'
     + '<div class="who">' + (roster.length
       ? roster.map((p) => '<span class="chip' + (p.connected ? '' : ' off') + '">'
-          + (p.avatar ? '<img src="' + p.avatar + '" alt="">' : '') + p.name + '</span>').join('')
+          + (avatarOf(p) ? '<img src="' + avatarOf(p) + '" alt="">' : '') + p.name + '</span>').join('')
       : '<span class="idle">Waiting for players&hellip;</span>') + '</div>'
     + '<button class="go" id="start"' + (roster.length < 3 ? ' disabled' : '') + '>Start with '
       + roster.length + ' player' + (roster.length === 1 ? '' : 's') + '</button>'
@@ -559,7 +660,10 @@ function renderClue() {
   const c = S.clue, locked = (S.race && S.race.lockedOut) || [];
   const names = (S.live || []).filter((p) => locked.indexOf(p.token) >= 0).map((p) => p.name);
   $('stage').innerHTML = '<div class="clue">'
-    + '<div class="cmeta">' + c.category + ' &middot; <span class="v">$' + c.value + '</span></div>'
+    + '<div class="cmeta">' + c.category + ' &middot; <span class="v">$' + c.value + '</span>'
+      + (S.overtime && S.overtime.multiplier > 1
+        ? ' <span style="color:var(--alarm)">&times;' + S.overtime.multiplier + ' overtime</span>' : '')
+      + '</div>'
     + (c.note ? '<div class="cnote">' + c.note + '</div>' : '')
     + '<div class="ctxt">' + c.text + '</div>'
     + (names.length ? '<div class="locked">Locked out: ' + names.join(', ') + '</div>' : '')

@@ -32,7 +32,12 @@ export function stripMediaLinks(text) {
     .replace(/<a\s[^>]*>(.*?)<\/a>/gis, '$1')
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<\/?i>|<\/?em>|<\/?b>/gi, '')
-    .replace(/\\'/g, "'")
+    // Boards that have been through a converter arrive with escapes intact —
+    // \" and \' render literally on screen unless they're undone here.
+    .replace(/\\(["'\\])/g, '$1')
+    .replace(/\\n/g, ' ')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }

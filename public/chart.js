@@ -6,6 +6,9 @@
 // The winner is the only line given colour.
 
 export function scoreChart(history, draw, opts = {}) {
+  // opts.meToken draws one more line in a second colour — on a player's own
+  // results screen, finding yourself among thirty lines is the first thing
+  // you want to do.
   const W = opts.width || 640, H = opts.height || 260;
   const P = { t: 14, r: 12, b: 26, l: 46 };
   if (!history || history.length < 2) return '';
@@ -32,7 +35,7 @@ export function scoreChart(history, draw, opts = {}) {
       d += (open ? 'L' : 'M') + x(h.clue).toFixed(1) + ' ' + y(v).toFixed(1) + ' ';
       open = true;
     }
-    return { tok, d, win: tok === winner };
+    return { tok, d, win: tok === winner, me: tok === opts.meToken && tok !== winner };
   }).filter((p) => p.d);
 
   const ceiling = history.map((h, i) =>
@@ -51,7 +54,8 @@ export function scoreChart(history, draw, opts = {}) {
   }
 
   const winPath = paths.find((p) => p.win);
-  const rest = paths.filter((p) => !p.win);
+  const mePath = paths.find((p) => p.me);
+  const rest = paths.filter((p) => !p.win && !p.me);
 
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img"
     aria-label="Every player's score across ${maxClue} clues, with the falling ceiling">
@@ -60,12 +64,16 @@ export function scoreChart(history, draw, opts = {}) {
       stroke-linejoin="round" opacity="0.75"/>`).join('')}
     <path d="${ceiling}" fill="none" stroke="#D6A93F" stroke-width="1.5"
       stroke-dasharray="5 4" opacity="0.85"/>
+    ${mePath ? `<path d="${mePath.d}" fill="none" stroke="#4FB286" stroke-width="2.5"
+      stroke-linejoin="round"/>` : ''}
     ${winPath ? `<path d="${winPath.d}" fill="none" stroke="#EEEBE1" stroke-width="2.5"
       stroke-linejoin="round"/>` : ''}
     <text x="${W - P.r}" y="${P.t + 2}" text-anchor="end" fill="#D6A93F" font-size="10"
       font-family="IBM Plex Sans, sans-serif">ceiling</text>
     ${winPath ? `<text x="${W - P.r}" y="${P.t + 16}" text-anchor="end" fill="#EEEBE1" font-size="10"
       font-family="IBM Plex Sans, sans-serif">${names.get(winner) || 'winner'}</text>` : ''}
+    ${mePath ? `<text x="${W - P.r}" y="${P.t + 30}" text-anchor="end" fill="#4FB286" font-size="10"
+      font-family="IBM Plex Sans, sans-serif">you</text>` : ''}
     <text x="${P.l}" y="${H - 8}" fill="#7C88AB" font-size="10"
       font-family="IBM Plex Sans, sans-serif">clue</text>
   </svg>`;

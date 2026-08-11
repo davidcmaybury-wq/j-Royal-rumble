@@ -180,7 +180,7 @@ white-space:nowrap;border-bottom:1px solid var(--line);z-index:2}
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
-         lockoutRemaining, startLatencyReports, fmt, ord } from '/rumble.js';
+         lockoutRemaining, startLatencyReports, syncClock, clockInfo, fmt, ord } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markFull } from '/brand.js';
 import * as sfx from '/sound.js';
@@ -307,6 +307,7 @@ renderJoin(); }
 
 // ---------------- socket ----------------
 socket.on('connect', () => {
+  syncClock();
   // A stored token means we've joined this match before — rejoin silently so
   // a refresh or a dropped connection doesn't cost anyone their place.
   const t = myToken(), n = localStorage.getItem('rumble:name');
@@ -645,7 +646,8 @@ function renderResults() {
       <span>${V.fastest.name}</span><span class="v num">${V.fastest.ms.toFixed(1)}</span></div>` : ''}
     ${V.history && V.history.length > 2 ? `<div class="chart">${
       scoreChart(V.history, V.draw || [], {
-        winnerToken: champ && champ.token, width: 500, height: 190 })}</div>` : ''}
+        winnerToken: champ && champ.token, meToken: V.you && V.you.token,
+        width: 500, height: 190 })}</div>` : ''}
     <div class="tabs">
       <button data-t="match" class="${rTab === 'match' ? 'on' : ''}">Match</button>
       <button data-t="buzz" class="${rTab === 'buzz' ? 'on' : ''}">Buzzers</button></div>

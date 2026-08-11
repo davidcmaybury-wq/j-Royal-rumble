@@ -25,6 +25,13 @@ export const DEFAULT_SETTINGS = {
   revivalLimit: 1,
   revivalFraction: 0.5,
   bountyMaxFraction: 0.5,    // most of their stake a queued player may stake
+  // Two evenly matched players trade the same points back and forth forever.
+  // Once the queue is empty and only a couple remain, the stakes climb until
+  // one of them cracks.
+  overtime: true,
+  overtimeAt: 2,             // players left in the ring that starts it
+  overtimeEvery: 6,          // clues between each escalation
+  overtimeMax: 8,            // never beyond this multiple
   delay: 200,                // ms held back so buzzers arm with Zoom audio
   lockout: 250,              // ms penalty for buzzing before the lights
   seasonRange: null,         // [lo, hi] archive seasons; null = all
@@ -101,6 +108,7 @@ export class RumbleGame {
     this.drawOrder = order.map((p) => p.id);
     this.eliminationOrder = [];
     this.bounties = [];        // { placer, target, amount }
+    this.overtimeFrom = null;  // clue number the escalation began at
 
     this.board = [];
     for (let i = 0; i < BOARD_CATEGORIES; i++) this.board.push(this.drawCategory());
@@ -123,6 +131,7 @@ export class RumbleGame {
       eliminationOrder: this.eliminationOrder,
       usedClueIds: [...this.usedClueIds],
       bounties: this.bounties,
+      overtimeFrom: this.overtimeFrom,
       cluesRevealed: this.cluesRevealed,
       fieldClears: this.fieldClears,
       vetoedThisMatch: this.vetoedThisMatch,
@@ -141,6 +150,7 @@ export class RumbleGame {
     this.eliminationOrder = d.eliminationOrder;
     this.usedClueIds = new Set(d.usedClueIds);
     this.bounties = d.bounties || [];
+    this.overtimeFrom = d.overtimeFrom ?? null;
     this.cluesRevealed = d.cluesRevealed;
     this.fieldClears = d.fieldClears;
     this.vetoedThisMatch = d.vetoedThisMatch;
@@ -164,6 +174,46 @@ export class RumbleGame {
       this.eliminationOrder = this.eliminationOrder.filter((id) => id !== token);
     }
     return { before, after: p.score };
+  }
+
+  // ---- overtime -------------------------------------------------------
+
+  // Multiplies every clue value once the field is down to the last few and
+  // nobody else is coming. Doubling on a fixed cadence, capped.
+  overtime() {
+    if (!this.s.overtime || this.overtimeFrom == null) return null;
+    const elapsed = this.cluesRevealed - this.overtimeFrom;
+    const steps = Math.floor(elapsed / this.s.overtimeEvery);
+    const mult = Math.min(this.s.overtimeMax, Math.pow(2, steps));
+    return {
+      multiplier: mult,
+      since: this.overtimeFrom,
+      cluesAtThisLevel: elapsed % this.s.overtimeEvery,
+      nextIn: mult >= this.s.overtimeMax
+        ? null : this.s.overtimeEvery - (elapsed % this.s.overtimeEvery),
+    };
+  }
+
+  overtimeMultiplier() {
+    const o = this.overtime();
+    return o ? o.multiplier : 1;
+  }
+
+  // Called after a clue resolves: opens overtime, or notes an escalation.
+  checkOvertime(entry) {
+    if (!this.s.overtime) return;
+    const ring = this.live().length;
+    if (this.overtimeFrom == null) {
+      if (ring <= this.s.overtimeAt && !this.queued().length && ring > 1) {
+        this.overtimeFrom = this.cluesRevealed;
+        entry.overtimeStarted = { multiplier: 1, at: this.cluesRevealed };
+      }
+      return;
+    }
+    if (ring <= 1) return;
+    const before = entry.overtimeBefore ?? 1;
+    const now = this.overtimeMultiplier();
+    if (now > before) entry.overtimeRaised = { multiplier: now };
   }
 
   // ---- advanced mechanics ---------------------------------------------
@@ -285,7 +335,8 @@ export class RumbleGame {
     const clue = cat.clues.find((c) => c.row === row);
     if (!clue || clue.revealed) throw new Error('clue unavailable');
 
-    const value = ROW_VALUES[row - 1];
+    const otBefore = this.overtimeMultiplier();
+    const value = ROW_VALUES[row - 1] * otBefore;
     clue.revealed = true;
     this.cluesRevealed += 1;
 
@@ -295,6 +346,7 @@ export class RumbleGame {
     const mult = (p) => (p.topRope ? 2 : 1);      // top rope doubles your own stakes, both ways
     const entry = {
       type: 'clue', n: this.cluesRevealed, category: cat.title, row, value,
+      faceValue: ROW_VALUES[row - 1], overtimeBefore: otBefore,
       winnerId, missedIds: [...missedIds], ceiling: this.ceiling, eliminated: [],
       topRope: live.filter((p) => p.topRope).map((p) => p.id),
       targets: Object.fromEntries(live.filter((p) => p.target).map((p) => [p.id, p.target])),
@@ -364,6 +416,7 @@ export class RumbleGame {
     }
 
     this.applyEliminations(entry, winnerId);
+    this.checkOvertime(entry);
 
     if (!cat.clues.some((c) => !c.revealed)) {
       this.board[slotIndex] = this.drawCategory();

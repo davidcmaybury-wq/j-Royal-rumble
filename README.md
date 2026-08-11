@@ -85,6 +85,54 @@ another, and adds a short room.
 Browsers block audio until a page has been interacted with, so both the console
 and the buzzer unlock on the first tap or key press.
 
+## Latency
+
+The Zoom delay setting assumes the socket path beats the call audio by 150–200
+ms. If the sockets get slow, that assumption inverts: players hear the clue
+before their buzzer arms and get penalised for being right. So the socket layer
+is tuned for latency over throughput — websocket only, no compression, Nagle
+off — and state pushes are coalesced over 25 ms so a burst of buzzes can't
+crowd out the messages that matter.
+
+Each player's measured one-way latency shows beside their name in the ring, and
+the console warns when anyone is over 120 ms. Every sample is kept in the match
+record, per player, so a slow evening can be told apart from a slow field.
+
+The app runs in `ord` (Chicago) for a field spread across the US. Moving it,
+between matches — the machine holds all live state, so this ends anything in
+progress:
+
+    fly scale count 0
+    fly scale count 1 --region ord
+    fly status
+
+`node test/perf.mjs` measures it with a field of 24: activation should reach
+every player with a spread well under 60 ms. It exists because an earlier
+attempt at this used `volatile` emits, which are dropped rather than queued —
+the activation reached nobody at all, and nothing else in the suite noticed.
+
+## A note on buzz times
+
+Times under 150ms are expected, not suspect. Players time the buzzer to the
+rhythm of the host's read rather than reacting to the lights, so a well-judged
+buzz lands at or near zero and an over-eager one takes the lockout. The server
+accepts `ms >= 0` for that reason; only negative and non-finite values are
+rejected. The match record reports how many buzzes came in under 150ms, which is
+a decent measure of how hard a field is anticipating.
+
+## Overtime
+
+Two evenly matched players will trade the same points back and forth
+indefinitely — seen in the first real match, where the last fourteen clues
+oscillated without either player getting closer to going out.
+
+Once the queue is empty and the ring is down to two, clue values double every
+six clues, capped at eight times face. The console announces the start and each
+rise. On by default; `overtime: false` turns it off.
+
+A perfectly alternating two-player stall runs forever without it, and ends in
+about 22 clues with it — see `test/overtime.mjs`.
+
 ## Advanced mechanics
 
 Four optional rules, off by default, toggled per match on the setup page. They

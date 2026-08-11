@@ -52,18 +52,22 @@ check('the early presser is not in the race',
 // --- a client that mislabels an early press as a buzz is ignored -------
 early.s.emit('buzz', { ms: 0, status: 'early' });
 await wait(120);
-check('a zero-time buzz is refused', !st.race.buzzes.some((b) => b.token === early.token),
+check('a buzz labelled early is refused whatever its time', !st.race.buzzes.some((b) => b.token === early.token),
   `${st.race.buzzes.length} in the race`);
+// Players buzz to the rhythm of the read, not to the lights, so a perfectly
+// judged buzz lands at zero. That's the best result available, not a fault.
 early.s.emit('buzz', { ms: 0, status: 'good' });
-await wait(120);
-check('a zero-time buzz is refused even when labelled good',
-  !st.race.buzzes.some((b) => b.token === early.token));
-
-// --- the early presser can still win once they buzz properly ----------
-early.s.emit('buzz', { ms: 300, status: 'good' });
 await wait(150);
-check('after the penalty they can buzz and take the lead',
-  st.race.buzzes[0].token === early.token, `${st.race.buzzes[0].ms} ms`);
+check('a perfectly timed buzz at 0.0 ms is accepted',
+  st.race.buzzes.some((b) => b.token === early.token && b.ms === 0),
+  st.race.buzzes.map((b) => `${b.name} ${b.ms}`).join(', '));
+check('and it goes straight to the front', st.race.buzzes[0].token === early.token);
+early.s.emit('buzz', { ms: -50, status: 'good' });
+await wait(120);
+check('a negative time is still refused',
+  !st.race.buzzes.some((b) => b.ms < 0));
+
+// --- one buzz each ----------------------------------------------------
 
 // --- one buzz each -----------------------------------------------------
 const before = st.race.buzzes.length;
@@ -79,8 +83,13 @@ await wait(250);
 const row = (st.standings || []).find((p) => p.token === early.token);
 check('the early press is counted in that player\u2019s stats', row && row.early === 1,
   row ? `early ${row.early}, attempts ${row.att}` : 'no row');
-check('the early press is not counted as an attempt', row && row.att === 1, row ? `att ${row.att}` : '');
-check('best time excludes the early press', row && row.best === 300, row ? `best ${row.best}` : '');
+// An early press counts as an attempt now. It has to: when it didn't, a
+// player could show more early buzzes than attempts, which reads as a broken
+// table rather than a reckless player.
+check('an early press counts as an attempt', row && row.att === 2, row ? `att ${row.att}` : '');
+check('early can never exceed attempts', row && row.early <= row.att,
+  row ? `${row.early} early of ${row.att}` : '');
+check('best time excludes the early press', row && row.best === 0, row ? `best ${row.best}` : '');
 
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); ps.forEach((p) => p.s.close());

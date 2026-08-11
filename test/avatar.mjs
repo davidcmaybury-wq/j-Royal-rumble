@@ -15,6 +15,10 @@ const m = await (await fetch(`${U}/api/match`, { method: 'POST',
 const host = io(U, { transports: ['websocket'] });
 await once(host, 'connect');
 let st = null;
+// Pictures come down their own channel now and are cached by the client, so
+// state pushes carry only a flag. Mirror that here.
+const pics = new Map();
+host.on('avatar', ({ token, dataUrl }) => pics.set(token, dataUrl));
 host.on('state', (s) => { st = s; });
 await new Promise((r) => host.emit('host-join', { gameId: m.gameId, hostKey: m.hostKey }, (x) => { st = x.state; r(); }));
 
@@ -31,24 +35,27 @@ await wait(150);
 a.s.emit('avatar', { dataUrl: TINY });
 await wait(200);
 const inLobby = st.roster.find((p) => p.token === a.token);
-check('an avatar reaches the lobby roster', !!inLobby.avatar, inLobby.avatar ? 'set' : 'missing');
-check('players without one are simply null',
-  st.roster.find((p) => p.token === b.token).avatar === null);
+check('an avatar reaches the lobby roster', inLobby.hasAvatar === true && pics.has(a.token),
+  inLobby.hasAvatar ? 'set' : 'missing');
+check('players without one are simply flagged false',
+  st.roster.find((p) => p.token === b.token).hasAvatar === false);
+check('the picture itself arrives once, off the state push',
+  pics.get(a.token) === TINY && !('avatar' in inLobby));
 
 // junk is refused
 b.s.emit('avatar', { dataUrl: 'javascript:alert(1)' });
 b.s.emit('avatar', { dataUrl: 'data:text/html;base64,PHNjcmlwdD4=' });
 await wait(200);
-check('a non-image data url is refused', st.roster.find((p) => p.token === b.token).avatar === null);
+check('a non-image data url is refused', st.roster.find((p) => p.token === b.token).hasAvatar === false);
 
 c.s.emit('avatar', { dataUrl: 'data:image/png;base64,' + 'A'.repeat(70000) });
 await wait(200);
-check('an oversized image is refused', st.roster.find((p) => p.token === c.token).avatar === null);
+check('an oversized image is refused', st.roster.find((p) => p.token === c.token).hasAvatar === false);
 
 host.emit('start-match');
 await wait(250);
 check('the avatar follows the player into the ring',
-  !!st.live.find((p) => p.token === a.token).avatar);
+  st.live.find((p) => p.token === a.token).hasAvatar === true);
 
 // survives a reconnect, because the client re-sends from its own cache
 a.s.close();
@@ -58,7 +65,7 @@ await once(back, 'connect');
 await new Promise((r) => back.emit('join', { gameId: m.gameId, token: a.token, name: 'WithPic' }, r));
 await wait(200);
 check('the avatar survives a reconnect on the server side',
-  !!st.live.find((p) => p.token === a.token).avatar);
+  st.live.find((p) => p.token === a.token).hasAvatar === true);
 
 host.emit('end-match');
 await wait(250);
