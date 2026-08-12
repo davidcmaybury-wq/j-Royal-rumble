@@ -109,14 +109,26 @@ def find(folder, *words):
 
 # ---------------------------------------------------------------- entry horn
 def build_horn(src):
-    # The usable blast sits a couple of seconds in; trim to the onset and take
-    # the sustain before the recording starts falling away.
-    x = decode(src, start=2.0, dur=4.4)
-    x = x[onset(x):]
-    x = x[:int(3.0 * SR)]
-    x = shape(x, fade_in=0.006, fade_out=0.55)
-    x = trim_tail(tail(x, seconds=1.1, mix=0.20))
+    # A short arcade phrase, kept whole and given a little room so it carries
+    # over a shared screen. The siren this replaced needed trimming to its
+    # onset and a long tail; a jingle needs neither.
+    x = decode(src)
+    lead = onset(x, thresh=0.02)
+    if lead > int(0.05 * SR):
+        x = x[lead:]
+    x = shape(x, fade_in=0.002, fade_out=0.06)
+    x = tail(x, seconds=0.3, mix=0.10)
+    x = trim_tail(x, floor=0.002, keep=0.10)
     return to_target(x, 0.155)
+
+
+def resample(x, factor):
+    """Crude pitch shift: read the samples at a different rate. Slower than 1
+    drops the pitch and lengthens it, which is exactly what a smaller sibling
+    of a sound wants."""
+    n = int(len(x) / factor)
+    idx = np.linspace(0, len(x) - 1, n)
+    return np.interp(idx, np.arange(len(x)), x)
 
 
 # ------------------------------------------------------- going out of the ring
@@ -138,18 +150,24 @@ def build_chop(src):
 
 # --------------------------------------------------------- somebody signs up
 def build_join(src):
-    # Another short phrase rather than an impact, so the same handling as the
-    # elimination cue. Pitched quieter than everything else on purpose: the
-    # host hears this thirty times while a room fills up, and a cue you hear
-    # thirty times should sit under the conversation rather than on top of it.
+    # The same source as the entry cue, deliberately: signing up and walking
+    # into the ring are the same kind of event at different scales, so this is
+    # the same phrase made smaller. Pitched down five semitones and cut to its
+    # opening, so it reads as a relative of the horn rather than a repeat of it.
+    #
+    # Quieter than everything else too — the host hears this thirty times while
+    # a room fills up, and a cue you hear thirty times should sit under the
+    # conversation rather than on top of it.
     x = decode(src)
     lead = onset(x, thresh=0.02)
     if lead > int(0.05 * SR):
         x = x[lead:]
-    x = shape(x, fade_in=0.002, fade_out=0.05)
-    x = tail(x, seconds=0.2, mix=0.06)
-    x = trim_tail(x, floor=0.002, keep=0.08)
-    return to_target(x, 0.095)
+    x = resample(x, 2 ** (-5 / 12))
+    x = x[:int(0.5 * SR)]
+    x = shape(x, fade_in=0.002, fade_out=0.10)
+    x = tail(x, seconds=0.18, mix=0.05)
+    x = trim_tail(x, floor=0.002, keep=0.06)
+    return to_target(x, 0.090)
 
 
 if __name__ == '__main__':
@@ -159,7 +177,7 @@ if __name__ == '__main__':
         print(f'no sources folder at {folder}'); sys.exit(1)
 
     print('building cues from', folder)
-    horn = find(folder, 'horn', 'siren')
+    horn = find(folder, 'start', 'horn', 'siren')
     chop = find(folder, 'die', 'lose', 'chop', 'impact', 'blade', 'slam', 'shot', 'gun', 'exit', 'hit')
 
     if horn:

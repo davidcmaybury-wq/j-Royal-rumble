@@ -295,7 +295,10 @@ const say = (m, cls) => { const f = $('feed'), e = document.createElement('div')
 const ac = () => sfx.unlock();
 const sfxEntry = () => sfx.play('entry');
 const sfxElim = (n) => sfx.chops(n);
-const sfxWin = () => { sfx.play('entry'); setTimeout(() => sfx.play('entry'), 620); };
+// Two of them, spaced to land after the first has finished. The old horn was
+// a three-second siren and overlapping it sounded like a fanfare; the arcade
+// phrase is a second long and overlapping it just sounds like a mistake.
+const sfxWin = () => { sfx.play('entry'); setTimeout(() => sfx.play('entry'), 1120); };
 
 $('brand').innerHTML = markSmall(28);
 

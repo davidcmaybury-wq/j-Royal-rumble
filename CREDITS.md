@@ -4,7 +4,7 @@
 
 | Cue | Source | Licence |
 |---|---|---|
-| `public/audio/entry-horn.mp3` | Freesound [324276 — "Multiple siren" by kostrava](https://freesound.org/s/324276/) | CC0 |
+| `public/audio/entry-horn.mp3` | Freesound [368691 — "8-bit arcade start" by fartbiscuit1700](https://freesound.org/s/368691/) | CC0 |
 | `public/audio/chop.mp3` | Freesound [157218 — "Video game die or lose life" by adamweeden](https://freesound.org/s/157218/) | CC0 |
 | `public/audio/join.mp3` | Freesound [368691 — "8-bit arcade start" by fartbiscuit1700](https://freesound.org/s/368691/) | CC0 |
 | `public/audio/countdown-*.mp3` | synthesised, `tools/make-audio.py` | none needed |
@@ -19,7 +19,12 @@ Nothing in the project carries a restrictive licence: the sounds are CC0, the
 fonts are OFL or Apache 2.0, the clue data comes from a public dataset, and the
 artwork was made for this.
 
-The horn is a 2.7–5.7 second excerpt trimmed to its onset. The elimination cue
+The entry and join cues come from the same recording on purpose: signing up and
+walking into the ring are the same kind of event at different scales, so the
+join chime is the same phrase pitched down five semitones and cut to its
+opening. They sit a fifth apart and read as relatives rather than repeats.
+
+The elimination cue
 is a musical phrase rather than an impact, so it is kept whole — an impact gets
 trimmed hard and cut short to protect its transient, but a tune has to resolve.
 It gets only a whisper of room, since a chiptune already sits in its own space. Both are level-matched against each other on their
