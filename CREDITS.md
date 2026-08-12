@@ -5,19 +5,19 @@
 | Cue | Source | Licence |
 |---|---|---|
 | `public/audio/entry-horn.mp3` | Freesound [324276 — "Multiple siren" by kostrava](https://freesound.org/s/324276/) | CC0 |
-| `public/audio/chop.mp3` | Freesound [157218 — "Video game die or lose life" by adamweeden](https://freesound.org/s/157218/) | **confirm before release** |
-| `public/audio/join.mp3` | Freesound [368691 — "8-bit arcade start" by fartbiscuit1700](https://freesound.org/s/368691/) | **confirm before release** |
+| `public/audio/chop.mp3` | Freesound [157218 — "Video game die or lose life" by adamweeden](https://freesound.org/s/157218/) | CC0 |
+| `public/audio/join.mp3` | Freesound [368691 — "8-bit arcade start" by fartbiscuit1700](https://freesound.org/s/368691/) | CC0 |
 | `public/audio/countdown-*.mp3` | synthesised, `tools/make-audio.py` | none needed |
 | `public/audio/lock.mp3` | synthesised, `tools/make-audio.py` | none needed |
 | `public/audio/powerup.mp3` | synthesised, `tools/make-audio.py` | none needed |
 
-> The horn and the earlier gunshot were both confirmed CC0. The elimination cue
-> that replaced the gunshot has not been checked — worth thirty seconds on its
-> Freesound page before this goes anywhere public. Everything else here is CC0,
-> OFL, Apache 2.0, or written for the project.
+Every sourced sound here is CC0, confirmed on its Freesound page. Attribution
+is not required, so this table exists because knowing where things came from is
+worth more than the licence strictly demands.
 
-Attribution is not required for CC0, so this table exists because knowing where
-things came from is worth more than the licence strictly demands.
+Nothing in the project carries a restrictive licence: the sounds are CC0, the
+fonts are OFL or Apache 2.0, the clue data comes from a public dataset, and the
+artwork was made for this.
 
 The horn is a 2.7–5.7 second excerpt trimmed to its onset. The elimination cue
 is a musical phrase rather than an impact, so it is kept whole — an impact gets

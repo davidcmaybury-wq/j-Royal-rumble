@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -38,7 +38,8 @@
     "tokens-test": "node test/tokens.mjs",
     "entry-test": "node test/entry-countdown.mjs",
     "retoss-test": "node test/retoss.mjs",
-    "botcal-test": "node test/botcal.mjs"
+    "botcal-test": "node test/botcal.mjs",
+    "make-toss": "python3 tools/make-toss.py"
   },
   "dependencies": {
     "express": "^4.21.2",

@@ -120,6 +120,12 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .mk.lat{color:#4A5680;font-family:"IBM Plex Mono",monospace;font-size:9.5px}
 .mk.lat.slow{color:var(--alarm)}
 .latwarn{font-size:11px;color:var(--alarm);line-height:1.5;margin-top:6px}
+.toss{margin-top:10px;opacity:0;transform:translateY(6px);pointer-events:none;
+transition:opacity .18s ease,transform .18s ease}
+.toss.on{opacity:1;transform:none}
+.toss svg{display:block;border:1px solid var(--line);border-radius:var(--r);width:100%}
+.tosscap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--alarm);
+text-align:center;margin-top:4px}
 .pl.control{box-shadow:inset 2px 0 0 var(--chalk)}
 .bounties{font-size:11px;color:var(--slate);line-height:1.6}
 .bounties b{color:var(--brass);font-weight:400}
@@ -251,7 +257,8 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
       <div class="lectern" id="lectern" aria-hidden="true"></div>
     <aside class="rail">
       <div><div class="sect"><span>In the ring</span><span id="ring-n"></span></div><div id="ring"></div>
-        <div class="latwarn" id="latwarn"></div></div>
+        <div class="latwarn" id="latwarn"></div>
+        <div class="toss" id="toss" aria-hidden="true"></div></div>
       <div class="clock" id="clock"><span class="lbl">Clues to next entry</span>
         <span class="n mq num" id="cd">&mdash;</span><div class="who2" id="who"></div></div>
       <div id="bty-wrap" style="display:none"><div class="sect"><span>Bounties</span><span id="bty-n"></span></div>
@@ -270,6 +277,7 @@ import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, wordmark, brainAvatar } from '/brand.js';
 import { weaponToken } from '/tokens.js';
+import { tossAnimation, TOSS_SECONDS } from '/toss.js';
 import * as sfx from '/sound.js';
 import { summaryImage, fullStatsImage, statsCsv } from '/share.js';
 const GID = gameId();
@@ -358,6 +366,24 @@ function detectEvents() {
   const gone = prev.live.filter((p) => !now.has(p.token));
   if (entered.length) { sfxEntry(); banner(entered); }
   gone.forEach((p) => say(p.name + ' out — survived ' + p.tenure + ' clues', 'elim'));
+  if (gone.length) showToss(gone);
+}
+
+// An elimination happens twenty-nine times in a full match, so this sits in the
+// corner and the game carries on around it — no overlay, no pause, nothing to
+// dismiss. It plays once and takes itself away.
+let tossTimer = null;
+function showToss(gone) {
+  const box = $('toss');
+  if (!box || muted === 'novisual') return;
+  clearTimeout(tossTimer);
+  const who = gone.length === 1
+    ? gone[0].name + ' is out'
+    : gone.length + ' out at once';
+  box.innerHTML = tossAnimation(150)
+    + '<div class="tosscap">' + who + '</div>';
+  box.classList.add('on');
+  tossTimer = setTimeout(() => box.classList.remove('on'), TOSS_SECONDS * 1000 + 700);
 }
 
 function banner(ps) {
