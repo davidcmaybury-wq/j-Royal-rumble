@@ -28,3 +28,13 @@ primary_region = "ord"
   memory = "512mb"
   cpu_kind = "shared"
   cpus = 1
+
+# Match logs. Without this the logs are written to the machine's own disk,
+# which survives a restart but is wiped by the next deploy — and this app
+# deploys several times a day. Create the volume once:
+#
+#   fly volumes create rumble_data --size 1 --region ord
+#
+[mounts]
+  source = "rumble_data"
+  destination = "/data"

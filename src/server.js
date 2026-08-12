@@ -9,6 +9,7 @@ import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS } from './engine.js';
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
 import { assignToken, resolveChoice } from './tokens-server.js';
+import * as logs from './logstore.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS,
          loadDistributions, drawReadJitter, referenceHumanMedian,
          nightlyForm } from './bots.js';
@@ -98,6 +99,9 @@ const PUSH_COALESCE_MS = 25;
 // race to robots that had never been levelled to him.
 const BOT_CALIBRATION_BUZZES = 6;
 
+// Testing phase: record and save every match, whatever the host ticked.
+const RECORD_EVERYTHING = process.env.RUMBLE_RECORD_ALL !== '0';
+
 // What to assume until then. The robots were recorded against a human whose
 // median buzz was 43ms; players of this game buzz at 200-450ms across every
 // match recorded so far. Starting from zero meant starting at the harder end of
@@ -105,6 +109,23 @@ const BOT_CALIBRATION_BUZZES = 6;
 const BOT_DEFAULT_OFFSET = 190;
 
 const matches = new Map();   // gameId -> Match
+
+// A host who closes the tab halfway through should still leave a log behind,
+// and a deploy should not throw away a match in progress.
+setInterval(() => {
+  for (const m of matches.values()) {
+    if (m.record && m.phase === 'live') m.saveLog({ partial: true });
+  }
+}, 3 * 60 * 1000).unref?.();
+
+for (const sig of ['SIGTERM', 'SIGINT']) {
+  process.on(sig, () => {
+    for (const m of matches.values()) {
+      if (m.record) m.saveLog({ partial: m.phase !== 'over' });
+    }
+    process.exit(0);
+  });
+}
 
 class Match {
   // Four letters, spoken aloud over Zoom. Ambiguous pairs are left in — the
@@ -207,7 +228,10 @@ class Match {
     }
     this.history = [{ clue: 0, ceiling: this.game.ceiling,
       scores: Object.fromEntries(this.game.live().map((p) => [p.id, p.score])) }];
-    if (this.settings.recordMatch) {
+    // Every match is recorded while the format is being tested. The setting
+    // still exists, but nothing turns it off — a log that was not kept is a
+    // test that has to be run again.
+    if (RECORD_EVERYTHING || this.settings.recordMatch) {
       this.record = {
         version: VERSION,
         startedAt: new Date().toISOString(),
@@ -374,6 +398,19 @@ class Match {
       offset: this.frozenOffset, from: times.length, mark: Math.round(mark),
     });
     return this.frozenOffset;
+  }
+
+  // Written when the match ends, and periodically while it runs. A host who
+  // closes the tab halfway through should still leave something behind.
+  saveLog({ partial = false } = {}) {
+    if (!this.record) return null;
+    const rec = partial
+      ? { ...this.record, actual: this.record.actual || null }
+      : (this.record.actual ? this.record : this.finishRecord());
+    const name = logs.save(this.id, rec, { partial });
+    if (name && !partial) console.log(`saved match log ${name}`);
+    this.savedAs = name || this.savedAs;
+    return name;
   }
 
   note(type, data) {
@@ -702,6 +739,7 @@ app.delete('/api/match/:id/material/:idx', (req, res) => {
 // machine id change is the tell.
 app.get('/api/health', (_req, res) => {
   res.json({
+    logs: logs.status(),
     version: VERSION, machine: MACHINE,
     uptimeSeconds: Math.round((Date.now() - BOOTED) / 1000),
     liveMatches: matches.size,
@@ -732,6 +770,30 @@ app.get('/api/match/:id/record', (req, res) => {
 });
 
 // The handbook, so the setup page can link to it.
+// The saved logs. Guarded by RUMBLE_LOG_KEY when it is set; open when it is
+// not, which is fine for a test deployment and stated plainly in /api/health.
+const logGuard = (req) => {
+  const want = process.env.RUMBLE_LOG_KEY;
+  if (!want) return true;
+  return (req.get('x-log-key') || req.query.key) === want;
+};
+
+app.get('/logs', (_req, res) => res.sendFile(join(__dir, '../public/logs.html')));
+
+app.get('/api/logs', (req, res) => {
+  if (!logGuard(req)) return res.status(403).json({ error: 'bad log key' });
+  res.json({ ...logs.status(), matches: logs.list() });
+});
+
+app.get('/api/logs/:file', (req, res) => {
+  if (!logGuard(req)) return res.status(403).json({ error: 'bad log key' });
+  const body = logs.read(req.params.file);
+  if (!body) return res.status(404).json({ error: 'no such log' });
+  res.setHeader('content-type', 'application/json');
+  res.setHeader('content-disposition', `attachment; filename="${req.params.file}"`);
+  res.send(body);
+});
+
 app.get('/handbook', (_req, res) =>
   res.sendFile(join(__dir, '../docs/j-royal-rumble-handbook.pdf')));
 app.get('/rules', (_req, res) => res.sendFile(join(__dir, '../RULES.md')));
@@ -1004,6 +1066,7 @@ io.on('connection', (socket) => {
     if (match.game.finished) {
       match.phase = 'over';
       match.finishRecord();
+      match.saveLog();
       pushAll();
     }
   }));
@@ -1051,7 +1114,7 @@ io.on('connection', (socket) => {
   }));
 
   socket.on('end-match', hostOnly(() => {
-    match.phase = 'over'; match.finishRecord(); pushAll();
+    match.phase = 'over'; match.finishRecord(); match.saveLog(); pushAll();
   }));
 
   // --- corrections -----------------------------------------------------

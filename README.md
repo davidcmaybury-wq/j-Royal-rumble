@@ -456,6 +456,38 @@ board to be replayed. Use it when the wrong player was credited.
 the value was wrong, or for anything undo can't reach. Both are logged, and the
 count shows next to the version in the top bar.
 
+## Match logs
+
+Every match is recorded and saved on the server. There is no setting to turn it
+off during testing — a log that was not kept is a test that has to be run again.
+Set `RUMBLE_RECORD_ALL=0` if that ever needs to change.
+
+Three copies get made, deliberately overlapping:
+
+**On the server.** Written when the match ends, every three minutes while one is
+running, and on shutdown — so a host who closes the tab, or a deploy that lands
+mid-match, still leaves something behind. Browse them at `/logs`.
+
+**In the host's downloads.** The console saves a copy automatically when the
+match finishes. Needs no volume, no account and no remembering.
+
+**By hand.** `Download match data` on the champion screen, any time.
+
+### The disk is ephemeral
+
+A fly machine's own filesystem survives a restart but is **wiped by the next
+deploy**, and this project deploys several times a day. Logs go to `/data`,
+which is where a volume mounts. Create it once:
+
+    fly volumes create rumble_data --size 1 --region ord
+
+The `[mounts]` block is already in `fly.toml`. Until the volume exists, logs are
+still written — they just will not survive. `/api/health` and the `/logs` page
+both say which of the two is currently true, in those words.
+
+`/logs` is open unless `RUMBLE_LOG_KEY` is set, in which case it wants
+`?key=…`. Fine for a test deployment; worth setting before anything public.
+
 ## Recording a match
 
 Tick **record detailed match data** on the setup page. When the match ends the

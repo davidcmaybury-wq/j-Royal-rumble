@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble — match logs</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;
+--chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:4px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--chalk);
+font:400 15px/1.55 "IBM Plex Sans",system-ui,sans-serif;padding:26px 20px 60px}
+.wrap{max-width:1000px;margin:0 auto}
+h1{font:400 34px/1 "Anton",Impact,sans-serif;color:var(--brass);margin:0 0 4px}
+.sub{color:var(--slate);font-size:13.5px;margin-bottom:20px}
+.warn{border:1px solid var(--alarm);border-left-width:3px;border-radius:var(--r);
+padding:11px 14px;color:var(--alarm);font-size:13.5px;margin-bottom:18px;background:#2A100D}
+.warn code{background:#00000055;padding:1px 5px;border-radius:3px;color:#F0A99E}
+.ok{border:1px solid var(--live);border-left-width:3px;border-radius:var(--r);
+padding:11px 14px;color:var(--live);font-size:13.5px;margin-bottom:18px;background:#0E241C}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:500;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+color:var(--slate);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid #1A2237;white-space:nowrap}
+tr:hover td{background:var(--panel)}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",monospace}
+a{color:var(--brass);text-decoration:none}
+a:hover{text-decoration:underline}
+.tag{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--alarm);
+border:1px solid var(--alarm);border-radius:20px;padding:1px 7px;margin-left:6px}
+.none{color:var(--slate);padding:30px 0}
+</style></head>
+<body><div class="wrap">
+  <h1>Match logs</h1>
+  <div class="sub" id="where">Loading…</div>
+  <div id="notice"></div>
+  <div id="list"><div class="none">Loading…</div></div>
+</div>
+<script type="module">
+const key = new URLSearchParams(location.search).get('key') || location.hash.slice(1);
+const q = key ? '?key=' + encodeURIComponent(key) : '';
+
+const fmt = (n) => n == null ? '—' : n.toLocaleString();
+
+try {
+  const d = await (await fetch('/api/logs' + q)).json();
+  if (d.error) throw new Error(d.error);
+
+  document.getElementById('where').textContent =
+    `${d.saved} saved in ${d.dir}`;
+
+  // The thing worth knowing up front, not buried at the bottom.
+  document.getElementById('notice').innerHTML = d.durable
+    ? `<div class="ok">On a mounted volume — these survive deploys.</div>`
+    : `<div class="warn"><b>These will be wiped by the next deploy.</b>
+        They are on the machine's own disk, not a volume. To keep them:
+        <code>fly volumes create rumble_data --size 1 --region ord</code>
+        and redeploy with the <code>[mounts]</code> block already in fly.toml.</div>`;
+
+  const rows = d.matches.map((m) => `<tr>
+    <td><a href="/api/logs/${m.file}${q}">${m.file.replace(/\.json$/, '')}</a>
+      ${m.partial ? '<span class="tag">unfinished</span>' : ''}</td>
+    <td>${m.winner || '<span style="color:var(--slate)">—</span>'}</td>
+    <td class="num">${fmt(m.players)}</td>
+    <td class="num">${fmt(m.clues)}</td>
+    <td class="num">${m.minutes == null ? '—' : m.minutes + 'm'}</td>
+    <td class="num">${m.secondsPerClueMedian == null ? '—' : m.secondsPerClueMedian + 's'}</td>
+    <td class="num" style="color:var(--slate)">${(m.bytes / 1024).toFixed(0)}KB</td>
+  </tr>`).join('');
+
+  document.getElementById('list').innerHTML = d.matches.length
+    ? `<table><tr><th>Match</th><th>Winner</th><th class="num">Players</th>
+        <th class="num">Clues</th><th class="num">Length</th>
+        <th class="num">Pace</th><th class="num">Size</th></tr>${rows}</table>`
+    : '<div class="none">No matches recorded yet.</div>';
+} catch (e) {
+  document.getElementById('list').innerHTML =
+    `<div class="warn">${e.message === 'bad log key'
+      ? 'This server wants a log key. Add <code>?key=…</code> to the address.'
+      : e.message}</div>`;
+  document.getElementById('where').textContent = '';
+}
+</script>
+</body></html>

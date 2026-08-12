@@ -514,6 +514,16 @@ function render() {
 // The room has been watching this board for an hour. When it ends, the screen
 // should say so — not quietly stop updating.
 let finishShown = false;
+let recordSaved = false;
+
+function downloadRecord() {
+  const a = document.createElement('a');
+  a.href = `/api/match/${GID}/record?key=${encodeURIComponent(hostKey)}`;
+  a.download = `rumble-${GID}-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 function showFinish() {
   if (finishShown) return;
   finishShown = true;
@@ -538,8 +548,12 @@ function showFinish() {
   b1.onclick = showStandings;
   if (S.recording) {
     const b0 = document.createElement('button'); b0.textContent = 'Download match data';
-    b0.onclick = () => window.open(`/api/match/${GID}/record?key=${encodeURIComponent(hostKey)}`, '_blank');
+    b0.onclick = () => downloadRecord();
     more.appendChild(b0);
+    // And take a copy without being asked. The server keeps one too, but a
+    // file in the host's own downloads folder needs no volume, no mail
+    // provider and no remembering.
+    if (!recordSaved) { recordSaved = true; setTimeout(downloadRecord, 400); }
   }
   const bs = document.createElement('button'); bs.textContent = 'Share results \u25BE';
   bs.onclick = (e) => { e.stopPropagation(); shareMenu(bs); };
