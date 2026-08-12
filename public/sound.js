@@ -10,6 +10,8 @@ const FILES = {
   count2: '/audio/countdown-2.mp3',
   count3: '/audio/countdown-3.mp3',
   lock: '/audio/lock.mp3',
+  powerup: '/audio/powerup.mp3',
+  join: '/audio/join.mp3',
 };
 
 const pool = {};
@@ -20,7 +22,9 @@ export function preload() {
   for (const [k, src] of Object.entries(FILES)) {
     const a = new Audio(src);
     a.preload = 'auto';
-    a.volume = k === 'entry' ? 0.85 : k === 'chop' ? 0.9 : k === 'lock' ? 0.7 : 0.55;
+    a.volume = k === 'entry' ? 0.85 : k === 'chop' ? 0.9
+      : k === 'lock' ? 0.7 : k === 'powerup' ? 0.8
+      : k === 'join' ? 0.6 : 0.55;
     pool[k] = a;
   }
 }
@@ -51,8 +55,10 @@ export function play(name) {
   } catch (e) { /* nothing to be done */ }
 }
 
-// Two eliminations on the same clue: a second chop just behind the first.
-export function chops(n = 1) {
+// Two eliminations on the same clue used to stack a second cue behind the
+// first, 190ms apart. That worked when the sound was an impact. It is a tune
+// now, and two copies of a tune a fifth of a second apart is a mess — so it
+// plays once however many players went out together.
+export function chops() {
   play('chop');
-  for (let i = 1; i < Math.min(n, 3); i++) setTimeout(() => play('chop'), 190 * i);
 }

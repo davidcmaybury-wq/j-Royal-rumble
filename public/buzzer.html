@@ -388,6 +388,8 @@ renderJoin(); }
     if (r && r.token) saveToken(r.token);
     joined = true; joinErr = '';
     sfx.unlock();
+    // Their own confirmation that they are in the room.
+    setTimeout(() => sfx.play('join'), 60);
     const av = localStorage.getItem('rumble:avatar');
     if (av) socket.emit('avatar', { dataUrl: av });
     if (myArt) socket.emit('token-art', myArt, (settled) => {

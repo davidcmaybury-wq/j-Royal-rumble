@@ -119,18 +119,37 @@ def build_horn(src):
     return to_target(x, 0.155)
 
 
-# ------------------------------------------------------------------ the chop
+# ------------------------------------------------------- going out of the ring
 def build_chop(src):
-    # An impact arrives already decayed and usually already in a room, so this
-    # adds far less than the horn needs. What matters is protecting the
-    # transient: it's the whole character of the sound, and it's the first
-    # thing lost to over-eager normalising.
+    # This one is a musical phrase, not an impact, and it wants the opposite
+    # treatment. An impact is trimmed hard to its onset and cut short to protect
+    # the transient; a jingle has to keep its whole shape or it stops resolving.
+    # So: no onset trim beyond leading silence, no truncation, and only a
+    # whisper of room since a chiptune already sits in its own space.
     x = decode(src)
-    x = x[onset(x, thresh=0.03):]
-    x = x[:int(1.2 * SR)]
-    x = shape(x, fade_in=0.0005, fade_out=0.18)
-    x = trim_tail(tail(x, seconds=0.35, mix=0.10), floor=0.002, keep=0.12)
-    return to_target(x, 0.115)
+    lead = onset(x, thresh=0.02)
+    if lead > int(0.05 * SR):          # only trim if there is real silence there
+        x = x[lead:]
+    x = shape(x, fade_in=0.002, fade_out=0.06)
+    x = tail(x, seconds=0.25, mix=0.07)
+    x = trim_tail(x, floor=0.002, keep=0.10)
+    return to_target(x, 0.135)
+
+
+# --------------------------------------------------------- somebody signs up
+def build_join(src):
+    # Another short phrase rather than an impact, so the same handling as the
+    # elimination cue. Pitched quieter than everything else on purpose: the
+    # host hears this thirty times while a room fills up, and a cue you hear
+    # thirty times should sit under the conversation rather than on top of it.
+    x = decode(src)
+    lead = onset(x, thresh=0.02)
+    if lead > int(0.05 * SR):
+        x = x[lead:]
+    x = shape(x, fade_in=0.002, fade_out=0.05)
+    x = tail(x, seconds=0.2, mix=0.06)
+    x = trim_tail(x, floor=0.002, keep=0.08)
+    return to_target(x, 0.095)
 
 
 if __name__ == '__main__':
@@ -141,7 +160,7 @@ if __name__ == '__main__':
 
     print('building cues from', folder)
     horn = find(folder, 'horn', 'siren')
-    chop = find(folder, 'chop', 'impact', 'blade', 'slam', 'shot', 'gun', 'exit', 'hit')
+    chop = find(folder, 'die', 'lose', 'chop', 'impact', 'blade', 'slam', 'shot', 'gun', 'exit', 'hit')
 
     if horn:
         print(f'  horn source: {os.path.basename(horn)}')
@@ -154,5 +173,12 @@ if __name__ == '__main__':
         write('chop', build_chop(chop))
     else:
         print('  no chop source found — leaving the existing chop.mp3 alone')
+
+    join = find(folder, 'start', 'join', 'reload', 'coin')
+    if join:
+        print(f'  join source: {os.path.basename(join)}')
+        write('join', build_join(join))
+    else:
+        print('  no join source found — leaving the existing join.mp3 alone')
 
     print('countdown tones stay synthesised: python3 tools/make-audio.py')

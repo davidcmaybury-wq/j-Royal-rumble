@@ -77,8 +77,24 @@ def norm(x, peak=0.89):
     return x / (np.max(np.abs(x)) + 1e-9) * peak
 
 
-def write(name, x, bitrate='112k'):
-    x = norm(x)
+def loudness(x):
+    """RMS of the loudest third of a second. Peak is the wrong measure here: a
+    square wave with a hard attack peaks far higher than it sounds, so
+    normalising to peak left the power-up much louder than everything else."""
+    b = int(0.3 * SR)
+    if len(x) < b:
+        return np.sqrt((x ** 2).mean())
+    return max(np.sqrt((x[i:i + b] ** 2).mean()) for i in range(0, len(x) - b, b // 2))
+
+
+def write(name, x, bitrate='112k', target=None):
+    if target:
+        x = x * (target / (loudness(x) + 1e-9))
+        peak = np.max(np.abs(x))
+        if peak > 0.95:
+            x = x * (0.95 / peak)
+    else:
+        x = norm(x)
     # short fade at both ends so nothing clicks
     f = int(0.006 * SR)
     x[:f] *= np.linspace(0, 1, f)
@@ -181,6 +197,46 @@ def lock_tone():
     return reverb(body, seconds=0.35, mix=0.13)[:int(SR * 0.95)]
 
 
+# ------------------------------------------------------------- stakes rising
+# A chiptune power-up: a short figure repeated up the scale, on a square wave.
+#
+# Synthesised rather than sampled, and deliberately not anybody else's jingle.
+# The 8-bit power-up is a genre, not a recording, and a rapid ascending
+# arpeggio on a square wave is what makes one — so this is built from the same
+# ingredients without borrowing the tune.
+def powerup():
+    # A three-note figure, transposed up a fifth each time it repeats.
+    figure = [0, 4, 7]              # a major triad, in semitones
+    steps = [0, 7, 14, 21, 28]      # the figure climbs by fifths
+    root = 261.6                    # middle C
+    note = 0.042                    # seconds per note — fast enough to read as a run
+    out = []
+    for si, step in enumerate(steps):
+        for fi, semis in enumerate(figure):
+            f = root * (2 ** ((step + semis) / 12))
+            x = t(note)
+            # Duty narrows as it climbs, which brightens the top of the run.
+            duty = 0.5 - 0.14 * (si / max(1, len(steps) - 1))
+            tone_ = signal.square(2 * np.pi * f * x, duty=duty)
+            # A hard attack and a short tail: the notes should click along.
+            env = np.minimum(1, np.linspace(0, 22, len(x))) * np.exp(-np.linspace(0, 3.2, len(x)))
+            # A quiet octave below keeps it from sounding thin on laptop speakers.
+            sub = signal.square(2 * np.pi * f * 0.5 * x, duty=0.5) * 0.22
+            out.append((tone_ + sub) * env * 0.42)
+
+    # One last note on top, held a little longer, to land it.
+    f = root * (2 ** ((steps[-1] + 12) / 12))
+    x = t(0.16)
+    env = np.minimum(1, np.linspace(0, 30, len(x))) * np.exp(-np.linspace(0, 5.5, len(x)))
+    out.append((signal.square(2 * np.pi * f * x, duty=0.34)
+                + signal.square(2 * np.pi * f * 0.5 * x, duty=0.5) * 0.3) * env * 0.5)
+
+    body = np.concatenate(out)
+    sos = signal.butter(2, 7000 / (SR / 2), btype='low', output='sos')
+    body = signal.sosfilt(sos, body)
+    return reverb(body, seconds=0.4, mix=0.12)[:int(SR * 0.95)]
+
+
 if __name__ == '__main__':
     print('writing synthesised cues:')
     np.random.seed(7)
@@ -190,6 +246,8 @@ if __name__ == '__main__':
         write('entry-horn', entry_horn())
         write('chop', chop())
     for i in range(3):
-        write(f'countdown-{i + 1}', countdown(i), bitrate='96k')
-    write('lock', lock_tone(), bitrate='96k')
+        write(f'countdown-{i + 1}', countdown(i), bitrate='96k', target=0.105)
+    write('lock', lock_tone(), bitrate='96k', target=0.130)
+    # Matched to the sampled cues, which sit around 0.13-0.16.
+    write('powerup', powerup(), bitrate='112k', target=0.145)
     print('done')

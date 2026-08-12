@@ -92,9 +92,17 @@ http.on('connection', (sock) => sock.setNoDelay(true));
 const PUSH_COALESCE_MS = 25;
 
 // How many human buzzes to watch before fixing the robots' speed to the field.
-// Enough to be more than noise, few enough that it settles in the first couple
-// of minutes rather than drifting all match.
-const BOT_CALIBRATION_BUZZES = 10;
+// Six rather than ten: a human eliminated early may never reach ten, and until
+// the calibration fires the robots run at their raw recorded speed. In one real
+// match the player was out at clue 12 having buzzed seven times, losing every
+// race to robots that had never been levelled to him.
+const BOT_CALIBRATION_BUZZES = 6;
+
+// What to assume until then. The robots were recorded against a human whose
+// median buzz was 43ms; players of this game buzz at 200-450ms across every
+// match recorded so far. Starting from zero meant starting at the harder end of
+// that range, which is exactly the wrong way round for an unknown field.
+const BOT_DEFAULT_OFFSET = 190;
 
 const matches = new Map();   // gameId -> Match
 
@@ -345,15 +353,19 @@ class Match {
   // decent buzzes rather than their average — buzzing slowly should not make
   // the opposition slower too.
   botOffset() {
-    if (this.settings.botMatchField === false) return this.settings.botOffset || 0;
+    if (this.settings.botMatchField === false) return this.settings.botOffset ?? BOT_DEFAULT_OFFSET;
     if (this.frozenOffset != null) return this.frozenOffset;
 
+    // Warm-up buzzes count. Queued and eliminated players keep buzzing, so
+    // there is a supply of human timing even when nobody is winning races.
     const times = [];
     for (const [tok, arr] of this.humanBuzzes || []) {
       if (this.roster.get(tok)?.isBot) continue;
       times.push(...arr);
     }
-    if (times.length < BOT_CALIBRATION_BUZZES) return this.settings.botOffset || 0;
+    if (times.length < BOT_CALIBRATION_BUZZES) {
+      return this.settings.botOffset ?? BOT_DEFAULT_OFFSET;
+    }
 
     times.sort((a, b) => a - b);
     const mark = times[Math.floor(times.length * 0.4)];
@@ -437,9 +449,10 @@ class Match {
       delaySetting: this.settings.delay,
       botOffset: this.frozenOffset,
       botOffsetNote: this.frozenOffset == null
-        ? 'never calibrated — fewer than ' + BOT_CALIBRATION_BUZZES + ' human buzzes'
+        ? 'never calibrated — fewer than ' + BOT_CALIBRATION_BUZZES
+          + ' human buzzes; robots ran on the ' + BOT_DEFAULT_OFFSET + 'ms default'
         : 'robots shifted ' + this.frozenOffset + 'ms to sit alongside the human field, '
-          + 'measured once and frozen',
+          + 'measured once after ' + BOT_CALIBRATION_BUZZES + ' buzzes and frozen',
       note: 'One-way estimates in ms, sampled every 8s from each client. '
         + 'The Zoom delay assumes the socket path beats the call audio; if median '
         + 'latency approaches the delay setting, that assumption is failing.',

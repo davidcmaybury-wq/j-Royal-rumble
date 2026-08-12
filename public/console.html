@@ -530,7 +530,9 @@ function overtimeSplash(big, mid, sub) {
   d.innerHTML = `<div class="h2 mq">${big}</div><div class="m mq">${mid}</div>
     <div class="s2">${sub}</div>`;
   document.body.appendChild(d);
-  sfx.play('chop');
+  // A rising chiptune run rather than the elimination chop — the stakes going
+  // up is good news for whoever is still standing.
+  sfx.play('powerup');
   $('sr').textContent = mid;
   const t = setTimeout(kill, 4200);
   function kill() { d.remove(); clearTimeout(t); removeEventListener('keydown', kill); }
@@ -662,8 +664,17 @@ function openCorrect(p) {
   setTimeout(() => el.querySelector('#fixamt').focus(), 50);
 }
 
+// Somebody signing up. Tracked by count rather than by event so a reconnect or
+// a state resend cannot make it chime twice for the same person.
+let lastRosterCount = null;
+function joinChime(n) {
+  if (lastRosterCount != null && n > lastRosterCount) sfx.play('join');
+  lastRosterCount = n;
+}
+
 function renderLobby() {
   const roster = S.roster || [];
+  joinChime(roster.length);
   const url = location.origin + '/j/' + S.gameId;
   $('stage').innerHTML = '<div class="lobby">' + markFull(150)
     + '<div class="join">Players join at <code>' + url + '</code></div>'

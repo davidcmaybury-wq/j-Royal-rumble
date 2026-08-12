@@ -37,6 +37,14 @@ await wait(300);
 
 check('no calibration before anyone has buzzed', st.botOffsetFrozen === false,
   `offset ${st.botOffset}`);
+// The default matters more than it looks. A human crushed in the opening clues
+// can be eliminated before the calibration ever fires — which is exactly what
+// happened in one recorded match, where the player went out at clue 12 having
+// buzzed seven times and lost every race to robots that had never been levelled
+// to him.
+check('but the robots start on a sensible default rather than raw speed',
+  st.botOffset >= 150 && st.botOffset <= 250,
+  `${st.botOffset}ms, against human medians of 198-422ms across recorded matches`);
 
 const playClue = async (humanMs) => {
   const open = [];

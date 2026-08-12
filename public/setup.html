@@ -128,6 +128,7 @@ border-radius:var(--r);font-size:13px;color:var(--slate);background:none;cursor:
 import { estimate as estimateFor, warnings as warningsFor } from '/estimate.js';
 import { markFull, brainAvatar } from '/brand.js';
 import { weaponToken } from '/tokens.js';
+import * as sfx from '/sound.js';
 const socket = io({ transports: ['websocket'] });
 let code = location.pathname.split('/')[2] || '';
 let hostKey = location.hash.slice(1);
@@ -143,6 +144,12 @@ const api = async (path, opts = {}) => {
   if (!r.ok) throw new Error(j.error || 'request failed');
   return j;
 };
+
+sfx.preload();
+// Browsers hold audio until the page has been interacted with. The host will
+// have clicked something on this page long before anyone joins.
+addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+addEventListener('keydown', () => sfx.unlock(), { once: true });
 
 async function boot() {
   if (!code) {
@@ -470,9 +477,19 @@ const num = (k, label, val, hint) =>
     <input type="number" id="${k}" value="${val}" style="width:118px">
     <span class="hint">${hint}</span></div>`;
 
+// Somebody signing up. Counted rather than event-driven, so a state resend
+// cannot chime twice for the same person, and never on the first paint — the
+// host should not hear six chimes because six people were already waiting.
+let lastRosterCount = null;
+function joinChime(n) {
+  if (lastRosterCount != null && n > lastRosterCount) sfx.play('join');
+  lastRosterCount = n;
+}
+
 function renderRoster() {
   const w = document.getElementById('who'), n = document.getElementById('rn');
   if (!w) return;
+  joinChime(S.roster.length);
   n.textContent = S.roster.length;
   renderWarnings();
   w.innerHTML = S.roster.length

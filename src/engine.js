@@ -34,7 +34,8 @@ export const DEFAULT_SETTINGS = {
   overtimeMax: 8,            // never beyond this multiple
   botReadJitter: 45,         // ms, shared per clue: the host activates by hand
   botMatchField: true,       // shift robots to sit alongside the humans present
-  botOffset: 0,              // used when botMatchField is off
+  botOffset: null,           // ms; null means use the built-in default, then
+                             // calibrate to the field once enough buzzes land
   delay: 200,                // ms held back so buzzers arm with Zoom audio
   lockout: 250,              // ms penalty for buzzing before the lights
   seasonRange: null,         // [lo, hi] archive seasons; null = all

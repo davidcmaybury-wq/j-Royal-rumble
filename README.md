@@ -122,6 +122,23 @@ every player with a spread well under 60 ms. It exists because an earlier
 attempt at this used `volatile` emits, which are dropped rather than queued —
 the activation reached nobody at all, and nothing else in the suite noticed.
 
+### Cues
+
+| Cue | When | Loudness |
+|---|---|---|
+| entry horn | a player enters the ring | 0.155 |
+| powerup | overtime, stakes doubling | 0.137 |
+| elimination | somebody goes out | 0.131 |
+| lock | you have been targeted | 0.123 |
+| join | somebody signs up | 0.097 |
+| countdown | your last three clues before entering | 0.095 |
+
+Matched on loudness rather than peak. A square wave with a hard attack peaks far
+higher than it sounds, so peak-normalising left the power-up towering over
+everything else. The join chime and the countdown sit deliberately quieter: the
+host hears the join cue thirty times while a room fills, and a sound you hear
+thirty times should sit under the conversation.
+
 ## A note on buzz times
 
 Times under 150ms are expected, not suspect. Players time the buzzer to the
