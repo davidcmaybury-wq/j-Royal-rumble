@@ -1,6 +1,7 @@
 # Shipping an update from a phone
 
-Drop a `.tar.gz` in this folder and the `unpack` workflow does the rest:
+Drop the archive in this folder — `.tar` or `.tar.gz`, whichever the
+download gave you and the `unpack` workflow does the rest:
 it extracts the archive over the tree, deletes the tarball, commits the
 result, and that commit triggers the normal deploy with all its tests.
 

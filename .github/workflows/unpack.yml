@@ -15,7 +15,11 @@ name: unpack
 
 on:
   push:
-    paths: ['incoming/**.tar.gz']
+    # Any archive, not just *.tar.gz. The download card renames the file on the
+    # way to a phone, so what actually arrives is usually a bare .tar even
+    # though it is gzipped inside. A filter that only matched .tar.gz would
+    # never have fired once.
+    paths: ['incoming/**']
 
 permissions:
   contents: write
@@ -35,7 +39,7 @@ jobs:
       - name: Find the tarball
         id: find
         run: |
-          FILE=$(ls -t incoming/*.tar.gz 2>/dev/null | head -1 || true)
+          FILE=$(ls -t incoming/*.tar incoming/*.tar.gz incoming/*.tgz 2>/dev/null | head -1 || true)
           if [ -z "$FILE" ]; then
             echo "nothing to unpack"
             echo "found=" >> $GITHUB_OUTPUT
@@ -54,17 +58,18 @@ jobs:
 
           # Look before leaping: refuse anything that tries to write outside
           # the repository, and note any workflow files we will have to skip.
-          if tar tzf "$FILE" | grep -qE '(^|/)\.\./'; then
+          if tar taf "$FILE" | grep -qE '(^|/)\.\./'; then
             echo "::error::the archive contains paths that climb out of the tree"
             exit 1
           fi
-          SKIPPED=$(tar tzf "$FILE" | grep -E '^\./\.github/workflows/' || true)
+          SKIPPED=$(tar taf "$FILE" | grep -E '^\./\.github/workflows/' || true)
           echo "skipped<<EOF" >> $GITHUB_OUTPUT
           echo "$SKIPPED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
           mkdir -p /tmp/unpack
-          tar xzf "$FILE" -C /tmp/unpack
+          # -a lets tar work out the compression, so .tar and .tar.gz both work.
+          tar xaf "$FILE" -C /tmp/unpack
           rm -f "$FILE"
 
           # Copy over the top. Deliberately no deletion of anything the
