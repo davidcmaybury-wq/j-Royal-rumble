@@ -203,9 +203,10 @@ A(P('<b>Correct.</b> Every other player in the ring pays you the clue value. You
     '$500 from each of the other four; heads-up it is worth $500.'))
 A(P('<b>Wrong.</b> You lose the value and you are locked out of that clue. Nobody '
     'else is affected by your miss.'))
-A(P('<b>The re-toss.</b> A missed clue immediately goes back out to everyone still '
-    'eligible as a fresh buzzer race. If somebody else converts it you pay them '
-    'along with everyone else, so a miss followed by a conversion costs you twice.'))
+A(P('<b>The re-toss.</b> A missed clue goes back out as a genuinely fresh race: '
+    'the buzzers reopen for everybody still eligible, including anyone who did '
+    'not attempt it the first time. If somebody else converts it you pay them '
+    'along with everyone else, so a miss followed by a conversion costs twice.'))
 A(P('<b>Nobody gets it.</b> Every player in the ring loses half the value. Passing '
     'is not free.'))
 
@@ -463,20 +464,50 @@ A(P('Five standards, drawn at random or forced, and any of them can be changed '
     'by clicking the robot before the match starts.'))
 
 A(table([
-    ['Standard', 'Attempts/game', 'Wins the buzz', 'Correct'],
-    ['rookie', '20 \u2013 29', '35%', '71%'],
-    ['normie', '29 \u2013 35', '47%', '82%'],
-    ['champ', '34 \u2013 40', '55%', '88%'],
-    ['superchamp', '39 \u2013 44', '62%', '93%'],
-    ['elite', '43 \u2013 50', '72%', '96%'],
-], [34 * mm, 34 * mm, 32 * mm, 26 * mm], align=[1, 2, 3]))
-A(P('Each standard is pinned to a percentile of 3,339 real player-games from '
-    'J!ometry\u2019s published box data \u2014 the 10th, 35th, 60th, 80th and 94th.', 'caption'))
+    ['Standard', 'Attempts', 'Accuracy', 'How often drawn'],
+    ['rookie', '23 \u2013 35%', '70 \u2013 80%', '5%'],
+    ['normie', '37 \u2013 61%', '77 \u2013 87%', '60%'],
+    ['champ', '63 \u2013 70%', '79 \u2013 89%', '23%'],
+    ['superchamp', '72 \u2013 88%', '83 \u2013 90%', '11%'],
+    ['elite', '89 \u2013 96%', '87 \u2013 95%', '1%'],
+], [30 * mm, 28 * mm, 28 * mm, 34 * mm], align=[1, 2, 3]))
+A(P('Attempts as a share of the clues played. These are Matt Schiffler\u2019s '
+    'figures from the generator he wrote for his own game, not a reconstruction '
+    'of them.', 'caption'))
+
+A(P('Checked against 3,339 real player-games from J!ometry\u2019s published box '
+    'data, his intuition holds up unusually well. The share of real games falling '
+    'in each of his bands runs 3.1%, 55.8%, 17.5%, 12.8% and 0.1% \u2014 against '
+    'the 5, 60, 23, 11 and 1 per cent at which he draws them. His population\u2019s '
+    'mean attempt rate is 56% against a real median of 57%.'))
+
+A(callout('Most players are ordinary',
+          'The weighting matters more than the bands do. An earlier version of '
+          'this drew the five standards uniformly, so one robot in five was '
+          'elite. On the show it is one in a hundred. A test field of twenty per '
+          'cent elites is not a test of anything.'))
+
+A(P('Difficulty by row', 'h2'))
+A(P('A player\u2019s attempt rate is raised to a power per row rather than '
+    'multiplied by one: <font face="Courier">rate ^ exponent</font>, with '
+    'exponents of 0.48, 0.67, 0.85, 1.10 and 1.40 from the cheapest row to the '
+    'dearest. The power form grades itself, because a fraction raised to a power '
+    'above one falls away much faster when the fraction is small.'))
+
+A(table([
+    ['Base attempt rate', 'On the dearest row', 'Lost'],
+    ['30%', '13%', '17 points'],
+    ['60%', '42%', '18 points'],
+    ['90%', '84%', '6 points'],
+], [42 * mm, 40 * mm, 28 * mm], align=[1, 2]))
+A(P('A weak player loses far more to a hard clue than a strong one, and no '
+    'per-standard table is needed to produce that. In play a rookie goes for the '
+    'cheapest row 3.6 times as often as the dearest; an elite 1.1 times.', 'caption'))
 
 A(P('What the real data changed', 'h2'))
-A(P('That file splits each game into its two rounds, and Double Jeopardy clues '
-    'average four times the value of Single Jeopardy ones. Between the rounds, '
-    'accuracy falls 1.9 points while attempts fall 15 per cent.'))
+A(P('The same file splits each game into its two rounds, and Double Jeopardy '
+    'clues average four times the value of Single Jeopardy ones. Between the '
+    'rounds, accuracy falls 1.9 points while attempts fall 15 per cent.'))
 
 A(callout('Difficulty lives in the attempt, not the answer',
           'A hard clue does not make a player wrong. It makes them not buzz at '
@@ -488,6 +519,44 @@ A(callout('Difficulty lives in the attempt, not the answer',
 A(P('Grouped by contestant across 1,772 people, the ladder from one appearance '
     'to ten or more runs 46.3% to 56.3% on winning the buzz, and 81.8% to 89.3% '
     'on accuracy. Both matter. The buzzer matters more.'))
+
+A(P('Levelling robots to the room', 'h2'))
+A(P('The recorded robots were measured against a player whose median buzz was 43 '
+    'milliseconds. Dropped in front of somebody buzzing at 400 they would be '
+    'unbeatable, so they are shifted to sit alongside whoever actually turned up '
+    '\u2014 measured once, after six human buzzes, and then frozen.'))
+
+A(callout('Two ways to get this wrong, both of them found in play',
+          'Recomputing the shift every clue made the robots chase the human: slow '
+          'buzzes early dragged the field down permanently, and by the end of one '
+          'match the player had sped up to 294ms while the robots sat at 612. '
+          'Freezing it instead introduced the opposite fault \u2014 the human was '
+          'eliminated at clue 12 having buzzed seven times, so the calibration '
+          'never fired and he lost every race to robots that had never been '
+          'levelled to him. It now settles after six buzzes and starts from a '
+          '190ms default rather than from nothing.'))
+
+A(H('WHAT ELSE IS IN THERE', P('Details that matter in the room rather than on paper.')))
+
+A(P('Player tokens', 'h2'))
+A(P('Twenty-four line-art weapons \u2014 crowbar, morningstar, dinosaur bone, '
+    'folding chair \u2014 assigned on arrival and changeable. Two players who pick '
+    'the same shape get different colourways rather than one being refused: the '
+    'shape is the identity, the colour is how you tell two of them apart. Anyone '
+    'can upload a photograph instead.'))
+
+A(P('The entry countdown', 'h2'))
+A(P('Each waiting player sees their own entry, not the next entry in the match, '
+    'with their place in the queue beside it. Three rising tones over their last '
+    'three clues, and the page washes amber as they come up.'))
+
+A(P('Match logs', 'h2'))
+A(P('Every match is recorded and saved three ways: on the server, in the '
+    'host\u2019s downloads automatically, and on demand from the champion screen. '
+    'Every clue, every buzz time, the connection it arrived over, scores before '
+    'and after, entries, eliminations, corrections, and the predicted length '
+    'against the real one. Nearly everything in this document that is a number '
+    'rather than an opinion came out of one of those files.'))
 
 A(H('METHOD', P('The rules engine is a plain module with no framework and no network, driven '
     'by a Monte Carlo harness that plays hundreds of matches per configuration '
