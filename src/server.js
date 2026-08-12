@@ -91,6 +91,11 @@ http.on('connection', (sock) => sock.setNoDelay(true));
 // Long enough to collapse a burst of buzzes, short enough that nobody sees it.
 const PUSH_COALESCE_MS = 25;
 
+// How many human buzzes to watch before fixing the robots' speed to the field.
+// Enough to be more than noise, few enough that it settles in the first couple
+// of minutes rather than drifting all match.
+const BOT_CALIBRATION_BUZZES = 10;
+
 const matches = new Map();   // gameId -> Match
 
 class Match {
@@ -128,6 +133,7 @@ class Match {
     this.latency = new Map();    // token -> [{ at, ms }] one-way samples
     this.bots = new Map();       // token -> bot brain
     this.humanBuzzes = new Map();// token -> [ms] for the live-field offset
+    this.frozenOffset = null;    // set once, then never moves
     this.botTimers = [];
   }
 
@@ -239,6 +245,7 @@ class Match {
         control: this.control,
         delay: this.settings.delay,
         botOffset: this.bots.size ? this.botOffset() : null,
+        botOffsetFrozen: this.frozenOffset != null,
         overtime: g.overtime ? g.overtime() : null,
         board: g.board.map((c) => ({
           title: c.title, note: c.note, source: c.source,
@@ -323,21 +330,38 @@ class Match {
     };
   }
 
-  // Robots were recorded against one particular field on one particular setup.
-  // Rather than assume that scale transfers, shift them by the difference
-  // between the humans actually playing and the human they were recorded
-  // against — so they stay competitive with whoever turned up.
+  // Robots were recorded against one particular field on one particular setup:
+  // a human whose median buzz was 43ms. Dropped in front of a player who buzzes
+  // at 400ms they would be unbeatable, so they are shifted to sit alongside
+  // whoever actually turned up.
+  //
+  // The shift is measured once and then frozen. Recomputing it every clue made
+  // the robots chase the human: slow buzzes early dragged the whole field down
+  // and never recovered, so a player who started badly faced easier opposition
+  // for the rest of the match. Measured over one real match, the gap went from
+  // the bots being 132ms faster than the human to 318ms slower.
+  //
+  // The 40th percentile rather than the median, so the target is the player's
+  // decent buzzes rather than their average — buzzing slowly should not make
+  // the opposition slower too.
   botOffset() {
     if (this.settings.botMatchField === false) return this.settings.botOffset || 0;
+    if (this.frozenOffset != null) return this.frozenOffset;
+
     const times = [];
     for (const [tok, arr] of this.humanBuzzes || []) {
       if (this.roster.get(tok)?.isBot) continue;
       times.push(...arr);
     }
-    if (times.length < 8) return this.settings.botOffset || 0;
+    if (times.length < BOT_CALIBRATION_BUZZES) return this.settings.botOffset || 0;
+
     times.sort((a, b) => a - b);
-    const median = times[Math.floor(times.length / 2)];
-    return Math.round(median - referenceHumanMedian());
+    const mark = times[Math.floor(times.length * 0.4)];
+    this.frozenOffset = Math.round(mark - referenceHumanMedian());
+    this.note('bot-calibration', {
+      offset: this.frozenOffset, from: times.length, mark: Math.round(mark),
+    });
+    return this.frozenOffset;
   }
 
   note(type, data) {
@@ -411,6 +435,11 @@ class Match {
         points: arr.map((x) => [x.at, x.ms]),
       })),
       delaySetting: this.settings.delay,
+      botOffset: this.frozenOffset,
+      botOffsetNote: this.frozenOffset == null
+        ? 'never calibrated — fewer than ' + BOT_CALIBRATION_BUZZES + ' human buzzes'
+        : 'robots shifted ' + this.frozenOffset + 'ms to sit alongside the human field, '
+          + 'measured once and frozen',
       note: 'One-way estimates in ms, sampled every 8s from each client. '
         + 'The Zoom delay assumes the socket path beats the call audio; if median '
         + 'latency approaches the delay setting, that assumption is failing.',
