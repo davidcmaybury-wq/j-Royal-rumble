@@ -107,7 +107,18 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .av.ph{background:var(--panel2)}
 .tko{color:var(--slate);font-size:11px}
 .mk{font-size:11px}
-.mk.rope{color:var(--brass)}
+.mk.rope{color:#FF9A3C;font-size:9.5px;letter-spacing:.1em;font-weight:500}
+/* The whole tile changes colour, not just a badge — a declaration the room has
+   to notice before the next clue goes up. */
+.pl.uptop{background:#3A2208;box-shadow:inset 2px 0 0 #FF9A3C;
+animation:uptop 1.1s ease-in-out infinite}
+@keyframes uptop{0%,100%{background:#3A2208}50%{background:#54300B}}
+@media (prefers-reduced-motion:reduce){.pl.uptop{animation:none}}
+.tosscap.climb{color:#FF9A3C}
+.tosscap.entry{color:var(--live)}
+.entryart{flex:none;line-height:0}
+.entryart svg{display:block;border-radius:var(--r);border:1px solid var(--line)}
+.entrytext{min-width:0}
 .mk.aim{color:#7FB2E8}
 .mk.hunted{color:var(--alarm)}
 .mk.bty{color:var(--brass);font-family:"IBM Plex Mono",monospace;font-size:10px}
@@ -160,7 +171,7 @@ align-self:center;margin-left:6px}
 .arm:hover{background:#4A3A0F}
 .entry{position:fixed;left:0;right:250px;bottom:92px;background:#0E1526F2;border-top:2px solid var(--brass);
 border-bottom:1px solid var(--brass);padding:14px 26px;z-index:60;display:flex;align-items:center;gap:22px;
-animation:rise .22s cubic-bezier(.2,.8,.3,1);cursor:pointer}
+animation:rise .22s cubic-bezier(.2,.8,.3,1);cursor:pointer;display:flex;align-items:center;gap:18px}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .entry .lbl{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--brass);display:block}
 .entry .no{font-size:60px;line-height:.85;color:var(--brass)}
@@ -277,7 +288,7 @@ import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, wordmark, brainAvatar } from '/brand.js';
 import { weaponToken } from '/tokens.js';
-import { tossAnimation, TOSS_SECONDS } from '/toss.js';
+import { animation, SECONDS } from '/toss.js';
 import * as sfx from '/sound.js';
 import { summaryImage, fullStatsImage, statsCsv } from '/share.js';
 const GID = gameId();
@@ -370,33 +381,52 @@ function detectEvents() {
   if (entered.length) { sfxEntry(); banner(entered); }
   gone.forEach((p) => say(p.name + ' out — survived ' + p.tenure + ' clues', 'elim'));
   if (gone.length) showToss(gone);
+
+  // Somebody has gone up top. Declared between clues, so this fires in the gap
+  // rather than over a live clue.
+  const wasUp = new Set((prev.live || []).filter((p) => p.topRope).map((p) => p.token));
+  const nowUp = S.live.filter((p) => p.topRope && !wasUp.has(p.token));
+  if (nowUp.length && !gone.length) {
+    showCorner('climb', nowUp[0].name + ' goes up top', 'toprope');
+    say(nowUp[0].name + ' is on the top rope', 'rope');
+  }
 }
 
 // An elimination happens twenty-nine times in a full match, so this sits in the
 // corner and the game carries on around it — no overlay, no pause, nothing to
 // dismiss. It plays once and takes itself away.
-let tossTimer = null;
-function showToss(gone) {
+// One slot in the corner, shared by every animation. The latest event wins:
+// if somebody climbs the rope and somebody else goes out on the same clue, the
+// elimination is the bigger moment and should be what the room sees.
+let cornerTimer = null;
+function showCorner(kind, caption, tone) {
   const box = $('toss');
-  if (!box || muted === 'novisual') return;
-  clearTimeout(tossTimer);
-  const who = gone.length === 1
-    ? gone[0].name + ' is out'
-    : gone.length + ' out at once';
-  box.innerHTML = tossAnimation(150)
-    + '<div class="tosscap">' + who + '</div>';
+  if (!box) return;
+  clearTimeout(cornerTimer);
+  box.innerHTML = animation(kind, 150)
+    + '<div class="tosscap ' + kind + '">' + caption + '</div>';
   box.classList.add('on');
-  tossTimer = setTimeout(() => box.classList.remove('on'), TOSS_SECONDS * 1000 + 700);
+  cornerTimer = setTimeout(() => box.classList.remove('on'),
+    SECONDS[kind] * 1000 + 700);
+  if (tone) sfx.play(tone);
 }
 
+const showToss = (gone) => showCorner('toss',
+  gone.length === 1 ? gone[0].name + ' is out' : gone.length + ' out at once');
+
+// The lower third, now with the entrance played beside the name rather than
+// as a separate thing. The name is still the largest object on it — the
+// animation is decoration and must not become the message.
 function banner(ps) {
   document.querySelectorAll('.entry').forEach((n) => n.remove());
   const d = document.createElement('div'); d.className = 'entry';
-  d.innerHTML = '<div><span class="lbl">Entry</span></div>' +
-    ps.map((p) => '<div class="who3"><span class="no mq num">' + p.draw +
-      '</span><span class="nm mq">' + p.name + '</span></div>').join('') +
-    '<div class="sub">' + (ps.length > 1 ? 'field cleared<br>two enter'
-      : 'enters with ' + fmt(ps[0].score)) + '</div>';
+  d.innerHTML = '<div class="entryart">' + animation('entry', 96) + '</div>'
+    + '<div class="entrytext">'
+    + '<div><span class="lbl">Entry</span></div>'
+    + ps.map((p) => '<div class="who3"><span class="no mq num">' + p.draw
+      + '</span><span class="nm mq">' + p.name + '</span></div>').join('')
+    + '<div class="sub">' + (ps.length > 1 ? 'field cleared &middot; two enter'
+      : 'enters with ' + fmt(ps[0].score)) + '</div></div>';
   document.body.appendChild(d);
   const t = setTimeout(kill, 4000);
   function kill() { d.remove(); clearTimeout(t); removeEventListener('keydown', kill); }
@@ -436,6 +466,7 @@ function render() {
       + (buzzed.has(p.token) ? ' buzzed' : '')
       + (on && on.token === p.token ? ' onclock' : '')
       + (p.connected ? '' : ' gone')
+      + (p.topRope ? ' uptop' : '')
       + (S.control === p.token ? ' control' : '');
     d.dataset.token = p.token; d.dataset.name = p.name; d.tabIndex = 0;
     d.title = 'Click to correct this score';
@@ -451,10 +482,13 @@ function render() {
       + '<span class="nm">' + p.name
       + (p.connected ? '' : ' <span style="color:var(--alarm);font-size:10px">&#9676;</span>')
       + (p.pins ? ' <span class="tko" title="toss outs">&#9670;' + p.pins + '</span>' : '')
-      + (p.topRope ? ' <span class="mk rope" title="on the top rope">&#9650;</span>' : '')
+      + (p.topRope ? ' <span class="mk rope">TOP ROPE</span>' : '')
       + (p.target ? ' <span class="mk aim" title="aiming at '
           + ((S.live || []).find((x) => x.token === p.target) || {}).name + '">&#9678;</span>' : '')
-      + ((p.targetedBy || []).length ? ' <span class="mk hunted" title="in someone\'s sights">&#9679;</span>' : '')
+      + ((p.targetedBy || []).length
+          ? ' <span class="mk hunted" title="in someone\'s sights">&#9678;'
+            + ((p.targetedBy.length > 1) ? ' \u00D7' + p.targetedBy.length : '')
+            + '</span>' : '')
       + (p.bounty ? ' <span class="mk bty" title="bounty on their head">' + fmt(p.bounty) + '</span>' : '')
       + (p.isBot ? ' <span class="mk bot" title="robot player">' + (p.level || 'bot') + '</span>' : '')
       + (p.revivals ? ' <span class="mk rev" title="second life">&#8635;</span>' : '')

@@ -237,6 +237,28 @@ def powerup():
     return reverb(body, seconds=0.4, mix=0.12)[:int(SR * 0.95)]
 
 
+# ------------------------------------------------------------ up on the ropes
+# Short and taunting: two notes up, one insolent one back down, on a bright
+# square wave. A dare rather than an achievement — the power-up climbs three
+# octaves and takes a second, this is over in a third of that.
+def top_rope():
+    notes = [(587.3, 0.055), (784.0, 0.055), (1046.5, 0.075), (880.0, 0.11)]
+    out = []
+    for i, (f, dur) in enumerate(notes):
+        x = t(dur)
+        duty = 0.30 if i < 3 else 0.22
+        body = signal.square(2 * np.pi * f * x, duty=duty)
+        body += signal.square(2 * np.pi * f * 2 * x, duty=0.5) * 0.18
+        body += signal.square(2 * np.pi * f * 0.5 * x, duty=0.5) * 0.20
+        env = np.minimum(1, np.linspace(0, 26, len(x))) * np.exp(-np.linspace(0, 3.6, len(x)))
+        out.append(body * env * 0.45)
+        if i < 3:
+            out.append(np.zeros(int(0.012 * SR)))
+    body = np.concatenate(out)
+    sos = signal.butter(2, 8000 / (SR / 2), btype='low', output='sos')
+    return reverb(signal.sosfilt(sos, body), seconds=0.3, mix=0.11)[:int(SR * 0.55)]
+
+
 if __name__ == '__main__':
     print('writing synthesised cues:')
     np.random.seed(7)
@@ -250,4 +272,5 @@ if __name__ == '__main__':
     write('lock', lock_tone(), bitrate='96k', target=0.130)
     # Matched to the sampled cues, which sit around 0.13-0.16.
     write('powerup', powerup(), bitrate='112k', target=0.145)
+    write('toprope', top_rope(), bitrate='112k', target=0.132)
     print('done')

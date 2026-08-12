@@ -45,6 +45,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/mechanics-ui.mjs
           node test/logstore.mjs
           node test/botcal.mjs
           node test/retoss.mjs

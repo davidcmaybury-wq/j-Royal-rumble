@@ -12,6 +12,7 @@ const FILES = {
   lock: '/audio/lock.mp3',
   powerup: '/audio/powerup.mp3',
   join: '/audio/join.mp3',
+  toprope: '/audio/toprope.mp3',
 };
 
 const pool = {};
@@ -24,7 +25,7 @@ export function preload() {
     a.preload = 'auto';
     a.volume = k === 'entry' ? 0.85 : k === 'chop' ? 0.9
       : k === 'lock' ? 0.7 : k === 'powerup' ? 0.8
-      : k === 'join' ? 0.6 : 0.55;
+      : k === 'join' ? 0.6 : k === 'toprope' ? 0.75 : 0.55;
     pool[k] = a;
   }
 }
