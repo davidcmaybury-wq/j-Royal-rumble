@@ -235,6 +235,7 @@ class Match {
       ...(g ? {
         clues: g.cluesRevealed, ceiling: g.ceiling,
         cluesUntilNextEntry: g.cluesUntilNextEntry(),
+        retoss: this.retoss || 0,
         control: this.control,
         delay: this.settings.delay,
         botOffset: this.bots.size ? this.botOffset() : null,
@@ -819,6 +820,7 @@ io.on('connection', (socket) => {
       category: cat.title, note: cat.note, text: clue.text, answer: clue.answer,
     };
     match.race = { open: false, activatedAt: null, buzzes: [], lockedOut: new Set() };
+    match.retoss = 0;
     pushHost();
     io.to(`${match.id}:players`).emit('clue-shown', { value: match.clue.value });
     pushPlayers();
@@ -949,7 +951,7 @@ io.on('connection', (socket) => {
     }
 
     clearBotTimers();
-    match.clue = null; match.race = null;
+    match.clue = null; match.race = null; match.retoss = 0;
     pushAll();
     io.to(`${match.id}:host`).emit('resolved', entry);
     for (const t of entry.revived || []) {
@@ -969,11 +971,20 @@ io.on('connection', (socket) => {
   socket.on('mark-wrong', hostOnly(({ token: t }) => {
     if (!match.race) return;
     match.race.lockedOut.add(t);
-    match.race.buzzes = match.race.buzzes.filter((b) => b.token !== t);
+
+    // A genuinely fresh race, which is what the rules promise: "a missed clue
+    // goes straight back out to everyone still eligible as a fresh buzzer
+    // race". Keeping the old queue and promoting the next-fastest instead put
+    // somebody on the clock the instant the host pressed N — no second race
+    // happened, and the players who had not buzzed the first time never got
+    // the chance the rules say they get.
+    match.race.buzzes = [];
     match.race.open = true;
     match.race.activatedAt = Date.now() + match.settings.delay;
+    match.retoss = (match.retoss || 0) + 1;
     io.to(`${match.id}:players`).emit('activate-buzzers',
       { at: match.race.activatedAt, lockout: match.settings.lockout });
+    io.to(`${match.id}:host`).emit('retoss', { lockedOut: [...match.race.lockedOut] });
     runBots();
     pushAll();
   }));

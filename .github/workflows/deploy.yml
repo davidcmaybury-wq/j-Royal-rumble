@@ -45,6 +45,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/retoss.mjs
           node test/entry-countdown.mjs
           node test/tokens.mjs
           node test/bots.mjs

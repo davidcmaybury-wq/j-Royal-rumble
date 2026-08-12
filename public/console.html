@@ -139,6 +139,8 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .bz .t{font-size:12px;color:var(--slate)}
 .bz .e{font-size:10px;color:var(--alarm)}
 .bz.isbot{border:1px dashed var(--line)}
+.rt{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--alarm);
+align-self:center;margin-left:6px}
 .bhint{font-size:10px;margin-left:5px;letter-spacing:.04em}
 .bhint.yes{color:var(--live)}
 .bhint.no{color:var(--alarm)}
@@ -746,7 +748,12 @@ function renderDock() {
       + '<button class="act bad" id="no">Wrong &middot; re-toss<span class="kb">N</span></button>'
       + '<button class="act neu" id="stump">Nobody got it<span class="kb">X</span></button>'
     : '<button class="act neu" id="stump">Nobody got it<span class="kb">X</span></button>';
-  d.innerHTML = '<div class="race">' + (chips || '<span class="idle">Buzzers live &mdash; waiting.</span>')
+  const retoss = S.retoss || 0;
+  const idle = retoss
+    ? '<span class="idle">Re-tossed &mdash; buzzers live again for everyone else.</span>'
+    : '<span class="idle">Buzzers live &mdash; waiting.</span>';
+  d.innerHTML = '<div class="race">' + (chips || idle)
+    + (retoss ? '<span class="rt">back out ' + retoss + '&times;</span>' : '')
     + '</div><div class="acts">' + acts + '</div>';
   if (on) {
     $('ok').onclick = () => socket.emit('resolve', { winnerToken: on.token });
