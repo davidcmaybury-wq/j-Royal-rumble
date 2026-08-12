@@ -200,39 +200,56 @@ def climb_frame(i):
 
 
 def entry_frame(i):
-    """Sliding in under the bottom rope, then up and flexing. Brief — this
-    replaces the lower-third banner, so the name beside it has to stay the
-    thing being read.
+    """Sliding in under the bottom rope, up onto his feet, then flexing.
 
-      0-3   slides in from the left, low
-      4-6   up onto his feet
-      7-11  flexing
+    Twenty-four frames rather than twelve. The first version was over before
+    anyone had looked at it — it replaced the lower-third banner, which sits up
+    for four seconds, so there was no reason for the animation to be the
+    shortest thing on screen. The sound cue is unchanged and finishes early;
+    that is fine, the flex is the part worth watching and it does not need
+    scoring.
+
+      0-7    slides in from the left, low, kicking up dust
+      8-12   gathers himself and stands
+      13-23  flexing, alternating poses
     """
     o = []
-    if i < 4:
-        x = -8 + i * 7
-        o.append(rect(x, 27, 8, 4, BLOOD))              # body, flat and sliding
-        o.append(rect(x + 6, 26, 4, 4, SKIN2))          # head out front
-        o.append(rect(x - 2, 28, 2, 1, SLATE))          # dust
-        o.append(rect(x - 5, 29, 2, 1, LINE))
-    elif i < 7:
-        o.append(wrestler(20, 17 + (6 - i) * 2, trunks=BLOOD, skin=SKIN2,
-                          arms='down', legs='tuck'))
+    if i < 8:
+        # A slower slide with a longer run-up, so the entrance has some travel.
+        x = -10 + i * 4
+        o.append(rect(x, 27, 8, 4, BLOOD))                  # body, flat
+        o.append(rect(x + 6, 26, 4, 4, SKIN2))              # head out front
+        o.append(rect(x + 1, 31, 3, 1, SKIN2))              # trailing legs
+        for k, c in ((2, SLATE), (5, LINE), (8, LINE)):     # dust behind
+            if x - k > -4 and (i + k) % 2:
+                o.append(rect(x - k, 29 + (k % 2), 2, 1, c))
+    elif i < 13:
+        # Up onto his feet over five frames rather than three.
+        t = i - 8                                           # 0..4
+        crouch = max(0, 4 - t)
+        o.append(wrestler(22, 17 + crouch, trunks=BLOOD, skin=SKIN2,
+                          arms='down' if t < 3 else 'up',
+                          legs='tuck' if t < 3 else 'stand'))
     else:
-        flex = (i - 7) % 2
-        o.append(wrestler(20, 17, trunks=BLOOD, skin=SKIN2,
-                          arms='raise' if flex else 'up',
-                          legs='wide' if flex else 'stand'))
-        if flex:
-            for (fx, fy) in ((15, 12), (33, 12)):
+        # Flexing: three poses on a slow cycle, so it reads as posing rather
+        # than as a flicker.
+        pose = ((i - 13) // 2) % 3
+        arms = ('raise', 'up', 'throw')[pose]
+        legs = ('wide', 'stand', 'wide')[pose]
+        o.append(wrestler(22, 17, trunks=BLOOD, skin=SKIN2, arms=arms, legs=legs))
+        if pose == 0:
+            for (fx, fy) in ((17, 12), (35, 12)):
                 o.append(rect(fx, fy, 2, 2, BRASS))
+        elif pose == 2:
+            for (fx, fy) in ((19, 9), (33, 9)):
+                o.append(rect(fx, fy, 2, 2, CHALK))
     return ''.join(o)
 
 
 SEQUENCES = {
     'toss': (frame, FRAMES),
     'climb': (climb_frame, 12),
-    'entry': (entry_frame, 12),
+    'entry': (entry_frame, 24),
 }
 
 

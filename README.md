@@ -392,7 +392,7 @@ as one module:
 |---|---|---|
 | toss | 2.0s | corner of the rail, when somebody is eliminated |
 | climb | 1.3s | same corner, when somebody goes to the top rope |
-| entry | 1.3s | inside the lower-third banner, beside the entrant's name |
+| entry | 2.7s | inside the lower-third banner, beside the entrant's name |
 
 The corner holds one at a time and the latest wins — if somebody climbs and
 somebody else goes out on the same clue, the elimination is the bigger moment.

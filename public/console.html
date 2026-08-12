@@ -428,7 +428,9 @@ function banner(ps) {
     + '<div class="sub">' + (ps.length > 1 ? 'field cleared &middot; two enter'
       : 'enters with ' + fmt(ps[0].score)) + '</div></div>';
   document.body.appendChild(d);
-  const t = setTimeout(kill, 4000);
+  // Long enough that the entrance finishes with room to spare — the animation
+  // runs 2.67s and a banner that vanishes mid-flex looks like a glitch.
+  const t = setTimeout(kill, 4200);
   function kill() { d.remove(); clearTimeout(t); removeEventListener('keydown', kill); }
   addEventListener('keydown', kill); d.onclick = kill;
 }
