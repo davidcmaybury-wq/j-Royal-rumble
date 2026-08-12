@@ -905,8 +905,7 @@ on('endm', 'onclick', () => { if (confirm('End the match now?')) socket.emit('en
 socket.on('undone', (d) => say(`Took back ${d.category} $${d.value}`));
 socket.on('adjusted', (d) => say(`${d.name} corrected by ${d.delta > 0 ? '+' : ''}${fmt(d.delta)} to ${fmt(d.to)}`));
 sfx.preload();
-addEventListener('pointerdown', () => sfx.unlock(), { once: true });
-addEventListener('keydown', () => sfx.unlock(), { once: true });
+sfx.armUnlock();
 </script>
 </body>
 </html>

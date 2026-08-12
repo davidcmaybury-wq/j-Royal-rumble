@@ -292,8 +292,6 @@ function renderJoin() {
       try { localStorage.setItem('rumble:avatar', url); } catch (err) {}
       setPicPreview(url);
     } catch (err) { joinErr = "couldn't read that image"; sfx.preload();
-addEventListener('pointerdown', () => sfx.unlock(), { once: true });
-addEventListener('keydown', () => sfx.unlock(), { once: true });
 renderJoin(); }
   };
   setTimeout(() => (cd.value ? nm : cd).focus(), 60);
@@ -382,8 +380,6 @@ function squareThumb(file, size) {
 function doJoin(name) {
   socket.emit('join', { gameId: gameId(), token: myToken(), name }, (r) => {
     if (r && r.error) { joinErr = r.error; joined = false; return sfx.preload();
-addEventListener('pointerdown', () => sfx.unlock(), { once: true });
-addEventListener('keydown', () => sfx.unlock(), { once: true });
 renderJoin(); }
     if (r && r.token) saveToken(r.token);
     joined = true; joinErr = '';
@@ -411,8 +407,6 @@ socket.on('connect', () => {
   // a refresh or a dropped connection doesn't cost anyone their place.
   const t = myToken(), n = localStorage.getItem('rumble:name');
   if (gameId() && t && n) doJoin(n); else sfx.preload();
-addEventListener('pointerdown', () => sfx.unlock(), { once: true });
-addEventListener('keydown', () => sfx.unlock(), { once: true });
 renderJoin();
 });
 socket.on('disconnect', () => { armed = false; disarm(); render(); });
@@ -501,8 +495,6 @@ socket.on('revived', ({ stake }) => {
 // ---------------- render ----------------
 function render() {
   if (!joined || !V) return sfx.preload();
-addEventListener('pointerdown', () => sfx.unlock(), { once: true });
-addEventListener('keydown', () => sfx.unlock(), { once: true });
 renderJoin();
   if (V.phase === 'over') return renderResults();
   const you = V.you || {};
@@ -799,8 +791,7 @@ function renderResults() {
 }
 
 sfx.preload();
-addEventListener('pointerdown', () => sfx.unlock(), { once: true });
-addEventListener('keydown', () => sfx.unlock(), { once: true });
+sfx.armUnlock();
 renderJoin();
 </script>
 </body>

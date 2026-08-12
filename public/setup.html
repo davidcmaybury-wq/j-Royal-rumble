@@ -148,8 +148,7 @@ const api = async (path, opts = {}) => {
 sfx.preload();
 // Browsers hold audio until the page has been interacted with. The host will
 // have clicked something on this page long before anyone joins.
-addEventListener('pointerdown', () => sfx.unlock(), { once: true });
-addEventListener('keydown', () => sfx.unlock(), { once: true });
+sfx.armUnlock();
 
 async function boot() {
   if (!code) {

@@ -30,13 +30,46 @@ export function preload() {
   }
 }
 
-export function unlock() {
-  if (ready) return;
-  ready = true;
-  // Nudge each element so the browser considers it user-initiated.
-  for (const a of Object.values(pool)) {
-    a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
+// Unlocking only counts if it worked.
+//
+// The first version set ready = true before the play promises settled, so one
+// call made without a user gesture marked the whole thing done and it never
+// tried again. A whole match ran silently that way.
+export async function unlock() {
+  if (ready) return true;
+  const first = pool.join || Object.values(pool)[0];
+  if (!first) return false;
+  try {
+    await first.play();
+    first.pause();
+    first.currentTime = 0;
+    ready = true;
+    // Prime the rest now that the browser is satisfied.
+    for (const a of Object.values(pool)) {
+      if (a === first) continue;
+      a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
+    }
+    return true;
+  } catch (e) {
+    // No gesture yet, or the file has not loaded. Leave ready false so the
+    // next gesture tries again.
+    return false;
   }
+}
+
+/** Keep trying on every interaction until one of them takes. */
+export function armUnlock() {
+  const attempt = () => {
+    unlock().then((ok) => {
+      if (ok) {
+        removeEventListener('pointerdown', attempt, true);
+        removeEventListener('keydown', attempt, true);
+      }
+    });
+  };
+  addEventListener('pointerdown', attempt, true);
+  addEventListener('keydown', attempt, true);
+  attempt();
 }
 
 export const isReady = () => ready;
@@ -47,13 +80,24 @@ export function play(name) {
   if (muted) return;
   const a = pool[name];
   if (!a) return;
+  // Rewind and reuse rather than cloning. A cloned element has never been
+  // played during a user gesture and has not necessarily loaded its source, so
+  // its play() was rejected and the rejection swallowed — silently, every time.
   try {
-    // Clone so overlapping cues don't cut each other off — two eliminations
-    // on one clue should sound like two.
-    const c = a.cloneNode();
-    c.volume = a.volume;
-    c.play().catch(() => {});
-  } catch (e) { /* nothing to be done */ }
+    a.currentTime = 0;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => { ready = false; });
+  } catch (e) { /* nothing useful to do here */ }
+}
+
+/** For the console, so a host can tell whether sound is actually working. */
+export function diagnostics() {
+  return {
+    ready,
+    muted,
+    cues: Object.keys(pool).length,
+    loaded: Object.values(pool).filter((a) => a.readyState >= 2).length,
+  };
 }
 
 // Two eliminations on the same clue used to stack a second cue behind the

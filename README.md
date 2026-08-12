@@ -82,8 +82,15 @@ Raw recordings don't drop straight in — `build-audio.py` trims to the onset,
 shapes the tail, matches loudness across cues so one doesn't tower over
 another, and adds a short room.
 
-Browsers block audio until a page has been interacted with, so both the console
-and the buzzer unlock on the first tap or key press.
+Browsers block audio until a page has been interacted with, so every page arms
+an unlock that retries on each interaction until one takes.
+
+Both parts of that matter. An earlier version set its ready flag *before* the
+play promise settled, so a single call made without a gesture marked the whole
+thing done and it never tried again — a full match ran silently that way. The
+same version cloned each audio element before playing it, and a clone starts
+with `readyState` 0, so its `play()` was rejected and the rejection swallowed.
+Cues are rewound and reused now rather than cloned.
 
 ## Latency
 
@@ -154,9 +161,20 @@ Two evenly matched players will trade the same points back and forth
 indefinitely — seen in the first real match, where the last fourteen clues
 oscillated without either player getting closer to going out.
 
-Once the queue is empty and the ring is down to two, clue values double every
-six clues, capped at eight times face. The console announces the start and each
-rise. On by default; `overtime: false` turns it off.
+Overtime opens as soon as **the queue is empty**, whatever the ring size —
+waiting for heads-up meant a robot test ran thirty clues with three players
+trading the same points and it never fired.
+
+But the escalation clock counts only clues where **nobody was eliminated**.
+Letting it run regardless made large fields a lottery: a 30-player match had the
+stakes doubling with fourteen still in the ring and the strongest players' win
+rate fell from 42% to 34%. A stall is precisely a run of clues with nobody going
+out, so that is what the clock measures. While the field thins on its own, the
+stakes hold.
+
+Values double every six stalled clues, capped at eight times face. Three evenly
+matched players with an empty queue ran past 300 clues without this and resolve
+in 38 with it. On by default; `overtime: false` turns it off.
 
 A perfectly alternating two-player stall runs forever without it, and ends in
 about 22 clues with it — see `test/overtime.mjs`.

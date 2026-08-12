@@ -59,6 +59,32 @@ check('and again at each doubling', on.raises.length >= 2,
     typeof g.overtime().nextIn === 'number' || g.overtime().nextIn === null);
 }
 
+// David's case: three evenly matched players with an empty queue. The old rule
+// waited for heads-up, so a real robot match ran 30 clues with three players
+// trading the same points and overtime never firing.
+{
+  const g = mk({}, 3);
+  let i = 0;
+  while (!g.finished && i < 300) {
+    g.resolveClue(...anyClue(g), { winnerId: ['p0', 'p1', 'p2'][i % 3], missedIds: [] });
+    i++;
+  }
+  check('three players stalling still resolves', g.finished, `${g.cluesRevealed} clues`);
+}
+
+// The escalation clock counts clues where nobody went out, so a field that is
+// thinning on its own does not get the stakes raised under it.
+{
+  const g = mk({}, 3);
+  g.resolveClue(...anyClue(g), { winnerId: 'p0', missedIds: [] });
+  const before = g.overtime()?.multiplier ?? 1;
+  for (let i = 0; i < 10; i++) {
+    g.resolveClue(...anyClue(g), { winnerId: ['p0', 'p1', 'p2'][i % 3], missedIds: [] });
+  }
+  check('a stalled run raises the stakes', (g.overtime()?.multiplier ?? 1) > before,
+    `x${g.overtime()?.multiplier}`);
+}
+
 // it must not fire while people are still queued
 {
   const g = mk({ entryInterval: 999 }, 6);

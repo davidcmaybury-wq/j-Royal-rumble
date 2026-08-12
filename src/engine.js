@@ -29,7 +29,10 @@ export const DEFAULT_SETTINGS = {
   // Once the queue is empty and only a couple remain, the stakes climb until
   // one of them cracks.
   overtime: true,
-  overtimeAt: 2,             // players left in the ring that starts it
+  // Once nobody else is coming, the stakes start climbing — whatever the ring
+  // size. It used to wait for heads-up, and a robot test ran 30 clues with
+  // three players trading the same points because it never fired.
+  overtimeAt: null,          // ring size that starts it; null means any
   overtimeEvery: 6,          // clues between each escalation
   overtimeMax: 8,            // never beyond this multiple
   botReadJitter: 45,         // ms, shared per clue: the host activates by hand
@@ -113,6 +116,7 @@ export class RumbleGame {
     this.eliminationOrder = [];
     this.bounties = [];        // { placer, target, amount }
     this.overtimeFrom = null;  // clue number the escalation began at
+    this.stalledClues = 0;     // clues since anyone was eliminated
 
     this.board = [];
     for (let i = 0; i < BOARD_CATEGORIES; i++) this.board.push(this.drawCategory());
@@ -136,6 +140,7 @@ export class RumbleGame {
       usedClueIds: [...this.usedClueIds],
       bounties: this.bounties,
       overtimeFrom: this.overtimeFrom,
+      stalledClues: this.stalledClues,
       cluesRevealed: this.cluesRevealed,
       fieldClears: this.fieldClears,
       vetoedThisMatch: this.vetoedThisMatch,
@@ -155,6 +160,7 @@ export class RumbleGame {
     this.usedClueIds = new Set(d.usedClueIds);
     this.bounties = d.bounties || [];
     this.overtimeFrom = d.overtimeFrom ?? null;
+    this.stalledClues = d.stalledClues ?? 0;
     this.cluesRevealed = d.cluesRevealed;
     this.fieldClears = d.fieldClears;
     this.vetoedThisMatch = d.vetoedThisMatch;
@@ -184,15 +190,24 @@ export class RumbleGame {
 
   // Multiplies every clue value once the field is down to the last few and
   // nobody else is coming. Doubling on a fixed cadence, capped.
+  // The escalation clock counts clues where nobody went out.
+  //
+  // Starting it the moment the queue empties, and letting it run regardless,
+  // made large fields a lottery — a 30-player match saw the stakes doubling
+  // with fourteen still in the ring, and the strongest players' win rate fell
+  // from 42% to 34%. But a stall is precisely a run of clues with nobody
+  // eliminated, so that is what the clock should measure. While the field is
+  // thinning on its own, the stakes hold.
   overtime() {
     if (!this.s.overtime || this.overtimeFrom == null) return null;
-    const elapsed = this.cluesRevealed - this.overtimeFrom;
+    const elapsed = this.stalledClues;
     const steps = Math.floor(elapsed / this.s.overtimeEvery);
     const mult = Math.min(this.s.overtimeMax, Math.pow(2, steps));
     return {
       multiplier: mult,
       since: this.overtimeFrom,
       cluesAtThisLevel: elapsed % this.s.overtimeEvery,
+      stalledClues: this.stalledClues,
       nextIn: mult >= this.s.overtimeMax
         ? null : this.s.overtimeEvery - (elapsed % this.s.overtimeEvery),
     };
@@ -207,8 +222,12 @@ export class RumbleGame {
   checkOvertime(entry) {
     if (!this.s.overtime) return;
     const ring = this.live().length;
+    // Any elimination is progress: the clock goes back to zero.
+    if ((entry.eliminated || []).length) this.stalledClues = 0;
+    else if (this.overtimeFrom != null) this.stalledClues += 1;
     if (this.overtimeFrom == null) {
-      if (ring <= this.s.overtimeAt && !this.queued().length && ring > 1) {
+      const cap = this.s.overtimeAt;
+      if (!this.queued().length && ring > 1 && (cap == null || ring <= cap)) {
         this.overtimeFrom = this.cluesRevealed;
         entry.overtimeStarted = { multiplier: 1, at: this.cluesRevealed };
       }
