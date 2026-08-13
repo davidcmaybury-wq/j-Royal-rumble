@@ -168,9 +168,9 @@ A(P('Three players start. The rest wait in draw order and enter one at a time as
     'pays you its value. Miss and you pay, and the clue goes back out to everyone '
     'else. Fall below zero and you are gone. The last player standing wins, and '
     'nothing else counts as a result.'))
-A(P('A full field takes about an hour. The board is six Jeopardy! categories at a '
-    'time, drawn from an archive of 47,000 categories or from boards written in '
-    'house, in whatever ratio the host sets.'))
+A(P('A full field takes about half an hour. The board is six Jeopardy! '
+    'categories at a time, drawn from an archive of 47,000 categories or from '
+    'boards written in house, in whatever ratio the host sets.'))
 
 A(callout('The one number that matters',
           'Under the obvious scoring rule &mdash; a correct answer is worth the '
@@ -294,13 +294,12 @@ A(table([
     ['Rising, 4,000 +40/clue', '100 min', '73%'],
     ['Falling, 15,000 \u221250/clue', '76 min', '53%'],
 ], [58 * mm, 32 * mm, 38 * mm], align=[1, 2]))
-A(P('A falling ceiling reaches near-perfect draw fairness at 76 minutes, where a '
-    'fixed one needs 118 minutes to get there. 50% is fair.', 'caption'))
+A(P('The tuning as it stood at the time. 50% is fair. This is the reasoning '
+    'that was later overturned \u2014 see the next section.', 'caption'))
 
-A(P('So the ceiling decays. Early entrants get room to build; by the time the last '
-    'numbers walk in, the ceiling has compressed and there is no worn-down field '
-    'to exploit. The floor is the entry stake, so a late arrival is never capped '
-    'on the way in.'))
+A(P('That was the case for a decaying ceiling, and it held for months. It is '
+    'wrong, and the section that follows explains why. The floor is still the '
+    'entry stake, so a late arrival is never capped on the way in.'))
 
 A(P('What the tuning produced', 'h2'))
 A(table([
@@ -336,6 +335,63 @@ A(table([
 A(P('The pathological case, since real players are never quite this symmetrical.', 'caption'))
 
 # ---------------------------------------------------------------- advanced
+A(H('THE CEILING, AND WHY IT STOPPED FALLING',
+    P('The ceiling clips every score. It began falling across the whole match, '
+      'to stop a late draw walking into a worn-down field and simply outlasting '
+      'it. That reasoning was backwards.')))
+
+A(P('The ceiling clips whoever is ahead, and whoever is ahead is nearly always '
+    'an early entrant who has been accumulating. A latecomer arrives at a fixed '
+    'stake, untouched. So the falling ceiling was destroying exactly the work it '
+    'was meant to protect against.'))
+
+A(table([
+    ['Decay per clue', 'Last third vs first third'],
+    ['\u2212180', '9.0\u00d7'],
+    ['\u221240', '2.16\u00d7'],
+    ['\u221225', '1.85\u00d7'],
+    ['0', '1.40\u00d7'],
+], [44 * mm, 52 * mm], align=[1]))
+A(P('3,000 simulated twenty-player matches per row. 1.00 would be even.', 'caption'))
+
+A(callout('A measurement that reversed the answer',
+          'The first version of this simulation used a random comparator to '
+          'shuffle the buzz order, which is not a shuffle at all \u2014 it leaves '
+          'a heavy bias toward the original order. It reported that the first '
+          'three draws, who all start together, won at 25.8%, 14.2% and 10.4%. '
+          'Three players in identical positions cannot differ like that. With a '
+          'proper shuffle they came out within noise of each other, and the '
+          'recommendation flipped.'))
+
+A(P('What replaced it', 'h2'))
+A(P('Taking the decay out removed the only guaranteed drain, and a symmetric '
+    'exchange with nothing leaking never resolves \u2014 a field of evenly '
+    'matched robots ran 400 clues without a single elimination. Raising the '
+    'stakes does not help, because doubling both sides of an even trade leaves '
+    'it even.'))
+A(P('So the ceiling falls only once overtime has opened. The endgame gets '
+    'teeth; the entry phase, where the bias came from, is left alone.'))
+
+A(H('PAID FOR LASTING',
+    P('Early draws spend the whole match being ground down. Rather than take '
+      'from the leaders, the game now pays for survival.')))
+
+A(table([
+    ['Bonus', '10 players', '20 players', '30 players'],
+    ['none', '1.31\u00d7', '1.40\u00d7', '1.14\u00d7'],
+    ['every 10, +250', '1.18\u00d7', '1.28\u00d7', '1.07\u00d7'],
+    ['every 10, +500', '1.05\u00d7', '1.07\u00d7', '0.97\u00d7'],
+    ['every 10, +1000', '0.82\u00d7', '0.89\u00d7', '0.80\u00d7'],
+], [34 * mm, 26 * mm, 26 * mm, 26 * mm], align=[1, 2, 3]))
+A(P('Draw advantage of the last third over the first. +1000 overshoots and '
+    'hands the game to early draws instead.', 'caption'))
+
+A(P('It self-limits: a leader at the ceiling gets nothing from it, so it helps '
+    'whoever is grinding rather than whoever is already winning. Taking every '
+    'clue in a column pays another 500, scaled by the overtime multiplier, and '
+    'is counted as the column is worked through so a board refresh cannot rob '
+    'anybody of a run they have finished.'))
+
 A(H('OPTIONAL MECHANICS', P('Four rules that change how the game is played rather than how it looks. All '
     'off by default, each toggled separately, and all of them lean on keyboard '
     'controls &mdash; worth leaving off if the field is mostly on phones.')))
@@ -379,8 +435,8 @@ A(P('Three of the four barely move the clock. Revival runs half again as long, '
     'because nearly every player spends their second life &mdash; the setup screen '
     'says so before the match starts. It is also the fairest setting on the list, '
     'which was not the expectation: a second chance is worth most to whoever went '
-    'in first, so it works against the same late-draw advantage the falling ceiling '
-    'exists to fight.'))
+    'in first, so it works against the same late-draw advantage the longevity '
+    'bonus exists to fight.'))
 
 A(callout('A measurement trap worth recording',
           'Revival first showed a 94% back-half win rate, which looked alarming. It '
@@ -397,9 +453,9 @@ A(P('The setup screen mints a four-letter room code to read aloud, and fills a '
     'archive can be narrowed by season. Fresh boards can be dropped in as '
     'j-trivia.org JSON or jparty.tv CSV.'))
 A(P('The screen estimates the length from the roster and warns when the numbers do '
-    'not work &mdash; a six-player field cannot be stretched to an hour by entry '
-    'pacing alone, and it says so, with a button that sets a target it can '
-    'actually reach.'))
+    'not work &mdash; a six-player field cannot be stretched much past its '
+    'natural length by entry pacing alone, and it says so, with a button that '
+    'sets a target it can actually reach.'))
 
 A(P('During', 'h2'))
 A(B('The clue takes over the shared screen. Correct responses appear only in a '
@@ -536,14 +592,81 @@ A(callout('Two ways to get this wrong, both of them found in play',
           'levelled to him. It now settles after six buzzes and starts from a '
           '190ms default rather than from nothing.'))
 
+A(H('OVERTIME, AS IT ENDED UP',
+    P('The rule that forces a resolution took three attempts, and each failure '
+      'is worth recording because each looked reasonable at the time.')))
+
+A(P('It began by waiting for heads-up. A robot test then ran thirty clues with '
+    'three players trading the same points and it never fired \u2014 so it now '
+    'opens as soon as the queue is empty.'))
+A(P('Opening it there and letting it run regardless made large fields a '
+    'lottery: a thirty-player match had the stakes doubling with fourteen still '
+    'in the ring, and the strongest players\u2019 win rate fell from 42% to 34%. '
+    'So the escalation clock counts only clues where nobody was eliminated. A '
+    'stall is precisely a run of clues with nobody going out; while the field '
+    'thins on its own, the stakes hold.'))
+A(P('Deriving the level from that clock then meant an elimination reset the '
+    'multiplier from four times face to one, which reads as the game forgetting '
+    'what had just happened. It ratchets now: an elimination stops the climb '
+    'without putting it back.'))
+
+A(callout('Escalation has to move both sides',
+          'In a live match a clue worth 2,000 paid the winner 500 and charged '
+          'the loser the full 2,000 \u2014 the ceiling clipped the winnings while '
+          'the loss went through untouched. The stakes only ever moved one way, '
+          'and did it invisibly, which read as overtime not working at all. The '
+          'winner of a raised clue now banks the whole amount and is clipped on '
+          'the next clue instead, so the falling roof takes it back unless they '
+          'keep winning.'))
+
+A(P('A very long stall \u2014 eight escalation windows, about 48 clues with '
+    'nobody eliminated \u2014 opens overtime even with people still queued, '
+    'because a slow entry interval means the queue may never empty. That '
+    'threshold has to be high: at three windows it fired during the entry phase '
+    'and cost eleven minutes of match length and twenty points of draw '
+    'fairness.'))
+
 A(H('WHAT ELSE IS IN THERE', P('Details that matter in the room rather than on paper.')))
 
-A(P('Player tokens', 'h2'))
-A(P('Twenty-four line-art weapons \u2014 crowbar, morningstar, dinosaur bone, '
-    'folding chair \u2014 assigned on arrival and changeable. Two players who pick '
-    'the same shape get different colourways rather than one being refused: the '
-    'shape is the identity, the colour is how you tell two of them apart. Anyone '
-    'can upload a photograph instead.'))
+A(P('Wrestlers', 'h2'))
+A(P('Every player gets an 8-bit wrestler: singlet style and colour, hair style '
+    'and colour, skin tone, chosen on arrival to be distinguishable from '
+    'everybody already in the room. Thirty players get thirty tellable-apart '
+    'wrestlers. One module draws both the portrait on a score tile and the '
+    'figures in the animations, so a player is recognisably themselves being '
+    'thrown out of the ring \u2014 and when nobody wins the clue, a referee in '
+    'stripes does the throwing.'))
+A(P('The portrait is drawn for the job rather than cropped from the body '
+    'sprite. Cropping was the obvious approach and it was wrong: the body\u2019s '
+    'head is four pixels across, so at tile size every player was an identical '
+    'skin-coloured blob.', 'caption'))
+
+A(P('Turning up late, and who is next', 'h2'))
+A(P('A latecomer joins at any point, goes to the back of the queue and enters '
+    'on the standard stake. With the interval on auto it recomputes against the '
+    'clues actually left, so entries compress as the roster grows. It is refused '
+    'once overtime has opened \u2014 letting somebody in then would reopen it '
+    'while the ratchet held the stakes high.'))
+A(P('Who is coming next is hidden from the room by default. The countdown '
+    'stays, because knowing when somebody arrives is tactical; only the name '
+    'goes, so the horn means something. The host sees it in the answers window, '
+    'and the entrant always sees their own countdown.'))
+
+A(P('Saves and gifts', 'h2'))
+A(P('Anyone still in the ring can put money up to buy an eliminated player '
+    'back, declared with S and settled at the next clue so nothing pauses. '
+    'Several people can chip in for one player, and partial amounts are allowed '
+    '\u2014 a cheap save is a weak save. From the queue, a player waiting to come '
+    'in can hand part of their entry to anybody in the ring and walks in lighter '
+    'by exactly that much.'))
+
+A(P('The watch screen', 'h2'))
+A(P('A public, read-only view of the board at /watch/CODE \u2014 no key, no '
+    'login, and the answers are never sent to it. Meant to replace sharing a '
+    'screen: a state push per event against a continuous video stream is a '
+    'rounding error, and every viewer gets a crisp local render at their own '
+    'resolution rather than a compressed copy of the host\u2019s monitor. One '
+    'screen in the room can turn on the sound.'))
 
 A(P('The entry countdown', 'h2'))
 A(P('Each waiting player sees their own entry, not the next entry in the match, '

@@ -10,38 +10,36 @@ section is noise.
 
 ## THE SHORT VERSION (pin this)
 
-**J! ROYAL RUMBLE — how it works**
+The Discord-ready copy, kept in step with `RULES-SHORT.md`.
 
+**J! ROYAL RUMBLE**
 Thirty players. Three start. One survives.
 
-🔔 **Getting in.** Everybody draws an entry number. Three players start; the
-rest come in one at a time as the match goes on. Your buzzer counts down the
-last three clues before your number is called.
+**Getting in** — everyone draws an entry number. Three open; the rest come in one at a time. You won't know who's next, only that somebody is. Your buzzer counts down your last three clues.
 
-💰 **Scoring is the whole trick.** Answer correctly and **every other player in
-the ring pays you the clue's value.** Four opponents on a $400 clue means you
-gain $1,600 and they each drop $400. Everyone bleeds, constantly.
+**Getting it right** — every other player in the ring pays you the clue's value. Four opponents on a $400 clue is **+$1,600 to you, −$400 to each of them.**
 
-❌ **Miss and it hurts twice.** You lose the value and you're locked out of that
-clue. It's re-tossed to everyone else — and if somebody else takes it, you pay
-them too.
+**Getting it wrong** — you lose the value and you're locked out of that clue. It goes straight back out as a fresh race. If somebody else takes it, **you pay them too.**
 
-🤐 **Nobody gets it?** Everyone in the ring loses half the value.
+**Nobody gets it** — everyone in the ring loses half.
 
-☠️ **Below zero and you're out.** Zero is still alive. Below is not.
+**Below zero and you're out.** Zero is still alive.
 
-⏱️ **Waiting your turn? Buzz anyway.** Your buzzer works the whole time you're
-in the queue. It doesn't score, but it tells you your reaction time and where
-you'd have placed against the live field. Use it to get your timing in before
-your number comes up — the people already in there have been warming up for
-twenty minutes.
+**Still standing?** +$500 every 10 clues you survive — being early in the draw is hard work, and this pays for it.
 
-🏆 **Last one standing wins.** That's the only result that counts. Everything
-else — clues survived, toss outs, points drained, buzzer speed — is bragging
-rights, and gets posted afterwards.
+**Take a whole column** and it washes brass: +$500.
 
-Keep your buzzer page open the whole match. Don't buzz early: jumping the
-lights costs a quarter-second lockout, and a quarter-second is a lifetime here.
+**There's a ceiling on your score**, and it comes down once the queue is empty.
+
+**Overtime** — when nobody's left to enter and nobody's going out, clue values double every six clues, up to eight times face. It doesn't stop until somebody breaks.
+
+**Waiting your turn? Buzz anyway.** Your buzzer works from the moment you join. It doesn't score, but it reports your time and where you'd have placed — the people in the ring have been warming up for twenty minutes, so don't arrive cold. Turning up late is fine too: join any time and go to the back of the queue.
+
+**Last one standing wins.** Clues survived, toss outs, points drained, buzzer speed — all tracked and posted, none of them the winner.
+
+⚠️ Don't jump the lights. Buzzing early costs you 250ms, and that's a lifetime here. Good players don't react to the lights anyway — they learn the rhythm of the read. A perfect buzz reads 0.0.
+
+**To play:** open the buzzer link, enter the room code, add your name, leave the page open. That page is your buzzer. There's a watch link too, if you'd rather have the board on your own screen than squint at a share.
 
 ---
 
@@ -54,6 +52,12 @@ board never runs dry.
 
 Three players start in the ring. Everyone else waits in the queue in draw
 order, entering one at a time on a fixed clue interval.
+
+**You won't be told who's coming next** — only that somebody is, and in how
+many clues. The entrant knows; the room doesn't. Turning up late is fine too:
+join at any point and you go to the back of the queue on the same terms as
+everybody else. If enough people arrive late the entries compress so the match
+still finishes on time.
 
 The match ends when the queue is empty and one player is left standing. There
 is no second place that means anything.
@@ -96,19 +100,54 @@ If a clue would somehow wipe the entire ring, the highest score survives.
 
 ## 4. THE CEILING
 
-There's a maximum score, and **it falls as the match goes on.**
+There's a maximum score. Anything above it gets clipped, and it never drops
+below what a new entrant walks in with, so nobody is capped on arrival.
 
-Anything above it gets clipped. It never drops below what a new entrant walks
-in with, so nobody is capped on arrival.
+**It holds steady while people are still coming in, and comes down once the
+queue is empty.**
 
-It exists to fix a real problem: without it, whoever draws last walks into a
-field that's been grinding itself down for an hour and simply outlasts them. The
-falling ceiling squeezes the survivors back toward the pack, so a late number is
-an advantage rather than a guarantee.
+It used to fall all match, and that turned out to be doing the opposite of what
+it was for. The ceiling clips whoever is ahead, and whoever is ahead is nearly
+always an early entrant who has been accumulating — a latecomer arrives at a
+fixed stake, untouched. Across three thousand simulated twenty-player matches
+the last third of the draw was worth **2.16 times** the first third with the
+ceiling falling, against **1.40** with it steady.
+
+Confining the fall to the endgame keeps the pressure where it belongs without
+quietly handing the match to whoever drew last.
 
 ---
 
-## 5. CLEARING THE FIELD
+## 5. LASTING, AND SWEEPING
+
+**+$500 every 10 clues you survive.** Being early in the draw means spending the
+whole match being ground down; this pays you for the thing you actually do more
+of, which is last. It stops at the ceiling, so it helps whoever is grinding
+rather than whoever is already winning.
+
+**+$500 for taking every clue in a column**, and the column washes brass. It's
+counted as you work through, so a board refresh can't rob you of a run you've
+already finished. In overtime the bonus scales with the multiplier.
+
+---
+
+## 6. OVERTIME
+
+When nobody is left to enter and nobody is going out, the stakes start climbing.
+**Clue values double every six clues with no elimination**, up to eight times
+face value.
+
+The clock counts only clues where nobody went out. While the field is thinning
+on its own, the stakes hold — it's a stall-breaker, not a timer. And the
+multiplier ratchets: an elimination stops it climbing but doesn't put it back.
+
+A missed clue in overtime is brutal. You lose the raised value for the miss and
+pay it again to whoever converts, so at eight times face a single wrong buzz can
+take out a player who looked comfortable. That's the point.
+
+---
+
+## 7. CLEARING THE FIELD
 
 Wipe out everyone in the ring while players are still queued and you've cleared
 the field. You take a bonus equal to every clue left on the board, the board is
@@ -118,10 +157,11 @@ It's rare. It should be.
 
 ---
 
-## 6. BUZZING, AND WARMING UP
+## 8. BUZZING, AND WARMING UP
 
 The host reads the clue aloud, then arms the buzzers. Yours lights up and the
-clock starts. Fastest reaction takes it.
+clock starts. Fastest reaction takes it. If the lights run out and nobody has
+buzzed, the clue is over.
 
 **Jump the lights and you're locked out for a quarter of a second.** The penalty
 runs even if the buzzers go live while you're serving it, so there's nothing to
@@ -144,7 +184,7 @@ early and you eat the lockout instead, which is the whole tension of it.
 
 ---
 
-## 7. IF YOUR CONNECTION DROPS
+## 9. IF YOUR CONNECTION DROPS
 
 You keep bleeding. Clues carry on, your score keeps falling, and you can be
 eliminated while you're offline. Harsh — but the alternative is that dropping
@@ -155,7 +195,7 @@ number, same place in the queue. Just get back in.
 
 ---
 
-## 8. WHAT GETS TRACKED
+## 10. WHAT GETS TRACKED
 
 Posted at the end, sortable and shareable:
 
@@ -171,34 +211,45 @@ The winner is the winner. The rest is an argument for the group chat.
 
 ---
 
-## 9. ADVANCED MECHANICS (only if the host says so)
+## 11. ADVANCED MECHANICS (only if the host says so)
 
-**These are off by default.** The host turns them on before the match and will
-tell you which are live. They need a keyboard, so expect them switched off if
-the field is mostly on phones.
+Off by default, each switched on separately.
 
-🪜 **TOP ROPE** — press **R** between clues to climb up. The next clue is worth
-**double to you in both directions**: twice as much if you take it, twice as
-much out of your pocket if you miss it or somebody else takes it. Everyone
-else's values are unchanged. Your winnings from up there ignore the score
-ceiling, so it's a live option even when you're capped. You can only declare
-between clues, never once one is on the board — no peeking first.
+**Top rope** — declare between clues. The next clue is worth double to you in
+both directions, and your winnings ignore the ceiling. Strictly bad if you're
+near the cap: the downside is uncapped and the upside isn't.
 
-🎯 **TARGETING** — press **T** and pick one player from the list. Take a clue
-and the **entire pot comes out of them alone**; everybody else is spared. But if
-*they* take the clue, **you** pay the whole pot yourself and the rest of the
-ring walks free. It's a finishing move and a kamikaze in the same button. Your
-target is shown to the room, and they get an alert on their buzzer — you can't
-aim quietly. Press **0** to stand down.
+**Targeting** — aim at one player, visible to the room. Win the clue and the
+whole pot comes from them alone, everyone else spared. Lose it to them and you
+pay the whole pot yourself while the rest of the ring walks.
 
-💀 **BOUNTIES** — waiting in the queue, press **B** to put part of **your own
-starting score** on somebody's head. Whoever knocks them out collects it, and
-you walk in that much lighter. If they survive to the end, they keep it. And if
-they knock *you* out, they keep it too. Choose carefully.
+**Bounties** — waiting in the queue, put part of your entry on somebody's head.
+Whoever eliminates them collects. If they survive to the end they keep it — so
+does whoever placed it if the target goes out. A declaration, not a free shot.
 
-🔁 **REVIVAL** — being eliminated puts you back in the queue instead of out,
-once, returning on a fraction of the starting stake with a new entry number.
-Expect the match to run about half again as long.
+**Revival** — eliminated players go back to the queue at a fraction of the
+stake, with a new entry number. Once each by default. It runs matches half
+again as long, because nearly every player spends a second life.
+
+**Save a player** — anyone still in the ring can put money up to buy an
+eliminated player back. Press `S`, name a figure. It settles at the next clue
+so nothing pauses, and several people can chip in for the same player. Partial
+amounts are allowed: a cheap save is a weak save.
+
+**Gift from the queue** — waiting to come in, hand part of your entry to
+anybody already in the ring. You walk in lighter by exactly what you gave.
+
+---
+
+## 12. WATCHING
+
+There's a watch link as well as a buzzer link. It shows the board, the live
+clue, the buzz race with reaction times, and the ring sorted by score — no key,
+no login, and the answers are never sent to it.
+
+Use it instead of squinting at a screen share. Everyone's browser draws it
+locally, so it's sharper than a shared screen and costs a fraction of the
+bandwidth. One screen in the room can turn on sound.
 
 ---
 
