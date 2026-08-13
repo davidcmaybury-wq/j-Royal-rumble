@@ -107,6 +107,49 @@ await wait(300);
 check('the watcher sees the finish', ws.phase === 'over');
 check('with standings', (ws.standings || []).length >= 3);
 
+// --- the ring is sorted by score, not by draw ---
+{
+  const m2 = await (await fetch(`${U}/api/match`, { method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ settings: { entryInterval: 999, delay: 0 } }) })).json();
+  const h2 = io(U, { transports: ['websocket'] });
+  await once(h2, 'connect');
+  let s2 = null;
+  h2.on('state', (x) => { s2 = x; });
+  await new Promise((r) => h2.emit('host-join', { gameId: m2.gameId, hostKey: m2.hostKey }, (x) => { s2 = x.state; r(); }));
+  const p2 = [];
+  for (const n of ['X', 'Y', 'Z']) {
+    const s = io(U, { transports: ['websocket'] });
+    await once(s, 'connect');
+    const p = { s };
+    await new Promise((r) => s.emit('join', { gameId: m2.gameId, name: n }, (x) => { p.token = x.token; r(); }));
+    p2.push(p);
+  }
+  const w2 = io(U, { transports: ['websocket'] });
+  await once(w2, 'connect');
+  let v2 = null;
+  w2.on('state', (x) => { v2 = x; });
+  v2 = (await new Promise((r) => w2.emit('watch-game', { gameId: m2.gameId }, r))).state;
+  await wait(150);
+  h2.emit('start-match');
+  await wait(300);
+
+  // Give the last draw the biggest score, so draw order and score order differ.
+  const ring = s2.live;
+  h2.emit('adjust-score', { token: ring[2].token, delta: 5000 });
+  h2.emit('adjust-score', { token: ring[0].token, delta: -1000 });
+  await wait(300);
+
+  const byScore = v2.live.slice().sort((a, b) => b.score - a.score).map((p) => p.name);
+  check('the watch view carries the scores it needs to sort by',
+    v2.live.every((p) => typeof p.score === 'number'));
+  check('and draw order is not score order here',
+    v2.live.map((p) => p.name).join() !== byScore.join()
+      || v2.live[0].score >= v2.live[v2.live.length - 1].score,
+    `draws ${v2.live.map((p) => p.draw).join()} scores ${v2.live.map((p) => p.score).join()}`);
+  h2.close(); w2.close(); p2.forEach((p) => p.s.close());
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); watch.close(); ps.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);

@@ -131,6 +131,8 @@ animation:breathe 1.6s ease-in-out infinite}
 .mbtn.on{border-color:var(--brass);color:var(--brass);background:#3A2E0C}
 .mbtn .k{opacity:.55;margin-left:5px;font-size:10.5px}
 .mbtn:disabled{opacity:.3;cursor:default}
+.lastarm{font-size:10.5px;color:var(--brass);font-family:"IBM Plex Mono",monospace;
+display:block;width:100%;margin-top:2px;text-align:center}
 .lagbox{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;
 padding:8px 12px;border:1px solid var(--line);border-radius:20px;margin-top:2px}
 .lagbox .lt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
@@ -463,7 +465,11 @@ socket.on('activate-buzzers', ({ at, lockout }) => {
   const waitMs = armAt(at, lockout);
   armed = false; early = false; render();
   clearTimeout(armTimer);
-  armTimer = setTimeout(() => { armed = true; render(); say('Buzzers live'); }, waitMs);
+  armTimer = setTimeout(() => {
+    armed = true; render(); noteArm(waitMs); say('Buzzers live');
+  }, waitMs);
+  // Say so up front too, rather than only after the wait.
+  if (getLag() !== 0) noteArm(waitMs);
 });
 
 // ---------------- buzz ----------------
@@ -649,8 +655,8 @@ function renderMech(st, you) {
       <input class="lv" id="lagv" type="number" step="10" value="${getLag()}">
       <button class="lg" id="lag+">+</button>
       <span class="lt">ms</span>
-      <span class="lh">${getLag() > 0 ? 'buzzers arm later for you'
-        : getLag() < 0 ? 'buzzers arm sooner for you' : 'buzzing too early? raise this'}</span>
+      <span class="lh">${lagHint()}</span>
+      <span class="lastarm" id="lastarm"></span>
     </div>`;
   const q = (id) => document.getElementById(id);
   if (q('m-rope')) q('m-rope').onclick = () => socket.emit('top-rope', { on: !you.topRope });

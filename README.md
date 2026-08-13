@@ -502,6 +502,28 @@ log in to. Board, live clue, buzz race with reaction times, the ring with
 scores and markers, the queue, the eliminated, overtime, and the champion with
 the score graph at the end.
 
+The ring is sorted **by score**, highest first — the console sorts by draw
+because the host is looking for a particular person, but a room watching wants
+to know who is winning.
+
+Animations play in the bottom-left corner: a toss when somebody goes out, an
+entrance when somebody arrives, a climb when somebody goes up top. This is where
+they earn their keep — thirty people seeing a wrestler thrown over the ropes
+beats one person glimpsing it in a console corner.
+
+### Sound on one screen
+
+A **Play sound here** toggle in the top bar, off by default. Thirty browsers
+playing the same cue a fraction apart would be a mess, so exactly one screen in
+the room turns it on — normally whichever machine is plugged into the speakers.
+That also takes the game's audio off the host's microphone and out of the call's
+audio path, so it arrives at full quality rather than through voice compression.
+
+Deliberately a click and nothing else: no URL parameter, no remembered setting.
+Browsers refuse audio until a page has been interacted with, and a toggle that
+restored itself on load would silently fail — which has already happened once in
+this project.
+
 Meant to replace sharing a screen over the call. A state push per event against
 a continuous video stream is a rounding error by comparison, and everyone gets
 a crisp local render at their own resolution instead of a compressed copy of

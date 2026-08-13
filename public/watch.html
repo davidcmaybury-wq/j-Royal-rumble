@@ -20,6 +20,12 @@ border-bottom:1px solid var(--line)}
 .st .v{font-size:19px;font-family:"IBM Plex Mono",monospace}
 .ot{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--alarm);
 border:1px solid var(--alarm);border-radius:20px;padding:3px 10px}
+.aud{margin-left:auto;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+color:var(--slate);border:1px solid var(--line);border-radius:20px;padding:5px 13px;
+cursor:pointer;white-space:nowrap}
+.aud:hover{border-color:var(--brass);color:var(--chalk)}
+.aud.on{color:var(--live);border-color:var(--live)}
+.aerr{display:block;font-size:9px;color:var(--alarm);letter-spacing:0;text-transform:none}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0}
 .stage{padding:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 /* board */
@@ -89,6 +95,14 @@ text-align:center;text-transform:uppercase;letter-spacing:.3em;width:220px}
 font-size:16px;cursor:pointer}
 .err{color:var(--alarm);font-size:14px;min-height:20px}
 .foot{position:fixed;right:10px;bottom:8px;font-size:10px;color:#26304C;font-family:"IBM Plex Mono",monospace}
+.anim{position:fixed;left:14px;bottom:14px;z-index:40;opacity:0;transform:translateY(8px);
+pointer-events:none;transition:opacity .2s ease,transform .2s ease}
+.anim.on{opacity:1;transform:none}
+.anim svg{display:block;border:1px solid var(--line);border-radius:var(--r)}
+.acap{font-size:12px;letter-spacing:.09em;text-transform:uppercase;text-align:center;
+margin-top:5px;color:var(--alarm)}
+.acap.climb{color:#FF9A3C}
+.acap.entry{color:var(--live)}
 </style></head>
 <body><div id="root"></div>
 <script src="/socket.io/socket.io.js"></script>
@@ -96,6 +110,8 @@ font-size:16px;cursor:pointer}
 import { markFull, markSmall, brainAvatar } from '/brand.js';
 import { weaponToken } from '/tokens.js';
 import { scoreChart } from '/chart.js';
+import { animation, SECONDS } from '/toss.js';
+import * as sfx from '/sound.js';
 
 const socket = io({ transports: ['websocket'] });
 const root = document.getElementById('root');
@@ -104,6 +120,37 @@ const $ = (id) => document.getElementById(id);
 
 let code = (location.pathname.match(/\/watch\/([A-Z0-9]{4})/i) || [])[1] || '';
 let S = null, err = '';
+
+// One screen in the room plays the audio.
+//
+// Thirty browsers playing the same cue a fraction apart would be a mess, so
+// this is off everywhere until somebody turns it on — normally whichever
+// machine is plugged into the speakers. It also takes the game's sound off the
+// host's microphone and out of the call's audio path entirely.
+//
+// Deliberately a click and nothing else: no URL parameter, no remembered
+// setting. Browsers refuse to play audio until a page has been interacted
+// with, and a toggle that restores itself on load would silently fail.
+let audioOn = false;
+const CUES = { toss: 'chop', climb: 'toprope', entry: 'entry' };
+function cue(kind) {
+  const k = CUES[kind];
+  if (k && audioOn) sfx.play(k);
+}
+async function toggleAudio() {
+  if (audioOn) { audioOn = false; sfx.setMuted(true); paintAudio(); return; }
+  const ok = await sfx.unlock();
+  audioOn = ok;
+  sfx.setMuted(!ok);
+  paintAudio(ok ? '' : 'the browser refused — try again');
+}
+function paintAudio(msg) {
+  const b = document.getElementById('audio');
+  if (!b) return;
+  b.className = 'aud' + (audioOn ? ' on' : '');
+  b.innerHTML = (audioOn ? '&#9679; Sound on this screen' : 'Play sound here')
+    + (msg ? '<span class="aerr">' + msg + '</span>' : '');
+}
 
 const face = (p, size = 22) => p.isBot
   ? '<span class="av">' + brainAvatar(p.level || 'normie', size) + '</span>'
@@ -227,7 +274,10 @@ function render() {
     return;
   }
 
-  const live = S.live || [], out = S.out || [], q = S.queue || [];
+  // Highest first. The console sorts by draw because the host is looking for a
+  // particular person; a room watching wants to know who is winning.
+  const live = (S.live || []).slice().sort((a, b) => b.score - a.score);
+  const out = S.out || [], q = S.queue || [];
   root.innerHTML = `<div class="app">
     <div class="bar">
       <span class="brand">${markSmall(28)}</span>
@@ -236,6 +286,8 @@ function render() {
       <span class="st"><span class="k">Queue</span><span class="v">${q.length}</span></span>
       <span class="st"><span class="k">Ceiling</span><span class="v">${fmt(S.ceiling)}</span></span>
       ${S.overtime ? `<span class="ot">Overtime &times;${S.overtime.multiplier}</span>` : ''}
+      <button class="aud${audioOn ? ' on' : ''}" id="audio">${audioOn
+        ? '&#9679; Sound on this screen' : 'Play sound here'}</button>
     </div>
     <div class="main">
       <div class="stage">${stage()}</div>
@@ -249,10 +301,67 @@ function render() {
           + out.slice().reverse().map((p) => row(p, true)).join('') : ''}
       </div>
     </div>
-  </div><div class="foot">${S.gameId} &middot; v${S.version}</div>`;
+  </div><div class="foot">${S.gameId} &middot; v${S.version}</div>
+  <div class="anim" id="anim" aria-hidden="true"></div>`;
+  const ab = document.getElementById('audio');
+  if (ab) ab.onclick = toggleAudio;
+  paintCorner();
 }
 
-socket.on('state', (s) => { S = s; render(); });
+// render() rebuilds the page, which would wipe a playing animation. Keep the
+// current one and put it back.
+let cornerHtml = '', cornerOn = false;
+function paintCorner() {
+  const box = document.getElementById('anim');
+  if (!box) return;
+  if (cornerOn && cornerHtml) { box.innerHTML = cornerHtml; box.classList.add('on'); }
+}
+
+// Watch the state for the things worth animating. The room is looking at this
+// screen rather than the host's, so this is where the animations earn their
+// keep — thirty people seeing somebody thrown out beats one person glimpsing
+// it in a corner.
+let prevLive = null;
+function detect(next) {
+  if (!prevLive || !next.live) { prevLive = next.live || null; return; }
+  const was = new Set(prevLive.map((p) => p.token));
+  const now = new Set(next.live.map((p) => p.token));
+  const gone = prevLive.filter((p) => !now.has(p.token));
+  const came = next.live.filter((p) => !was.has(p.token));
+  const wasUp = new Set(prevLive.filter((p) => p.topRope).map((p) => p.token));
+  const up = next.live.filter((p) => p.topRope && !wasUp.has(p.token));
+
+  if (gone.length) {
+    corner('toss', gone.length === 1 ? gone[0].name + ' is out'
+      : gone.length + ' out at once');
+  } else if (came.length) {
+    corner('entry', came.length === 1 ? came[0].name + ' enters'
+      : came.length + ' enter');
+  } else if (up.length) {
+    corner('climb', up[0].name + ' goes up top');
+  }
+  prevLive = next.live;
+}
+
+let cornerTimer = null;
+function corner(kind, caption) {
+  const box = document.getElementById('anim');
+  if (!box) return;
+  clearTimeout(cornerTimer);
+  cornerHtml = animation(kind, 190)
+    + '<div class="acap ' + kind + '">' + caption + '</div>';
+  cornerOn = true;
+  box.innerHTML = cornerHtml;
+  box.classList.add('on');
+  cornerTimer = setTimeout(() => {
+    cornerOn = false; cornerHtml = '';
+    const b = document.getElementById('anim');
+    if (b) b.classList.remove('on');
+  }, SECONDS[kind] * 1000 + 800);
+  if (audioOn) cue(kind);
+}
+
+socket.on('state', (s) => { detect(s); S = s; render(); paintCorner(); });
 socket.on('connect', () => { if (code) join(); else ask(); });
 socket.on('disconnect', () => { /* the state stays on screen until it returns */ });
 
@@ -265,6 +374,7 @@ setInterval(() => {
   }
 }, 120);
 
+sfx.preload();
 if (!code) ask();
 </script>
 </body></html>
