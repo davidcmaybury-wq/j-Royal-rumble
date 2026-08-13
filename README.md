@@ -472,6 +472,45 @@ answers window, which they are already keeping to themselves. The entrant always
 sees their own countdown — anonymity to the room cannot mean anonymity to the
 person who has to get ready.
 
+## Scoring bonuses
+
+**Longevity** — every 10 clues you survive, +500. On by default. Early draws
+spend the whole match being ground down by pot scoring; this pays them for the
+thing they actually do more of. Across 3,000 simulated matches per field size it
+brings the draw advantage from 1.31x / 1.40x / 1.14x (10 / 20 / 30 players) to
+1.05x / 1.07x / 0.97x. **+1000 overshoots** and hands the advantage to early
+draws instead. It self-limits: a leader at the ceiling gets nothing, so it helps
+whoever is grinding rather than whoever is already winning.
+
+**Category sweep** — take every clue in a column and it washes brass: +500,
+scaled by the overtime multiplier. Counted as the column is worked through, so a
+board refresh cannot rob somebody of a run they already finished.
+
+**Save a player** — anyone still in can put money up to buy an eliminated player
+back. Declared with `S`, settled at the next clue boundary so play never pauses,
+and several people can chip in for the same player. Partial amounts are allowed:
+a cheap save is a weak save.
+
+**Gift from the queue** — waiting to come in, you can hand part of your entry to
+anybody in the ring. You walk in lighter by whatever you gave.
+
+### The ceiling falls during overtime
+
+Taking the decay out of the main match fixed the draw bias, but it removed the
+only guaranteed drain — and a symmetric exchange with nothing leaking never
+resolves. Raising the stakes does not help: doubling both sides of an even trade
+leaves it even. A field of evenly matched robots ran 400 clues without a single
+elimination.
+
+So the ceiling now falls 120 a clue **once overtime opens, and only then**. That
+gives the endgame teeth without touching the entry phase, which is where the
+bias came from.
+
+Overtime also opens on a very long stall — eight escalation windows, about 48
+clues with nobody eliminated — even if people are still queued. The threshold
+has to be that high: at three windows it fired during the entry phase and cost
+eleven minutes of match length and twenty points of draw fairness.
+
 ## Advanced mechanics
 
 Four optional rules, off by default, toggled per match on the setup page. They

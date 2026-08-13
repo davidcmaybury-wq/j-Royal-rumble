@@ -35,6 +35,17 @@ export const DEFAULT_SETTINGS = {
   overtimeAt: null,          // ring size that starts it; null means any
   overtimeEvery: 6,          // clues between each escalation
   overtimeMax: 8,
+  // The ceiling falls during overtime, and only then.
+  //
+  // Taking the decay out of the main match was right — it was handing the game
+  // to late draws — but it also removed the only guaranteed drain, and a
+  // symmetric exchange with nothing leaking never resolves. Raising the stakes
+  // does not help: doubling both sides of an even trade leaves it even. A
+  // field of evenly matched robots ran 400 clues without an elimination.
+  //
+  // Confining it to overtime gives the endgame teeth without touching the entry
+  // phase, which is where the draw bias came from.
+  overtimeCeilingDrop: 120,
   // When the lights run out and nobody has taken the clue, close the race and
   // let the host call it. Off means the buzzers stay open until they press X,
   // which is what they used to do.
@@ -42,6 +53,30 @@ export const DEFAULT_SETTINGS = {
   // countdown stays visible — knowing *when* somebody arrives is tactical — it
   // is only the name that goes, so the horn means something again.
   anonymousNext: true,
+
+  // Paying for survival rather than taking from leaders. Early draws spend the
+  // whole match being ground down by pot scoring; this pays them for the thing
+  // they actually do more of. Measured across 3,000 simulated matches per
+  // field size, every 10 clues at +500 brings the draw spread from 1.31x /
+  // 1.40x / 1.14x (10 / 20 / 30 players) to 1.05x / 1.07x / 0.97x. +1000
+  // overshoots and hands the advantage to early draws instead.
+  //
+  // It self-limits: a leader near the ceiling gets nothing from it, so it helps
+  // whoever is grinding rather than whoever is already winning.
+  longevity: true,
+  longevityEvery: 10,
+  longevityBonus: 500,
+
+  // Taking every clue in a column. Rewards a run rather than a single lucky
+  // buzz, and gives the board a reason to be watched rather than read.
+  categorySweep: true,
+  sweepBonus: 500,
+
+  // Eliminated players can be bought back in by those still standing, and a
+  // player waiting in the queue can hand part of their entry to somebody
+  // already in the ring.
+  savePlayer: true,
+  giftFromQueue: true,
   autoStumper: true,
   lecternSeconds: 5,            // never beyond this multiple
   botReadJitter: 45,         // ms, shared per clue: the host activates by hand
@@ -146,6 +181,8 @@ export class RumbleGame {
     });
     this.drawOrder = order.map((p) => p.id);
     this.eliminationOrder = [];
+    this.sweepTaken = new Map();   // category slot -> Map(playerId -> count)
+    this.pendingSaves = [];        // { by, target, amount } declared, not yet paid
     this.bounties = [];        // { placer, target, amount }
     this.overtimeFrom = null;  // clue number the escalation began at
     this.stalledClues = 0;     // clues since anyone was eliminated
@@ -262,10 +299,18 @@ export class RumbleGame {
     const ring = this.live().length;
     // Any elimination is progress, so the clock toward the *next* raise goes
     // back to zero. The level already reached stays where it is.
+    //
+    // The clock runs whether or not overtime has opened, because it is also
+    // what detects a match that has stalled with people still queued — a slow
+    // entry interval means the queue may never empty, and waiting for that
+    // before doing anything let a field of evenly matched robots run 400 clues
+    // without an elimination.
     if ((entry.eliminated || []).length) {
       this.stalledClues = 0;
-    } else if (this.overtimeFrom != null && ring > 1) {
+    } else if (ring > 1) {
       this.stalledClues += 1;
+    }
+    if (this.overtimeFrom != null && ring > 1) {
       if (this.stalledClues >= this.s.overtimeEvery
           && Math.pow(2, this.overtimeSteps + 1) <= this.s.overtimeMax) {
         this.overtimeSteps += 1;
@@ -275,7 +320,17 @@ export class RumbleGame {
     }
     if (this.overtimeFrom == null) {
       const cap = this.s.overtimeAt;
-      if (!this.queued().length && ring > 1 && (cap == null || ring <= cap)) {
+      // Normally when the queue empties. A very long stall opens it anyway —
+      // eight escalation windows, about 48 clues, with nobody eliminated means
+      // the match is not resolving on its own whoever is still queued.
+      //
+      // The threshold has to be that high. At three windows it fired during the
+      // entry phase and did real damage: matches fell from 27 to 15 minutes,
+      // back-half win rate went from 51% to 74%, and fields started getting
+      // wiped. Eighteen clues without an elimination is normal early on. Forty
+      // eight is not.
+      const stalled = this.stalledClues >= this.s.overtimeEvery * 8;
+      if ((!this.queued().length || stalled) && ring > 1 && (cap == null || ring <= cap)) {
         this.overtimeFrom = this.cluesRevealed;
         entry.overtimeStarted = { multiplier: 1, at: this.cluesRevealed };
       }
@@ -335,7 +390,11 @@ export class RumbleGame {
   // ---- derived values -------------------------------------------------
 
   get ceiling() {
-    const c = this.s.ceiling + this.s.ceilingDecayPerClue * this.cluesRevealed;
+    let c = this.s.ceiling + this.s.ceilingDecayPerClue * this.cluesRevealed;
+    // Once overtime has opened, the roof comes down as well.
+    if (this.overtimeFrom != null && this.s.overtimeCeilingDrop > 0) {
+      c -= this.s.overtimeCeilingDrop * (this.cluesRevealed - this.overtimeFrom);
+    }
     // A ceiling below the entry stake would clip newcomers on arrival, which
     // would quietly undo the thing the stake is for.
     const floor = Math.max(this.s.ceilingFloor, this.s.startScore);
@@ -483,6 +542,36 @@ export class RumbleGame {
       entry.stumperDeduction = d;
     }
 
+    // --- taking every clue in a column ---------------------------------
+    //
+    // Counted as the column is worked through rather than checked at the end,
+    // so a board refresh cannot rob somebody of a run they already completed.
+    const taker = winnerId && liveIds.has(winnerId) ? this.players.get(winnerId) : null;
+    if (this.s.categorySweep && taker) {
+      const key = cat.id || String(slotIndex);
+      const tally = this.sweepTaken.get(key) || new Map();
+      tally.set(taker.id, (tally.get(taker.id) || 0) + 1);
+      this.sweepTaken.set(key, tally);
+      if (tally.get(taker.id) === cat.clues.length) {
+        const bonus = this.s.sweepBonus * otBefore;
+        taker.score += bonus;
+        entry.sweep = { playerId: taker.id, category: cat.title, bonus };
+      }
+    }
+
+    // --- paid for still being here ---------------------------------------
+    if (this.s.longevity && this.s.longevityBonus > 0) {
+      const paid = [];
+      for (const p of live) {
+        const tenure = this.cluesRevealed - (p.enteredAtClue ?? 0);
+        if (tenure > 0 && tenure % this.s.longevityEvery === 0) {
+          p.score += this.s.longevityBonus;
+          paid.push({ playerId: p.id, amount: this.s.longevityBonus, tenure });
+        }
+      }
+      if (paid.length) entry.longevity = paid;
+    }
+
     // A declaration lasts exactly one clue, however it resolves.
     for (const p of live) p.topRope = false;
 
@@ -496,6 +585,44 @@ export class RumbleGame {
     }
 
     this.applyEliminations(entry, winnerId);
+    // --- saves declared during the previous clue --------------------------
+    //
+    // Resolved here rather than the moment somebody declares, so nothing has to
+    // pause while a number is typed. Several people can chip in for the same
+    // player and it settles as one event.
+    if (this.pendingSaves.length) {
+      const byTarget = new Map();
+      for (const sv of this.pendingSaves) {
+        const donor = this.players.get(sv.by);
+        const target = this.players.get(sv.target);
+        if (!donor || !target || donor.state !== 'live') continue;
+        if (target.state !== 'eliminated') continue;
+        const amount = Math.max(0, Math.min(sv.amount, donor.score));
+        if (amount <= 0) continue;
+        donor.score -= amount;
+        const cur = byTarget.get(sv.target) || { total: 0, donors: [] };
+        cur.total += amount;
+        cur.donors.push({ playerId: sv.by, amount });
+        byTarget.set(sv.target, cur);
+      }
+      this.pendingSaves = [];
+      const saved = [];
+      for (const [targetId, info] of byTarget) {
+        const t = this.players.get(targetId);
+        if (!t) continue;
+        // Straight back into the ring at whatever was raised. Partial amounts
+        // are allowed on purpose: a cheap save is a weak save.
+        t.state = 'live';
+        t.score = Math.min(info.total, this.ceiling);
+        t.enteredAtClue = this.cluesRevealed;
+        t.eliminatedAtClue = null;
+        t.revivals = (t.revivals || 0) + 1;
+        this.eliminationOrder = this.eliminationOrder.filter((x) => x !== targetId);
+        saved.push({ playerId: targetId, total: info.total, donors: info.donors });
+      }
+      if (saved.length) entry.saved = saved;
+    }
+
     this.checkOvertime(entry);
 
     if (!cat.clues.some((c) => !c.revealed)) {
@@ -632,6 +759,42 @@ export class RumbleGame {
   // the match is winding up; letting somebody in then would reopen it while
   // the stakes stayed elevated by the ratchet, which is a strange thing to do
   // to the people who got there on time.
+  // Declared by somebody still in the ring, paid at the next clue boundary so
+  // play never stops for it.
+  declareSave(byId, targetId, amount) {
+    if (!this.s.savePlayer) return { error: 'saves are off' };
+    const by = this.players.get(byId);
+    const target = this.players.get(targetId);
+    if (!by || by.state !== 'live') return { error: 'you are not in the ring' };
+    if (!target || target.state !== 'eliminated') return { error: 'they are not out' };
+    const amt = Math.floor(Number(amount) || 0);
+    if (amt <= 0) return { error: 'nothing offered' };
+    if (amt > by.score) return { error: 'more than you have' };
+    this.pendingSaves = this.pendingSaves.filter(
+      (s2) => !(s2.by === byId && s2.target === targetId));
+    this.pendingSaves.push({ by: byId, target: targetId, amount: amt });
+    return { ok: true, amount: amt, pending: this.pendingSaves.length };
+  }
+
+  // A player waiting to come in can hand part of their entry to anybody in the
+  // ring. They enter with whatever is left, which is the cost of the gesture.
+  giftFromQueue(byId, targetId, amount) {
+    if (!this.s.giftFromQueue) return { error: 'gifting is off' };
+    const by = this.players.get(byId);
+    const target = this.players.get(targetId);
+    if (!by || by.state !== 'queued') return { error: 'you are not waiting' };
+    if (!target || target.state !== 'live') return { error: 'they are not in the ring' };
+    const amt = Math.floor(Number(amount) || 0);
+    if (amt <= 0) return { error: 'nothing offered' };
+    // Measured against the stake they have not yet received.
+    const stake = this.s.startScore - (by.gifted || 0) - (by.bountyPlaced || 0);
+    if (amt > stake) return { error: `you only have ${stake} to give` };
+    by.gifted = (by.gifted || 0) + amt;
+    target.score = Math.min(this.ceiling, target.score + amt);
+    this.log.push({ type: 'gift', from: byId, to: targetId, amount: amt });
+    return { ok: true, amount: amt, remaining: stake - amt };
+  }
+
   addLatecomer(id, name) {
     if (this.finished) return { error: 'the match is over' };
     if (this.overtimeFrom != null) return { error: 'too late — the match is in overtime' };
@@ -670,7 +833,7 @@ export class RumbleGame {
     const stake = next.revivals > 0
       ? Math.round(this.s.startScore * this.s.revivalFraction)
       : this.s.startScore;
-    next.score = Math.min(stake - next.bountyPlaced, this.ceiling);
+    next.score = Math.min(stake - next.bountyPlaced - (next.gifted || 0), this.ceiling);
     next.enteredAtClue = this.cluesRevealed;
     this.log.push({ type: 'entry', playerId: next.id, draw: next.drawNumber, cause });
     return next;

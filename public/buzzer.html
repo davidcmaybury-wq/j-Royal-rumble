@@ -133,6 +133,18 @@ animation:breathe 1.6s ease-in-out infinite}
 .mbtn:disabled{opacity:.3;cursor:default}
 .lastarm{font-size:10.5px;color:var(--brass);font-family:"IBM Plex Mono",monospace;
 display:block;width:100%;margin-top:2px;text-align:center}
+.bonus{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);z-index:80;
+text-align:center;pointer-events:none;animation:bonusin .32s cubic-bezier(.2,.9,.3,1),
+bonusout .5s ease-in 1.7s forwards}
+@keyframes bonusin{from{opacity:0;transform:translate(-50%,-30%) scale(.85)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes bonusout{to{opacity:0;transform:translate(-50%,-62%) scale(1.04)}}
+.bonus .bg{display:block;font-size:clamp(46px,15vw,86px);line-height:1;color:var(--brass);
+text-shadow:0 0 28px #D6A93F55}
+.bonus .bs{display:block;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+color:var(--slate);margin-top:6px}
+.bonus.swept .bg{color:#FFD877}
+.bonus.saved .bg{color:var(--live)}
 .watchlink{display:block;text-align:center;margin-top:14px;color:var(--brass);
 text-decoration:none;font-size:13px;border-bottom:1px solid #6A4509;
 padding-bottom:2px;width:fit-content;margin-left:auto;margin-right:auto}
@@ -512,6 +524,27 @@ socket.on('targeted', ({ by }) => {
   sfx.play('lock');
   say(`${by} is aiming at you`);
 });
+// Your own longevity payment. This only ever fires for one person, so it can
+// afford to be more than a flicker.
+socket.on('resolved', (e) => {
+  const mine = (e.longevity || []).find((g) => g.playerId === myToken());
+  if (mine) flash(`+${fmt(mine.amount)}`, 'still standing', 'paid');
+  if (e.sweep && e.sweep.playerId === myToken()) {
+    flash(`+${fmt(e.sweep.bonus)}`, 'you swept ' + e.sweep.category, 'swept');
+  }
+  const saved = (e.saved || []).find((x) => x.playerId === myToken());
+  if (saved) flash(fmt(saved.total), 'bought back in', 'saved');
+});
+
+function flash(big, small, kind) {
+  document.querySelectorAll('.bonus').forEach((n) => n.remove());
+  const d = document.createElement('div');
+  d.className = 'bonus ' + kind;
+  d.innerHTML = `<span class="bg mq num">${big}</span><span class="bs">${small}</span>`;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 2200);
+}
+
 socket.on('revived', ({ stake }) => {
   sfx.play('entry');
   say(`You are back in the queue with ${stake.toLocaleString()}`);

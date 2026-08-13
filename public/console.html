@@ -110,6 +110,14 @@ padding:6px 7px;border-radius:var(--r);background:var(--panel);margin-bottom:3px
 .mk.rope{color:#FF9A3C;font-size:9.5px;letter-spacing:.1em;font-weight:500}
 /* The whole tile changes colour, not just a badge — a declaration the room has
    to notice before the next clue goes up. */
+/* longevity: a quick brass wash across the tile */
+@keyframes paidpulse{0%{background:var(--panel)}22%{background:#3A2E0C}100%{background:var(--panel)}}
+.pl.paid{animation:paidpulse 1.3s ease-out}
+@keyframes sweptpulse{0%,100%{background:var(--panel)}
+  20%{background:#4A3A0E}45%{background:var(--panel)}70%{background:#4A3A0E}}
+.pl.swept{animation:sweptpulse 1.4s ease-out}
+.cell.rippled,.cat.rippled{background:var(--brass)!important;color:var(--ink)!important;
+transition:background .12s ease,color .12s ease}
 .pl.uptop{background:#3A2208;box-shadow:inset 2px 0 0 #FF9A3C;
 animation:uptop 1.1s ease-in-out infinite}
 @keyframes uptop{0%,100%{background:#3A2208}50%{background:#54300B}}
@@ -358,6 +366,26 @@ socket.on('resolved', (e) => {
     say(`${p ? p.name : 'A player'} gets a second life`, 'enter');
   }
   if (e.eliminated && e.eliminated.length) sfxElim(e.eliminated.length);
+
+  // A longevity payment fires for several players at once and several times a
+  // minute, so it gets a brief pulse on the tile rather than anything that
+  // takes over the screen.
+  for (const g of e.longevity || []) {
+    pulse(g.playerId, 'paid');
+    say(nameOf(g.playerId) + ' +' + fmt(g.amount) + ' for lasting', 'bonus');
+  }
+  // A sweep is rare enough to be worth a moment.
+  if (e.sweep) {
+    ripple(e.sweep.category);
+    pulse(e.sweep.playerId, 'swept');
+    say(nameOf(e.sweep.playerId) + ' swept ' + e.sweep.category
+      + ' — ' + fmt(e.sweep.bonus), 'sweep');
+    sfx.play('powerup');
+  }
+  for (const sv of e.saved || []) {
+    say(nameOf(sv.playerId) + ' is bought back in for ' + fmt(sv.total), 'enter');
+    sfx.play('entry');
+  }
   if (e.fieldClear) say('Field cleared — +' + fmt(e.fieldClear.bonus) + ' bonus, board reset', 'enter');
   if (e.stumperDeduction) say('Stumper — everyone −' + e.stumperDeduction);
   if (e.totalWipe) say('Total wipe — highest score survives', 'elim');
@@ -420,6 +448,34 @@ const showToss = (gone) => showCorner('toss',
 // The lower third, now with the entrance played beside the name rather than
 // as a separate thing. The name is still the largest object on it — the
 // animation is decoration and must not become the message.
+const nameOf = (t) => ((S.live || []).concat(S.out || []).find((p) => p.token === t) || {}).name
+  || 'Somebody';
+
+// A brief flash on a player's tile. Deliberately small: with a full ring these
+// fire several times a minute and anything larger would be exhausting.
+function pulse(token, kind) {
+  const el = document.querySelector(`.pl[data-token="${token}"]`);
+  if (!el) return;
+  el.classList.remove('paid', 'swept');
+  void el.offsetWidth;                 // restart the animation
+  el.classList.add(kind);
+  setTimeout(() => el.classList.remove(kind), 1400);
+}
+
+// The column washes brass, top to bottom.
+function ripple(category) {
+  const cols = [...document.querySelectorAll('.col')];
+  const col = cols.find((c) => (c.querySelector('.cat')?.textContent || '')
+    .trim().toUpperCase().includes(String(category).trim().toUpperCase()));
+  if (!col) return;
+  [...col.children].forEach((cell, i) => {
+    setTimeout(() => {
+      cell.classList.add('rippled');
+      setTimeout(() => cell.classList.remove('rippled'), 700);
+    }, i * 90);
+  });
+}
+
 function banner(ps) {
   document.querySelectorAll('.entry').forEach((n) => n.remove());
   const d = document.createElement('div'); d.className = 'entry';

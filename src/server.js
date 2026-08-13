@@ -1361,6 +1361,29 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Declared by somebody in the ring; paid at the next clue boundary so play
+  // never stops while a number is typed.
+  socket.on('save-player', ({ target, amount }, ack) => {
+    if (!match?.game || !token) return ack?.({ error: 'no match' });
+    const r = match.game.declareSave(token, target, amount);
+    if (r.ok) { match.note('save-declared', { by: token, target, amount: r.amount }); pushAll(); }
+    ack?.(r);
+  });
+
+  // From the queue: fund anyone in the ring out of your own entry.
+  socket.on('gift', ({ target, amount }, ack) => {
+    if (!match?.game || !token) return ack?.({ error: 'no match' });
+    const r = match.game.giftFromQueue(token, target, amount);
+    if (r.ok) {
+      match.note('gift', { from: token, to: target, amount: r.amount });
+      io.to(`${match.id}:host`).emit('gifted', {
+        from: match.roster.get(token)?.name,
+        to: match.roster.get(target)?.name, amount: r.amount });
+      pushAll();
+    }
+    ack?.(r);
+  });
+
   socket.on('set-target', ({ target }) => {
     if (!match?.game || !token) return;
     if (match.game.setTarget(token, target || null)) {

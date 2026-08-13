@@ -111,6 +111,20 @@ check('and again at each doubling', on.raises.length >= 2,
     `x${g.overtime()?.multiplier}`);
 }
 
+// A very long stall opens overtime even with people queued — but only a very
+// long one. At three escalation windows it fired during the entry phase and
+// cost eleven minutes of match length and twenty points of draw fairness.
+{
+  const g = mk({ overtimeEvery: 3 }, 8);
+  // Nobody eliminated: rotate the winner so scores stay level.
+  for (let i = 0; i < 20; i++) {
+    g.resolveClue(...anyClue(g), { winnerId: g.live()[i % g.live().length].id, missedIds: [] });
+  }
+  check('twenty stalled clues do not open it while people are queued',
+    g.overtimeFrom == null || g.queued().length === 0,
+    );
+}
+
 // it must not fire while people are still queued
 {
   const g = mk({ entryInterval: 999 }, 6);
