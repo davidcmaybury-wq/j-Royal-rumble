@@ -64,7 +64,7 @@ const playClue = async (humanMs) => {
 
 // Only three players start, so one of the two humans may be queued — play
 // enough clues that at least ten human buzzes have certainly landed.
-for (let i = 0; i < 14 && !st.botOffsetFrozen; i++) await playClue(600);
+for (let i = 0; i < 30 && !st.botOffsetFrozen; i++) await playClue(600);
 check('it calibrates once there are enough buzzes', st.botOffsetFrozen === true,
   `offset ${st.botOffset}ms`);
 const frozen = st.botOffset;

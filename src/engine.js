@@ -34,7 +34,12 @@ export const DEFAULT_SETTINGS = {
   // three players trading the same points because it never fired.
   overtimeAt: null,          // ring size that starts it; null means any
   overtimeEvery: 6,          // clues between each escalation
-  overtimeMax: 8,            // never beyond this multiple
+  overtimeMax: 8,
+  // When the lights run out and nobody has taken the clue, close the race and
+  // let the host call it. Off means the buzzers stay open until they press X,
+  // which is what they used to do.
+  autoStumper: true,
+  lecternSeconds: 5,            // never beyond this multiple
   botReadJitter: 45,         // ms, shared per clue: the host activates by hand
   botMatchField: true,       // shift robots to sit alongside the humans present
   botOffset: null,           // ms; null means use the built-in default, then
@@ -60,7 +65,27 @@ export function expectedClues(playerCount, interval) {
 
 // A ceiling that decays from its opening value down to the floor across the
 // expected length of the match. Set by hand if you want it steeper.
-export function autoCeilingDecay(ceiling, floor, playerCount, interval) {
+// Zero, for now.
+//
+// The falling ceiling was invented to force a resolution, back when nothing
+// else did — without it a 30-player match ran to 112 minutes. Overtime does
+// that job properly now, and does it by raising the stakes rather than by
+// confiscating a leader's winnings.
+//
+// Leaving both in place turned out to cost a great deal. The ceiling clips
+// whoever is ahead, and whoever is ahead is nearly always an early entrant who
+// has been accumulating; a latecomer arrives at a fixed stake untouched. So the
+// decay was quietly handing the match to late draws. Across 3,000 simulated
+// 20-player matches the last third of the draw was worth 2.16x the first third
+// at -40, 1.85x at -25, and 1.40x at zero. Zero also rewards skill slightly
+// better and nothing stalls — 9,000 matches, every one resolved, median length
+// up by about two minutes.
+//
+// Kept as a function rather than a constant because the reasoning above depends
+// on overtime being on. If a host turns overtime off, a falling ceiling is the
+// only thing left that ends the match.
+export function autoCeilingDecay(ceiling, floor, playerCount, interval, settings = {}) {
+  if (settings.overtime !== false) return 0;
   const clues = expectedClues(playerCount, interval);
   if (clues <= 0 || ceiling <= floor) return 0;
   return -Math.max(5, Math.round((ceiling - floor) / clues / 5) * 5);
@@ -97,7 +122,7 @@ export class RumbleGame {
     if (this.s.ceilingFloor == null) this.s.ceilingFloor = this.s.startScore;
     if (this.s.ceilingDecayPerClue == null) {
       this.s.ceilingDecayPerClue = autoCeilingDecay(
-        this.s.ceiling, this.s.ceilingFloor, players.length, this.s.entryInterval);
+        this.s.ceiling, this.s.ceilingFloor, players.length, this.s.entryInterval, this.s);
     }
 
     this.players = new Map();
@@ -117,6 +142,7 @@ export class RumbleGame {
     this.bounties = [];        // { placer, target, amount }
     this.overtimeFrom = null;  // clue number the escalation began at
     this.stalledClues = 0;     // clues since anyone was eliminated
+    this.overtimeSteps = 0;    // doublings reached; a ratchet, never falls
 
     this.board = [];
     for (let i = 0; i < BOARD_CATEGORIES; i++) this.board.push(this.drawCategory());
@@ -141,6 +167,7 @@ export class RumbleGame {
       bounties: this.bounties,
       overtimeFrom: this.overtimeFrom,
       stalledClues: this.stalledClues,
+      overtimeSteps: this.overtimeSteps,
       cluesRevealed: this.cluesRevealed,
       fieldClears: this.fieldClears,
       vetoedThisMatch: this.vetoedThisMatch,
@@ -161,6 +188,7 @@ export class RumbleGame {
     this.bounties = d.bounties || [];
     this.overtimeFrom = d.overtimeFrom ?? null;
     this.stalledClues = d.stalledClues ?? 0;
+    this.overtimeSteps = d.overtimeSteps ?? 0;
     this.cluesRevealed = d.cluesRevealed;
     this.fieldClears = d.fieldClears;
     this.vetoedThisMatch = d.vetoedThisMatch;
@@ -198,18 +226,21 @@ export class RumbleGame {
   // from 42% to 34%. But a stall is precisely a run of clues with nobody
   // eliminated, so that is what the clock should measure. While the field is
   // thinning on its own, the stakes hold.
+  // The multiplier is a ratchet. An elimination stops the stakes climbing —
+  // the field is thinning on its own again — but it does not put them back.
+  // Deriving the level from the stall clock alone meant a single elimination
+  // dropped the values from four times face to one, which reads as the game
+  // forgetting what had just happened.
   overtime() {
     if (!this.s.overtime || this.overtimeFrom == null) return null;
-    const elapsed = this.stalledClues;
-    const steps = Math.floor(elapsed / this.s.overtimeEvery);
-    const mult = Math.min(this.s.overtimeMax, Math.pow(2, steps));
+    const mult = Math.min(this.s.overtimeMax, Math.pow(2, this.overtimeSteps));
+    const at = this.stalledClues % this.s.overtimeEvery;
     return {
       multiplier: mult,
       since: this.overtimeFrom,
-      cluesAtThisLevel: elapsed % this.s.overtimeEvery,
+      cluesAtThisLevel: at,
       stalledClues: this.stalledClues,
-      nextIn: mult >= this.s.overtimeMax
-        ? null : this.s.overtimeEvery - (elapsed % this.s.overtimeEvery),
+      nextIn: mult >= this.s.overtimeMax ? null : this.s.overtimeEvery - at,
     };
   }
 
@@ -222,9 +253,19 @@ export class RumbleGame {
   checkOvertime(entry) {
     if (!this.s.overtime) return;
     const ring = this.live().length;
-    // Any elimination is progress: the clock goes back to zero.
-    if ((entry.eliminated || []).length) this.stalledClues = 0;
-    else if (this.overtimeFrom != null) this.stalledClues += 1;
+    // Any elimination is progress, so the clock toward the *next* raise goes
+    // back to zero. The level already reached stays where it is.
+    if ((entry.eliminated || []).length) {
+      this.stalledClues = 0;
+    } else if (this.overtimeFrom != null && ring > 1) {
+      this.stalledClues += 1;
+      if (this.stalledClues >= this.s.overtimeEvery
+          && Math.pow(2, this.overtimeSteps + 1) <= this.s.overtimeMax) {
+        this.overtimeSteps += 1;
+        this.stalledClues = 0;
+        entry.overtimeRaised = { multiplier: Math.pow(2, this.overtimeSteps) };
+      }
+    }
     if (this.overtimeFrom == null) {
       const cap = this.s.overtimeAt;
       if (!this.queued().length && ring > 1 && (cap == null || ring <= cap)) {
@@ -233,10 +274,6 @@ export class RumbleGame {
       }
       return;
     }
-    if (ring <= 1) return;
-    const before = entry.overtimeBefore ?? 1;
-    const now = this.overtimeMultiplier();
-    if (now > before) entry.overtimeRaised = { multiplier: now };
   }
 
   // ---- advanced mechanics ---------------------------------------------

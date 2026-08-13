@@ -93,11 +93,19 @@ http.on('connection', (sock) => sock.setNoDelay(true));
 const PUSH_COALESCE_MS = 25;
 
 // How many human buzzes to watch before fixing the robots' speed to the field.
-// Six rather than ten: a human eliminated early may never reach ten, and until
-// the calibration fires the robots run at their raw recorded speed. In one real
-// match the player was out at clue 12 having buzzed seven times, losing every
-// race to robots that had never been levelled to him.
-const BOT_CALIBRATION_BUZZES = 6;
+//
+// Six was too few. Measured against two real matches, the first six buzzes gave
+// 302ms and 242ms where the settled figures were 85ms and 60ms — people start
+// slowly. The estimate stops moving at about sixteen:
+//
+//   buzzes    6     10    12    16    20    whole match
+//   test 1  302    204   190   190   178      85
+//   test 2  242    118   118   105    64      60
+//
+// Sixteen is still reached inside the first few clues, because warm-up presses
+// count toward it — which is what stops the calibration failing to fire for a
+// player who is being eliminated early.
+const BOT_CALIBRATION_BUZZES = 16;
 
 // Testing phase: record and save every match, whatever the host ticked.
 const RECORD_EVERYTHING = process.env.RUMBLE_RECORD_ALL !== '0';
@@ -298,6 +306,7 @@ class Match {
 
       race: this.race ? {
         open: !!this.race.open,
+        timedOut: !!this.race.timedOut,
         buzzes: this.race.buzzes.filter((b) => !b.spectator)
           .map((b) => ({ name: b.name, ms: b.ms, early: !!b.early })),
         lockedOut: [...this.race.lockedOut]
@@ -604,6 +613,9 @@ class Match {
         correct: p.correct, missed: p.missed, pins: p.pins,
         drained: st.drained, peak: Math.max(st.peak, p.score),
         att: st.att, early: st.early, won: st.won,
+        // Practice presses, kept apart so a queued or eliminated player can
+        // still see what they did without it counting for anything.
+        warmAtt: st.warmAtt || 0,
         avg: times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length * 10) / 10 : null,
         best: times.length ? Math.min(...times) : null,
       };
@@ -1009,12 +1021,18 @@ io.on('connection', (socket) => {
     const cat = g.board[slot];
     const clue = cat.clues.find((c) => c.row === row);
     if (!clue || clue.revealed) return;
+    // What the clue is actually worth right now, not its face value. The
+    // engine computes the same thing independently when it scores, so this is
+    // display only — but every surface that showed a raw $400 during a x4
+    // overtime was telling the room the wrong number.
+    const face = [100, 200, 300, 400, 500][row - 1];
     match.clue = {
-      slot, row, value: [100, 200, 300, 400, 500][row - 1],
+      slot, row, face, value: face * g.overtimeMultiplier(),
       category: cat.title, note: cat.note, text: clue.text, answer: clue.answer,
     };
     match.race = { open: false, activatedAt: null, buzzes: [], lockedOut: new Set() };
     match.retoss = 0;
+    clearTimeout(match.raceTimer);
     pushHost();
     io.to(`${match.id}:players`).emit('clue-shown', { value: match.clue.value });
     pushPlayers();
@@ -1024,6 +1042,25 @@ io.on('connection', (socket) => {
   // `delay` compensates for Zoom audio lagging the socket by ~150ms: clients
   // wait `delay` ms, then arm locally, and every client anchors on that same
   // post-delay instant so live and spectator times stay comparable.
+  // The five lights are a promise: when they go out, the clue is over. There
+  // was no timeout at all, so a clue nobody wanted sat open until the host
+  // noticed and pressed X — and on a re-toss the lights ran a second time,
+  // which read as a glitch rather than as a second race.
+  const armTimeout = () => {
+    clearTimeout(match.raceTimer);
+    if (!match.settings.autoStumper) return;
+    const grace = (match.settings.lecternSeconds ?? 5) * 1000
+      + match.settings.delay + 400;
+    match.raceTimer = setTimeout(() => {
+      if (!match || !match.race || !match.race.open || !match.clue) return;
+      if (match.race.buzzes.some((b) => !b.spectator)) return;   // somebody is on the clock
+      match.race.open = false;
+      match.race.timedOut = true;
+      io.to(`${match.id}:host`).emit('race-timeout', {});
+      pushAll();
+    }, grace);
+  };
+
   socket.on('activate', hostOnly(() => {
     if (!match.race) return;
     const at = Date.now() + match.settings.delay;
@@ -1036,6 +1073,7 @@ io.on('connection', (socket) => {
     io.to(`${match.id}:players`).emit('activate-lights', { at });
     io.to(`${match.id}:players`).emit('activate-buzzers', { at, lockout: match.settings.lockout });
     runBots();
+    armTimeout();
     pushAll();
   }));
 
@@ -1131,6 +1169,7 @@ io.on('connection', (socket) => {
         seconds: t0 ? Math.round((Date.now() - t0) / 100) / 10 : null,
         category: clueMeta.category, source: match.game.board[slot]?.source,
         note: clueMeta.note || null, row: clueMeta.row, value: clueMeta.value,
+        faceValue: clueMeta.face ?? clueMeta.value,
         buzzes: buzzes.map((b) => ({ name: b.name, ms: b.ms, spectator: b.spectator,
           early: !!b.early, latency: match.roster.get(b.token)?.latency ?? null })),
         winner: winnerToken ? match.roster.get(winnerToken)?.name : null,
@@ -1145,6 +1184,7 @@ io.on('connection', (socket) => {
     }
 
     clearBotTimers();
+    clearTimeout(match.raceTimer);
     match.clue = null; match.race = null; match.retoss = 0;
     pushAll();
     io.to(`${match.id}:host`).emit('resolved', entry);
@@ -1181,6 +1221,7 @@ io.on('connection', (socket) => {
       { at: match.race.activatedAt, lockout: match.settings.lockout });
     io.to(`${match.id}:host`).emit('retoss', { lockedOut: [...match.race.lockedOut] });
     runBots();
+    armTimeout();
     pushAll();
   }));
 
@@ -1299,8 +1340,21 @@ io.on('connection', (socket) => {
       token, name: match.roster.get(token)?.name || 'Player',
       ms: Math.round(ms * 10) / 10, early: false, spectator,
     };
+    // Warm-up presses are practice: they must not touch the live record.
+    //
+    // They used to increment the same counters as a real attempt, and a player
+    // eliminated at clue 9 who kept buzzing for the remaining 75 finished the
+    // match credited with 159 attempts against a real 1. Across a live match
+    // 43% of every recorded buzz was warm-up, so every attempt count and win
+    // rate in the standings was wrong.
     const st = match.stat(token);
-    st.att++; st.times.push(rec.ms);
+    if (spectator) {
+      st.warmAtt = (st.warmAtt || 0) + 1;
+      st.warmTimes = st.warmTimes || [];
+      st.warmTimes.push(rec.ms);
+    } else {
+      st.att++; st.times.push(rec.ms);
+    }
     if (!match.roster.get(token)?.isBot) {
       if (!match.humanBuzzes.has(token)) match.humanBuzzes.set(token, []);
       match.humanBuzzes.get(token).push(rec.ms);
@@ -1308,6 +1362,8 @@ io.on('connection', (socket) => {
     match.race.buzzes.push(rec);
     match.race.buzzes.sort((a, b) => a.ms - b.ms);
 
+    // The fastest buzz of the match has to have been a real one — otherwise it
+    // can be won by somebody who was not in the ring.
     if (!spectator && (!match.fastest || rec.ms < match.fastest.ms)) {
       match.fastest = { ms: rec.ms, name: rec.name, clue: g.cluesRevealed + 1,
         category: match.clue?.category, value: match.clue?.value };

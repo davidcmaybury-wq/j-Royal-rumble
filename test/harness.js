@@ -1,7 +1,7 @@
 // Drives the shipping engine with simulated buzzer outcomes to verify that
 // the tuning presets still hold after any rules change.
 
-import { RumbleGame, makeRng, ROW_VALUES } from '../src/engine.js';
+import { RumbleGame, makeRng, ROW_VALUES, autoEntryInterval } from '../src/engine.js';
 
 const KNOW_BY_ROW = [0.82, 0.72, 0.62, 0.50, 0.38];
 const WRONG_BUZZ = 0.07;
@@ -91,10 +91,14 @@ function shuffle(a, rng) {
 console.log('Verifying presets against the shipping engine.');
 console.log('back-half = win rate of draws in the second half (50% is fair)');
 console.log('skill = win rate of the 3 strongest players (10% is chance)\n');
-run('10 players', 10, { startScore: 3000, ceiling: 7500, ceilingDecayPerClue: -40, entryInterval: 10 });
-run('16 players', 16, { startScore: 3000, ceiling: 7500, ceilingDecayPerClue: -25, entryInterval: 7 });
-run('20 players', 20, { startScore: 3000, ceiling: 7500, ceilingDecayPerClue: -25, entryInterval: 6 });
-run('30 players', 30, { startScore: 3000, ceiling: 11000, ceilingDecayPerClue: -40, entryInterval: 5 });
+// The intervals the app actually computes at a 30-minute target, not the ones
+// from the original 60-minute tuning. The old presets meant this harness had
+// been reporting on settings nobody uses — its back-half figure said 65% where
+// the live settings give 41%.
+run('10 players', 10, { startScore: 3000, ceiling: 7500, entryInterval: autoEntryInterval(10, 30, 17.5) });
+run('16 players', 16, { startScore: 3000, ceiling: 7500, entryInterval: autoEntryInterval(16, 30, 17.5) });
+run('20 players', 20, { startScore: 3000, ceiling: 7500, entryInterval: autoEntryInterval(20, 30, 17.5) });
+run('30 players', 30, { startScore: 3000, ceiling: 11000, entryInterval: autoEntryInterval(30, 30, 17.5) });
 console.log('');
 run('30p, no ceiling decay', 30, { startScore: 3000, ceiling: 11000, ceilingDecayPerClue: 0, entryInterval: 5 });
 run('30p, flat gain (no pot)', 30, { startScore: 5000, ceiling: 99999, ceilingDecayPerClue: 0, entryInterval: 6, potScoring: false });

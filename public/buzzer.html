@@ -46,6 +46,7 @@ cursor:pointer;padding:0;flex:none}
 .tokbtn:hover{border-color:var(--brass)}
 .tokbtn svg{border-radius:50%;display:block}
 .tokhint{font-size:11.5px;color:var(--slate);text-align:center;margin-top:-4px}
+.tokask{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate)}
 .tokpick{position:fixed;inset:0;background:#0A0E1CF0;z-index:70;display:flex;
 align-items:center;justify-content:center;padding:16px}
 .tpbox{background:var(--panel);border:1px solid var(--brass);border-radius:10px;
@@ -278,7 +279,11 @@ function renderJoin() {
     const saved = JSON.parse(localStorage.getItem('rumble:art') || 'null');
     if (saved && saved.art) myArt = saved;
   } catch (e) {}
-  if (!myArt) myArt = { art: TOKEN_NAMES[0], colour: 'brass' };
+  // Deliberately left null when the player has no saved choice. Defaulting to
+  // TOKEN_NAMES[0] meant every first-timer *asked* the server for a crowbar,
+  // and the server politely gave each of them a crowbar in a different colour —
+  // so a field of three showed three crowbars when 24 shapes were free. Say
+  // nothing and the server's own assignment stands.
   paintToken();
   document.getElementById('tokbtn').onclick = pickToken;
 
@@ -301,10 +306,17 @@ let myArt = null;
 
 function paintToken() {
   const b = document.getElementById('tokbtn');
-  if (b && myArt) b.innerHTML = weaponToken(myArt.art, 84, myArt.colour);
+  if (!b) return;
+  // Before the server has said, show whatever it last told us, or a prompt.
+  const art = myArt || (V && V.you && V.you.tokenArt);
+  b.innerHTML = art
+    ? weaponToken(art.art, 84, art.colour)
+    : '<span class="tokask">pick</span>';
 }
 
 function pickToken() {
+  // Opening the picker is the moment a preference exists.
+  if (!myArt) myArt = (V && V.you && V.you.tokenArt) || { art: TOKEN_NAMES[0], colour: 'brass' };
   const el = document.createElement('div'); el.className = 'tokpick';
   const grid = () => TOKEN_NAMES.map((n) =>
     `<button data-a="${n}" title="${tokenLabel(n)}" class="${n === myArt.art ? 'on' : ''}"
@@ -388,6 +400,7 @@ renderJoin(); }
     setTimeout(() => sfx.play('join'), 60);
     const av = localStorage.getItem('rumble:avatar');
     if (av) socket.emit('avatar', { dataUrl: av });
+    // Only ask for something the player actually chose.
     if (myArt) socket.emit('token-art', myArt, (settled) => {
       if (settled && settled.art) {
         myArt = settled;
@@ -412,7 +425,8 @@ renderJoin();
 socket.on('disconnect', () => { armed = false; disarm(); render(); });
 socket.on('state', (v) => {
   prev = V; V = v;
-  if (v.you && v.you.tokenArt && !myArt) myArt = v.you.tokenArt;
+  // The server assigns on arrival; reflect it without claiming it as a choice.
+  if (v.you && v.you.tokenArt) paintToken();
   if (joined) { cues(); render(); }
 });
 

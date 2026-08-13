@@ -158,6 +158,9 @@ text-align:center;margin-top:4px}
 .bz.isbot{border:1px dashed var(--line)}
 .rt{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--alarm);
 align-self:center;margin-left:6px}
+.race.timedout .idle{color:var(--alarm)}
+.race.timedout b{color:var(--chalk);border:1px solid var(--line);border-radius:3px;
+padding:1px 6px;font-weight:400}
 .bhint{font-size:10px;margin-left:5px;letter-spacing:.04em}
 .bhint.yes{color:var(--live)}
 .bhint.no{color:var(--alarm)}
@@ -839,6 +842,15 @@ function renderDock() {
       + '<button class="act neu" id="stump">Nobody got it<span class="kb">X</span></button>'
     : '<button class="act neu" id="stump">Nobody got it<span class="kb">X</span></button>';
   const retoss = S.retoss || 0;
+  // The lights have gone out with nobody on the clue. Say so plainly and put
+  // the stumper key in front of the host rather than leaving them to notice.
+  if (S.race && S.race.timedOut && !buzzes.length) {
+    d.innerHTML = '<div class="race timedout">'
+      + '<span class="idle">Nobody took it &mdash; press <b>X</b> for a stumper</span>'
+      + (retoss ? '<span class="rt">back out ' + retoss + '&times;</span>' : '')
+      + '</div>';
+    return;
+  }
   const idle = retoss
     ? '<span class="idle">Re-tossed &mdash; buzzers live again for everyone else.</span>'
     : '<span class="idle">Buzzers live &mdash; waiting.</span>';

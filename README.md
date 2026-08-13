@@ -172,7 +172,12 @@ rate fell from 42% to 34%. A stall is precisely a run of clues with nobody going
 out, so that is what the clock measures. While the field thins on its own, the
 stakes hold.
 
-Values double every six stalled clues, capped at eight times face. Three evenly
+Values double every six stalled clues, capped at eight times face, and the
+multiplier **ratchets**: an elimination stops the stakes climbing, because the
+field is thinning on its own again, but it does not put them back. Deriving the
+level from the stall clock alone dropped a live match from four times face value
+to one the moment somebody went out, which reads as the game forgetting what had
+just happened. Three evenly
 matched players with an empty queue ran past 300 clues without this and resolve
 in 38 with it. On by default; `overtime: false` turns it off.
 

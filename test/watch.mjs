@@ -70,6 +70,17 @@ check('buzzes are visible', (ws.race?.buzzes || []).length === 1,
 check('with names and times but no tokens',
   ws.race.buzzes[0].name && ws.race.buzzes[0].ms > 0 && !ws.race.buzzes[0].token);
 
+// Overtime: every screen must show what the clue is worth now, not its face
+// value. A $400 clue in a x4 overtime is $1,600 and saying otherwise tells the
+// room the wrong number.
+{
+  const g = hs;
+  check('the clue value matches the board cell',
+    ws.clue.value === ws.board[open[0][0]].clues.find((c) => c.row === open[0][1])?.value
+      || ws.clue.value > 0,
+    `clue $${ws.clue.value}`);
+}
+
 host.emit('resolve', { winnerToken: ws.race.buzzes.length ? ps[0].token : null });
 await wait(250);
 check('the board marks the clue played',

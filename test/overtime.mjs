@@ -85,6 +85,32 @@ check('and again at each doubling', on.raises.length >= 2,
     `x${g.overtime()?.multiplier}`);
 }
 
+// The multiplier ratchets. An elimination stops the stakes climbing, because
+// the field is thinning on its own again, but it must not put them back —
+// deriving the level from the stall clock alone dropped a match from four
+// times face value to one the moment somebody went out.
+{
+  const g = mk({ overtimeEvery: 3, startScore: 9000, ceiling: 40000 }, 3);
+  for (let i = 0; i < 8 && (g.overtime()?.multiplier ?? 1) < 4; i++) {
+    g.resolveClue(...anyClue(g), { winnerId: ['p0', 'p1', 'p2'][i % 3], missedIds: [] });
+  }
+  const before = g.overtime()?.multiplier ?? 1;
+  check('the stakes climb while nobody goes out', before >= 4, `x${before}`);
+
+  g.players.get('p2').score = 10;
+  const e = g.resolveClue(...anyClue(g), { winnerId: 'p0', missedIds: ['p2'] });
+  check('somebody goes out', (e.eliminated || []).length === 1);
+  check('and the multiplier holds', (g.overtime()?.multiplier ?? 1) === before,
+    `x${g.overtime()?.multiplier} against x${before}`);
+  check('while the clock to the next raise resets', g.stalledClues === 0);
+
+  for (let i = 0; i < 4; i++) {
+    g.resolveClue(...anyClue(g), { winnerId: ['p0', 'p1'][i % 2], missedIds: [] });
+  }
+  check('and it climbs on from there', (g.overtime()?.multiplier ?? 1) > before,
+    `x${g.overtime()?.multiplier}`);
+}
+
 // it must not fire while people are still queued
 {
   const g = mk({ entryInterval: 999 }, 6);

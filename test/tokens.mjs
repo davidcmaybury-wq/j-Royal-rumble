@@ -65,6 +65,13 @@ check('everyone is given a token on arrival', arts.length === 6, `${arts.length}
 check('and no two are alike',
   new Set(arts.map((a) => `${a.art}:${a.colour}`)).size === 6,
   arts.map((a) => a.art).join(', '));
+// The real failure looked like de-confliction working: six players, six
+// tokens, all of them the same shape in different colours. The buzzer was
+// asking for TOKEN_NAMES[0] on behalf of anyone with no saved preference, so
+// the server's own spread never got a chance.
+check('and they are six different shapes, not one shape six times',
+  new Set(arts.map((a) => a.art)).size === 6,
+  new Set(arts.map((a) => a.art)).size + ' distinct shapes');
 
 // Two players ask for the same shape.
 //

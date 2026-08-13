@@ -156,9 +156,25 @@ check('settings lock once the match starts', locked.status === 409);
   await wait(300);
   check('auto floor resolves to the starting score', st.settings.ceilingFloor === 4000,
     String(st.settings.ceilingFloor));
-  check('auto decay resolves to a negative number', st.settings.ceilingDecayPerClue < 0,
-    `${st.settings.ceilingDecayPerClue}/clue`);
+  // Auto now holds the ceiling steady while overtime is on. The falling
+  // ceiling was there to force a resolution; overtime does that job, and doing
+  // both handed the match to late draws — in a 20-player field the last third
+  // of the draw was worth 2.16x the first third at -40 against 1.40x at zero.
+  check('auto decay holds the ceiling steady while overtime is on',
+    st.settings.ceilingDecayPerClue === 0, `${st.settings.ceilingDecayPerClue}/clue`);
   check('the opening ceiling is the configured one', st.ceiling === 12000, String(st.ceiling));
+
+  // With overtime off, nothing else ends the match, so auto must still decay.
+  // Called directly rather than over a socket: the setting is only resolved
+  // when a match starts, so reading it from a lobby would always see null.
+  {
+    const { autoCeilingDecay } = await import('../src/engine.js');
+    check('with overtime off, auto still decays the ceiling',
+      autoCeilingDecay(12000, 4000, 20, 4, { overtime: false }) < 0,
+      `${autoCeilingDecay(12000, 4000, 20, 4, { overtime: false })}/clue`);
+    check('and holds it steady with overtime on',
+      autoCeilingDecay(12000, 4000, 20, 4, { overtime: true }) === 0);
+  }
 
   // Play far enough that a decaying ceiling would have gone under the stake.
   for (let i = 0; i < 25 && st.phase === 'live'; i++) {

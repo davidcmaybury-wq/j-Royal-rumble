@@ -374,11 +374,11 @@ function render(keepEdits) {
         <select id="decayMode">
           <option value="auto" ${s.ceilingDecayPerClue == null ? 'selected' : ''}>Auto</option>
           <option value="fixed" ${s.ceilingDecayPerClue == null ? '' : 'selected'}>Set a number</option>
-        </select><span class="hint">auto decays to the floor across the match</span></div>
+        </select><span class="hint">auto holds the ceiling steady while overtime is on</span></div>
       <div class="f" id="decaywrap" style="${s.ceilingDecayPerClue == null ? 'display:none' : ''}">
         <label>Per clue</label>
         <input type="number" id="ceilingDecayPerClue" value="${s.ceilingDecayPerClue ?? -40}" step="5" style="width:96px">
-        <span class="hint">negative decays</span></div>
+        <span class="hint">negative decays &mdash; favours late draws</span></div>
       <div class="f"><label>Ceiling floor</label>
         <select id="floorMode">
           <option value="auto" ${s.ceilingFloor == null ? 'selected' : ''}>Auto — match the starting score</option>
