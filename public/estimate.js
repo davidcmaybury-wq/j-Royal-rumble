@@ -2,6 +2,11 @@
 // module so the setup page and the test suite run the same code rather than
 // two hopefully-identical copies.
 
+// Imported from the engine itself so the setup page uses the same measured
+// grid the server does. The path is relative, which resolves both in the
+// browser (public/ and src/ are siblings) and under node in the tests.
+import { fairnessWarning, predictMatch } from '../src/engine.js';
+
 export const IV_MIN = 2;
 export const IV_MAX = 15;
 
@@ -66,6 +71,20 @@ export function warnings(playerCount, settings) {
       text: `Auto can't compress to ${s.targetMinutes} minutes with ${n} players. Entry lands on every `
         + `${IV_MIN} clues and the match still runs about ${e.mins} minutes.`,
       fix: `Set the target to ${reach.min} minutes`, target: reach.min,
+    });
+  }
+
+  // Draw fairness, from the measured grid rather than a rule of thumb. It never
+  // refuses anything — a host who wants a two-hour thirty-player match can have
+  // one, they should just know late draws will run away with it.
+  const fw = fairnessWarning(n, e.iv);
+  if (fw) {
+    const p = predictMatch(n, fw.suggest);
+    out.push({
+      level: fw.kind === 'late-draws' ? 'bad' : 'note',
+      text: fw.text,
+      fix: p ? `Use every ${fw.suggest} — about ${p.minutes} minutes` : null,
+      interval: fw.suggest,
     });
   }
 

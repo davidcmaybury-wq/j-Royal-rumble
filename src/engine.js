@@ -7,7 +7,7 @@ export const BOARD_CATEGORIES = 6;
 
 export const DEFAULT_SETTINGS = {
   startScore: 3000,
-  ceiling: 11000,
+  ceiling: null,             // null => scaled to the field, see autoCeiling
   ceilingDecayPerClue: null,  // null => auto: decay to the floor over the match
   ceilingFloor: null,         // null => auto: the starting score
   entryInterval: null,       // null => auto from roster + targetMinutes
@@ -88,15 +88,167 @@ export const DEFAULT_SETTINGS = {
   seasonRange: null,         // [lo, hi] archive seasons; null = all
 };
 
+// The ceiling that makes a given field size even.
+//
+// This turned out to be a stronger fairness lever than the entry interval, and
+// it had been confounding every earlier measurement — the ceiling was jumping
+// from 7,500 to 11,000 at 25 players, which made a 24-player field look far
+// less fair than a 30-player one. It was the ceiling, not the field size.
+//
+// A ceiling that is too low favours late draws, because it clips the leaders an
+// early entrant has worked to become. Too high and it never binds, so early
+// accumulation runs away. Measured at 2,500 matches per point:
+//
+//   field   fair ceiling   spread
+//     6         6,000       0.96
+//    10         7,500       0.99
+//    16         7,500       1.02
+//    20         9,000       0.96
+//    24        10,500       0.98
+//    30        10,500       1.01
+export function autoCeiling(playerCount) {
+  if (playerCount <= 8) return 6000;
+  if (playerCount <= 16) return 7500;
+  if (playerCount <= 20) return 9000;
+  return 10500;
+}
+
+// Measured draw fairness, rather than a formula.
+//
+// Several plausible formulas were tried — the share of the match left after the
+// field fills, clues after the fill, clues per player — and the best correlated
+// at only r = 0.71. A rule that confident-sounding and that wrong is worse than
+// a lookup, so this is the measurement itself: 3,000 simulated matches for each
+// pair, with players of mixed ability and the ceiling scaled to the field.
+//
+// Measuring this the first time with a fixed ceiling gave badly wrong answers —
+// it made twenty players look unfair at every interval past 3, when in fact
+// they are fine out to 8. The ceiling was the variable doing the work.
+//
+// Each row is [entry interval, draw spread, minutes, skill percent]. Spread is
+// the last third of the draw against the first; 1.00 is even, higher favours
+// late numbers. Skill is how often one of the three strongest players wins.
+const FAIRNESS = {"6":[[1,0.93,8,74],[2,0.9,8,75],[3,0.89,9,73],[4,1,11,76],[5,1.02,11,77],[6,0.96,12,77],[8,0.98,14,76],[10,0.94,15,78],[12,0.98,17,78],[15,1.03,20,77]],"8":[[1,1.02,9,63],[2,1.02,10,66],[3,0.93,12,66],[4,0.98,13,65],[5,1.07,15,66],[6,1.03,16,66],[8,1.02,19,67],[10,1.06,22,68],[12,1.06,24,69],[15,1.27,28,69]],"10":[[1,0.94,11,56],[2,0.91,13,58],[3,1.02,15,61],[4,1,17,59],[5,0.98,19,61],[6,0.96,21,63],[8,0.98,25,62],[10,0.92,28,63],[12,1.18,32,63],[15,1.47,38,62]],"12":[[1,0.93,12,52],[2,0.98,15,54],[3,0.98,18,54],[4,0.98,20,56],[5,1,22,55],[6,1.01,25,56],[8,1,29,57],[10,1.07,34,58],[12,1.23,39,58],[15,1.69,46,56]],"16":[[1,1.03,15,45],[2,1.09,18,46],[3,0.98,22,45],[4,1.05,25,48],[5,1.02,29,49],[6,1.11,32,48],[8,1.13,39,51],[10,1.34,46,49],[12,2.05,54,48],[15,3.4,63,48]],"20":[[1,1.01,18,38],[2,0.99,22,40],[3,1.02,27,41],[4,0.97,31,43],[5,0.96,36,44],[6,1.05,40,44],[8,1.07,50,46],[10,1.38,59,46],[12,1.87,69,43],[15,3.75,71,38]],"24":[[1,1,20,37],[2,0.92,26,38],[3,0.94,31,39],[4,0.96,37,41],[5,0.95,43,41],[6,0.94,48,42],[8,1.02,60,43],[10,1.29,72,42],[12,1.99,83,39],[15,3.97,71,33]],"30":[[1,0.95,23,32],[2,0.93,30,32],[3,1.03,37,33],[4,1.02,44,35],[5,1.11,52,36],[6,1.06,60,36],[8,1.14,74,38],[10,1.63,90,38],[12,2.38,104,34]]};
+
+const SPREAD_OK = 1.15;      // beyond this the draw is doing real work
+const SHORT_MINUTES = 15;    // below this the strongest players stop showing
+
+/** Interpolate the grid for any field size and interval. */
+export function predictMatch(playerCount, interval) {
+  if (!interval || playerCount < 4) return null;
+  const sizes = Object.keys(FAIRNESS).map(Number).sort((a, b) => a - b);
+  const pick = (n) => {
+    const row = FAIRNESS[n];
+    if (!row) return null;
+    let best = row[0];
+    for (const r of row) {
+      if (Math.abs(r[0] - interval) < Math.abs(best[0] - interval)) best = r;
+    }
+    return best;
+  };
+  const lo = [...sizes].reverse().find((n) => n <= playerCount) ?? sizes[0];
+  const hi = sizes.find((n) => n >= playerCount) ?? sizes[sizes.length - 1];
+  const a = pick(lo), b = pick(hi);
+  if (!a || !b) return null;
+  const t = hi === lo ? 0 : (playerCount - lo) / (hi - lo);
+  return {
+    spread: a[1] + (b[1] - a[1]) * t,
+    minutes: Math.round(a[2] + (b[2] - a[2]) * t),
+    skill: Math.round(a[3] + (b[3] - a[3]) * t),
+  };
+}
+
+/**
+ * The interval to recommend: the longest match the fairness budget allows.
+ * Length buys skill and unfairness is what it costs, so spend right up to the
+ * limit and no further.
+ */
+export function bestInterval(playerCount) {
+  const sizes = Object.keys(FAIRNESS).map(Number).sort((a, b) => a - b);
+  const n = sizes.reduce((best, x) =>
+    Math.abs(x - playerCount) < Math.abs(best - playerCount) ? x : best, sizes[0]);
+  const row = FAIRNESS[n] || [];
+  const fair = row.filter((r) => r[1] <= SPREAD_OK && r[2] >= SHORT_MINUTES);
+  if (fair.length) return fair[fair.length - 1][0];
+  const any = row.filter((r) => r[1] <= SPREAD_OK);
+  return any.length ? any[any.length - 1][0] : 2;
+}
+
+// How much of a match should still be left once everybody is in.
+//
+// Draw fairness follows this and almost nothing else. Measured across 4,000
+// matches per configuration:
+//
+//   share of the match after the field fills    last third vs first third
+//     over 40%                                       0.90 - 1.09x
+//     25 - 35%                                       1.04 - 1.31x
+//     12 - 20%                                       1.21 - 2.29x
+//     under 10%                                      2.29 - 5.27x
+//
+// At sixteen players entering every sixteen clues the last entrant arrives with
+// 6% of the match left, walks into an exhausted field, and wins 4.3 times their
+// share. Keeping a third of the match in reserve holds the spread near 1.00.
+export const MIN_TAIL_FRACTION = 0.35;
+
+/**
+ * Longer matches are less fair, not more, so this caps the interval rather than
+ * simply dividing the target by the field.
+ *
+ * Skill pulls the other way — a short match is even but random, because the
+ * strongest player never gets the clues to prove it. Most of that gain arrives
+ * by twenty-odd minutes and then flattens, while fairness keeps degrading, so
+ * the honest answer is a window rather than a number.
+ */
 export function autoEntryInterval(playerCount, targetMinutes, secondsPerClue) {
   if (playerCount <= 3) return 1;
   const targetClues = (targetMinutes * 60) / secondsPerClue;
-  const raw = Math.round((targetClues * 0.6) / (playerCount - 3));
-  return Math.min(15, Math.max(2, raw));
+  const entrants = playerCount - 3;
+
+  // What the host asked for, and what fairness will allow.
+  const wanted = Math.round((targetClues * 0.6) / entrants);
+  const fair = Math.floor((targetClues * (1 - MIN_TAIL_FRACTION)) / entrants);
+
+  return Math.min(15, Math.max(2, Math.min(wanted, fair)));
 }
 
-// Roughly how many clues a match of this shape runs. Mirrors the estimate the
-// setup page shows the host — the queue emptying, plus an endgame.
+/**
+ * What the host is about to get, so the setup screen can say so. Returns null
+ * when the settings sit inside the measured window.
+ *
+ * It never refuses anything. A host who wants a two-hour thirty-player match
+ * can have one; they should just know late draws will run away with it.
+ */
+export function fairnessWarning(playerCount, interval) {
+  if (playerCount < 4 || !interval) return null;
+  const p = predictMatch(playerCount, interval);
+  if (!p) return null;
+  const best = bestInterval(playerCount);
+
+  if (p.spread > SPREAD_OK) {
+    return {
+      kind: 'late-draws',
+      spread: p.spread,
+      suggest: best,
+      minutes: p.minutes,
+      text: `At every ${interval} clues the last players in walk into a worn-down `
+        + `field: late draws win about ${p.spread.toFixed(1)} times as often as `
+        + `early ones. Every ${best} keeps it near even.`,
+    };
+  }
+  if (p.minutes < SHORT_MINUTES && playerCount >= 10) {
+    return {
+      kind: 'too-short',
+      suggest: best,
+      minutes: p.minutes,
+      text: `About ${p.minutes} minutes is even on the draw but short on skill — `
+        + `the strongest players win noticeably less often below ${SHORT_MINUTES} `
+        + `minutes. Every ${best} gives the result more to stand on.`,
+    };
+  }
+  return null;
+}
+
+
 export function expectedClues(playerCount, interval) {
   const entry = Math.max(0, playerCount - 3) * interval;
   return Math.round(entry + Math.max(22, entry * 0.67));
@@ -155,6 +307,7 @@ export class RumbleGame {
 
     // Remembered so a latecomer can trigger a recalculation. Without it we
     // could not tell a host-chosen interval from one we worked out ourselves.
+    if (this.s.ceiling == null) this.s.ceiling = autoCeiling(players.length);
     this.autoInterval = this.s.entryInterval == null;
     if (this.autoInterval) {
       this.s.entryInterval = autoEntryInterval(

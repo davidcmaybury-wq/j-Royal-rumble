@@ -468,6 +468,42 @@ read as a magnifying glass, the boot as a chess pawn, the morningstar as a
 blob, and the bone as a dumbbell. `tools/` has no generator for these; they are
 hand-drawn paths in `public/tokens.js`.
 
+## Pacing, and what the setup card warns about
+
+**The ceiling scales with the field**, and this turned out to matter more than
+anything else. It had been jumping from 7,500 to 11,000 at 25 players, which
+made a 24-player field look far less fair than a 30-player one — it was the
+ceiling doing that, not the field size. Every earlier fairness measurement was
+confounded by it.
+
+| Field | Ceiling |
+|---|---|
+| up to 8 | 6,000 |
+| 9–16 | 7,500 |
+| 17–20 | 9,000 |
+| 21+ | 10,500 |
+
+With that fixed, draw fairness holds across a much wider range of entry
+intervals than it appeared to — twenty players are fine out to every 8 clues,
+where the confounded measurement said 3.
+
+**Longer matches are less fair, not more.** The last players in walk into a
+worn-down field, so at extreme pacing they win several times their share. But
+short matches are random — the strongest player never gets the clues to prove
+it, and skill only settles around the fifteen-minute mark. So there is a window,
+and the setup card knows where it is.
+
+`FAIRNESS` in `src/engine.js` is the measurement itself: 3,000 simulated matches
+for every field-size and interval pair. Several formulas were tried first — the
+share of the match left after the field fills, clues after the fill, clues per
+player — and the best correlated at only r = 0.71. A rule that
+confident-sounding and that wrong is worse than a lookup.
+
+The setup card shows a red warning outside the window, with a button that sets
+the recommended interval. **It never refuses anything.** A host who wants a
+two-hour thirty-player match can have one; they should just know late draws will
+run away with it.
+
 ## Latecomers
 
 Somebody arriving after the bell goes to the back of the queue and enters at the

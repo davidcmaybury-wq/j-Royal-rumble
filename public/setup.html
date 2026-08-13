@@ -92,6 +92,11 @@ border-radius:20px;padding:5px 12px;font-size:12.5px}
 border-radius:var(--r);font-size:12.5px;line-height:1.5;border-left:2px solid var(--line);background:var(--ink)}
 .wrn.warn{border-left-color:var(--brass);color:var(--chalk)}
 .wrn.note{border-left-color:var(--line);color:var(--slate)}
+/* Red, for the things that will visibly skew a match. Never blocking — the
+   host can run whatever they like, they just get told. */
+.wrn.bad{border-left-color:var(--alarm);color:#F0A99E;background:#2A100D}
+.wrn.bad .wfix{border-color:var(--alarm);color:#F0A99E}
+.wrn.bad .wfix:hover{background:var(--alarm);color:var(--ink)}
 .wfix{flex:none;align-self:center;border:1px solid var(--brass);color:var(--brass);
 border-radius:var(--r);padding:5px 11px;font-size:12px;white-space:nowrap}
 .wfix:hover{background:#3A2E0C}
@@ -538,8 +543,15 @@ function renderWarnings() {
   w.innerHTML = ws.map((x, i) => `<div class="wrn ${x.level}">
     <span>${x.text}</span>${x.fix ? `<button class="wfix" data-fix="${i}">${x.fix}</button>` : ''}</div>`).join('');
   w.querySelectorAll('[data-fix]').forEach((b) => b.onclick = async () => {
-    const v = ws[Number(b.dataset.fix)].target;
-    document.getElementById('targetMinutes').value = v;
+    const x = ws[Number(b.dataset.fix)];
+    if (x.interval != null) {
+      // A fairness fix sets the interval directly and takes it off auto,
+      // because auto is what produced the number being complained about.
+      const iv = document.getElementById('entryInterval');
+      if (iv) iv.value = x.interval;
+    } else if (x.target != null) {
+      document.getElementById('targetMinutes').value = x.target;
+    }
     await save(true); render();
   });
 }

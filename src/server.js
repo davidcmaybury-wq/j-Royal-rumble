@@ -71,6 +71,15 @@ console.log(`v${VERSION} · machine ${MACHINE} · library ${LIBRARY.length} cate
 
 const app = express();
 app.use(express.json({ limit: '12mb' }));
+// The rules engine, served to the browser so the setup page can use the same
+// fairness measurements the server does rather than a second copy that drifts.
+// Served at /src/engine.js so that `../src/engine.js` resolves the same way
+// from a module in public/ whether it is loaded by the browser or by node.
+app.get('/src/engine.js', (_req, res) => {
+  res.type('application/javascript');
+  res.sendFile(join(__dir, 'engine.js'));
+});
+
 app.use(express.static(join(__dir, '../public')));
 
 const http = createServer(app);

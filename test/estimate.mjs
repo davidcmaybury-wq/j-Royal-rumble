@@ -60,5 +60,43 @@ for (const n of [4, 5, 6, 8, 10]) {
     !after.some((x) => x.level === 'warn'), `target ${fix.target}`);
 }
 
+// --- draw fairness, from the measured grid --------------------------------
+//
+// The setup card warns but never refuses. A host who wants a two-hour
+// thirty-player match can have one; they should just know late draws will run
+// away with it.
+{
+  const { fairnessWarning, bestInterval, predictMatch, autoCeiling } =
+    await import('../src/engine.js');
+
+  check('a sensible pacing draws no complaint', !fairnessWarning(20, 4));
+  const bad = fairnessWarning(16, 15);
+  check('a punishing one does', !!bad, bad && bad.kind);
+  check('and says how bad', bad && bad.spread > 2, bad && bad.spread.toFixed(2));
+  check('with something to do about it', bad && bad.suggest < 15, bad && String(bad.suggest));
+  check('and the suggestion is actually fair',
+    !fairnessWarning(16, bad.suggest), `every ${bad.suggest}`);
+
+  // The ceiling turned out to matter more than the interval, and measuring
+  // fairness with it fixed gave badly wrong answers.
+  check('the ceiling scales with the field',
+    autoCeiling(8) < autoCeiling(20) && autoCeiling(20) < autoCeiling(30),
+    `${autoCeiling(8)} / ${autoCeiling(20)} / ${autoCeiling(30)}`);
+
+  check('the grid covers small and large fields',
+    predictMatch(6, 4) && predictMatch(30, 4));
+  check('and interpolates in between',
+    predictMatch(22, 4) !== null && predictMatch(22, 4).minutes > 0,
+    `22 players: ${predictMatch(22, 4).minutes} min`);
+
+  // Warnings appear in the list the setup card renders, marked red.
+  const ws = warnings(16, { targetMinutes: 63, secondsPerClue: 17.5, entryInterval: 15,
+    startScore: 3000, ceiling: null, ceilingFloor: 3000 });
+  check('the setup card shows it in red', ws.some((x) => x.level === 'bad'),
+    ws.map((x) => x.level).join());
+  check('with a button that sets the interval',
+    ws.some((x) => x.level === 'bad' && x.interval > 0));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);
