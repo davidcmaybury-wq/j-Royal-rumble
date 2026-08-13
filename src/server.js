@@ -1163,6 +1163,8 @@ io.on('connection', (socket) => {
     match.history.push({ clue: match.game.cluesRevealed, ceiling: match.game.ceiling, scores: after });
 
     if (match.record) {
+      // What the clue was actually worth over its face value.
+      const mult = clueMeta.face ? Math.round(clueMeta.value / clueMeta.face) : 1;
       match.record.clues.push({
         n: match.game.cluesRevealed,
         at: match.elapsed(),
@@ -1180,6 +1182,36 @@ io.on('connection', (socket) => {
         scoresBefore: before, scoresAfter: after,
         eliminated: (entry.eliminated || []).map((t) => match.roster.get(t)?.name),
         fieldClear: entry.fieldClear ? true : undefined,
+
+        // Everything below had to be inferred from arithmetic before, and I got
+        // it wrong on the first pass: a clue paying 2x looked like overtime when
+        // it was pot scoring with three in the ring. If the log is the way this
+        // game gets tuned, the log has to say what happened.
+        overtime: mult > 1 ? mult : undefined,
+        overtimeStarted: entry.overtimeStarted ? true : undefined,
+        overtimeRaised: entry.overtimeRaised ? entry.overtimeRaised.multiplier : undefined,
+        stalledClues: match.game.stalledClues,
+        // entry.entered is a single id on a normal entry and a list when the
+        // field clears and two come in at once.
+        entered: (() => {
+          const ids = entry.entered == null ? []
+            : (Array.isArray(entry.entered) ? entry.entered : [entry.entered]);
+          return ids.length ? ids.map((t) => ({
+            name: match.roster.get(t)?.name,
+            draw: match.game.players.get(t)?.drawNumber,
+            stake: match.game.players.get(t)?.score })) : undefined;
+        })(),
+        queueLength: match.game.queued().length,
+        topRope: match.game.live().filter((p) => p.topRope)
+          .map((p) => match.roster.get(p.id)?.name).filter(Boolean).length || undefined,
+        bounties: (entry.bountyCollected || []).length
+          ? entry.bountyCollected.map((b) => ({
+              by: match.roster.get(b.by)?.name, on: match.roster.get(b.on)?.name,
+              amount: b.amount })) : undefined,
+        bountiesOpen: match.settings.bounties
+          ? [...match.game.players.values()]
+              .reduce((n, p) => n + match.game.bountyTotal(p.id), 0) || undefined
+          : undefined,
       });
     }
 

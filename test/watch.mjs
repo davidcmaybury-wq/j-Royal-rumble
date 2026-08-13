@@ -52,9 +52,22 @@ check('the host has the answer', typeof hs.clue.answer === 'string' && hs.clue.a
 // The whole point.
 const dump = JSON.stringify(ws);
 check('the watch view has no answer field', !('answer' in ws.clue));
-check('and the answer does not appear anywhere in the payload',
-  !dump.includes(hs.clue.answer),
-  hs.clue.answer.slice(0, 30));
+check('no field of the clue holds it',
+  !Object.values(ws.clue).some((v) => typeof v === 'string'
+    && v.toLowerCase() === hs.clue.answer.toLowerCase()));
+// A substring search is only meaningful for an answer long enough not to occur
+// by chance — this failed once on the answer "raw", which appears inside plenty
+// of innocent words. Short answers are covered by the field check above.
+if (hs.clue.answer.length >= 8) {
+  check('and it does not appear anywhere in the payload',
+    !dump.toLowerCase().includes(hs.clue.answer.toLowerCase()),
+    hs.clue.answer.slice(0, 30));
+} else {
+  check('and it does not appear as a standalone word in the payload',
+    !new RegExp('\\b' + hs.clue.answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i')
+      .test(dump),
+    `"${hs.clue.answer}" is short, so matched on word boundaries`);
+}
 check('nor the host key', !dump.includes(m.hostKey));
 check('nor the settings block', ws.settings === undefined);
 check('nor player tokens for anyone queued',

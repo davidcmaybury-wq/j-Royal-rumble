@@ -45,6 +45,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/logdetail.mjs
           node test/warmup.mjs
           node test/timeout.mjs
           node test/otvalue.mjs
