@@ -109,6 +109,7 @@ margin-top:5px;color:var(--alarm)}
 <script type="module">
 import { markFull, markSmall, brainAvatar } from '/brand.js';
 import { weaponToken } from '/tokens.js';
+import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import { scoreChart } from '/chart.js';
 import { animation, SECONDS } from '/toss.js';
 import * as sfx from '/sound.js';
@@ -152,11 +153,13 @@ function paintAudio(msg) {
     + (msg ? '<span class="aerr">' + msg + '</span>' : '');
 }
 
-const face = (p, size = 22) => p.isBot
-  ? '<span class="av">' + brainAvatar(p.level || 'normie', size) + '</span>'
-  : p.tokenArt
-    ? '<span class="av">' + weaponToken(p.tokenArt.art, size, p.tokenArt.colour) + '</span>'
-    : '<span class="av"></span>';
+// A photo if they uploaded one, otherwise their wrestler. Robots get a
+// wrestler too — they are in the ring, so they should look like it.
+const face = (p, size = 22) => p.look
+  ? '<span class="av">' + wrestlerAvatar(p.look, size) + '</span>'
+  : p.isBot ? '<span class="av">' + brainAvatar(p.level || 'normie', size) + '</span>'
+  : p.tokenArt ? '<span class="av">' + weaponToken(p.tokenArt.art, size, p.tokenArt.colour) + '</span>'
+  : '<span class="av"></span>';
 
 function join() {
   socket.emit('watch-game', { gameId: code }, (r) => {
@@ -323,6 +326,8 @@ function paintCorner() {
 // keep — thirty people seeing somebody thrown out beats one person glimpsing
 // it in a corner.
 let prevLive = null;
+// Who took the last clue, so the toss can show the right thrower.
+let lastWinner = null;
 function detect(next) {
   if (!prevLive || !next.live) { prevLive = next.live || null; return; }
   const was = new Set(prevLive.map((p) => p.token));
@@ -332,24 +337,31 @@ function detect(next) {
   const wasUp = new Set(prevLive.filter((p) => p.topRope).map((p) => p.token));
   const up = next.live.filter((p) => p.topRope && !wasUp.has(p.token));
 
+  // Whoever took the clue threw them out. On a stumper nobody did, and the
+  // referee does the honours instead.
+  const lookOf = (t) => ((next.live || []).concat(next.out || [])
+    .find((p) => p.token === t) || {}).look || null;
   if (gone.length) {
     corner('toss', gone.length === 1 ? gone[0].name + ' is out'
-      : gone.length + ' out at once');
+      : gone.length + ' out at once',
+      { thrower: lookOf(lastWinner), victim: gone[0].look });
   } else if (came.length) {
     corner('entry', came.length === 1 ? came[0].name + ' enters'
-      : came.length + ' enter');
+      : came.length + ' enter', { entrant: came[0].look });
   } else if (up.length) {
-    corner('climb', up[0].name + ' goes up top');
+    corner('climb', up[0].name + ' goes up top',
+      { climber: up[0].look,
+        other: (next.live.find((p) => p.token !== up[0].token) || {}).look });
   }
   prevLive = next.live;
 }
 
 let cornerTimer = null;
-function corner(kind, caption) {
+function corner(kind, caption, who) {
   const box = document.getElementById('anim');
   if (!box) return;
   clearTimeout(cornerTimer);
-  cornerHtml = animation(kind, 190)
+  cornerHtml = animation(kind, 190, who || {})
     + '<div class="acap ' + kind + '">' + caption + '</div>';
   cornerOn = true;
   box.innerHTML = cornerHtml;
@@ -363,6 +375,7 @@ function corner(kind, caption) {
 }
 
 socket.on('state', (s) => { detect(s); S = s; render(); paintCorner(); });
+socket.on('resolved', (e) => { lastWinner = e.winnerId || null; });
 socket.on('connect', () => { if (code) join(); else ask(); });
 socket.on('disconnect', () => { /* the state stays on screen until it returns */ });
 

@@ -299,6 +299,7 @@ import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, wordmark, brainAvatar } from '/brand.js';
 import { weaponToken } from '/tokens.js';
+import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import { animation, SECONDS } from '/toss.js';
 import * as sfx from '/sound.js';
 import { summaryImage, fullStatsImage, statsCsv } from '/share.js';
@@ -365,6 +366,7 @@ socket.on('resolved', (e) => {
     const p = (S.queue || []).find((x) => x.token === t);
     say(`${p ? p.name : 'A player'} gets a second life`, 'enter');
   }
+  lastWinner = e.winnerId || null;
   if (e.eliminated && e.eliminated.length) sfxElim(e.eliminated.length);
 
   // A longevity payment fires for several players at once and several times a
@@ -411,14 +413,16 @@ function detectEvents() {
   const gone = prev.live.filter((p) => !now.has(p.token));
   if (entered.length) { sfxEntry(); banner(entered); }
   gone.forEach((p) => say(p.name + ' out — survived ' + p.tenure + ' clues', 'elim'));
-  if (gone.length) showToss(gone);
+  if (gone.length) showToss(gone, lastWinner);
 
   // Somebody has gone up top. Declared between clues, so this fires in the gap
   // rather than over a live clue.
   const wasUp = new Set((prev.live || []).filter((p) => p.topRope).map((p) => p.token));
   const nowUp = S.live.filter((p) => p.topRope && !wasUp.has(p.token));
   if (nowUp.length && !gone.length) {
-    showCorner('climb', nowUp[0].name + ' goes up top', 'toprope');
+    showCorner('climb', nowUp[0].name + ' goes up top', 'toprope',
+      { climber: nowUp[0].look || lookOf(nowUp[0].token),
+        other: (S.live.find((p) => p.token !== nowUp[0].token) || {}).look });
     say(nowUp[0].name + ' is on the top rope', 'rope');
   }
 }
@@ -429,12 +433,14 @@ function detectEvents() {
 // One slot in the corner, shared by every animation. The latest event wins:
 // if somebody climbs the rope and somebody else goes out on the same clue, the
 // elimination is the bigger moment and should be what the room sees.
+// Remembered from the last resolution so the toss can show who did it.
+let lastWinner = null;
 let cornerTimer = null;
-function showCorner(kind, caption, tone) {
+function showCorner(kind, caption, tone, who) {
   const box = $('toss');
   if (!box) return;
   clearTimeout(cornerTimer);
-  box.innerHTML = animation(kind, 150)
+  box.innerHTML = animation(kind, 150, who || {})
     + '<div class="tosscap ' + kind + '">' + caption + '</div>';
   box.classList.add('on');
   cornerTimer = setTimeout(() => box.classList.remove('on'),
@@ -442,8 +448,14 @@ function showCorner(kind, caption, tone) {
   if (tone) sfx.play(tone);
 }
 
-const showToss = (gone) => showCorner('toss',
-  gone.length === 1 ? gone[0].name + ' is out' : gone.length + ' out at once');
+// Whoever took the clue did the throwing. On a stumper nobody did, so the
+// referee tosses them — which is the honest picture of what happened.
+const lookOf = (t) => ((S.live || []).concat(S.out || [], S.roster || [])
+  .find((p) => p.token === t) || {}).look || null;
+
+const showToss = (gone, winnerToken) => showCorner('toss',
+  gone.length === 1 ? gone[0].name + ' is out' : gone.length + ' out at once',
+  null, { thrower: lookOf(winnerToken), victim: gone[0].look || lookOf(gone[0].token) });
 
 // The lower third, now with the entrance played beside the name rather than
 // as a separate thing. The name is still the largest object on it — the
@@ -479,7 +491,8 @@ function ripple(category) {
 function banner(ps) {
   document.querySelectorAll('.entry').forEach((n) => n.remove());
   const d = document.createElement('div'); d.className = 'entry';
-  d.innerHTML = '<div class="entryart">' + animation('entry', 96) + '</div>'
+  d.innerHTML = '<div class="entryart">'
+    + animation('entry', 96, { entrant: ps[0].look || lookOf(ps[0].token) }) + '</div>'
     + '<div class="entrytext">'
     + '<div><span class="lbl">Entry</span></div>'
     + ps.map((p) => '<div class="who3"><span class="no mq num">' + p.draw
@@ -537,6 +550,7 @@ function render() {
       + (p.isBot ? '<span class="av brain" title="' + (p.level || 'robot') + '">'
             + brainAvatar(p.level || 'normie', 24) + '</span>'
           : avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">'
+          : p.look ? '<span class="av brain">' + wrestlerAvatar(p.look, 24) + '</span>'
           : p.tokenArt ? '<span class="av brain">'
             + weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) + '</span>'
           : '<span class="av ph"></span>')
@@ -594,6 +608,7 @@ function render() {
     d.innerHTML = '<span class="ctrl"></span><span class="dr num">' + (i + 1) + '</span>'
       + (p.isBot ? '<span class="av brain">' + brainAvatar(p.level || 'normie', 24) + '</span>'
          : avatarOf(p) ? '<img class="av" src="' + avatarOf(p) + '" alt="">'
+         : p.look ? '<span class="av brain">' + wrestlerAvatar(p.look, 24) + '</span>'
          : p.tokenArt ? '<span class="av brain">'
            + weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) + '</span>'
          : '<span class="av ph"></span>')
@@ -819,9 +834,9 @@ function renderLobby() {
     + '<div class="who">' + (roster.length
       ? roster.map((p) => '<span class="chip' + (p.connected ? '' : ' off')
           + (p.isBot ? ' bot' : '') + '"' + (p.bot ? ' title="' + p.bot + '"' : '') + '>'
-          + (p.isBot ? brainAvatar(p.level || 'normie', 24)
-             : avatarOf(p) ? '<img src="' + avatarOf(p) + '" alt="">'
-             : p.tokenArt ? weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) : '')
+          + (avatarOf(p) ? '<img src="' + avatarOf(p) + '" alt="">'
+             : p.look ? wrestlerAvatar(p.look, 24)
+             : p.isBot ? brainAvatar(p.level || 'normie', 24) : '')
           + p.name + (p.isBot ? '<em class="lvl">' + (p.level || '') + '</em>' : '')
           + '</span>').join('')
       : '<span class="idle">Waiting for players&hellip;</span>') + '</div>'

@@ -9,6 +9,7 @@ import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS } from './engine.js';
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
 import { assignToken, resolveChoice } from './tokens-server.js';
+import { distinctLook } from '../public/wrestlers.js';
 import * as logs from './logstore.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS,
          loadDistributions, drawReadJitter, referenceHumanMedian,
@@ -280,7 +281,7 @@ class Match {
         phase: this.phase, gameId: this.id, version: VERSION, watching: true,
         roster: [...this.roster.values()].map((p) => ({
           token: p.token, name: p.name, connected: p.connected,
-          hasAvatar: !!p.avatar, tokenArt: p.tokenArt || null,
+          hasAvatar: !!p.avatar, tokenArt: p.tokenArt || null, look: p.look || null,
           isBot: !!p.isBot, level: this.bots.get(p.token)?.level || null })),
       };
     }
@@ -337,7 +338,7 @@ class Match {
       token: p.id, draw: p.drawNumber, name: p.name, score: p.score,
       state: p.state, tenure: (p.eliminatedAtClue ?? g.cluesRevealed) - (p.enteredAtClue ?? 0),
       connected: r?.connected ?? false, hasAvatar: !!r?.avatar,
-      tokenArt: r?.tokenArt || null, isBot: !!r?.isBot,
+      tokenArt: r?.tokenArt || null, look: r?.look || null, isBot: !!r?.isBot,
       level: this.bots.get(p.id)?.level || null,
       capped: p.score >= g.ceiling,
       topRope: !!p.topRope,
@@ -357,7 +358,7 @@ class Match {
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
         hasAvatar: !!p.avatar, latency: p.latency ?? null,
-        tokenArt: p.tokenArt || null,
+        tokenArt: p.tokenArt || null, look: p.look || null,
         isBot: !!p.isBot, level: this.bots.get(p.token)?.level || null,
         bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
       ...(g ? {
@@ -422,6 +423,7 @@ class Match {
       tenure, connected: this.roster.get(p.id)?.connected ?? false,
       hasAvatar: !!this.roster.get(p.id)?.avatar,
       tokenArt: this.roster.get(p.id)?.tokenArt || null,
+      look: this.roster.get(p.id)?.look || null,
       isBot: !!this.roster.get(p.id)?.isBot,
       level: this.bots.get(p.id)?.level || null,
       latency: this.roster.get(p.id)?.latency ?? null,
@@ -458,7 +460,8 @@ class Match {
       uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
-        hasAvatar: !!p.avatar, tokenArt: p.tokenArt || null, isBot: !!p.isBot,
+        hasAvatar: !!p.avatar, tokenArt: p.tokenArt || null, look: p.look || null,
+        isBot: !!p.isBot,
         level: this.bots.get(p.token)?.level || null,
         bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),
     };
@@ -759,7 +762,8 @@ app.post('/api/match/:id/bots', (req, res) => {
     taken.add(name);
     m.bots.set(token, brain);
     m.roster.set(token, { token, name, socketId: null, connected: true,
-      avatar: null, isBot: true });
+      avatar: null, isBot: true,
+      look: distinctLook(token, [...m.roster.values()].map((x) => x.look).filter(Boolean)) });
     added.push({ name, ...brain });
   }
   res.json({ ...m.setupView(), added: added.map((b) => ({ name: b.name, level: b.level,
@@ -980,6 +984,9 @@ io.on('connection', (socket) => {
       // Everyone gets a token on arrival rather than a blank circle. Chosen
       // to avoid whatever the room is already using.
       const art = assignToken([...m.roster.values()].map((x) => x.tokenArt), m.rng || Math.random);
+      // A wrestler nobody else in this room already looks like.
+      const look = distinctLook(token,
+        [...m.roster.values()].map((x) => x.look).filter(Boolean));
 
       if (m.phase !== 'lobby') {
         // Turning up after the bell. A Rumble is built around people arriving
@@ -989,7 +996,7 @@ io.on('connection', (socket) => {
         const r = m.game.addLatecomer(token, name || 'Player');
         if (r.error) return ack?.({ error: r.error });
         m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
-          connected: true, avatar: null, tokenArt: art, late: true });
+          connected: true, avatar: null, tokenArt: art, look, late: true });
         m.note('latecomer', { name: name || 'Player', draw: r.draw });
         socket.join(`${m.id}:players`);
         ack?.({ ok: true, token, late: true, draw: r.draw, state: m.playerView(token) });
@@ -998,7 +1005,7 @@ io.on('connection', (socket) => {
       }
 
       m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
-        connected: true, avatar: null, tokenArt: art });
+        connected: true, avatar: null, tokenArt: art, look });
     }
     socket.join(`${m.id}:players`);
     ack?.({ ok: true, token, state: m.playerView(token) });

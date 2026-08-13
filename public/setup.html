@@ -133,6 +133,7 @@ border-radius:var(--r);font-size:13px;color:var(--slate);background:none;cursor:
 import { estimate as estimateFor, warnings as warningsFor } from '/estimate.js';
 import { markFull, brainAvatar } from '/brand.js';
 import { weaponToken } from '/tokens.js';
+import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import * as sfx from '/sound.js';
 const socket = io({ transports: ['websocket'] });
 let code = location.pathname.split('/')[2] || '';
@@ -514,7 +515,8 @@ function renderRoster() {
         p.bot ? ` title="${p.bot} — click to change"` : ''}>${
         p.isBot ? brainAvatar(p.level || 'normie', 24)
           : avatarOf(p) ? `<img src="${avatarOf(p)}" alt="">`
-          : p.tokenArt ? weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) : ''}${p.name}${
+          : p.look ? wrestlerAvatar(p.look, 24)
+             : p.tokenArt ? weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) : ''}${p.name}${
         p.isBot ? `<em class="lvl">${p.level || ''}</em>` : ''}</span>`).join('')
     : '<span class="note">Nobody yet. Read them the code.</span>';
   const cw = document.getElementById('copywatch');

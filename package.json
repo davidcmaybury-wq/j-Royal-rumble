@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.42.2",
+  "version": "0.43.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -39,7 +39,6 @@
     "entry-test": "node test/entry-countdown.mjs",
     "retoss-test": "node test/retoss.mjs",
     "botcal-test": "node test/botcal.mjs",
-    "make-toss": "python3 tools/make-toss.py",
     "logstore-test": "node test/logstore.mjs",
     "mechanics-ui-test": "node test/mechanics-ui.mjs",
     "watch-test": "node test/watch.mjs",
@@ -49,7 +48,8 @@
     "logdetail-test": "node test/logdetail.mjs",
     "lag-test": "node test/lag.mjs",
     "latecomer-test": "node test/latecomer.mjs",
-    "mechanics2-test": "node test/mechanics2.mjs"
+    "mechanics2-test": "node test/mechanics2.mjs",
+    "wrestlers-test": "node test/wrestlers.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

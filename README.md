@@ -424,6 +424,29 @@ The sprites are drawn parametrically rather than as pixel maps, so a pose is a
 function call — `arms='throw'`, `legs='wide'` — which is what lets the
 flight use real rotation for the tumble instead of flipping back and forth.
 
+## Wrestler avatars
+
+Every player gets an 8-bit wrestler: singlet style and colour, hair style and
+colour, skin tone. Assigned on arrival and picked to be distinguishable from
+everyone already in the room — thirty players get thirty tellable-apart
+wrestlers with no clashes.
+
+`public/wrestlers.js` is the single source. It draws both the portrait on a
+score tile and the figures in the animations, so **a player is recognisably
+themselves being thrown out of the ring**. The Python generator that used to
+bake animation frames is gone: it could only produce fixed colours, and two
+copies of the same sprite code would have drifted apart within a week.
+
+The portrait is drawn for the job rather than cropped from the body sprite.
+Cropping was the obvious approach and it was wrong — the body's head is four
+pixels across, so at 24px every player was an identical skin-coloured blob. A
+portrait on its own 16x16 grid has room for hair, a face and the singlet, which
+are the three things that survive at tile size.
+
+**The toss shows who actually did it.** Whoever took the clue is the thrower;
+on a stumper nobody did, so a referee in black and white stripes does the
+honours, which is the honest picture of what happened.
+
 ## Player tokens
 
 Twenty-four line-art weapons — crowbar, morningstar, dinosaur bone, folding
