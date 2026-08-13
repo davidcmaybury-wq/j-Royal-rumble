@@ -18,11 +18,26 @@ const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${
 
 const armIn = (lag, serverWait = 200) => { setLag(lag); return armAt(Date.now() + serverWait, 250); };
 
-check('no trim arms on the signal', Math.round(armIn(0)) === 200, `${Math.round(armIn(0))}ms`);
-check('a positive trim arms later', Math.round(armIn(100)) === 300, `${Math.round(armIn(100))}ms`);
-check('and scales all the way up', Math.round(armIn(1000)) === 1200, `${Math.round(armIn(1000))}ms`);
-check('a negative trim arms sooner', Math.round(armIn(-100)) === 100, `${Math.round(armIn(-100))}ms`);
-check('but never before now', armIn(-5000) === 0, `${armIn(-5000)}ms`);
+// Measure once and reuse. Calling armIn twice — once for the condition and once
+// for the message — meant the two evaluated different moments, and a
+// millisecond of drift between them failed the check while printing the value
+// that would have passed it. A tolerance too: this is wall-clock arithmetic and
+// a slow runner can lose a millisecond mid-call.
+const near = (got, want, slack = 3) => Math.abs(got - want) <= slack;
+
+for (const [lag, want, label] of [
+  [0, 200, 'no trim arms on the signal'],
+  [100, 300, 'a positive trim arms later'],
+  [1000, 1200, 'and scales all the way up'],
+  [-100, 100, 'a negative trim arms sooner'],
+]) {
+  const got = armIn(lag);
+  check(label, near(got, want), `${Math.round(got)}ms, wanted ${want}ms`);
+}
+{
+  const got = armIn(-5000);
+  check('but never before now', got === 0, `${got}ms`);
+}
 
 // Rounded to the nearest ten on purpose: the control is a trim for audio-path
 // differences, and single milliseconds are noise at that scale.

@@ -21,6 +21,8 @@ main.done .clue{opacity:.6}
 .row .v{font-size:20px;font-family:"IBM Plex Mono",monospace}
 .locked{color:var(--alarm);font-size:13px}
 .idle{color:var(--slate);text-align:center;font-size:15px}
+  .k em{font-style:normal;color:var(--brass);opacity:.8}
+  .v.nm{font-size:17px}
 </style></head><body>
 <div class="warn">Admin window — do not share this screen</div>
 <main id="m"><p class="idle">Waiting for the host to put a clue up.</p></main>
@@ -51,6 +53,9 @@ function render(s){
       <div><span class="k">In the ring</span><span class="v">${(s.live||[]).length}</span></div>
       <div><span class="k">Ceiling</span><span class="v">${(s.ceiling||0).toLocaleString()}</span></div>
       <div><span class="k">Next entry in</span><span class="v">${s.cluesUntilNextEntry ?? '—'}</span></div>
+      ${s.nextUp ? `<div><span class="k">Coming in${s.anonymousNext
+        ? ' <em>(hidden from the room)</em>' : ''}</span><span class="v nm"
+        >#${s.nextUp.draw} ${s.nextUp.name}</span></div>` : ''}
       ${names.length?`<div><span class="k">Locked out</span><span class="locked">${names.join(', ')}</span></div>`:''}
     </div>`;
 }

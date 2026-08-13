@@ -100,6 +100,11 @@ border-radius:var(--r);padding:5px 11px;font-size:12px;white-space:nowrap}
 .manual{display:inline-block;margin-top:7px;color:var(--brass);text-decoration:none;
 border-bottom:1px solid #6A4509;font-size:13px}
 .manual:hover{border-bottom-color:var(--brass)}
+.watchcard .wt{color:var(--slate);font-size:13px;margin:0 0 12px;max-width:62ch;line-height:1.5}
+.wrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.wrow code{background:var(--ink);border:1px solid var(--line);border-radius:var(--r);
+padding:9px 13px;font-family:"IBM Plex Mono",monospace;font-size:14px;color:var(--brass)}
+.wrow .alt{text-decoration:none;display:inline-flex;align-items:center}
 
 /* robot editor */
 .chip.bot{cursor:pointer}
@@ -289,6 +294,18 @@ function render(keepEdits) {
         Players go to <code>${location.origin}/join</code> and enter this code.<br>
         Or send them <code>${location.origin}/j/${code}</code> — the code is filled in, they still confirm it.
       </div>
+    </div>
+  </div>
+
+  <div class="card watchcard">
+    <h2>Watch screen</h2>
+    <p class="wt">Put this on the shared screen, or send it to anyone who would
+      rather see the board themselves than squint at a screen share. No key, no
+      login &mdash; the answers are never sent to it.</p>
+    <div class="wrow">
+      <code id="watchurl">${location.origin}/watch/${code}</code>
+      <button class="alt" id="copywatch">Copy</button>
+      <a class="alt" href="/watch/${code}" target="_blank" rel="noopener">Open &#8599;</a>
     </div>
   </div>
 
@@ -500,6 +517,14 @@ function renderRoster() {
           : p.tokenArt ? weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) : ''}${p.name}${
         p.isBot ? `<em class="lvl">${p.level || ''}</em>` : ''}</span>`).join('')
     : '<span class="note">Nobody yet. Read them the code.</span>';
+  const cw = document.getElementById('copywatch');
+  if (cw) cw.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(location.origin + '/watch/' + code);
+      cw.textContent = 'Copied';
+      setTimeout(() => { cw.textContent = 'Copy'; }, 1600);
+    } catch (e) { cw.textContent = 'Select it by hand'; }
+  };
   const b = document.getElementById('start');
   if (b) b.disabled = S.roster.length < 3;
 }

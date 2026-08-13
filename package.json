@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.40.1",
+  "version": "0.41.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -47,7 +47,8 @@
     "warmup-test": "node test/warmup.mjs",
     "timeout-test": "node test/timeout.mjs",
     "logdetail-test": "node test/logdetail.mjs",
-    "lag-test": "node test/lag.mjs"
+    "lag-test": "node test/lag.mjs",
+    "latecomer-test": "node test/latecomer.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

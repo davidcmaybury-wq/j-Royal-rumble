@@ -38,6 +38,10 @@ export const DEFAULT_SETTINGS = {
   // When the lights run out and nobody has taken the clue, close the race and
   // let the host call it. Off means the buzzers stay open until they press X,
   // which is what they used to do.
+  // Who is coming next is hidden from the room until they walk in. The
+  // countdown stays visible — knowing *when* somebody arrives is tactical — it
+  // is only the name that goes, so the horn means something again.
+  anonymousNext: true,
   autoStumper: true,
   lecternSeconds: 5,            // never beyond this multiple
   botReadJitter: 45,         // ms, shared per clue: the host activates by hand
@@ -114,7 +118,10 @@ export class RumbleGame {
     this.usedClueIds = new Set();     // no-repeat, scoped to this match
     this.vetoedThisMatch = [];
 
-    if (this.s.entryInterval == null) {
+    // Remembered so a latecomer can trigger a recalculation. Without it we
+    // could not tell a host-chosen interval from one we worked out ourselves.
+    this.autoInterval = this.s.entryInterval == null;
+    if (this.autoInterval) {
       this.s.entryInterval = autoEntryInterval(
         players.length, this.s.targetMinutes, this.s.secondsPerClue);
     }
@@ -614,6 +621,46 @@ export class RumbleGame {
 
   revivedCount() {
     return [...this.players.values()].reduce((n, p) => n + p.revivals, 0);
+  }
+
+  // Somebody turning up after the bell. A Rumble is built around people
+  // arriving throughout, so this is the format working rather than an edge
+  // case: they go to the back of the queue and enter at the standard stake
+  // like anybody else.
+  //
+  // Refused once overtime has opened. Overtime means the queue is empty and
+  // the match is winding up; letting somebody in then would reopen it while
+  // the stakes stayed elevated by the ratchet, which is a strange thing to do
+  // to the people who got there on time.
+  addLatecomer(id, name) {
+    if (this.finished) return { error: 'the match is over' };
+    if (this.overtimeFrom != null) return { error: 'too late — the match is in overtime' };
+    if (this.players.has(id)) return { error: 'already in' };
+
+    const draw = this.drawOrder.length + 1;
+    const p = {
+      id, name, drawNumber: draw, originalDraw: draw,
+      state: 'queued', score: 0, enteredAtClue: null,
+      eliminatedAtClue: null, placement: null,
+      pins: 0, correct: 0, missed: 0,
+      topRope: false, target: null, revivals: 0, bountyPlaced: 0,
+    };
+    this.players.set(id, p);
+    this.drawOrder.push(id);
+    // More people means the entries have to come faster to finish on time, so
+    // the interval is recomputed against the clues actually left rather than
+    // against the whole match.
+    let interval = this.s.entryInterval;
+    if (this.autoInterval) {
+      const budget = Math.max(1, Math.round(
+        (this.s.targetMinutes * 60) / this.s.secondsPerClue) - this.cluesRevealed);
+      const waiting = this.queued().length;
+      interval = Math.max(1, Math.min(this.s.entryInterval,
+        Math.floor(budget / Math.max(1, waiting))));
+      this.s.entryInterval = interval;
+    }
+    this.log.push({ type: 'latecomer', playerId: id, draw, interval });
+    return { ok: true, draw, interval };
   }
 
   admit(cause) {

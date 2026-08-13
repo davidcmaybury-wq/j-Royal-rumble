@@ -521,7 +521,7 @@ function render() {
   $('clock').classList.toggle('soon', cd === 1);
   $('cd').textContent = (cd === null || cd === undefined) ? '—' : cd;
   $('who').innerHTML = q.length
-    ? '<b>#' + q[0].draw + ' ' + q[0].name + '</b> next'
+    ? (q[0].hidden ? '<b>someone</b> next' : '<b>#' + q[0].draw + ' ' + q[0].name + '</b> next')
     : '<span style="color:var(--slate)">Queue empty</span>';
 
   const bw = $('bty-wrap'), bl = $('bty');

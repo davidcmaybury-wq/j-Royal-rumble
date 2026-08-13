@@ -445,6 +445,33 @@ read as a magnifying glass, the boot as a chess pawn, the morningstar as a
 blob, and the bone as a dumbbell. `tools/` has no generator for these; they are
 hand-drawn paths in `public/tokens.js`.
 
+## Latecomers
+
+Somebody arriving after the bell goes to the back of the queue and enters at the
+standard stake like anyone else — a Rumble is built around people arriving
+throughout, so this is the format working rather than an edge case.
+
+When the entry interval is on auto it recomputes against the clues actually
+left, so entries compress as the roster grows. Four latecomers still fit at
+every 15 clues; fourteen do not, and the interval falls to 6.
+
+Refused once overtime has opened. Overtime means the queue is empty and the
+match is winding up, so letting somebody in then would reopen it while the
+stakes stayed elevated by the ratchet — a strange thing to do to the people who
+turned up on time.
+
+## Who is next
+
+Hidden from the room by default. The countdown stays, because knowing *when*
+somebody arrives is tactical; it is only the name that goes, so the horn means
+something again.
+
+Hidden on the console as well as the watch screen, since the console is the
+surface most likely to end up on a shared screen. The host sees the name in the
+answers window, which they are already keeping to themselves. The entrant always
+sees their own countdown — anonymity to the room cannot mean anonymity to the
+person who has to get ready.
+
 ## Advanced mechanics
 
 Four optional rules, off by default, toggled per match on the setup page. They

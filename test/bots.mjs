@@ -210,7 +210,15 @@ while (st.phase === 'live' && guard++ < 300) {
   host.emit('pick-clue', { slot: o[0][0], row: o[0][1] });
   await wait(40);
   host.emit('activate');
-  await wait(140);
+  // Wait for the race rather than guessing at it.
+  //
+  // This used to sleep a flat 140ms, which was already marginal and became
+  // wrong when robots gained a 190ms default field offset: most of them had not
+  // buzzed by then, so a champion could finish an 85-clue match credited with
+  // three attempts. It failed on CI roughly one run in four and passed locally,
+  // because a loaded runner shifts every timer.
+  for (let w = 0; w < 24 && !(st.race?.buzzes?.length); w++) await wait(50);
+  await wait(60);            // let a slower second buzzer land behind the first
   const top = st.race?.buzzes?.[0];
   if (top && top.botCorrect) host.emit('resolve', { winnerToken: top.token });
   else if (top) host.emit('mark-wrong', { token: top.token });

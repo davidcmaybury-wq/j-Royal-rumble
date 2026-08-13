@@ -36,7 +36,10 @@ const openClue = () => {
   st.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) o.push([si, x.row, x.value]); }));
   return o;
 };
-check('the board reports a clue value', openClue()[0][2] > 0, `$${openClue()[0][2]}`);
+// Read the board once: openClue() re-reads live state, so calling it in both
+// the condition and the message can compare two different boards.
+const firstOpen = openClue()[0];
+check('the board reports a clue value', firstOpen[2] > 0, `$${firstOpen[2]}`);
 
 // change it mid-match and confirm it takes effect on the next arming
 host.emit('set-delay', { delay: 450 });

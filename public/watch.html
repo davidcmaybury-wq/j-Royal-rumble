@@ -296,7 +296,8 @@ function render() {
         ${live.map((p) => row(p, false)).join('')}
         ${q.length ? `<div class="next"><div class="k">Next in</div>
           <div class="n">${S.cluesUntilNextEntry ?? '—'}</div>
-          <div class="k">#${q[0].draw} ${q[0].name}</div></div>` : ''}
+          <div class="k">${q[0].name ? '#' + q[0].draw + ' ' + q[0].name
+            : 'someone'}</div></div>` : ''}
         ${out.length ? `<div class="sect"><span>Out</span><span>${out.length}</span></div>`
           + out.slice().reverse().map((p) => row(p, true)).join('') : ''}
       </div>

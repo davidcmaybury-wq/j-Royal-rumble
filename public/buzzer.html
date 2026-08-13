@@ -133,6 +133,11 @@ animation:breathe 1.6s ease-in-out infinite}
 .mbtn:disabled{opacity:.3;cursor:default}
 .lastarm{font-size:10.5px;color:var(--brass);font-family:"IBM Plex Mono",monospace;
 display:block;width:100%;margin-top:2px;text-align:center}
+.watchlink{display:block;text-align:center;margin-top:14px;color:var(--brass);
+text-decoration:none;font-size:13px;border-bottom:1px solid #6A4509;
+padding-bottom:2px;width:fit-content;margin-left:auto;margin-right:auto}
+.watchlink:hover{border-bottom-color:var(--brass)}
+.watchlink.small{font-size:11.5px;margin-top:10px;opacity:.75}
 .lagbox{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;
 padding:8px 12px;border:1px solid var(--line);border-radius:20px;margin-top:2px}
 .lagbox .lt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
@@ -556,7 +561,9 @@ function renderMeter(st, you) {
   if (st === 'lobby') {
     m.innerHTML = `<div class="cd"><span class="k">Waiting to start</span>
       <span class="n mq num">${V.roster || 0}</span>
-      <span class="sub">${V.roster === 1 ? 'player' : 'players'} in the lobby</span></div>`;
+      <span class="sub">${V.roster === 1 ? 'player' : 'players'} in the lobby</span></div>
+      <a class="watchlink" href="/watch/${gameId()}" target="_blank" rel="noopener">
+        Open the board on another screen &#8599;</a>`;
   } else if (st === 'queued') {
     // The number is this player's own entry, not the next entry in the match.
     // Showing the queue position alongside it makes that unambiguous.
@@ -657,7 +664,9 @@ function renderMech(st, you) {
       <span class="lt">ms</span>
       <span class="lh">${lagHint()}</span>
       <span class="lastarm" id="lastarm"></span>
-    </div>`;
+    </div>
+    <a class="watchlink small" href="/watch/${gameId()}" target="_blank" rel="noopener">
+      Open the board on another screen &#8599;</a>`;
   const q = (id) => document.getElementById(id);
   if (q('m-rope')) q('m-rope').onclick = () => socket.emit('top-rope', { on: !you.topRope });
   if (q('m-target')) q('m-target').onclick = () => pickTarget(you);

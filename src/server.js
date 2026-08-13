@@ -315,7 +315,12 @@ class Match {
 
       live: g.live().map((p) => this.watchRow(p)),
       out: g.eliminationOrder.map((t) => this.watchRow(g.players.get(t))),
-      queue: g.queued().map((p) => ({ draw: p.drawNumber, name: p.name })),
+      // The room does not get to know who is coming. The countdown stays —
+      // knowing *when* somebody arrives is tactical — it is only the name that
+      // goes, so the horn means something again.
+      queue: g.queued().map((p) => this.settings.anonymousNext
+        ? { draw: null, name: null }
+        : { draw: p.drawNumber, name: p.name }),
       ...(this.phase === 'over'
         ? { standings: this.standings(), history: this.history,
             fastest: this.fastest } : {}),
@@ -371,8 +376,20 @@ class Match {
         live: [...g.players.values()]
           .filter((p) => p.state === 'live' || p.state === 'winner')
           .map(this.playerRow, this),
-        queue: g.queued().map((p) => ({ draw: p.drawNumber, name: p.name,
-          token: p.id, revivals: p.revivals || 0 })),
+        // Hidden from the console too: it is the surface most likely to be on
+        // a shared screen. The host still gets the name, in the admin window,
+        // which is the one they are already keeping to themselves.
+        queue: g.queued().map((p) => this.settings.anonymousNext
+          ? { draw: null, name: null, token: null, revivals: 0, hidden: true }
+          : { draw: p.drawNumber, name: p.name, token: p.id, revivals: p.revivals || 0 }),
+        anonymousNext: !!this.settings.anonymousNext,
+        // For the admin window only, which is already the surface holding the
+        // answers and is the one the host keeps unshared. The console shows the
+        // countdown without a name; this is where the name lives.
+        nextUp: (() => {
+          const n = g.queued()[0];
+          return n ? { draw: n.drawNumber, name: n.name } : null;
+        })(),
         bounties: this.settings.bounties ? g.bounties.map((b) => ({
           placer: g.players.get(b.placer)?.name, target: g.players.get(b.target)?.name,
           targetToken: b.target, amount: b.amount })) : [],
@@ -957,10 +974,26 @@ io.on('connection', (socket) => {
       existing.connected = true;
       if (name) existing.name = name;
     } else {
-      if (m.phase !== 'lobby') return ack?.({ error: 'match already started' });
       // Everyone gets a token on arrival rather than a blank circle. Chosen
       // to avoid whatever the room is already using.
       const art = assignToken([...m.roster.values()].map((x) => x.tokenArt), m.rng || Math.random);
+
+      if (m.phase !== 'lobby') {
+        // Turning up after the bell. A Rumble is built around people arriving
+        // throughout, so a latecomer goes to the back of the queue rather than
+        // being turned away.
+        if (!m.game) return ack?.({ error: 'match already started' });
+        const r = m.game.addLatecomer(token, name || 'Player');
+        if (r.error) return ack?.({ error: r.error });
+        m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
+          connected: true, avatar: null, tokenArt: art, late: true });
+        m.note('latecomer', { name: name || 'Player', draw: r.draw });
+        socket.join(`${m.id}:players`);
+        ack?.({ ok: true, token, late: true, draw: r.draw, state: m.playerView(token) });
+        pushAll();
+        return;
+      }
+
       m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
         connected: true, avatar: null, tokenArt: art });
     }
