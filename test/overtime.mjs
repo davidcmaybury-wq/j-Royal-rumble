@@ -125,6 +125,32 @@ check('and again at each doubling', on.raises.length >= 2,
     );
 }
 
+// Escalation has to move both sides equally. It used to clip the winner's gain
+// against the ceiling while charging the loser in full, so a clue worth 2,000
+// paid 500 and took 2,000 — the stakes only ever went one way, invisibly, and
+// it read as overtime not working at all.
+{
+  const g = mk({ overtimeEvery: 2, startScore: 7860, ceiling: 8500,
+    ceilingDecayPerClue: 0, longevity: false, categorySweep: false }, 2);
+  let checked = false;
+  for (let i = 0; i < 6 && !g.finished; i++) {
+    const before = g.live().map((p) => p.score);
+    const mult = g.overtimeMultiplier();
+    const [a, b] = g.live().map((p) => p.id);
+    const e = g.resolveClue(...anyClue(g), { winnerId: a, missedIds: [] });
+    if (mult > 1 && !checked) {
+      const gain = g.players.get(a).score - before[0];
+      const loss = before[1] - g.players.get(b).score;
+      check('a raised clue moves both players by the same amount',
+        gain === loss, `won ${gain}, lost ${loss} on a ${e.value} clue at x${mult}`);
+      check('and that amount is the raised value', gain === e.value,
+        `${gain} against ${e.value}`);
+      checked = true;
+    }
+  }
+  check('the comparison actually happened', checked);
+}
+
 // it must not fire while people are still queued
 {
   const g = mk({ entryInterval: 999 }, 6);

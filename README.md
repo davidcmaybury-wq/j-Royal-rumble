@@ -506,6 +506,12 @@ So the ceiling now falls 120 a clue **once overtime opens, and only then**. That
 gives the endgame teeth without touching the entry phase, which is where the
 bias came from.
 
+**The winner of a raised clue banks the whole amount.** Clipping it on the spot
+was the thing that made escalation look broken in a live match: a clue worth
+2,000 paid the winner 500 while charging the loser the full 2,000, so the stakes
+only ever moved one way and did it invisibly. They are clipped on the *next*
+clue instead, so the falling roof takes it back unless they keep winning.
+
 Overtime also opens on a very long stall — eight escalation windows, about 48
 clues with nobody eliminated — even if people are still queued. The threshold
 has to be that high: at three windows it fired during the entry phase and cost

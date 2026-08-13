@@ -151,7 +151,10 @@ class Match {
     this.id = Match.newCode();
     this.hostKey = randomUUID();
     this.settings = { ...DEFAULT_SETTINGS, ...settings };
-    this.blend = settings.blend || { original: 1, archive: 1 };
+    // All Jeopardy! archive by default. The custom boards are still there and
+    // one slider moves them back in; they are just not what most matches want
+    // as a starting point.
+    this.blend = settings.blend || { original: 0, archive: 1 };
     this.roster = new Map();     // token -> { token, name, socketId, connected }
     this.game = null;
     this.phase = 'lobby';        // lobby | live | over

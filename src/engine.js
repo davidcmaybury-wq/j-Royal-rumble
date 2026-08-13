@@ -391,7 +391,9 @@ export class RumbleGame {
 
   get ceiling() {
     let c = this.s.ceiling + this.s.ceilingDecayPerClue * this.cluesRevealed;
-    // Once overtime has opened, the roof comes down as well.
+
+    // Once overtime has opened, the roof comes down. That is the drain that
+    // makes the endgame resolve — without it a symmetric exchange never ends.
     if (this.overtimeFrom != null && this.s.overtimeCeilingDrop > 0) {
       c -= this.s.overtimeCeilingDrop * (this.cluesRevealed - this.overtimeFrom);
     }
@@ -536,6 +538,14 @@ export class RumbleGame {
       w.correct += 1;
       entry.gain = gain;
       if (w.topRope) ceilingFreeFor = w.id;   // the point of the risk is the reward
+      // During overtime the winner keeps the whole raised amount for this clue.
+      //
+      // Clipping it on the spot was the thing that made escalation look broken:
+      // a clue worth 2,000 paid the winner 500 while charging the loser the
+      // full 2,000, so the stakes only ever went one way and it was invisible.
+      // They are still clipped on the next clue, so the falling roof takes it
+      // back unless they keep winning — which is the pressure overtime is for.
+      if (otBefore > 1) ceilingFreeFor = w.id;
     } else if (this.s.stumperFraction > 0) {
       const d = Math.round(value * this.s.stumperFraction);
       for (const p of live) p.score -= d * mult(p);

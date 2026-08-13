@@ -50,6 +50,30 @@ console.log('\nLONGEVITY');
     g.live().every(p=>p.score<=3000), g.live().map(p=>p.score).join());
 }
 
+// It has to keep paying, not fire once. And each player is on their own clock:
+// somebody who enters at clue 7 is paid at 17, 27, 37 — not on the match's.
+{
+  const g=mk({longevityEvery:10,longevityBonus:500,categorySweep:false,
+    entryInterval:7,startScore:20000,ceiling:200000,overtime:false},5);
+  const at={};
+  const paid=[];
+  for(let i=0;i<40;i++){
+    const e=g.resolveClue(...openIn(g,i%6)||openIn(g,0),{winnerId:g.live()[0].id,missedIds:[]});
+    if(e.entered!=null){
+      const id=Array.isArray(e.entered)?e.entered[0]:e.entered;
+      at[id]=e.n;
+    }
+    for(const l of e.longevity||[]) paid.push({n:e.n,id:l.playerId,tenure:l.tenure});
+  }
+  const starters=paid.filter(x=>!at[x.id]).map(x=>x.n);
+  ck('it keeps paying, not just once', new Set(starters).size>=4,
+    `starters paid at clues ${[...new Set(starters)].join(', ')}`);
+  const late=paid.filter(x=>at[x.id]);
+  ck('a late entrant is on their own clock',
+    late.length>0 && late.every(x=>x.tenure%10===0 && x.n===at[x.id]+x.tenure),
+    late.map(x=>`clue ${x.n} after ${x.tenure}`).join(', '));
+}
+
 console.log('\nSAVE A PLAYER');
 {
   const g=mk({longevity:false,categorySweep:false});
