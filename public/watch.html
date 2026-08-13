@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;--chalk:#EEEBE1;
+--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:5px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--chalk);font:400 16px/1.4 "IBM Plex Sans",system-ui,sans-serif;
+overflow:hidden;height:100dvh}
+button{font:inherit;background:none;border:0;color:inherit}
+.app{display:grid;grid-template-rows:auto minmax(0,1fr);height:100dvh}
+.bar{display:flex;align-items:center;gap:18px;padding:10px 16px;background:var(--panel);
+border-bottom:1px solid var(--line)}
+.bar .brand{line-height:0}
+.st{display:flex;flex-direction:column;line-height:1.1}
+.st .k{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
+.st .v{font-size:19px;font-family:"IBM Plex Mono",monospace}
+.ot{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--alarm);
+border:1px solid var(--alarm);border-radius:20px;padding:3px 10px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0}
+.stage{padding:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+/* board */
+.board{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;flex:1;min-height:0}
+.col{display:grid;grid-template-rows:auto repeat(5,1fr);gap:7px;min-height:0}
+.cat{background:var(--panel2);border-radius:var(--r);padding:8px 6px;text-align:center;
+font-size:12.5px;line-height:1.2;display:flex;align-items:center;justify-content:center;
+min-height:56px;letter-spacing:.03em}
+.cat .src{display:block;font-size:8.5px;letter-spacing:.14em;color:var(--slate);margin-bottom:3px}
+.cell{background:var(--panel);border-radius:var(--r);display:flex;align-items:center;
+justify-content:center;font:400 clamp(15px,2.1vw,28px) "IBM Plex Mono",monospace;color:var(--brass)}
+.cell.gone{background:#0C1120;color:#1A2138}
+.cell.raised{color:var(--alarm)}
+/* clue */
+.clue{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+text-align:center;padding:20px;gap:18px}
+.clue .meta{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
+.clue .meta .v{color:var(--brass)}
+.clue .txt{font:400 clamp(24px,3.6vw,54px)/1.28 "IBM Plex Sans",sans-serif;max-width:22ch}
+.lect{display:flex;gap:8px;justify-content:center}
+.lect i{width:clamp(34px,5vw,70px);height:14px;border-radius:3px;background:#3A1512}
+.lect i.lit{background:var(--alarm);box-shadow:0 0 12px #E24A3C88}
+.race{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;min-height:34px}
+.bz{background:var(--panel);border-radius:20px;padding:5px 13px;font-size:14px;
+display:flex;gap:9px;align-items:center}
+.bz.on{background:#3A2E0C;color:var(--brass)}
+.bz .t{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--slate)}
+.idle{color:var(--slate);font-size:14px}
+/* rail */
+.rail{border-left:1px solid var(--line);padding:12px;overflow:auto;background:#0C1120}
+.sect{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);
+display:flex;justify-content:space-between;padding:12px 4px 6px}
+.sect:first-child{padding-top:0}
+.pl{display:grid;grid-template-columns:8px 20px 22px minmax(0,1fr) auto;align-items:center;
+gap:6px;padding:8px 9px;background:var(--panel);border-radius:var(--r);margin-bottom:4px}
+.pl.out{opacity:.45}
+.pl.uptop{background:#3A2208;box-shadow:inset 2px 0 0 #FF9A3C}
+.dr{color:var(--slate);font-size:11.5px;font-family:"IBM Plex Mono",monospace;text-align:right}
+.ctrl{width:7px;height:7px;border-radius:50%}
+.ctrl.on{background:var(--chalk);box-shadow:0 0 7px #EEEBE1AA}
+.av{width:22px;height:22px;border-radius:50%;object-fit:cover;display:block;background:var(--panel2)}
+.av svg{display:block;border-radius:50%}
+.nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px}
+.sc{font-family:"IBM Plex Mono",monospace;font-size:15px}
+.sc.cap{color:var(--brass)}
+.sc.low{color:var(--alarm)}
+.mk{font-size:10px}
+.mk.rope{color:#FF9A3C;letter-spacing:.08em;font-size:9px}
+.mk.hunted{color:var(--alarm)}
+.next{background:var(--panel);border-radius:var(--r);padding:10px;text-align:center;margin-top:6px}
+.next .n{font:400 30px "Anton",Impact,sans-serif;color:var(--brass);line-height:1}
+.next .k{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate)}
+/* lobby + join */
+.mid{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+gap:16px;text-align:center;padding:30px}
+.mid h1{font:400 clamp(30px,5vw,52px)/1 "Anton",Impact,sans-serif;color:var(--brass)}
+.mid .code{font:400 clamp(44px,9vw,110px)/1 "Anton",Impact,sans-serif;color:var(--brass);letter-spacing:.06em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:760px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:20px;
+padding:4px 12px 4px 5px;font-size:14px;display:inline-flex;align-items:center;gap:7px}
+.chip svg,.chip img{width:22px;height:22px;border-radius:50%;display:block}
+.chip.bot{border-style:dashed;color:var(--slate)}
+.fld{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+color:var(--chalk);padding:12px 14px;font:400 24px "IBM Plex Mono",monospace;
+text-align:center;text-transform:uppercase;letter-spacing:.3em;width:220px}
+.go{background:var(--brass);color:#0A0E1C;border-radius:var(--r);padding:12px 26px;
+font-size:16px;cursor:pointer}
+.err{color:var(--alarm);font-size:14px;min-height:20px}
+.foot{position:fixed;right:10px;bottom:8px;font-size:10px;color:#26304C;font-family:"IBM Plex Mono",monospace}
+</style></head>
+<body><div id="root"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script type="module">
+import { markFull, markSmall, brainAvatar } from '/brand.js';
+import { weaponToken } from '/tokens.js';
+import { scoreChart } from '/chart.js';
+
+const socket = io({ transports: ['websocket'] });
+const root = document.getElementById('root');
+const fmt = (n) => (n == null ? '—' : n.toLocaleString());
+const $ = (id) => document.getElementById(id);
+
+let code = (location.pathname.match(/\/watch\/([A-Z0-9]{4})/i) || [])[1] || '';
+let S = null, err = '';
+
+const face = (p, size = 22) => p.isBot
+  ? '<span class="av">' + brainAvatar(p.level || 'normie', size) + '</span>'
+  : p.tokenArt
+    ? '<span class="av">' + weaponToken(p.tokenArt.art, size, p.tokenArt.colour) + '</span>'
+    : '<span class="av"></span>';
+
+function join() {
+  socket.emit('watch-game', { gameId: code }, (r) => {
+    if (!r || r.error) { err = r ? r.error : 'could not reach the match'; return ask(); }
+    err = ''; S = r.state; render();
+  });
+}
+
+function ask() {
+  root.innerHTML = `<div class="mid">${markFull(120)}
+    <h1>Watch a Rumble</h1>
+    <div style="color:var(--slate)">Enter the room code the host read out.</div>
+    <input class="fld" id="c" maxlength="4" autocomplete="off" value="${code}">
+    <button class="go" id="g">Watch</button>
+    <div class="err">${err}</div></div>`;
+  const c = $('c');
+  const go = () => {
+    code = c.value.trim().toUpperCase();
+    if (code.length === 4) { history.replaceState(null, '', '/watch/' + code); join(); }
+  };
+  $('g').onclick = go;
+  c.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  c.oninput = () => { c.value = c.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); };
+  setTimeout(() => c.focus(), 60);
+}
+
+// Five red boxes counting the five seconds after the buzzers arm, the way a
+// lectern does it. Driven off the state rather than a local clock, so every
+// watcher sees the same thing.
+let armedAt = null;
+function lectern() {
+  if (!S.race || !S.race.open) { armedAt = null; return ''; }
+  if (armedAt == null) armedAt = performance.now();
+  const left = Math.max(0, 5 - (performance.now() - armedAt) / 1000);
+  const lit = Math.ceil(left);
+  return '<div class="lect">' + Array.from({ length: 5 },
+    (_, i) => `<i class="${i < lit ? 'lit' : ''}"></i>`).join('') + '</div>';
+}
+
+function board() {
+  const face2 = [100, 200, 300, 400, 500];
+  return '<div class="board">' + (S.board || []).map((c) => '<div class="col">'
+    + '<div class="cat"><span>' + (c.source ? '<span class="src">'
+        + (c.source === 'original' ? 'TTG' : 'J!') + '</span>' : '') + c.title + '</span></div>'
+    + c.clues.map((x) => {
+        const worth = x.value ?? face2[x.row - 1];
+        return '<div class="cell' + (x.revealed ? ' gone' : '')
+          + (worth > face2[x.row - 1] ? ' raised' : '') + '">'
+          + (x.revealed ? '' : '$' + worth.toLocaleString()) + '</div>';
+      }).join('')
+    + '</div>').join('') + '</div>';
+}
+
+function stage() {
+  if (S.clue) {
+    const b = (S.race && S.race.buzzes) || [];
+    const chips = b.map((x, i) => '<span class="bz' + (i === 0 ? ' on' : '') + '"><span>'
+      + x.name + '</span><span class="t">' + x.ms.toFixed(0) + 'ms</span></span>').join('');
+    return '<div class="clue">'
+      + '<div class="meta">' + S.clue.category + ' &middot; <span class="v">$'
+        + fmt(S.clue.value) + '</span>'
+        + (S.retoss ? ' &middot; <span style="color:var(--alarm)">back out ' + S.retoss + '&times;</span>' : '')
+      + '</div>'
+      + '<div class="txt">' + S.clue.text + '</div>'
+      + lectern()
+      + '<div class="race">' + (chips || (S.race && S.race.open
+          ? '<span class="idle">Buzzers live</span>' : '<span class="idle">&nbsp;</span>')) + '</div>'
+      + '</div>';
+  }
+  return board();
+}
+
+function row(p, out) {
+  const low = !out && p.score < 600;
+  return '<div class="pl' + (out ? ' out' : '') + (p.topRope ? ' uptop' : '') + '">'
+    + '<span class="ctrl' + (S.control === p.token ? ' on' : '') + '"></span>'
+    + '<span class="dr">' + p.draw + '</span>'
+    + face(p)
+    + '<span class="nm">' + p.name
+      + (p.topRope ? ' <span class="mk rope">TOP ROPE</span>' : '')
+      + ((p.targetedBy || []).length ? ' <span class="mk hunted">&#9678;'
+          + (p.targetedBy.length > 1 ? ' \u00D7' + p.targetedBy.length : '') + '</span>' : '')
+    + '</span>'
+    + '<span class="sc' + (p.capped ? ' cap' : '') + (low ? ' low' : '') + '">'
+      + (out ? p.tenure : fmt(p.score)) + '</span></div>';
+}
+
+function render() {
+  if (!S) return ask();
+
+  if (S.phase === 'lobby') {
+    root.innerHTML = `<div class="mid">${markFull(130)}
+      <div class="code">${S.gameId}</div>
+      <div style="color:var(--slate)">Waiting for the host to start.</div>
+      <div class="chips">${(S.roster || []).map((p) =>
+        `<span class="chip${p.isBot ? ' bot' : ''}">${face(p)}${p.name}</span>`).join('')
+        || '<span style="color:var(--slate)">Nobody yet.</span>'}</div>
+      </div><div class="foot">watching ${S.gameId}</div>`;
+    return;
+  }
+
+  if (S.phase === 'over') {
+    const champ = (S.standings || []).find((p) => p.winner);
+    root.innerHTML = `<div class="mid">
+      <div style="font-size:12px;letter-spacing:.4em;text-transform:uppercase;color:var(--brass)">
+        Last one standing</div>
+      <div style="font:400 clamp(48px,11vw,140px)/.95 Anton,Impact,sans-serif;color:var(--brass)">
+        ${champ ? champ.name : 'No winner'}</div>
+      ${champ ? `<div style="color:var(--slate)">entry #${champ.draw} &middot;
+        ${champ.tenure} clues survived &middot; ${champ.correct} correct</div>` : ''}
+      ${S.history && S.history.length > 2 ? `<div style="width:min(860px,92vw)">${
+        scoreChart(S.history, (S.standings || []).map((p) => ({ token: p.token, name: p.name })),
+          { winnerToken: champ && champ.token, width: 860, height: 240 })}</div>` : ''}
+      </div><div class="foot">${S.gameId}</div>`;
+    return;
+  }
+
+  const live = S.live || [], out = S.out || [], q = S.queue || [];
+  root.innerHTML = `<div class="app">
+    <div class="bar">
+      <span class="brand">${markSmall(28)}</span>
+      <span class="st"><span class="k">Clue</span><span class="v">${S.clues}</span></span>
+      <span class="st"><span class="k">In</span><span class="v">${live.length}</span></span>
+      <span class="st"><span class="k">Queue</span><span class="v">${q.length}</span></span>
+      <span class="st"><span class="k">Ceiling</span><span class="v">${fmt(S.ceiling)}</span></span>
+      ${S.overtime ? `<span class="ot">Overtime &times;${S.overtime.multiplier}</span>` : ''}
+    </div>
+    <div class="main">
+      <div class="stage">${stage()}</div>
+      <div class="rail">
+        <div class="sect"><span>In the ring</span><span>${live.length}</span></div>
+        ${live.map((p) => row(p, false)).join('')}
+        ${q.length ? `<div class="next"><div class="k">Next in</div>
+          <div class="n">${S.cluesUntilNextEntry ?? '—'}</div>
+          <div class="k">#${q[0].draw} ${q[0].name}</div></div>` : ''}
+        ${out.length ? `<div class="sect"><span>Out</span><span>${out.length}</span></div>`
+          + out.slice().reverse().map((p) => row(p, true)).join('') : ''}
+      </div>
+    </div>
+  </div><div class="foot">${S.gameId} &middot; v${S.version}</div>`;
+}
+
+socket.on('state', (s) => { S = s; render(); });
+socket.on('connect', () => { if (code) join(); else ask(); });
+socket.on('disconnect', () => { /* the state stays on screen until it returns */ });
+
+// The lectern counts down between state pushes, so repaint it on a timer while
+// a race is open. Nothing else needs animating.
+setInterval(() => {
+  if (S && S.race && S.race.open && S.clue) {
+    const el = document.querySelector('.lect');
+    if (el) el.outerHTML = lectern();
+  }
+}, 120);
+
+if (!code) ask();
+</script>
+</body></html>

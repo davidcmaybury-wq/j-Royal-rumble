@@ -490,6 +490,25 @@ board to be replayed. Use it when the wrong player was credited.
 the value was wrong, or for anything undo can't reach. Both are logged, and the
 count shows next to the version in the top bar.
 
+## The watch screen
+
+`/watch/CODE` — a public, read-only view of a match. No host key, nothing to
+log in to. Board, live clue, buzz race with reaction times, the ring with
+scores and markers, the queue, the eliminated, overtime, and the champion with
+the score graph at the end.
+
+Meant to replace sharing a screen over the call. A state push per event against
+a continuous video stream is a rounding error by comparison, and everyone gets
+a crisp local render at their own resolution instead of a compressed copy of
+the host's monitor.
+
+**It is built field by field rather than by copying the host view and deleting
+things.** The host view carries the correct answer, and a spectator page that
+leaks it ruins the game — so anything added to the host view in future is absent
+from the watch view until somebody adds it deliberately. `test/watch.mjs`
+asserts the answer appears nowhere in the payload, along with the host key, the
+settings block and player tokens.
+
 ## Match logs
 
 Every match is recorded and saved on the server. There is no setting to turn it

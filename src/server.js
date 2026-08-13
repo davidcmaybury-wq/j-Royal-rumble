@@ -258,6 +258,79 @@ class Match {
 
   // --- public views ----------------------------------------------------
 
+  // For the watch screen. Built up field by field rather than by copying the
+  // host view and deleting things — the host view carries the correct answer,
+  // and a spectator page that leaks it ruins the game. Anything added to the
+  // host view in future is absent here until somebody adds it on purpose.
+  watchView() {
+    const g = this.game;
+    if (!g) {
+      return {
+        phase: this.phase, gameId: this.id, version: VERSION, watching: true,
+        roster: [...this.roster.values()].map((p) => ({
+          token: p.token, name: p.name, connected: p.connected,
+          hasAvatar: !!p.avatar, tokenArt: p.tokenArt || null,
+          isBot: !!p.isBot, level: this.bots.get(p.token)?.level || null })),
+      };
+    }
+    return {
+      phase: this.phase, gameId: this.id, version: VERSION, watching: true,
+      clues: g.cluesRevealed,
+      ceiling: g.ceiling,
+      control: this.control,
+      overtime: g.overtime ? g.overtime() : null,
+      cluesUntilNextEntry: g.cluesUntilNextEntry(),
+      retoss: this.retoss || 0,
+
+      board: g.board.map((c) => ({
+        title: c.title, note: c.note, source: c.source,
+        clues: c.clues.map((x) => ({
+          row: x.row, revealed: x.revealed,
+          value: [100, 200, 300, 400, 500][x.row - 1] * g.overtimeMultiplier(),
+        })),
+      })),
+
+      // The clue text, never the response.
+      clue: this.clue ? {
+        category: this.clue.category, note: this.clue.note,
+        text: this.clue.text, value: this.clue.value, row: this.clue.row,
+      } : null,
+
+      race: this.race ? {
+        open: !!this.race.open,
+        buzzes: this.race.buzzes.filter((b) => !b.spectator)
+          .map((b) => ({ name: b.name, ms: b.ms, early: !!b.early })),
+        lockedOut: [...this.race.lockedOut]
+          .map((t) => this.roster.get(t)?.name).filter(Boolean),
+      } : null,
+
+      live: g.live().map((p) => this.watchRow(p)),
+      out: g.eliminationOrder.map((t) => this.watchRow(g.players.get(t))),
+      queue: g.queued().map((p) => ({ draw: p.drawNumber, name: p.name })),
+      ...(this.phase === 'over'
+        ? { standings: this.standings(), history: this.history,
+            fastest: this.fastest } : {}),
+    };
+  }
+
+  watchRow(p) {
+    const g = this.game;
+    const r = this.roster.get(p.id);
+    return {
+      token: p.id, draw: p.drawNumber, name: p.name, score: p.score,
+      state: p.state, tenure: (p.eliminatedAtClue ?? g.cluesRevealed) - (p.enteredAtClue ?? 0),
+      connected: r?.connected ?? false, hasAvatar: !!r?.avatar,
+      tokenArt: r?.tokenArt || null, isBot: !!r?.isBot,
+      level: this.bots.get(p.id)?.level || null,
+      capped: p.score >= g.ceiling,
+      topRope: !!p.topRope,
+      targetedBy: [...g.players.values()]
+        .filter((x) => x.target === p.id && x.state === 'live').map((x) => x.id),
+      bounty: this.settings.bounties ? g.bountyTotal(p.id) : 0,
+      pins: p.pins, correct: p.correct, missed: p.missed,
+    };
+  }
+
   // Sent to the host console and the shared screen. Carries answers.
   hostView() {
     const g = this.game;
@@ -778,6 +851,10 @@ const logGuard = (req) => {
   return (req.get('x-log-key') || req.query.key) === want;
 };
 
+// The watch screen: public, read-only, and carrying no answers.
+app.get('/watch', (_req, res) => res.sendFile(join(__dir, '../public/watch.html')));
+app.get('/watch/:id', (_req, res) => res.sendFile(join(__dir, '../public/watch.html')));
+
 app.get('/logs', (_req, res) => res.sendFile(join(__dir, '../public/logs.html')));
 
 app.get('/api/logs', (req, res) => {
@@ -808,7 +885,12 @@ app.get('/admin/:id', (_req, res) => res.sendFile(join(__dir, '../public/admin.h
 io.on('connection', (socket) => {
   let match = null, token = null, isHost = false;
 
-  const pushHostNow = () => match && io.to(`${match.id}:host`).emit('state', match.hostView());
+  const pushHostNow = () => {
+    if (!match) return;
+    io.to(`${match.id}:host`).emit('state', match.hostView());
+    // Watchers get their own view, never the host's.
+    io.to(`${match.id}:watch`).emit('state', match.watchView());
+  };
   const pushPlayersNow = () => {
     if (!match) return;
     for (const p of match.roster.values()) {
@@ -902,6 +984,14 @@ io.on('connection', (socket) => {
   }));
 
   // The setup page watches the lobby fill without claiming the host socket.
+  socket.on('watch-game', ({ gameId }, ack) => {
+    const m = matches.get(String(gameId || '').toUpperCase());
+    if (!m) return ack?.({ error: 'no such match' });
+    match = m;
+    socket.join(`${m.id}:watch`);
+    ack?.({ ok: true, state: m.watchView() });
+  });
+
   socket.on('watch-setup', ({ gameId, hostKey }, ack) => {
     const m = matches.get((gameId || '').toUpperCase());
     if (!m) return ack?.({ error: `no match ${gameId} on this server (machine ${MACHINE})` });

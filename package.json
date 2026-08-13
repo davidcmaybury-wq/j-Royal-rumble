@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.37.1",
+  "version": "0.38.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -41,7 +41,8 @@
     "botcal-test": "node test/botcal.mjs",
     "make-toss": "python3 tools/make-toss.py",
     "logstore-test": "node test/logstore.mjs",
-    "mechanics-ui-test": "node test/mechanics-ui.mjs"
+    "mechanics-ui-test": "node test/mechanics-ui.mjs",
+    "watch-test": "node test/watch.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",
