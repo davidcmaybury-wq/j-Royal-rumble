@@ -77,8 +77,10 @@ export const DEFAULT_SETTINGS = {
   // already in the ring.
   savePlayer: true,
   giftFromQueue: true,
+  // When the lights run out and nobody has taken the clue, close the race and
+  // let the host call it. Off means the buzzers stay open until they press X.
   autoStumper: true,
-  lecternSeconds: 5,            // never beyond this multiple
+  lecternSeconds: 5,         // how long the lights run
   botReadJitter: 45,         // ms, shared per clue: the host activates by hand
   botMatchField: true,       // shift robots to sit alongside the humans present
   botOffset: null,           // ms; null means use the built-in default, then

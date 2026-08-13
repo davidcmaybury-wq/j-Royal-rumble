@@ -172,28 +172,41 @@ await wait(300);
 check('a match of bots starts', st.phase === 'live' && st.live.length === 3,
   `${st.live.length} in the ring, ${st.queue.length} queued`);
 
-// play a clue and watch the race fill in over time
-const open = [];
-st.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) open.push([si, x.row]); }));
-host.emit('pick-clue', { slot: open[0][0], row: open[0][1] });
-await wait(150);
-host.emit('activate');
-await wait(60);
-const early = (st.race?.buzzes || []).length;
+// Play clues until the robots buzz, rather than betting the suite on one.
+//
+// Whether anybody attempts a given clue is a roll of the dice: the three in the
+// ring are drawn by shuffled entry order, so they are usually not the elites,
+// and all three declining a cheap clue happens about 0.4% of the time. That is
+// rare enough to pass every local run and often enough to have failed CI three
+// times. Polling within one clue does not help — the problem is not that the
+// buzzes are late, it is that there are none coming.
+let early = 0, late = 0, clues = 0;
+for (let attempt = 0; attempt < 6 && late === 0; attempt++) {
+  const open = [];
+  st.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) open.push([si, x.row]); }));
+  if (!open.length) break;
+  host.emit('pick-clue', { slot: open[0][0], row: open[0][1] });
+  await wait(150);
+  host.emit('activate');
+  await wait(60);
+  early = (st.race?.buzzes || []).length;
+  clues += 1;
 
-// Poll rather than sleep a fixed span. Buzz times are sampled from real
-// histograms whose tail runs past 900ms — a rookie whiffs beyond half a second
-// 14% of the time — and a loaded CI runner adds scheduling delay on top. A
-// fixed 950ms wait passed locally and failed in CI, which is the worst kind of
-// test: green on the machine that wrote it.
-let late = 0;
-for (let i = 0; i < 60 && late === 0; i++) {
-  await wait(100);
-  late = (st.race?.buzzes || []).length;
+  // Buzz times come from real histograms whose tail runs past 900ms — a rookie
+  // whiffs beyond half a second 14% of the time — and a loaded runner adds
+  // scheduling delay on top, so poll rather than sleep a fixed span.
+  for (let i = 0; i < 40 && late === 0; i++) {
+    await wait(100);
+    late = (st.race?.buzzes || []).length;
+  }
+  if (late === 0) {
+    host.emit('resolve', { winnerToken: null });   // nobody wanted it
+    await wait(120);
+  }
 }
 check('the race fills in over time rather than all at once',
   late >= early, `${early} buzzes at 60ms, ${late} once they land`);
-check('bots actually buzz', late > 0, `${late} buzzes`);
+check('bots actually buzz', late > 0, `${late} buzzes over ${clues} clue(s)`);
 if (late) {
   const b = st.race.buzzes[0];
   check('their buzzes are marked as robotic', b.bot === true);
