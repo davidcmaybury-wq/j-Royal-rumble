@@ -64,7 +64,7 @@ footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
 <body>
 <div class="wrap">
   <header>
-    <div class="mark"><span class="jbadge" id="jb"></span><span id="wm"></span></div>
+    <div class="mark"><span id="wm"></span></div>
     <p class="tag">Thirty players. Three start. One survives.</p>
   </header>
 
@@ -118,10 +118,10 @@ footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
 </div>
 
 <script type="module">
-import { markBanner, markSmall } from '/brand.js';
+import { markBanner } from '/banner.js';
 const $ = (id) => document.getElementById(id);
-$('wm').innerHTML = markBanner(430);
-$('jb').innerHTML = markSmall(58);
+// The J! is part of the artwork now, so no separate badge.
+$('wm').innerHTML = markBanner(Math.min(520, window.innerWidth - 48));
 let mode = null;
 
 // The code is checked before we send anybody anywhere. A wrong code used to

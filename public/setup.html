@@ -147,7 +147,8 @@ border-radius:var(--r);font-size:13px;color:var(--slate);background:none;cursor:
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { estimate as estimateFor, warnings as warningsFor } from '/estimate.js';
-import { markBanner, markSmall, brainAvatar } from '/brand.js';
+import { brainAvatar } from '/brand.js';
+import { markBanner } from '/banner.js';
 import { weaponToken } from '/tokens.js';
 import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import * as sfx from '/sound.js';
@@ -312,7 +313,7 @@ function render(keepEdits) {
   const est = estimate(), s = S.settings;
   root.innerHTML = `
   <a class="backhome" href="/">&larr; J! Royal Rumble</a>
-  <div class="hero">${markSmall(64)}${markBanner(300)}</div>
+  <div class="hero">${markBanner(340)}</div>
   <div class="tag">Read the room code aloud. Only people who have it can join.
     <a class="manual" href="/handbook" target="_blank" rel="noopener">Handbook &mdash; rules, mechanics and the design behind them &#8599;</a></div>
 
