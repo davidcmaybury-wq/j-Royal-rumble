@@ -16,7 +16,7 @@ export const DEFAULT_SETTINGS = {
   potScoring: true,          // winner collects the value from EACH opponent
   secondsPerClue: 17.5,
   targetMinutes: 30,
-  recordMatch: false,        // keep a detailed log of the match
+  recordMatch: true,          // always on; kept so old saved settings still load        // keep a detailed log of the match
   // --- advanced mechanics, all off unless the host turns them on ---
   // --- advanced mechanics, all off unless the host turns them on -----------
   topRope: false,            // double your stakes both ways for one clue

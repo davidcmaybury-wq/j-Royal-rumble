@@ -283,7 +283,10 @@ class Match {
     // Every match is recorded while the format is being tested. The setting
     // still exists, but nothing turns it off — a log that was not kept is a
     // test that has to be run again.
-    if (RECORD_EVERYTHING || this.settings.recordMatch) {
+    // Always. Recording used to be a setting that defaulted off, which meant
+    // the interesting matches — the ones nobody expected to be interesting —
+    // were the ones without a record. The control room is where they are read.
+    {
       this.record = {
         version: VERSION,
         startedAt: new Date().toISOString(),
@@ -973,9 +976,11 @@ app.get('/api/match/:id/record', (req, res) => {
 // Guarded by RUMBLE_ADMIN_KEY when it is set. When it is not, it still works —
 // locking the host out of his own server is worse than the risk at this scale —
 // but the page says so plainly rather than pretending to be secure.
-const ADMIN_KEY = process.env.RUMBLE_ADMIN_KEY || '';
+// A password, not a secret. It keeps a stranger who finds the address from
+// ending a live match; it is not protecting anything valuable, and it travels
+// in a request header rather than the URL so it stays out of logs.
+const ADMIN_KEY = process.env.RUMBLE_ADMIN_KEY || 'daymay';
 function adminOk(req) {
-  if (!ADMIN_KEY) return true;
   const given = req.get('x-admin-key') || req.query.key || '';
   return given === ADMIN_KEY;
 }
@@ -986,7 +991,7 @@ app.get('/api/control', (req, res) => {
   if (!adminOk(req)) return res.status(403).json({ error: 'bad admin key' });
   const now = Date.now();
   res.json({
-    guarded: !!ADMIN_KEY,
+    guarded: true,
     idleMinutes: IDLE_MS / 60000,
     version: VERSION,
     uptimeSeconds: Math.round((now - BOOTED) / 1000),

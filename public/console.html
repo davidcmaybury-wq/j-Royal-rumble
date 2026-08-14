@@ -540,7 +540,7 @@ function render() {
   }
   const dv = $('s-delay');
   if (dv && !delayDirty && document.activeElement !== dv && S.delay != null) dv.value = S.delay;
-  if (S.version) $('ver').textContent = 'v' + S.version
+  if (S.version) $('ver').innerHTML = '<a href="/control" title="Control room" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">v' + S.version + '</a>'
     + (S.recording ? ' \u25CF rec' : '') + (S.corrections ? ' \u00B7 ' + S.corrections + ' fixed' : '');
   const u = $('undo'); if (u) u.disabled = !S.canUndo;
   if (S.phase === 'lobby') return renderLobby();
@@ -641,7 +641,6 @@ function render() {
 // The room has been watching this board for an hour. When it ends, the screen
 // should say so — not quietly stop updating.
 let finishShown = false;
-let recordSaved = false;
 
 function downloadRecord() {
   const a = document.createElement('a');
@@ -677,10 +676,9 @@ function showFinish() {
     const b0 = document.createElement('button'); b0.textContent = 'Download match data';
     b0.onclick = () => downloadRecord();
     more.appendChild(b0);
-    // And take a copy without being asked. The server keeps one too, but a
-    // file in the host's own downloads folder needs no volume, no mail
-    // provider and no remembering.
-    if (!recordSaved) { recordSaved = true; setTimeout(downloadRecord, 400); }
+    // No automatic copy. Every match is recorded on the server now and readable
+    // from the control room, so a file appearing in the downloads folder after
+    // every game was clutter rather than insurance.
   }
   const bs = document.createElement('button'); bs.textContent = 'Share results \u25BE';
   bs.onclick = (e) => { e.stopPropagation(); shareMenu(bs); };

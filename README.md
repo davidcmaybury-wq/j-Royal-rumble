@@ -811,9 +811,16 @@ forgotten test match sat live for an hour and blocked a deploy, because the
 deploy guard quite correctly refuses to restart under a game in progress. Set
 `RUMBLE_IDLE_MINUTES` to change the window.
 
-The page is open unless `RUMBLE_ADMIN_KEY` is set, and says so plainly when it
-is not. With a key, open it as `/control#your-key` — the fragment is not sent
-to the server, so it stays out of logs.
+It asks for a password, `daymay` unless `RUMBLE_ADMIN_KEY` says otherwise. That
+is a doorlatch rather than a lock — it stops a stranger who finds the address
+from ending a live match. The password is kept for the tab and sent in a
+request header, never the URL, so it stays out of server logs. The version
+number in the corner of the setup and host screens links here.
+
+**Every match is recorded**, and read from this page. Recording used to be a
+setting that defaulted off, which meant the interesting matches — the ones
+nobody expected to be interesting — were the ones without a record. The host
+console can still download a copy, but no longer does so unasked.
 
 ## Deploying
 

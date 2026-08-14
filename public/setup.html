@@ -109,6 +109,14 @@ border-radius:var(--r);padding:5px 11px;font-size:12px;white-space:nowrap}
 border-bottom:1px solid #6A4509;font-size:13px}
 .manual:hover{border-bottom-color:var(--brass)}
 .watchcard .wt{color:var(--slate);font-size:13px;margin:0 0 12px;max-width:62ch;line-height:1.5}
+/* The links under the roster: the watch screen sits alongside the join links
+   rather than in a card of its own, because it is the same kind of thing. */
+.verlink{color:var(--slate);text-decoration:none;border-bottom:1px dotted #3C486E}
+.verlink:hover{color:var(--brass);border-bottom-color:var(--brass)}
+.links{list-style:none;margin:14px 0 0;padding:0;border-top:1px solid var(--line);padding-top:12px}
+.links li{font-size:13.5px;color:var(--slate);line-height:1.5}
+.links b{color:var(--chalk);font-weight:500}
+.links .wrow{margin-top:8px}
 .wrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .wrow code{background:var(--ink);border:1px solid var(--line);border-radius:var(--r);
 padding:9px 13px;font-family:"IBM Plex Mono",monospace;font-size:14px;color:var(--brass)}
@@ -318,20 +326,17 @@ function render(keepEdits) {
     </div>
   </div>
 
-  <div class="card watchcard">
-    <h2>Watch screen</h2>
-    <p class="wt">Put this on the shared screen, or send it to anyone who would
-      rather see the board themselves than squint at a screen share. No key, no
-      login &mdash; the answers are never sent to it.</p>
-    <div class="wrow">
-      <code id="watchurl">${location.origin}/watch/${code}</code>
-      <button class="alt" id="copywatch">Copy</button>
-      <a class="alt" href="/watch/${code}" target="_blank" rel="noopener">Open &#8599;</a>
-    </div>
-  </div>
-
   <div class="card"><h2>Signed up <span id="rn" style="color:var(--brass)">${S.roster.length}</span></h2>
     <div class="who" id="who"></div>
+    <ul class="links">
+      <li><b>Watch screen</b> &mdash; put it on the shared screen, or send it to anyone who
+        would rather see the board themselves. No key, no login; the answers are never sent to it.
+        <div class="wrow">
+          <code id="watchurl">${location.origin}/watch/${code}</code>
+          <button class="alt" id="copywatch">Copy</button>
+          <a class="alt" href="/watch/${code}" target="_blank" rel="noopener">Open &#8599;</a>
+        </div></li>
+    </ul>
     ${est ? `<p class="est" style="margin:14px 0 0">With ${S.roster.length} players: entry every <b>${est.iv}</b> clues${
         est.auto ? ' (auto)' : ''}, roughly <b>${est.mins} minutes</b>, about ${est.clues} clues.${est.rough ? ' Rough at this size.' : ''}</p>`
       : `<p class="note" style="margin:14px 0 0">Three players minimum.</p>`}
@@ -365,6 +370,49 @@ function render(keepEdits) {
       ${(S.roster || []).some((p) => p.isBot) ? '<button class="alt" id="rmbots">Remove all robots</button>' : ''}
     </div>
     <div class="botlist" id="botlist"></div>
+  </div>
+
+  <div class="card"><h2>Game setup</h2>
+    <div class="row">
+      ${num('targetMinutes', 'Target length (min)', s.targetMinutes,
+            'how long you want this to run — everything else scales to it')}
+    </div>
+    <div class="row" style="margin-top:14px">
+      ${num('startScore', 'Starting score', s.startScore, 'what every entrant walks in with')}
+      <div class="f"><label>Score ceiling</label>
+        <select id="ceilingMode">
+          <option value="auto" ${s.ceiling == null ? 'selected' : ''}>Auto — scales to the field</option>
+          <option value="fixed" ${s.ceiling == null ? '' : 'selected'}>Set a number</option>
+        </select><span class="hint">clips every live score</span></div>
+      <div class="f" id="ceilwrap" style="${s.ceiling == null ? 'display:none' : ''}">
+        <label>Ceiling</label>
+        <input type="number" id="ceiling" value="${s.ceiling ?? 7500}" step="500" style="width:104px">
+        <span class="hint">&nbsp;</span></div>
+      <div class="f"><label>Ceiling change / clue</label>
+        <select id="decayMode">
+          <option value="auto" ${s.ceilingDecayPerClue == null ? 'selected' : ''}>Auto</option>
+          <option value="fixed" ${s.ceilingDecayPerClue == null ? '' : 'selected'}>Set a number</option>
+        </select><span class="hint">auto holds the ceiling steady while overtime is on</span></div>
+      <div class="f" id="decaywrap" style="${s.ceilingDecayPerClue == null ? 'display:none' : ''}">
+        <label>Per clue</label>
+        <input type="number" id="ceilingDecayPerClue" value="${s.ceilingDecayPerClue ?? -40}" step="5" style="width:96px">
+        <span class="hint">negative decays &mdash; favours late draws</span></div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <div class="f"><label>New entrant frequency</label>
+        <select id="entryMode">
+          <option value="auto" ${s.entryInterval == null ? 'selected' : ''}>Auto</option>
+          <option value="fixed" ${s.entryInterval == null ? '' : 'selected'}>Every N clues</option>
+        </select><span class="hint">auto scales to the roster and target length</span></div>
+      <div class="f" id="ivwrap" style="${s.entryInterval == null ? 'display:none' : ''}">
+        <label>N</label><input type="number" id="entryInterval" value="${s.entryInterval ?? 5}" min="1" max="30" style="width:80px">
+        <span class="hint">clues between entries</span></div>
+      <div class="f"><label>Stumper deduction</label>
+        <select id="stumperFraction">
+          ${[['0','off'],['0.25','quarter value'],['0.5','half value'],['1','full value']]
+            .map(([v, t]) => `<option value="${v}" ${Number(s.stumperFraction) === Number(v) ? 'selected' : ''}>${t}</option>`).join('')}
+        </select><span class="hint">when nobody gets a clue</span></div>
+    </div>
   </div>
 
   <div class="card"><h2>Clue material</h2>
@@ -402,52 +450,6 @@ function render(keepEdits) {
     </div>
     <div class="files" id="files"></div>
     <div class="msg" id="msg"></div>
-  </div>
-
-  <div class="card"><h2>Rules</h2>
-    <div class="row">
-      ${num('startScore', 'Starting score', s.startScore, 'what every entrant walks in with')}
-      ${num('ceiling', 'Score ceiling', s.ceiling, 'clips every live score')}
-      <div class="f"><label>Ceiling change / clue</label>
-        <select id="decayMode">
-          <option value="auto" ${s.ceilingDecayPerClue == null ? 'selected' : ''}>Auto</option>
-          <option value="fixed" ${s.ceilingDecayPerClue == null ? '' : 'selected'}>Set a number</option>
-        </select><span class="hint">auto holds the ceiling steady while overtime is on</span></div>
-      <div class="f" id="decaywrap" style="${s.ceilingDecayPerClue == null ? 'display:none' : ''}">
-        <label>Per clue</label>
-        <input type="number" id="ceilingDecayPerClue" value="${s.ceilingDecayPerClue ?? -40}" step="5" style="width:96px">
-        <span class="hint">negative decays &mdash; favours late draws</span></div>
-      <div class="f"><label>Ceiling floor</label>
-        <select id="floorMode">
-          <option value="auto" ${s.ceilingFloor == null ? 'selected' : ''}>Auto — match the starting score</option>
-          <option value="fixed" ${s.ceilingFloor == null ? '' : 'selected'}>Set a number</option>
-        </select><span class="hint">can never sit below the starting score</span></div>
-      <div class="f" id="floorwrap" style="${s.ceilingFloor == null ? 'display:none' : ''}">
-        <label>Floor</label>
-        <input type="number" id="ceilingFloor" value="${s.ceilingFloor ?? s.startScore}" style="width:104px">
-        <span class="hint">&nbsp;</span></div>
-    </div>
-    <div class="row" style="margin-top:14px">
-      <div class="f"><label>New entrant frequency</label>
-        <select id="entryMode">
-          <option value="auto" ${s.entryInterval == null ? 'selected' : ''}>Auto</option>
-          <option value="fixed" ${s.entryInterval == null ? '' : 'selected'}>Every N clues</option>
-        </select><span class="hint">auto scales to the roster and target length</span></div>
-      <div class="f" id="ivwrap" style="${s.entryInterval == null ? 'display:none' : ''}">
-        <label>N</label><input type="number" id="entryInterval" value="${s.entryInterval ?? 5}" min="1" max="30" style="width:80px">
-        <span class="hint">clues between entries</span></div>
-      ${num('targetMinutes', 'Target length (min)', s.targetMinutes, 'used when entry is automatic')}
-      <div class="f"><label>Stumper deduction</label>
-        <select id="stumperFraction">
-          ${[['0','off'],['0.25','quarter value'],['0.5','half value'],['1','full value']]
-            .map(([v, t]) => `<option value="${v}" ${Number(s.stumperFraction) === Number(v) ? 'selected' : ''}>${t}</option>`).join('')}
-        </select><span class="hint">when nobody gets a clue</span></div>
-      <div class="f"><label>Scoring</label>
-        <select id="potScoring">
-          <option value="true" ${s.potScoring ? 'selected' : ''}>Collect from each opponent</option>
-          <option value="false" ${s.potScoring ? '' : 'selected'}>Flat clue value</option>
-        </select><span class="hint">flat scoring hands the win to the last draw</span></div>
-    </div>
   </div>
 
   <div class="card"><h2>Standard mechanics</h2>
@@ -499,14 +501,6 @@ function render(keepEdits) {
     </div>
   </div>
 
-  <div class="card"><h2>Recording</h2>
-    <label class="rec"><input type="checkbox" id="recordMatch" ${s.recordMatch ? 'checked' : ''}>
-      <span><b>Record detailed match data</b>
-      <span class="hint2">Every clue, every buzz time, the score of everyone in the ring, entries,
-      eliminations, corrections, and how the length compared with the estimate. Downloadable as JSON
-      when the match ends. Off by default — a recorded match keeps more in memory.</span></span></label>
-  </div>
-
   <div class="card"><h2>Timing</h2>
     <div class="row">
       ${num('delay', 'Zoom delay (ms)', s.delay, 'holds the buzzers to match your audio')}
@@ -521,7 +515,9 @@ function render(keepEdits) {
     <button class="go" id="start" ${S.roster.length < 3 ? 'disabled' : ''}>Start the Rumble</button>
     <button class="alt" id="save">Save settings</button>
     <span class="note" id="savemsg"></span>
-    <span class="note num" style="margin-left:auto">v${S.version || '?'} &middot; room ${code}</span>
+    <a class="note num verlink" style="margin-left:auto" href="/control"
+       title="Control room — every match on this server, and the logs"
+       >v${S.version || '?'}</a><span class="note num"> &middot; room ${code}</span>
   </div>`;
 
   renderRoster(); renderWarnings(); renderFiles(); wire();
@@ -613,16 +609,21 @@ function collect() {
   const auto = g('entryMode').value === 'auto';
   const iv = auto ? '' : g('entryInterval').value.trim();
   const decayAuto = g('decayMode').value === 'auto';
-  const floorAuto = g('floorMode').value === 'auto';
+  const ceilAuto = g('ceilingMode').value === 'auto';
   return {
     settings: {
-      startScore: +g('startScore').value, ceiling: +g('ceiling').value,
+      startScore: +g('startScore').value,
+      // null means the engine scales it to the field, which is the right
+      // default and what autoCeiling(n) exists for.
+      ceiling: ceilAuto ? null : +g('ceiling').value,
       ceilingDecayPerClue: decayAuto ? null : +g('ceilingDecayPerClue').value,
-      ceilingFloor: floorAuto ? null : +g('ceilingFloor').value,
+      // The floor is always the starting score; there is no sensible reason to
+      // cap a new entrant below what they walk in with.
+      ceilingFloor: null,
       entryInterval: iv === '' ? null : +iv, targetMinutes: +g('targetMinutes').value,
-      stumperFraction: +g('stumperFraction').value, potScoring: g('potScoring').value === 'true',
+      stumperFraction: +g('stumperFraction').value,
       delay: +g('delay').value, lockout: +g('lockout').value, secondsPerClue: +g('secondsPerClue').value,
-      recordMatch: g('recordMatch').checked,
+
       topRope: g('topRope').checked, targeting: g('targeting').checked,
       savePlayer: g('savePlayer').checked,
       bounties: g('bounties').checked, revival: g('revival').checked,
@@ -761,7 +762,7 @@ function wire() {
       renderWarnings();
     };
   });
-  [['entryMode', 'ivwrap'], ['decayMode', 'decaywrap'], ['floorMode', 'floorwrap']]
+  [['entryMode', 'ivwrap'], ['decayMode', 'decaywrap'], ['ceilingMode', 'ceilwrap']]
     .forEach(([sel, wrap]) => {
       const el = document.getElementById(sel);
       el.onchange = () => {

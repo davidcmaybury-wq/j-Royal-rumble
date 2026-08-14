@@ -23,6 +23,13 @@ color:var(--brass);margin:26px 0 9px}
 border-radius:var(--r);padding:12px 14px;font-size:13px;color:#E8C77A;margin-bottom:16px}
 .warnbox code{font-family:"IBM Plex Mono",monospace;background:#00000044;padding:1px 5px;
 border-radius:3px}
+.askbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+padding:18px;max-width:340px}
+.askbox label{display:block;font-size:13px;color:var(--slate);margin-bottom:8px}
+.askrow{display:flex;gap:8px}
+.askrow input{flex:1;min-width:0;background:var(--ink);border:1px solid var(--line);
+border-radius:var(--r);padding:9px 11px;color:var(--chalk);font:inherit}
+.askrow input:focus{outline:none;border-color:var(--brass)}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
 color:var(--slate);font-weight:400;padding:0 8px 7px;border-bottom:1px solid var(--line)}
@@ -63,10 +70,28 @@ a.open:hover{color:var(--brass)}
 
 <script type="module">
 const $ = (id) => document.getElementById(id);
-// The key travels in the fragment, which browsers do not send to the server,
-// so it stays out of logs and referrers. It is only appended to requests.
-const key = location.hash.slice(1);
-const auth = key ? { 'x-admin-key': key } : {};
+// The password is asked for once and kept for the tab. It travels in a request
+// header, never the URL, so it stays out of server logs and referrers. The
+// fragment is still honoured so a bookmarked /control#word keeps working.
+let key = location.hash.slice(1) || sessionStorage.getItem('rumble-admin') || '';
+const auth = () => (key ? { 'x-admin-key': key } : {});
+
+function askKey(msg) {
+  $('sub').textContent = '';
+  $('guard').innerHTML = `<div class="askbox">
+    <label for="pw">${msg || 'Password'}</label>
+    <div class="askrow"><input type="password" id="pw" autocomplete="current-password">
+      <button id="pwgo" class="confirm">Open</button></div></div>`;
+  const go = () => {
+    key = $('pw').value.trim();
+    sessionStorage.setItem('rumble-admin', key);
+    if (location.hash) history.replaceState(null, '', '/control');
+    load();
+  };
+  $('pwgo').onclick = go;
+  $('pw').onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  $('pw').focus();
+}
 let pending = null;               // the match awaiting a second click
 
 const ago = (s) => s < 60 ? s + 's'
@@ -76,13 +101,16 @@ const ago = (s) => s < 60 ? s + 's'
 async function load() {
   let d;
   try {
-    const r = await fetch('/api/control', { headers: auth });
+    const r = await fetch('/api/control', { headers: auth() });
     d = await r.json();
     if (d.error) throw new Error(d.error);
   } catch (e) {
-    $('sub').textContent = e.message === 'bad admin key'
-      ? 'That admin key is wrong. Add it to the address after a # symbol.'
-      : 'Could not reach the server.';
+    $('live').innerHTML = ''; $('logs').innerHTML = ''; $('foot').textContent = '';
+    if (e.message === 'bad admin key') {
+      askKey(key ? 'That password is wrong. Try again.' : 'Password');
+    } else {
+      $('sub').textContent = 'Could not reach the server.';
+    }
     return;
   }
 
@@ -90,10 +118,7 @@ async function load() {
   $('sub').textContent = `Up ${ago(d.uptimeSeconds)}. Matches with no activity for `
     + `${d.idleMinutes} minutes end themselves.`;
 
-  $('guard').innerHTML = d.guarded ? '' : `<div class="warnbox">
-    This page is <strong>not protected</strong>. Anybody who finds the address can end
-    a match in progress. To lock it, set <code>RUMBLE_ADMIN_KEY</code> on the server
-    and open this page as <code>/control#your-key</code>.</div>`;
+  $('guard').innerHTML = '';
 
   const ms = d.matches || [];
   $('live').innerHTML = !ms.length
@@ -131,7 +156,7 @@ async function load() {
         <td class="num">${l.minutes != null ? Math.round(l.minutes) + ' min' : '—'}</td>
         <td>${l.winner || '—'}</td>
         <td style="text-align:right"><a class="open"
-          href="/api/logs/${encodeURIComponent(l.file)}${key ? '?key=' + encodeURIComponent(key) : ''}"
+          href="/api/logs/${encodeURIComponent(l.file)}?key=${encodeURIComponent(key)}"
           target="_blank" rel="noopener">open</a></td></tr>`).join('')}</table>`;
   $('foot').textContent = `${ls.length} logs. Reloads every 5 seconds.`;
 }
@@ -145,7 +170,7 @@ async function end(id) {
     return;
   }
   pending = null;
-  await fetch(`/api/control/${id}/end`, { method: 'POST', headers: auth });
+  await fetch(`/api/control/${id}/end`, { method: 'POST', headers: auth() });
   await load();
 }
 
