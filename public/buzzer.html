@@ -6,8 +6,17 @@
 <title>J! Royal Rumble</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* The clue face.
+   ITC Korinna Bold is what the show used and is licensed, so this is Bitter at
+   700 — the closest free slab serif: heavy, slightly rounded slabs, generous
+   x-height. All caps, white on the board blue, with a tight black shadow the
+   way the studio cards carried one. */
+.btext{font-family:"Bitter",Georgia,serif;font-weight:700;text-transform:uppercase;
+color:#FFFFFF;letter-spacing:.012em;
+text-shadow:2px 2px 0 #000000,1px 1px 0 #000000,0 1px 2px #00000099}
+
 :root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;
 --chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:4px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -168,7 +177,7 @@ background:radial-gradient(ellipse 90% 75% at 50% 40%,#2B2BE0 0%,#1717C2 52%,#0B
 box-shadow:inset 0 0 10px #000A4ACC;
 font-family:"Anton",Impact,sans-serif;font-size:14px;letter-spacing:.05em;
 color:#FFF;text-shadow:0 0 5px #9A9AFF,0 1px 1px #000060}
-.bcell.gone{background:radial-gradient(ellipse 90% 75% at 50% 40%,#2222C8 0%,#1212A8 55%,#0A0A85 100%);
+.bcell.played{background:radial-gradient(ellipse 90% 75% at 50% 40%,#2222C8 0%,#1212A8 55%,#0A0A85 100%);
 color:transparent;text-shadow:none}
 .bcol{min-width:0;display:grid;grid-template-rows:auto repeat(5,1fr)}
 .brow .bn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -300,7 +309,9 @@ import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBu
          lockoutRemaining, startLatencyReports, syncClock,
          getLag, setLag, fmt, ord } from '/rumble.js';
 import { scoreChart } from '/chart.js';
-import { weaponToken, TOKEN_NAMES, COLOUR_NAMES, tokenLabel } from '/tokens.js';
+// The line-art weapons are gone: everyone sees wrestlers now, including the
+// player themselves.
+import { avatar, distinctLook } from '/wrestlers.js';
 import { markFull } from '/brand.js';
 import * as sfx from '/sound.js';
 
@@ -334,6 +345,7 @@ function themeLabel() {
 }
 
 async function openMusic() {
+  let chosen = null;
   if (!themeList) {
     try { themeList = (await (await fetch('/api/themes')).json()).themes || []; }
     catch { themeList = []; }
@@ -355,6 +367,8 @@ async function openMusic() {
              ? 'https://youtu.be/' + myTheme.id : ''}" autocomplete="off">
     <div class="srow"><label>Start at</label>
       <input type="number" id="tstart" min="0" value="${myTheme?.start || 0}"> seconds</div>
+    <p class="snote" style="margin:14px 0 0">Tap a theme to hear it. Nothing is
+      saved until you press Save.</p>
     <div class="sbtns">
       <button id="tnone">No music</button>
       <button id="tsave" class="prim">Save</button>
@@ -363,11 +377,29 @@ async function openMusic() {
   document.body.appendChild(el);
   el.onclick = (ev) => { if (ev.target === el) el.remove(); };
 
+  // Clicking a chip plays it here, on this device, so you can hear what you are
+  // choosing. The room only ever hears it on the screen with sound enabled, but
+  // picking blind was silly.
+  let preview = null;
+  const stopPreview = () => { if (preview) { preview.pause(); preview = null; } };
   for (const b of el.querySelectorAll('.schip')) {
-    b.onclick = () => save({ kind: 'library', key: b.dataset.key }, el);
+    b.onclick = () => {
+      for (const o of el.querySelectorAll('.schip')) o.classList.remove('on');
+      b.classList.add('on');
+      stopPreview();
+      preview = new Audio(`/audio/themes/${b.dataset.key}.mp3`);
+      preview.volume = 0.8;
+      preview.play().catch(() => {});
+      chosen = { kind: 'library', key: b.dataset.key };
+    };
   }
+  el.addEventListener('remove', stopPreview);
+  const origRemove = el.remove.bind(el);
+  el.remove = () => { stopPreview(); origRemove(); };
   el.querySelector('#tnone').onclick = () => save(null, el);
   el.querySelector('#tsave').onclick = () => {
+    // A library pick made by ear wins over a stale link in the box.
+    if (chosen) return save(chosen, el);
     const raw = el.querySelector('#tlink').value.trim();
     if (!raw) return save(null, el);
     const id = (raw.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/) || [])[1];
@@ -445,7 +477,10 @@ function boardHtml() {
     + `<div class="bcat">${c.title}</div>`
     // Same as the console: keep the value so the cell keeps its size, and let
     // .gone make it transparent.
-    + c.clues.map((x) => `<div class="bcell${x.revealed ? ' gone' : ''}">`
+    // 'played', not 'gone': .gone already exists on this page as the
+    // full-screen overlay for an eliminated player, and a cell that inherited
+    // position:absolute;inset:0 turned the whole window solid blue.
+    + c.clues.map((x) => `<div class="bcell${x.revealed ? ' played' : ''}">`
         + '$' + x.value + '</div>').join('')
     + '</div>').join('');
   const ring = (W.live || []).map((p) => `<div class="brow">`
@@ -482,6 +517,8 @@ function renderJoin() {
     <div class="tokhint">Pick a token, or add a photo of your own.</div>
     <input id="nm" placeholder="Your name" maxlength="18" autocomplete="off" autocapitalize="words">
     <button id="go" disabled>Join</button>
+    <button class="fullbtn" id="musicjoin" type="button">Pick your entrance music
+      <span class="fh">plays on the shared screen when you walk in</span></button>
     <a class="backhome" href="/">&larr; Back</a>
     ${joinErr ? `<div class="err">${joinErr}</div>` : ''}
     <div class="rules">
@@ -528,6 +565,10 @@ function renderJoin() {
   // nothing and the server's own assignment stands.
   paintToken();
   document.getElementById('tokbtn').onclick = pickToken;
+  const mj = document.getElementById('musicjoin');
+  // Choosing before the match starts is the natural moment — you are already
+  // fiddling with your name and your wrestler.
+  if (mj) mj.onclick = openMusic;
 
   const cached = localStorage.getItem('rumble:avatar');
   if (cached) setPicPreview(cached);
@@ -544,56 +585,47 @@ renderJoin(); }
   setTimeout(() => (cd.value ? nm : cd).focus(), 60);
 }
 
-let myArt = null;
+let myArt = null;      // kept only so old saved preferences load without error
+
+// The wrestler is chosen before joining, so a player picks their own figure
+// rather than being handed one. The server still has the last word — it keeps
+// looks distinct across the room — but it starts from this.
+let myLook = null;
+try { myLook = JSON.parse(localStorage.getItem('rumble:look') || 'null'); } catch (e) {}
+if (!myLook) myLook = distinctLook(String(Math.random()), []);
 
 function paintToken() {
   const b = document.getElementById('tokbtn');
   if (!b) return;
-  // Before the server has said, show whatever it last told us, or a prompt.
-  const art = myArt || (V && V.you && V.you.tokenArt);
-  b.innerHTML = art
-    ? weaponToken(art.art, 84, art.colour)
-    : '<span class="tokask">pick</span>';
+  // The wrestler, not a weapon. The line-art tokens were what players saw
+  // while everyone else — the console, the watch screen, the animations — saw
+  // wrestlers, so a player never recognised their own figure being thrown out
+  // of the ring.
+  const look = (V && V.you && V.you.look) || myLook;
+  b.innerHTML = look ? avatar(look, 84) : '<span class="tokask">pick</span>';
 }
 
 function pickToken() {
-  // Opening the picker is the moment a preference exists.
-  if (!myArt) myArt = (V && V.you && V.you.tokenArt) || { art: TOKEN_NAMES[0], colour: 'brass' };
-  const el = document.createElement('div'); el.className = 'tokpick';
-  const grid = () => TOKEN_NAMES.map((n) =>
-    `<button data-a="${n}" title="${tokenLabel(n)}" class="${n === myArt.art ? 'on' : ''}"
-      >${weaponToken(n, 46, myArt.colour)}</button>`).join('');
-  const swatches = () => COLOUR_NAMES.map((c) =>
-    `<button data-c="${c}" class="${c === myArt.colour ? 'on' : ''}"
-      >${weaponToken(myArt.art, 26, c)}</button>`).join('');
-  const draw = () => {
-    el.innerHTML = `<div class="tpbox"><h3>Choose your token</h3>
-      <div class="tpgrid">${grid()}</div>
-      <div class="tprow">${swatches()}</div></div>`;
-    el.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => {
-      myArt = { ...myArt, art: b.dataset.a }; save(); draw();
-    });
-    el.querySelectorAll('[data-c]').forEach((b) => b.onclick = () => {
-      myArt = { ...myArt, colour: b.dataset.c }; save(); draw();
-    });
-  };
-  const save = () => {
-    paintToken();
-    // The server may hand back a different colour if somebody already has this
-    // shape in the one asked for.
-    socket.emit('token-art', myArt, (settled) => {
-      if (settled && settled.art) {
-        myArt = settled;
-        try { localStorage.setItem('rumble:art', JSON.stringify(myArt)); } catch (e) {}
-        paintToken(); draw();
-      }
-    });
-  };
-  draw();
-  el.onclick = (e) => { if (e.target === el) el.remove(); };
-  document.body.appendChild(el);
-  addEventListener('keydown', function esc(ev) {
-    if (ev.key === 'Escape') { el.remove(); removeEventListener('keydown', esc); }
+  // One tap, another wrestler. A grid of every possible combination would be
+  // thousands of tiles; rerolling until you like one is the same job in less
+  // space, and the server keeps it distinct from everybody else's.
+  const b = document.getElementById('tokbtn');
+  // Before joining there is no server to ask, so roll it here.
+  // myToken is a function; calling it is the difference between "not joined"
+  // and "always truthy".
+  if (!myToken()) {
+    myLook = distinctLook(String(Math.random()), [myLook]);
+    try { localStorage.setItem('rumble:look', JSON.stringify(myLook)); } catch (e) {}
+    return paintToken();
+  }
+  if (b) b.classList.add('rolling');
+  socket.emit('reroll-look', {}, (r) => {
+    if (b) b.classList.remove('rolling');
+    if (r && r.look) {
+      myLook = r.look;
+      try { localStorage.setItem('rumble:look', JSON.stringify(myLook)); } catch (e) {}
+      paintToken();
+    }
   });
 }
 
@@ -632,7 +664,7 @@ function squareThumb(file, size) {
 }
 
 function doJoin(name) {
-  socket.emit('join', { gameId: gameId(), token: myToken(), name }, (r) => {
+  socket.emit('join', { gameId: gameId(), token: myToken(), name, look: myLook }, (r) => {
     if (r && r.error) { joinErr = r.error; joined = false; return sfx.preload();
 renderJoin(); }
     if (r && r.token) saveToken(r.token);

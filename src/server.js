@@ -9,7 +9,7 @@ import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS } from './engine.js';
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
 import { assignToken, resolveChoice } from './tokens-server.js';
-import { distinctLook } from '../public/wrestlers.js';
+import { distinctLook, looksAlike } from '../public/wrestlers.js';
 import * as logs from './logstore.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS,
          loadDistributions, drawReadJitter, referenceHumanMedian,
@@ -1229,7 +1229,7 @@ io.on('connection', (socket) => {
 
   // Players identify by a durable token stored on their own device, so a
   // reconnect keeps their score, draw number and place in the queue.
-  socket.on('join', ({ gameId, token: t, name }, ack) => {
+  socket.on('join', ({ gameId, token: t, name, look }, ack) => {
     const j = matches.get(String(gameId || '').toUpperCase());
     if (j) j.lastActivity = Date.now();
     const m = matches.get((gameId || '').toUpperCase());
@@ -1246,9 +1246,13 @@ io.on('connection', (socket) => {
       // Everyone gets a token on arrival rather than a blank circle. Chosen
       // to avoid whatever the room is already using.
       const art = assignToken([...m.roster.values()].map((x) => x.tokenArt), m.rng || Math.random);
-      // A wrestler nobody else in this room already looks like.
-      const look = distinctLook(token,
-        [...m.roster.values()].map((x) => x.look).filter(Boolean));
+      // A wrestler nobody else in this room already looks like. The player may
+      // have chosen one on the way in; honour it unless somebody already looks
+      // that way, in which case the room's clarity wins over the preference.
+      const taken = [...m.roster.values()].map((x) => x.look).filter(Boolean);
+      const wanted = look && typeof look === 'object' ? look : null;
+      const clash = wanted && taken.some((t) => looksAlike(t, wanted));
+      const chosen = wanted && !clash ? wanted : distinctLook(token, taken);
 
       if (m.phase !== 'lobby') {
         // Turning up after the bell. A Rumble is built around people arriving
@@ -1258,7 +1262,7 @@ io.on('connection', (socket) => {
         const r = m.game.addLatecomer(token, name || 'Player');
         if (r.error) return ack?.({ error: r.error });
         m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
-          connected: true, avatar: null, tokenArt: art, look, late: true });
+          connected: true, avatar: null, tokenArt: art, look: chosen, late: true });
         m.note('latecomer', { name: name || 'Player', draw: r.draw });
         socket.join(`${m.id}:players`);
         ack?.({ ok: true, token, late: true, draw: r.draw, state: m.playerView(token) });
@@ -1267,7 +1271,7 @@ io.on('connection', (socket) => {
       }
 
       m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
-        connected: true, avatar: null, tokenArt: art, look });
+        connected: true, avatar: null, tokenArt: art, look: chosen });
     }
     socket.join(`${m.id}:players`);
     ack?.({ ok: true, token, state: m.playerView(token) });
@@ -1331,6 +1335,20 @@ io.on('connection', (socket) => {
   // would eventually leak.
   // A player's entrance music. Either a theme from the library or a link they
   // supplied; the watch screen with sound on is what actually plays it.
+  // Another wrestler. Assigned on join, but a player who does not like theirs
+  // should be able to say so — it is the figure the whole room watches get
+  // thrown out of the ring.
+  socket.on('reroll-look', (_d, ack) => {
+    if (!match || !token) return ack?.({ error: 'no match' });
+    const r = match.roster.get(token);
+    if (!r) return ack?.({ error: 'not in this match' });
+    const taken = [...match.roster.values()]
+      .filter((p) => p.token !== token).map((p) => p.look).filter(Boolean);
+    r.look = distinctLook(token + ':' + Date.now(), taken);
+    pushAll();
+    ack?.({ ok: true, look: r.look });
+  });
+
   socket.on('set-theme', ({ theme }, ack) => {
     if (!match || !token) return ack?.({ error: 'no match' });
     const r = match.roster.get(token);
