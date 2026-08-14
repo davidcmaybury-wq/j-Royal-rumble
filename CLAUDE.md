@@ -162,6 +162,14 @@ a real 1.
 the first six gave 302ms and 242ms where the settled figures were 85ms and 60ms.
 People start slowly.
 
+## Editing a workflow
+
+`secrets` is **not** available in an `if:`, at step or job level. GitHub rejects
+the whole file — no jobs run, and the run reports as a failure with nothing in
+it, which is confusing to debug. Compute the flag in job-level `env` and test
+`env.X` in the step instead. A YAML parser will not catch this; `test/workflows.mjs`
+will, and also checks that every suite a workflow names actually exists.
+
 ## Known-flaky patterns, all fixed but worth recognising
 
 - **Double evaluation in a `check()`** — calling the same clock-reading function

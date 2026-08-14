@@ -8,6 +8,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      # A step's `if` cannot read `secrets` — GitHub rejects the whole file with
+      # "Unrecognized named-value: 'secrets'". Job-level env can, so the flag is
+      # computed once here and the steps test that instead.
+      HAVE_DEPLOY_KEY: ${{ secrets.AWS_SSH_KEY != '' }}
     concurrency:
       group: deploy-production
       cancel-in-progress: false
@@ -45,6 +50,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/workflows.mjs
           node test/health.mjs
           node test/moved.mjs
           node test/wrestlers.mjs
@@ -87,7 +93,7 @@ jobs:
       # as plain CI in the meantime. See infra/aws/README.md for the two-minute
       # setup.
       - name: Deploy to Lightsail
-        if: ${{ secrets.AWS_SSH_KEY != '' }}
+        if: env.HAVE_DEPLOY_KEY == 'true'
         env:
           AWS_HOST: ${{ secrets.AWS_HOST }}
         run: |
@@ -100,7 +106,7 @@ jobs:
             'bash /home/ubuntu/app/tools/deploy-remote.sh --wait'
 
       - name: How to deploy by hand
-        if: ${{ secrets.AWS_SSH_KEY == '' }}
+        if: env.HAVE_DEPLOY_KEY != 'true'
         run: |
           echo "Tests passed, but no AWS_SSH_KEY is set, so nothing was deployed."
           echo "SSH the Lightsail box (infra/aws/HOSTING.md), then:"
