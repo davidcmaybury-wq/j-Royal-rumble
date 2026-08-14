@@ -986,7 +986,13 @@ io.on('connection', (socket) => {
     if (!match) return;
     io.to(`${match.id}:host`).emit('state', match.hostView());
     // Watchers get their own view, never the host's.
-    io.to(`${match.id}:watch`).emit('state', match.watchView());
+    // Two audiences, two rooms. A watch screen listens for `state`; a player in
+    // full mode already uses `state` for their own buzzer view, so putting them
+    // in the same room would overwrite it with somebody else's. They get their
+    // own room and their own event name.
+    const wv = match.watchView();
+    io.to(`${match.id}:watch`).emit('state', wv);
+    io.to(`${match.id}:board`).emit('watch-state', wv);
   };
   const pushPlayersNow = () => {
     if (!match) return;
@@ -1100,6 +1106,24 @@ io.on('connection', (socket) => {
   }));
 
   // The setup page watches the lobby fill without claiming the host socket.
+  // Full buzzer mode: a player asks for the board as well as their buzzer.
+  //
+  // They join the same watch room and get the same watchView() everybody else
+  // gets — deliberately, because that payload is built field-by-field with no
+  // answer in it and test/watch.mjs asserts as much. Assembling a second
+  // "buzzer with board" payload from the host view is exactly how an answer
+  // would eventually leak.
+  socket.on('want-board', ({ on }, ack) => {
+    if (!match) return ack?.({ error: 'no match' });
+    if (on) {
+      socket.join(`${match.id}:board`);
+      socket.emit('watch-state', match.watchView());
+    } else {
+      socket.leave(`${match.id}:board`);
+    }
+    ack?.({ ok: true, on: !!on });
+  });
+
   socket.on('watch-game', ({ gameId }, ack) => {
     const m = matches.get(String(gameId || '').toUpperCase());
     if (!m) return ack?.({ error: 'no such match' });

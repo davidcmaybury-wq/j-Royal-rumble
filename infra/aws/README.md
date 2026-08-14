@@ -71,5 +71,13 @@ watched. Unset the variable and it is a normal server again.
 It needs one deploy to take effect: set the repository variable
 `DEPLOY_FLY=true`, push, then set it back.
 
-`tools/pull-logs.mjs` moves match logs off a running server over HTTP if
-anything else ever needs recovering.
+## Moving the match logs
+
+Run the puller **on the box**, writing straight into place:
+
+    cd /home/ubuntu/app && node tools/pull-logs.mjs https://j-royal-rumble.fly.dev /data/logs
+    curl -s localhost:8080/api/health | grep -o '"saved":[0-9]*'
+
+It only needs HTTP to the old host, so there is no key to arrange and nothing
+to copy afterwards. Pulling to a laptop or Codespace and then `scp`-ing across
+is the long way round, and needs a key that only exists on the box.

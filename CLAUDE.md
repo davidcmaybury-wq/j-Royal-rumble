@@ -195,6 +195,19 @@ it, which is confusing to debug. Compute the flag in job-level `env` and test
 `env.X` in the step instead. A YAML parser will not catch this; `test/workflows.mjs`
 will, and also checks that every suite a workflow names actually exists.
 
+## A whole panel can vanish silently
+
+`lagHint()` was called from `renderMech` and defined nowhere, for several
+releases. It threw on every render, so the mechanics panel — top rope,
+targeting, bounties, the lag control, the watch link — was simply empty on the
+live site, and nothing failed. The edit that added the call landed; the edit
+that added the function missed its anchor.
+
+Two lessons. **Check that a patch applied**, not just that the file still
+parses. And `pagerefs.mjs` now reads the source for functions that are called
+but never defined, because executing renderers in a stub DOM did not catch it —
+`renderMech` returns early there.
+
 ## Known-flaky patterns, all fixed but worth recognising
 
 - **Double evaluation in a `check()`** — calling the same clock-reading function
@@ -206,6 +219,17 @@ will, and also checks that every suite a workflow names actually exists.
   measuring it; don't.
 
 ## Queued, not started
+
+**1. ~~Two buzzer modes~~ — built in 0.49.0, layout unverified.** Desktop-only
+board beside the buzzer, opt-in, remembered per device. Reuses `watchView()` on
+its own socket room (`:board`) so it cannot corrupt the player's own `state`
+feed or carry an answer. `test/fullbuzzer.mjs` covers both. **Two headless
+screenshots came out blank despite correct DOM and bounding boxes** — probably a
+headless artefact, but it needs a real pair of eyes before anyone relies on it.
+`?light` on the buzzer URL forces light mode and forgets the preference, which
+is the way out if it renders badly.
+
+Old note follows.
 
 **1. Two buzzer modes.** The current buzzer is the *light* one and assumes the
 board is on a shared screen. A *full* mode folds the watch view in — board,
@@ -219,6 +243,11 @@ field-by-field for exactly this reason and `test/watch.mjs` asserts the answer
 is absent, so full mode must reuse `watchView()` rather than the host view.
 Copying the host view and deleting fields is the mistake that guard exists to
 catch.
+
+**2. ~~Countdown lights on the watch screen~~ — already done.** The watch screen
+has had them since the trio in 0.40.0; this note was stale. Verified live.
+
+Old note follows.
 
 **2. Countdown lights on the watch screen.** The console has a five-light
 lectern (`.lectern`, driven by `startLectern`/`stopLectern` on the race

@@ -31,7 +31,20 @@ for (const f of files) {
   if (got % 25 === 0) console.log(`  ${got}...`);
 }
 console.log(`done: ${got} fetched, ${skipped} already present, into ${dest}`);
-console.log('\nnext: push them to the new machine —');
-console.log('  aws s3 cp ' + dest + ' s3://YOUR-BUCKET/logs --recursive');
-console.log('  then on the instance (via SSM session):');
-console.log('  aws s3 cp s3://YOUR-BUCKET/logs /data/logs --recursive');
+
+// The simplest route is to run this ON the box and write straight into place —
+// it only needs to reach the old host over HTTP, so there is no key to arrange
+// and nothing to copy afterwards.
+if (dest !== '/data/logs') {
+  console.log(`
+To get them onto the live server, run this there rather than copying:
+
+  cd /home/ubuntu/app && node tools/pull-logs.mjs ${base} /data/logs
+
+Then check it took:
+
+  curl -s localhost:8080/api/health | grep -o '"saved":[0-9]*'`);
+} else {
+  console.log('\nWritten straight into /data/logs. Check with:');
+  console.log("  curl -s localhost:8080/api/health | grep -o '\"saved\":[0-9]*'");
+}

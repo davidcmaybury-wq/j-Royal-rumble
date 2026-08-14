@@ -152,8 +152,15 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
   }).replace(/import\s+[\w$]+\s+from\s*'[^']+';?/g, '');
 
   // Every module-level function declaration whose name suggests it paints.
-  const painters = [...js.matchAll(/^function\s+([A-Za-z_$][\w$]*)\s*\(\s*\)/gm)]
-    .map((m) => m[1]).filter((n) => /^render|^paint|^draw/.test(n));
+  // Renderers with parameters count too.
+  //
+  // This used to match only zero-argument functions, which meant
+  // renderMech(st, you) was never exercised — and it had been throwing
+  // "lagHint is not defined" through several releases, silently emptying the
+  // whole mechanics panel, with this guard reporting all clear.
+  const painters = [...js.matchAll(/^function\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)/gm)]
+    .filter((m) => /^render|^paint|^draw/.test(m[1]))
+    .map((m) => ({ name: m[1], arity: m[2].trim() ? m[2].split(',').length : 0 }));
 
   // Which state variable this page keeps its view in.
   const stateVar = /\bS\s*=\s*(null|await)/.test(js) ? 'S' : (/\bV\s*=/.test(js) ? 'V' : null);
@@ -161,11 +168,18 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
   const probe = `
     ;globalThis.__refErrors = [];
     ${stateVar ? `try { ${stateVar} = globalThis.__seed; } catch (e) {}` : ''}
-    ${painters.map((fn) => `
-    try { ${fn}(); } catch (e) {
+    ${painters.map((fn) => {
+      // Plausible arguments: most take (state-ish, player-ish). Anything the
+      // stub cannot satisfy throws a different error, which is ignored — only
+      // missing identifiers are reported.
+      const args = ['\'live\'', 'globalThis.__player', 'globalThis.__player',
+                    'globalThis.__player'].slice(0, fn.arity).join(', ');
+      return `
+    try { ${fn.name}(${args}); } catch (e) {
       if (/is not defined|before initialization/.test(e.message))
-        globalThis.__refErrors.push('${fn}: ' + e.message);
-    }`).join('')}
+        globalThis.__refErrors.push('${fn.name}: ' + e.message);
+    }`;
+    }).join('')}
   `;
 
   // Stubs return an empty array rather than an empty string: it coerces to ''
@@ -187,6 +201,10 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
   `;
 
   globalThis.__seed = JSON.parse(JSON.stringify(SEED));
+  // A stand-in player, for renderers that take one.
+  globalThis.__player = { token: 'aaaa', name: 'Test', draw: 1, score: 3000,
+    state: 'live', topRope: false, topRopeWait: 0, target: null, revivals: 0,
+    cluesToEntry: null, queuePlace: null, bounty: 0, entryStake: 3000 };
   globalThis.__refErrors = [];
   let loadError = null;
   try {
@@ -207,6 +225,65 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
   check(`${page}: every reference resolves when its renderers run`,
     errs.length === 0,
     errs.length ? errs[0] : `${painters.length} renderers exercised`);
+}
+
+// --- a function that is called but never defined --------------------------
+//
+// `lagHint()` was called from renderMech and defined nowhere, through several
+// releases. It threw on every render, silently emptying the whole mechanics
+// panel — top rope, targeting, bounties, the lag control, the watch link. The
+// executing check above missed it because renderMech returns early in a stub
+// DOM, so this reads the source instead, which is what the bug actually is.
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html']) {
+  const html = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
+  const i = html.indexOf('<script type="module">');
+  if (i < 0) continue;
+  const raw = html.slice(i + 22, html.lastIndexOf('</script>'));
+
+  // Strip comments and string literals before looking for calls. Without this
+  // the scan trips over CSS inside template literals — var(), clamp(), min() —
+  // and over ordinary prose in comments.
+  const js = raw
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
+    .replace(/`(?:\\.|\$\{[^}]*\}|[^`\\])*`/g, '``')
+    .replace(/'(?:\\.|[^'\\])*'/g, "''")
+    .replace(/"(?:\\.|[^"\\])*"/g, '""');
+
+  // Everything this script defines or brings in.
+  const defined = new Set([
+    ...[...raw.matchAll(/function\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1]),
+    ...[...raw.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g)].map((m) => m[1]),
+    ...[...raw.matchAll(/import\s*\{([^}]*)\}/g)]
+      .flatMap((m) => m[1].split(',').map((x) => x.split(/\s+as\s+/).pop().trim())),
+    ...[...raw.matchAll(/import\s+\*\s+as\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1]),
+    ...[...raw.matchAll(/import\s+([A-Za-z_$][\w$]*)\s+from/g)].map((m) => m[1]),
+    // destructured locals and loop bindings
+    ...[...raw.matchAll(/(?:const|let|var)\s*\{([^}]*)\}\s*=/g)]
+      .flatMap((m) => m[1].split(',').map((x) => x.split(':').pop().split('=')[0].trim())),
+    ...[...raw.matchAll(/(?:for\s*\(\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)|catch\s*\(\s*([A-Za-z_$][\w$]*))/g)]
+      .flatMap((m) => [m[1], m[2]]).filter(Boolean),
+  ].filter(Boolean));
+
+  const KNOWN = new Set(['fetch', 'setTimeout', 'setInterval', 'clearTimeout',
+    'clearInterval', 'requestAnimationFrame', 'cancelAnimationFrame', 'parseInt',
+    'parseFloat', 'isNaN', 'isFinite', 'encodeURIComponent', 'decodeURIComponent',
+    'String', 'Number', 'Boolean', 'Array', 'Object', 'JSON', 'Math', 'Date',
+    'Promise', 'Map', 'Set', 'RegExp', 'Error', 'console', 'alert', 'confirm',
+    'prompt', 'io', 'structuredClone', 'queueMicrotask', 'atob', 'btoa',
+    'if', 'for', 'while', 'switch', 'catch', 'return', 'typeof', 'function',
+    'super', 'this', 'await', 'new', 'delete', 'void', 'in', 'of', 'do', 'else',
+    'async', 'resolve', 'reject', 'require', 'addEventListener',
+    'removeEventListener', 'matchMedia', 'getComputedStyle', 'URL',
+    'AudioContext', 'Audio', 'Image', 'FileReader', 'Blob', 'FormData']);
+
+  // Bare calls: `name(` not preceded by a dot, and not a declaration.
+  const called = new Set([...js.matchAll(/(^|[^.\w$])([a-z_$][\w$]*)\s*\(/g)]
+    .map((m) => m[2]));
+  const missing = [...called].filter((n) => !defined.has(n) && !KNOWN.has(n));
+
+  check(`${page}: every function it calls is defined`,
+    missing.length === 0, missing.join(', ') || `${called.size} calls checked`);
 }
 
 // --- a toggle that is never read back is decoration -----------------------

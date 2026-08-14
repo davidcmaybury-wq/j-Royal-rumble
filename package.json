@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.48.3",
+  "version": "0.49.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -55,7 +55,8 @@
     "health-test": "node test/health.mjs",
     "workflows-test": "node test/workflows.mjs",
     "welcome-test": "node test/welcome.mjs",
-    "ping": "node tools/ping-host.mjs"
+    "ping": "node tools/ping-host.mjs",
+    "fullbuzzer-test": "node test/fullbuzzer.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",
