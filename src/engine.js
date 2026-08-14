@@ -18,7 +18,17 @@ export const DEFAULT_SETTINGS = {
   targetMinutes: 30,
   recordMatch: false,        // keep a detailed log of the match
   // --- advanced mechanics, all off unless the host turns them on ---
+  // --- advanced mechanics, all off unless the host turns them on -----------
   topRope: false,            // double your stakes both ways for one clue
+  // Clues you must wait before climbing again. Without one, a player who
+  // decides doubling is worth it simply declares every single clue, and the
+  // mechanic stops being a decision — it becomes a permanent stake setting that
+  // the rest of the ring has to play against.
+  topRopeCooldown: 5,
+  // Buying an eliminated player back in. Advanced: it undoes an elimination,
+  // which is a bigger change to how a match reads than a scoring tweak, and it
+  // leans on a keyboard control.
+  savePlayer: false,
   targeting: false,          // aim your damage at one player, and theirs at you
   bounties: false,           // queued players pay to put a price on a head
   revival: false,            // one more life, at a fraction of the stake
@@ -72,10 +82,8 @@ export const DEFAULT_SETTINGS = {
   categorySweep: true,
   sweepBonus: 500,
 
-  // Eliminated players can be bought back in by those still standing, and a
-  // player waiting in the queue can hand part of their entry to somebody
+  // A player waiting in the queue can hand part of their entry to somebody
   // already in the ring.
-  savePlayer: true,
   giftFromQueue: true,
   // When the lights run out and nobody has taken the clue, close the race and
   // let the host call it. Off means the buzzers stay open until they press X.
@@ -331,7 +339,8 @@ export class RumbleGame {
         state: 'queued', score: 0, enteredAtClue: null,
         eliminatedAtClue: null, placement: null,
         pins: 0, correct: 0, missed: 0,
-        topRope: false, target: null, revivals: 0, bountyPlaced: 0,
+        topRope: false, topRopeAt: null, target: null,
+        revivals: 0, bountyPlaced: 0,
       });
     });
     this.drawOrder = order.map((p) => p.id);
@@ -501,8 +510,19 @@ export class RumbleGame {
     if (!this.s.topRope) return false;
     const p = this.players.get(token);
     if (!p || p.state !== 'live') return false;
+    // Climbing down is always allowed; climbing up has to wait its turn.
+    if (on && this.topRopeWait(token) > 0) return false;
     p.topRope = !!on;
+    if (on) p.topRopeAt = this.cluesRevealed;
     return true;
+  }
+
+  /** Clues left before this player may climb again. Zero means now. */
+  topRopeWait(token) {
+    const p = this.players.get(token);
+    if (!p || p.topRopeAt == null) return 0;
+    const since = this.cluesRevealed - p.topRopeAt;
+    return Math.max(0, this.s.topRopeCooldown - since);
   }
 
   setTarget(token, targetToken) {
@@ -893,6 +913,7 @@ export class RumbleGame {
         p.enteredAtClue = null;
         p.target = null;
         p.topRope = false;
+        p.topRopeAt = null;
         this.eliminationOrder = this.eliminationOrder.filter((id) => id !== p.id);
         this.drawOrder = this.drawOrder.filter((id) => id !== p.id).concat([p.id]);
         // A fresh number for the queue, but the number they actually drew is
@@ -971,7 +992,8 @@ export class RumbleGame {
       state: 'queued', score: 0, enteredAtClue: null,
       eliminatedAtClue: null, placement: null,
       pins: 0, correct: 0, missed: 0,
-      topRope: false, target: null, revivals: 0, bountyPlaced: 0,
+      topRope: false, topRopeAt: null, target: null,
+      revivals: 0, bountyPlaced: 0,
     };
     this.players.set(id, p);
     this.drawOrder.push(id);

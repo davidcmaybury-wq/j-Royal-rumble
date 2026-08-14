@@ -128,6 +128,7 @@ animation:breathe 1.6s ease-in-out infinite}
 .mech{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:0 10px}
 .mbtn{padding:8px 14px;border:1px solid var(--line);border-radius:20px;font-size:12.5px;color:var(--slate)}
 .mbtn:hover{color:var(--chalk);border-color:var(--slate)}
+.mbtn.cooling{opacity:.5;border-style:dashed}
 .mbtn.on{border-color:var(--brass);color:var(--brass);background:#3A2E0C}
 .mbtn .k{opacity:.55;margin-left:5px;font-size:10.5px}
 .mbtn:disabled{opacity:.3;cursor:default}
@@ -511,7 +512,8 @@ addEventListener('keydown', (e) => {
   if (e.code === 'Space') { e.preventDefault(); press(); return; }
   const you = (V && V.you) || {}, M = (V && V.mechanics) || {};
   const k = (e.key || '').toLowerCase();
-  if (k === 'r' && M.topRope && you.state === 'live' && !V.clueUp) {
+  if (k === 'r' && M.topRope && you.state === 'live' && !V.clueUp
+      && (you.topRope || !(you.topRopeWait > 0))) {
     e.preventDefault(); socket.emit('top-rope', { on: !you.topRope });
   } else if (k === 't' && M.targeting && you.state === 'live') {
     e.preventDefault(); pickTarget(you);
@@ -669,8 +671,15 @@ function renderMech(st, you) {
   const M = V.mechanics || {};
   const parts = [];
   if (M.topRope && st === 'live') {
-    parts.push(`<button class="mbtn${you.topRope ? ' on' : ''}" id="m-rope" ${V.clueUp ? 'disabled' : ''}>
-      ${you.topRope ? 'ON THE TOP ROPE' : 'Go to the top rope'}<span class="k">R</span></button>`);
+    // Cooling down after a climb. Say how long rather than just greying out —
+    // a dead button with no reason reads as a bug.
+    const wait = you.topRopeWait || 0;
+    const blocked = V.clueUp || (wait > 0 && !you.topRope);
+    parts.push(`<button class="mbtn${you.topRope ? ' on' : ''}${wait > 0 && !you.topRope ? ' cooling' : ''}"
+      id="m-rope" ${blocked ? 'disabled' : ''}>
+      ${you.topRope ? 'ON THE TOP ROPE'
+        : wait > 0 ? `Ropes ready in ${wait}`
+        : 'Go to the top rope'}<span class="k">R</span></button>`);
   }
   if (M.targeting && st === 'live') {
     const t = (V.ring || []).find((x) => x.token === you.target);
@@ -701,7 +710,10 @@ function renderMech(st, you) {
     <a class="watchlink small" href="/watch/${gameId()}" target="_blank" rel="noopener">
       Open the board on another screen &#8599;</a>`;
   const q = (id) => document.getElementById(id);
-  if (q('m-rope')) q('m-rope').onclick = () => socket.emit('top-rope', { on: !you.topRope });
+  if (q('m-rope')) q('m-rope').onclick = () => {
+    if (!you.topRope && (you.topRopeWait || 0) > 0) return;
+    socket.emit('top-rope', { on: !you.topRope });
+  };
   if (q('m-target')) q('m-target').onclick = () => pickTarget(you);
   if (q('m-bounty')) q('m-bounty').onclick = () => pickBounty(you);
   const lv = q('lagv');

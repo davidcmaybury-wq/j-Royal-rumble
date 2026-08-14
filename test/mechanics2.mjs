@@ -74,9 +74,26 @@ console.log('\nLONGEVITY');
     late.map(x=>`clue ${x.n} after ${x.tenure}`).join(', '));
 }
 
+console.log('\nTOP ROPE COOLDOWN');
+{
+  const g=mk({topRope:true,topRopeCooldown:5,longevity:false,categorySweep:false});
+  const me=g.live()[0].id;
+  ck('you can climb', g.setTopRope(me,true));
+  g.resolveClue(...openIn(g,0),{winnerId:me,missedIds:[]});
+  ck('the declaration lasts one clue', !g.players.get(me).topRope);
+  ck('and you cannot climb straight back up', !g.setTopRope(me,true),
+    `${g.topRopeWait(me)} clues to wait`);
+  for(let i=0;i<3;i++) g.resolveClue(...openIn(g,0),{winnerId:me,missedIds:[]});
+  ck('still not after three', !g.setTopRope(me,true), `${g.topRopeWait(me)} to go`);
+  g.resolveClue(...openIn(g,1),{winnerId:me,missedIds:[]});
+  ck('but yes after five', g.setTopRope(me,true), `waited ${5}`);
+  // Climbing down is never blocked.
+  ck('and stepping down is always allowed', g.setTopRope(me,false));
+}
+
 console.log('\nSAVE A PLAYER');
 {
-  const g=mk({longevity:false,categorySweep:false});
+  const g=mk({longevity:false,categorySweep:false,savePlayer:true});
   const [a,b,c]=g.live().map(p=>p.id);
   g.players.get(c).score=50;
   g.resolveClue(...openIn(g,0),{winnerId:a,missedIds:[c]});

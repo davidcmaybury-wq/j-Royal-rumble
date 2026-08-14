@@ -10,8 +10,13 @@ A Jeopardy!-format battle royale played over video call. Thirty players, three
 start, one survives. Built for David to host; players buzz on their phones, the
 host drives a console, the room watches a public screen.
 
-Live at `https://j-royal-rumble.fly.dev`, region `ord`. Repo
+**Live at `https://j-royal-rumble.net`** — a Lightsail VM in Ohio behind
+CloudFront, domain at Cloudflare. `infra/aws/HOSTING.md` is David's record of
+how it was built and is the authority for anything about the hosting. Repo
 `https://github.com/davidcmaybury-wq/j-Royal-rumble`.
+
+The old Fly app (`j-royal-rumble.fly.dev`, region `ord`) is what everything
+before August 2026 refers to.
 
 ## Shipping
 
@@ -32,10 +37,25 @@ This has bitten twice.
 `.github/workflows` — those are skipped and listed in the run summary. The
 download card strips `.gz`, so `.tar` is accepted too.
 
-**AWS**: `infra/aws/` holds a complete migration — CloudFormation stack, deploy
-workflow, log puller, runbook. Switched by the repository variable
-`DEPLOY_TARGET=aws`; anything else and Fly stays the deploy of record. Built and
-packaged but **never actually stood up**, so its first real run is unproven.
+**The live deploy is now manual**, and this is the most important thing to know
+about the current setup:
+
+```bash
+# SSH via the Lightsail console, then:
+cd /home/ubuntu/app && git pull && npm install --omit=dev && sudo systemctl restart rumble
+```
+
+`npm run ship` still commits and pushes, but **nothing downstream acts on it** —
+the box has to be told to pull. And because the deploy is a bare `git pull`,
+**the test suite no longer gates a release**; on Fly, all 32 suites ran before
+anything shipped. Run them locally before pushing, and say so when handing over
+a tarball.
+
+Restarting kills in-progress matches: they live in memory.
+
+I had designed a CloudFormation stack for this migration (EC2 + Caddy + ECR).
+David built something simpler and better suited, so that design was deleted —
+see `infra/aws/README.md`. Don't resurrect it.
 
 ## Layout
 
@@ -156,6 +176,11 @@ repo** — the library folder is his to fill.
 
 **Handbook figures are hand-typed** in `tools/make-handbook.py` rather than read
 from the code, so they drift. Offered to wire them up twice; no answer.
+
+**A toggle that renders but is never read back is invisible.** Five shipped that
+way — the render landed, the read did not, and the defaults were sensible enough
+that nobody noticed. `pagerefs.mjs` now checks every toggle in setup.html is
+read back and is a real engine setting.
 
 **Bounties are still untested in live play** — the mechanic has never fired in a
 real match. Worth checking whether the `B` key is discoverable.

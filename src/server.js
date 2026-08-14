@@ -683,6 +683,7 @@ class Match {
             : this.settings.startScore) - (p.bountyPlaced || 0), g.ceiling),
         tokenArt: this.roster.get(token)?.tokenArt || null,
         topRope: !!p.topRope,
+        topRopeWait: g.topRopeWait(p.id),
         target: p.target || null,
         targetedBy: [...g.players.values()].filter((x) => x.target === token && x.state === 'live')
           .map((x) => x.name),

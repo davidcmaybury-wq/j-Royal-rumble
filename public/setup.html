@@ -439,8 +439,14 @@ function render(keepEdits) {
     <p class="note" style="margin:-4px 0 14px">All off by default. They change how the game plays,
     not just how it looks — and they lean on keyboard controls, so think twice if the field is on phones.</p>
     ${adv('topRope', 'Top rope', s.topRope,
-      'A player can climb up between clues. That clue is worth double to them in both directions — '
+      'A player can climb up between clues, then must wait five clues before climbing again. '
+      + 'That clue is worth double to them in both directions — '
       + 'and their winnings ignore the ceiling, so the leaders have a reason to risk it too.')}
+    ${adv('savePlayer', 'Save a player', s.savePlayer,
+      'Anyone still in the ring can put money up to buy an eliminated player back. '
+      + 'Declared with S, settled at the next clue so nothing pauses, and several '
+      + 'people can chip in for one player. Partial amounts are allowed — a cheap '
+      + 'save is a weak save.')}
     ${adv('targeting', 'Targeting', s.targeting,
       'Aim at one player. Get it right and the whole pot comes out of them alone, everyone else spared. '
       + 'Get it wrong and they answer, and you pay the whole pot yourself. Visible to the room.')}
@@ -584,7 +590,12 @@ function collect() {
       delay: +g('delay').value, lockout: +g('lockout').value, secondsPerClue: +g('secondsPerClue').value,
       recordMatch: g('recordMatch').checked,
       topRope: g('topRope').checked, targeting: g('targeting').checked,
+      savePlayer: g('savePlayer').checked,
       bounties: g('bounties').checked, revival: g('revival').checked,
+      longevity: g('longevity').checked,
+      categorySweep: g('categorySweep').checked,
+      giftFromQueue: g('giftFromQueue').checked,
+      anonymousNext: g('anonymousNext').checked,
       revivalLimit: +g('revivalLimit').value || 1,
       revivalFraction: +g('revivalFraction').value,
       seasonRange: [+g('s-lo').value, +g('s-hi').value],

@@ -219,6 +219,11 @@ Off by default, each switched on separately.
 both directions, and your winnings ignore the ceiling. Strictly bad if you're
 near the cap: the downside is uncapped and the upside isn't.
 
+**Then wait five clues before climbing again.** Without a cooldown, anybody who
+decides doubling is worth it simply declares every clue, and it stops being a
+decision — it becomes a permanent stake setting the rest of the ring has to
+play against.
+
 **Targeting** — aim at one player, visible to the room. Win the clue and the
 whole pot comes from them alone, everyone else spared. Lose it to them and you
 pay the whole pot yourself while the rest of the ring walks.

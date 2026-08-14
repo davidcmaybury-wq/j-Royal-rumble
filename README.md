@@ -754,10 +754,19 @@ entirely.
 
 ## Deploying
 
-The app runs on either Fly or AWS, switched by one repository variable —
-`DEPLOY_TARGET=aws` and the AWS workflow takes over; anything else and Fly is
-the deploy of record. `infra/aws/MIGRATION.md` is the runbook: one small
-instance, Caddy TLS, a retained volume for the logs, about $7 a month.
+Live at <https://j-royal-rumble.net>: a Lightsail VM in Ohio running the server
+under systemd, behind CloudFront for HTTPS, domain at Cloudflare. About $7 a
+month. `infra/aws/HOSTING.md` has the full picture — instance, DNS records,
+certificate, and the gotchas found while building it.
+
+Deploying is a pull on the box:
+
+```bash
+cd /home/ubuntu/app && git pull && npm install --omit=dev && sudo systemctl restart rumble
+```
+
+Note that this does **not** run the test suite the way the old Fly deploy did,
+and that restarting ends any match in progress.
 
 
 **This app must run exactly one machine.** Matches live in memory, so a second

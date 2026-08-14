@@ -1,4 +1,4 @@
-name: deploy
+name: ci
 
 on:
   push:
@@ -62,7 +62,23 @@ jobs:
           node test/tokens.mjs
           node test/bots.mjs
           node test/setup-bots.mjs
+      # The live site moved to Lightsail, where deploying is a pull on the box.
+      # This workflow keeps running the whole suite on every push, because that
+      # is the safety net the move would otherwise have removed — a bare
+      # `git pull` will happily deploy a broken commit.
+      #
+      # The Fly deploy is kept behind a switch rather than deleted, so the old
+      # app can still be brought up to date if it is ever needed as a fallback.
+      # Set the repository variable DEPLOY_FLY=true to re-enable it.
       - uses: superfly/flyctl-actions/setup-flyctl@master
+        if: vars.DEPLOY_FLY == 'true'
       - run: flyctl deploy --remote-only
+        if: vars.DEPLOY_FLY == 'true'
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Where this goes
+        run: |
+          echo "Tests passed. The live site does not deploy from here."
+          echo "SSH the Lightsail box (see infra/aws/HOSTING.md), then:"
+          echo "  cd /home/ubuntu/app && git pull && npm install --omit=dev && sudo systemctl restart rumble"

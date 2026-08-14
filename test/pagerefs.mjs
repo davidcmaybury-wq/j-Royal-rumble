@@ -209,5 +209,29 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
     errs.length ? errs[0] : `${painters.length} renderers exercised`);
 }
 
+// --- a toggle that is never read back is decoration -----------------------
+//
+// Five settings shipped this way: the switch rendered, the host flipped it, and
+// nothing happened, because the edit that added the render anchored on a line
+// that did not match and the one adding the read never landed. The defaults
+// happened to be sensible, so nobody noticed.
+{
+  const src = readFileSync(new URL('../public/setup.html', import.meta.url), 'utf8');
+  const rendered = [...new Set([...src.matchAll(/adv\('(\w+)'/g)].map((m) => m[1]))];
+  const read = new Set([...src.matchAll(/g\('(\w+)'\)\.checked/g)].map((m) => m[1]));
+  const orphans = rendered.filter((id) => !read.has(id));
+  check('setup.html: every toggle it renders is also read back',
+    orphans.length === 0,
+    orphans.length ? orphans.join(', ') : `${rendered.length} toggles`);
+
+  // And every one of them has to be a real setting the engine knows about.
+  const eng = readFileSync(new URL('../src/engine.js', import.meta.url), 'utf8');
+  const block = eng.slice(eng.indexOf('DEFAULT_SETTINGS'), eng.indexOf('\n};', eng.indexOf('DEFAULT_SETTINGS')));
+  const known = new Set([...block.matchAll(/^\s*(\w+):/gm)].map((m) => m[1]));
+  const unknown = rendered.filter((id) => !known.has(id));
+  check('and every one is a setting the engine has a default for',
+    unknown.length === 0, unknown.join(', ') || 'all known');
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);
