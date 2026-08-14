@@ -170,7 +170,7 @@ font-family:"Anton",Impact,sans-serif;font-size:14px;letter-spacing:.05em;
 color:#FFF;text-shadow:0 0 5px #9A9AFF,0 1px 1px #000060}
 .bcell.gone{background:radial-gradient(ellipse 90% 75% at 50% 40%,#2222C8 0%,#1212A8 55%,#0A0A85 100%);
 color:transparent;text-shadow:none}
-.bcol{min-width:0}
+.bcol{min-width:0;display:grid;grid-template-rows:auto repeat(5,1fr)}
 .brow .bn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bclue{display:grid;place-items:center;min-height:44vh;text-align:center;padding:18px}
 .bmeta{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate)}
@@ -443,8 +443,10 @@ function boardHtml() {
   if (!W) return '<aside class="board"><div class="bwait">Loading the board...</div></aside>';
   const cols = (W.board || []).map((c) => '<div class="bcol">'
     + `<div class="bcat">${c.title}</div>`
+    // Same as the console: keep the value so the cell keeps its size, and let
+    // .gone make it transparent.
     + c.clues.map((x) => `<div class="bcell${x.revealed ? ' gone' : ''}">`
-        + (x.revealed ? '' : '$' + x.value) + '</div>').join('')
+        + '$' + x.value + '</div>').join('')
     + '</div>').join('');
   const ring = (W.live || []).map((p) => `<div class="brow">`
     + `<span class="bd">${p.draw}</span><span class="bn">${p.name}</span>`
