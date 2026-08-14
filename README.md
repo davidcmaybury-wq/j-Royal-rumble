@@ -754,6 +754,12 @@ entirely.
 
 ## Deploying
 
+The app runs on either Fly or AWS, switched by one repository variable —
+`DEPLOY_TARGET=aws` and the AWS workflow takes over; anything else and Fly is
+the deploy of record. `infra/aws/MIGRATION.md` is the runbook: one small
+instance, Caddy TLS, a retained volume for the logs, about $7 a month.
+
+
 **This app must run exactly one machine.** Matches live in memory, so a second
 machine means a host can create a match on one and have players land on the
 other — which surfaces as "bad host key" and "no such game". After any

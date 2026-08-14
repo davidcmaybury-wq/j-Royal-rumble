@@ -1,0 +1,197 @@
+# J! Royal Rumble on AWS — one small machine, which is what this app is.
+#
+# The shape mirrors Fly exactly: a single always-on instance (matches live in
+# memory, so there must be exactly one), a persistent disk for match logs that
+# survives deploys, and TLS in front. An ALB alone costs more than this whole
+# stack, so ingress is Caddy on the instance with automatic Let's Encrypt.
+#
+#   aws cloudformation deploy \
+#     --stack-name rumble --template-file infra/aws/stack.yml \
+#     --capabilities CAPABILITY_NAMED_IAM \
+#     --parameter-overrides DomainName=rumble.example.com
+#
+# Cost, us-east-2, on-demand: t4g.micro $6.10/mo + 10GB gp3 $0.80 + EIP free
+# while attached + ECR storage pennies. About $7/mo. (For comparison an
+# Application Load Balancer is ~$16/mo before it has served a byte.)
+AWSTemplateFormatVersion: '2010-09-09'
+Description: J! Royal Rumble - single instance, Caddy TLS, persistent /data
+
+Parameters:
+  DomainName:
+    Type: String
+    Description: The domain Caddy will serve and fetch a certificate for.
+  InstanceType:
+    Type: String
+    Default: t4g.micro
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The default VPC is fine.
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Any public subnet in that VPC.
+
+Mappings:
+  # Amazon Linux 2023 ARM64, per region (resolved via SSM alias at launch).
+  Dummy: { Dummy: { Dummy: dummy } }
+
+Resources:
+  Repo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: rumble
+      LifecyclePolicy:
+        # Keep the last ten images; this app ships several times a day.
+        LifecyclePolicyText: |
+          {"rules":[{"rulePriority":1,"selection":{"tagStatus":"any",
+            "countType":"imageCountMoreThan","countNumber":10},
+            "action":{"type":"expire"}}]}
+
+  Sg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: rumble web
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80,  ToPort: 80,  CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0 }
+      # No port 22: deploys and shell access go through SSM, which means no
+      # keys to lose and every session is logged.
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: rumble-instance
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+
+  Profile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: { Roles: [!Ref Role] }
+
+  DataVolume:
+    Type: AWS::EC2::Volume
+    DeletionPolicy: Retain
+    Properties:
+      # Retain: the match logs are the project's records. Deleting the stack
+      # must not delete them.
+      AvailabilityZone: !GetAtt Instance.AvailabilityZone
+      Size: 10
+      VolumeType: gp3
+      Tags: [{ Key: Name, Value: rumble-data }]
+
+  Mount:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref Instance
+      VolumeId: !Ref DataVolume
+      Device: /dev/xvdf
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64}}'
+      IamInstanceProfile: !Ref Profile
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds: [!Ref Sg]
+      Tags: [{ Key: Name, Value: rumble }]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          dnf install -y docker
+          systemctl enable --now docker
+          curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64" \
+            -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
+
+          # The data disk. Format only if blank — this instance may be replaced
+          # while the volume, and the logs on it, live on.
+          while [ ! -e /dev/xvdf ] && [ ! -e /dev/nvme1n1 ]; do sleep 2; done
+          DEV=$(test -e /dev/nvme1n1 && echo /dev/nvme1n1 || echo /dev/xvdf)
+          blkid "$DEV" || mkfs.ext4 "$DEV"
+          mkdir -p /data && echo "$DEV /data ext4 defaults,nofail 0 2" >> /etc/fstab
+          mount -a
+
+          mkdir -p /srv/rumble /data/logs /data/caddy
+          cat > /srv/rumble/docker-compose.yml <<'EOF'
+          services:
+            app:
+              image: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/rumble:latest
+              restart: unless-stopped
+              environment: [ "PORT=8080", "NODE_ENV=production" ]
+              volumes: [ "/data:/data" ]
+              # Matches live in memory: exactly one replica, never scaled.
+            caddy:
+              image: caddy:2
+              restart: unless-stopped
+              ports: [ "80:80", "443:443" ]
+              volumes:
+                - /srv/rumble/Caddyfile:/etc/caddy/Caddyfile:ro
+                - /data/caddy:/data
+          EOF
+          cat > /srv/rumble/Caddyfile <<'EOF'
+          ${DomainName} {
+            reverse_proxy app:8080
+          }
+          EOF
+          cat > /usr/local/bin/rumble-deploy <<'EOF'
+          #!/bin/bash
+          # Pull the newest image and restart. Run by SSM from GitHub Actions.
+          set -euo pipefail
+          aws ecr get-login-password --region ${AWS::Region} \
+            | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+          cd /srv/rumble && docker-compose pull app && docker-compose up -d
+          docker image prune -f
+          EOF
+          chmod +x /usr/local/bin/rumble-deploy
+          rumble-deploy || true   # first boot may predate the first image push
+
+  Ip:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref Instance
+      Tags: [{ Key: Name, Value: rumble }]
+
+  Deployer:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: rumble-deployer
+      Policies:
+        - PolicyName: push-and-restart
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ 'ecr:GetAuthorizationToken' ]
+                Resource: '*'
+              - Effect: Allow
+                Action: [ 'ecr:BatchCheckLayerAvailability', 'ecr:PutImage',
+                          'ecr:InitiateLayerUpload', 'ecr:UploadLayerPart',
+                          'ecr:CompleteLayerUpload', 'ecr:BatchGetImage',
+                          'ecr:GetDownloadUrlForLayer' ]
+                Resource: !GetAtt Repo.Arn
+              - Effect: Allow
+                Action: [ 'ssm:SendCommand' ]
+                Resource:
+                  - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${Instance}
+                  - !Sub arn:aws:ssm:${AWS::Region}::document/AWS-RunShellScript
+              - Effect: Allow
+                Action: [ 'ssm:GetCommandInvocation' ]
+                Resource: '*'
+
+Outputs:
+  PublicIp:
+    Value: !Ref Ip
+    Description: Point the domain's A record here.
+  InstanceId:
+    Value: !Ref Instance
+    Description: For the GitHub secret AWS_INSTANCE_ID.
+  EcrRepo:
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/rumble

@@ -1,0 +1,176 @@
+# CLAUDE.md
+
+Context for picking this project up cold. Read this first, then `README.md` for
+what the thing does and `docs/j-royal-rumble-handbook.pdf` for why it does it
+that way.
+
+## What this is
+
+A Jeopardy!-format battle royale played over video call. Thirty players, three
+start, one survives. Built for David to host; players buzz on their phones, the
+host drives a console, the room watches a public screen.
+
+Live at `https://j-royal-rumble.fly.dev`, region `ord`. Repo
+`https://github.com/davidcmaybury-wq/j-Royal-rumble`.
+
+## Shipping
+
+```bash
+tar xzf rumble-code-vX.Y.Z.tar.gz && rm rumble-code-vX.Y.Z.tar.gz
+npm run ship "what changed"
+```
+
+Tarballs handed to David are **full snapshots** — a later one carries
+everything from earlier ones, so a skipped version is not a lost version.
+
+`ship.sh` does **not** pull first. If the remote has moved (a phone deploy, an
+edit in the Codespace) the push is rejected; `git pull --rebase` and ship again.
+This has bitten twice.
+
+**Phone deploys**: upload a tarball to `incoming/` on github.com and the
+`unpack` workflow extracts, commits and deploys. It cannot modify
+`.github/workflows` — those are skipped and listed in the run summary. The
+download card strips `.gz`, so `.tar` is accepted too.
+
+**AWS**: `infra/aws/` holds a complete migration — CloudFormation stack, deploy
+workflow, log puller, runbook. Switched by the repository variable
+`DEPLOY_TARGET=aws`; anything else and Fly stays the deploy of record. Built and
+packaged but **never actually stood up**, so its first real run is unproven.
+
+## Layout
+
+```
+src/engine.js      rules, scoring, overtime, the fairness grid. No I/O.
+src/server.js      express + socket.io, match lifecycle, bot driving, logs
+src/bots.js        Matt Schiffler's real generator, ported
+public/*.html      console, buzzer, setup, watch, admin — each self-contained
+public/wrestlers.js  parametric 8-bit sprites: avatars AND animation figures
+public/toss.js     the three animations, generated at runtime
+public/estimate.js length estimation + setup warnings; imports the engine
+test/              32 .mjs suites + harness.js, all wired into deploy.yml
+tools/             handbook, audio, box scores, analysis charts, ship
+```
+
+`src/engine.js` is served to the browser at `/src/engine.js` so `estimate.js`
+can `import '../src/engine.js'` and have it resolve **both** in node and in the
+browser. Don't "fix" that path.
+
+## Running the tests
+
+```bash
+node src/server.js &          # give it ~25s in a slow sandbox
+for t in wrestlers mechanics2 latecomer lag watch logdetail warmup timeout \
+         tokens botcal otvalue mechanics-ui overtime logstore retoss \
+         entry-countdown pagerefs bots setup-bots setup e2e delay record \
+         buzzer avatar mechanics-live perf escapes; do node test/$t.mjs; done
+for t in mechanics estimate boxparse boxfetch; do node test/$t.mjs; done
+node test/harness.js          # preset sanity: length, back-half, skill
+```
+
+In this sandbox the server is killed periodically. **A suite that fails with
+`fetch failed` or `ECONNREFUSED` is not a real failure** — restart the server
+and re-run before believing it.
+
+`test/pagerefs.mjs` is the most valuable one: it parses every page, checks that
+every id the script binds to exists, that every class it applies is styled, and
+that no import goes unused, then executes the renderers against a stub DOM. It
+has caught several bugs mid-build, including CSS patches that silently missed
+their anchor.
+
+## Conventions that matter
+
+**Comments explain why, not what.** Especially where a decision looks wrong:
+every non-obvious constant should say what was measured to land on it.
+
+**Test names read as sentences** — `check('a raised clue moves both players by
+the same amount', ...)`. The output is meant to be readable as a description of
+the rules.
+
+**Corrections are recorded, not deleted.** The handbook still contains the old
+argument for a decaying ceiling, marked as overturned, with the new finding
+after it. A design document that quietly deletes its wrong answers is less
+useful than one that shows the correction.
+
+## Hard-won findings — do not re-litigate without measuring
+
+**`sort(() => rng() - 0.5)` is not a shuffle.** It leaves a heavy bias toward
+the original order. It reported three players in identical starting positions
+winning at 25.8%, 14.2% and 10.4%, and reversed a ceiling recommendation. Use
+Fisher-Yates everywhere. If a simulation produces an asymmetry between draws
+1–3, that is the bug, because they all start together.
+
+**The ceiling is the dominant fairness lever**, not the entry interval. It used
+to jump 7,500 → 11,000 at 25 players, which confounded every measurement before
+it was found — it made 24 players look far less fair than 30. `autoCeiling(n)`
+now scales it, and fairness holds across a far wider range of intervals than the
+confounded data suggested.
+
+**A falling ceiling favours late draws.** It clips whoever is ahead, and that is
+nearly always an early entrant who has been accumulating; a latecomer arrives at
+a fixed stake untouched. Decay is zero during the main match.
+
+**But removing it entirely removed the only drain.** A symmetric exchange with
+nothing leaking never resolves — evenly matched robots ran 400 clues with no
+elimination. Escalating stakes does not help: doubling both sides of an even
+trade leaves it even. So the ceiling falls **only once overtime opens**.
+
+**Longer matches are less fair, shorter ones are less skilful.** No formula
+predicted the spread well (best r = 0.71), so `FAIRNESS` in `src/engine.js` is
+the measurement itself — 3,000 matches per field-size/interval pair. Prefer a
+lookup you measured to a rule you guessed.
+
+**Overtime took three attempts**, each failure recorded in the handbook. Current
+shape: opens when the queue empties, or on a very long stall (8 escalation
+windows ≈ 48 clues) even with people queued. At 3 windows it fired during the
+entry phase and cost 11 minutes of length and 20 points of fairness. The
+multiplier **ratchets** — an elimination stops the climb, doesn't reset it. The
+winner of a raised clue **banks the full amount** and is clipped next clue; the
+old behaviour paid 500 on a 2,000 clue while charging the loser 2,000.
+
+**Warm-up buzzes must stay out of the live record.** A player eliminated at
+clue 9 who kept buzzing finished a real match credited with 159 attempts against
+a real 1.
+
+**Bot calibration needs 16 buzzes, not 6.** Measured against two real matches,
+the first six gave 302ms and 242ms where the settled figures were 85ms and 60ms.
+People start slowly.
+
+## Known-flaky patterns, all fixed but worth recognising
+
+- **Double evaluation in a `check()`** — calling the same clock-reading function
+  in both the condition and the message means they measure different moments.
+  Failed CI while printing the value that would have passed.
+- **Betting a suite on one dice roll** — `bots.mjs` asserted that one of three
+  robots would take a given clue. All three decline about 0.4% of the time. It
+  now plays up to six clues. I dismissed this as flakiness twice before
+  measuring it; don't.
+
+## Outstanding
+
+**Entrance music** is the one queue item never started: per-player uploaded clip
+or YouTube link with a start time, plus a library folder seeded with original
+synthesised 8-bit themes in three moods (horror, wrestling, sports), ~10s each,
+loudness-matched. Plays through the watch screen with sound enabled. David
+accepts the IP risk on user uploads; **do not commit copyrighted clips to the
+repo** — the library folder is his to fill.
+
+**Handbook figures are hand-typed** in `tools/make-handbook.py` rather than read
+from the code, so they drift. Offered to wire them up twice; no answer.
+
+**Bounties are still untested in live play** — the mechanic has never fired in a
+real match. Worth checking whether the `B` key is discoverable.
+
+**Softening the double-dip at high overtime multipliers** was raised and left
+open: at ×8 a missed clue costs the value twice, which can eliminate a player
+from 8,000 points in one press.
+
+## Live data
+
+Two human matches recorded. Pace 19.3s → 16.8s median per clue (the model
+assumes 17.5). The length estimator is 2-for-2: predicted 100 clues/29 min
+against 84/31, and 75/22 against 69/21. Human buzz median ~150ms, with 49%
+under 150ms.
+
+`data/box-scores.json` (2,784 player-games) and `data/jometry-box.csv` (3,339
+with per-round splits) back the bot model. j-ometry blocks bots, so David
+downloaded that one by hand — don't try to re-fetch it.
