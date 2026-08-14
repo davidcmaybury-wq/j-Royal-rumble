@@ -910,8 +910,22 @@ app.get('/api/library', (_req, res) => {
     version: VERSION });
 });
 
-app.get('/', (_req, res) => res.sendFile(join(__dir, '../public/setup.html')));
+// The front door. It used to be the host setup page, which meant anybody who
+// typed the domain landed on the controls for running a match.
+app.get('/', (_req, res) => res.sendFile(join(__dir, '../public/welcome.html')));
+
+// Setting up a match. The welcome screen mints one over the API and sends the
+// host here; /host/:id, further down, is the console for a match under way.
 app.get('/setup/:id', (_req, res) => res.sendFile(join(__dir, '../public/setup.html')));
+
+// Does this room exist? Used by the welcome screen before it sends anybody to a
+// buzzer, because a mistyped code used to mean landing on a page that simply
+// never connected — which reads as the site being broken rather than a typo.
+// Deliberately says nothing else about the match.
+app.get('/api/match/:id/exists', (req, res) => {
+  const m = matches.get((req.params.id || '').toUpperCase());
+  res.json({ exists: !!m, phase: m ? m.phase : null });
+});
 app.get('/api/match/:id/record', (req, res) => {
   const m = auth(req) || (matches.get((req.params.id || '').toUpperCase()));
   if (!m) return res.status(404).json({ error: 'no such match' });

@@ -162,6 +162,21 @@ a real 1.
 the first six gave 302ms and 242ms where the settled figures were 85ms and 60ms.
 People start slowly.
 
+## Routes
+
+```
+/                 welcome: play / watch / host
+/setup/:id        set a match up (host key in the URL fragment)
+/host/:id         the host console
+/j/:id            a player's buzzer
+/watch/:id        the public read-only board
+/api/match/:id/exists   does this room exist — used by the welcome screen
+```
+
+The host key travels in the **fragment**, which browsers do not send to the
+server, keeping it out of logs and referrer headers. Don't move it to a query
+string.
+
 ## Editing a workflow
 
 `secrets` is **not** available in an `if:`, at step or job level. GitHub rejects
@@ -182,12 +197,7 @@ will, and also checks that every suite a workflow names actually exists.
 
 ## Queued, not started
 
-**1. A welcome screen.** `/` currently serves the host setup page, which means
-anybody who types the domain lands on the controls for running a match. Should
-be a landing page offering **play / host / watch**, with a room-code box.
-Setup moves to `/host`.
-
-**2. Two buzzer modes.** The current buzzer is the *light* one and assumes the
+**1. Two buzzer modes.** The current buzzer is the *light* one and assumes the
 board is on a shared screen. A *full* mode folds the watch view in — board,
 scores, the live clue — for a player who is not screen-sharing.
 
@@ -200,7 +210,7 @@ is absent, so full mode must reuse `watchView()` rather than the host view.
 Copying the host view and deleting fields is the mistake that guard exists to
 catch.
 
-**3. Countdown lights on the watch screen.** The console has a five-light
+**2. Countdown lights on the watch screen.** The console has a five-light
 lectern (`.lectern`, driven by `startLectern`/`stopLectern` on the race
 opening). The watch screen has the animations but no lights, so a room watching
 it cannot see how long is left. Mirror it. Note the re-toss reopens the race and

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;--chalk:#EEEBE1;
+--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:5px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--chalk);
+font:400 16px/1.5 "IBM Plex Sans",system-ui,sans-serif;min-height:100dvh;
+display:grid;place-items:center;padding:24px}
+button,input{font:inherit;color:inherit}
+.wrap{width:100%;max-width:660px}
+
+header{text-align:center;margin-bottom:30px}
+h1{font-family:"Anton",Impact,sans-serif;font-size:clamp(34px,9vw,58px);
+letter-spacing:.02em;line-height:.98}
+h1 .j{color:var(--brass)}
+.tag{color:var(--slate);font-size:14.5px;margin-top:8px}
+
+/* Three doors. Play first and biggest: most people arriving here are players,
+   and a host already knows where they are going. */
+.doors{display:grid;gap:12px}
+.door{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+padding:18px 20px;cursor:pointer;text-align:left;width:100%;
+transition:border-color .12s ease,background .12s ease}
+.door:hover,.door:focus-visible{border-color:var(--brass);background:var(--panel2);outline:none}
+.door .ic{width:34px;height:34px}
+.door h2{font-size:17px;font-weight:500;letter-spacing:.01em}
+.door p{color:var(--slate);font-size:13.5px;margin-top:2px}
+.door .go{color:var(--slate);font-size:20px}
+.door:hover .go{color:var(--brass)}
+
+/* The code box only appears once you have said what you want to do with it. */
+.ask{background:var(--panel);border:1px solid var(--brass);border-radius:var(--r);
+padding:20px;margin-top:12px;display:none}
+.ask.on{display:block}
+.ask label{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+color:var(--slate);margin-bottom:9px}
+.row{display:flex;gap:10px}
+input[type=text]{flex:1;min-width:0;background:var(--ink);border:1px solid var(--line);
+border-radius:var(--r);padding:14px 16px;color:var(--chalk);
+font-family:"IBM Plex Mono",monospace;font-size:26px;letter-spacing:.30em;
+text-transform:uppercase;text-align:center}
+input[type=text]:focus{outline:none;border-color:var(--brass)}
+input[type=text]::placeholder{color:#33406B;letter-spacing:.30em}
+.go-btn{background:var(--brass);color:var(--ink);border:0;border-radius:var(--r);
+padding:0 24px;font-weight:500;cursor:pointer;white-space:nowrap}
+.go-btn:hover{background:#E8BC52}
+.go-btn:disabled{opacity:.4;cursor:default}
+.err{color:var(--alarm);font-size:13px;margin-top:10px;min-height:1.2em}
+.back{background:none;border:0;color:var(--slate);font-size:13px;cursor:pointer;
+margin-top:12px;text-decoration:underline;text-underline-offset:3px}
+.back:hover{color:var(--chalk)}
+
+footer{text-align:center;margin-top:26px;color:#3C486E;font-size:12.5px}
+footer a{color:var(--slate);text-decoration:none;border-bottom:1px solid #2A3556}
+footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
+.sep{margin:0 8px}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="j">J!</span> ROYAL RUMBLE</h1>
+    <p class="tag">Thirty players. Three start. One survives.</p>
+  </header>
+
+  <div class="doors" id="doors">
+    <button class="door" data-go="play">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" stroke="#D6A93F" stroke-width="1.6"/>
+        <circle cx="12" cy="12" r="3.4" fill="#E24A3C"/>
+      </svg>
+      <span><h2>Play</h2><p>Join a match. This device becomes your buzzer.</p></span>
+      <span class="go">&rsaquo;</span>
+    </button>
+
+    <button class="door" data-go="watch">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="13" rx="1.5" stroke="#4FB286" stroke-width="1.6"/>
+        <path d="M8 21h8" stroke="#4FB286" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span><h2>Watch</h2><p>Follow the board on your own screen. No sign-in.</p></span>
+      <span class="go">&rsaquo;</span>
+    </button>
+
+    <button class="door" data-go="host">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 19V9m0 0 7-5 7 5v10" stroke="#7C88AB" stroke-width="1.6"
+              stroke-linejoin="round"/>
+        <path d="M3 19h18" stroke="#7C88AB" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span><h2>Host a match</h2><p>Set the rules, invite people, run the board.</p></span>
+      <span class="go">&rsaquo;</span>
+    </button>
+  </div>
+
+  <div class="ask" id="ask">
+    <label id="asklabel">Room code</label>
+    <div class="row">
+      <input type="text" id="code" maxlength="4" placeholder="ABCD"
+             autocomplete="off" autocapitalize="characters" spellcheck="false"
+             inputmode="text" aria-labelledby="asklabel">
+      <button class="go-btn" id="enter">Go</button>
+    </div>
+    <div class="err" id="err" role="status"></div>
+    <button class="back" id="back">Back</button>
+  </div>
+
+  <footer>
+    <a href="/rules">Rules</a><span class="sep">·</span>
+    <a href="/handbook">Handbook</a><span class="sep">·</span>
+    <span id="ver">&nbsp;</span>
+  </footer>
+</div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+let mode = null;
+
+// The code is checked before we send anybody anywhere. A wrong code used to
+// mean landing on a buzzer page that simply never connected, which reads as the
+// site being broken rather than as a typo.
+async function go() {
+  const code = $('code').value.trim().toUpperCase();
+  if (!/^[A-Z0-9]{4}$/.test(code)) {
+    $('err').textContent = 'A room code is four letters.';
+    return;
+  }
+  $('enter').disabled = true;
+  $('err').textContent = '';
+  try {
+    const r = await fetch(`/api/match/${code}/exists`);
+    const j = await r.json();
+    if (!j.exists) {
+      $('err').textContent = `No match called ${code}. Check with whoever is hosting.`;
+      $('enter').disabled = false;
+      return;
+    }
+    location.href = (mode === 'watch' ? '/watch/' : '/j/') + code;
+  } catch {
+    // If the check itself fails, don't strand them — let them through and let
+    // the buzzer page report the trouble.
+    location.href = (mode === 'watch' ? '/watch/' : '/j/') + code;
+  }
+}
+
+for (const b of document.querySelectorAll('.door')) {
+  b.onclick = async () => {
+    const what = b.dataset.go;
+    if (what === 'host') {
+      b.querySelector('h2').textContent = 'Setting up...';
+      const m = await (await fetch('/api/match', { method: 'POST',
+        headers: { 'content-type': 'application/json' }, body: '{}' })).json();
+      // The host key lives in the fragment, which browsers do not send to the
+      // server and which keeps it out of logs and referrers.
+      location.href = `/setup/${m.gameId}#${m.hostKey}`;
+      return;
+    }
+    mode = what;
+    $('doors').style.display = 'none';
+    $('ask').classList.add('on');
+    $('asklabel').textContent = what === 'watch'
+      ? 'Room code to watch' : 'Room code to join';
+    $('code').focus();
+  };
+}
+
+$('back').onclick = () => {
+  $('ask').classList.remove('on');
+  $('doors').style.display = '';
+  $('err').textContent = '';
+  $('code').value = '';
+};
+$('enter').onclick = go;
+$('code').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+$('code').addEventListener('input', () => {
+  $('err').textContent = '';
+  $('enter').disabled = false;
+});
+
+// A code in the address bar — from a shared link — skips straight through.
+const pre = (location.hash.match(/^#([A-Za-z0-9]{4})$/) || [])[1];
+if (pre) { mode = 'play'; $('code').value = pre.toUpperCase(); go(); }
+
+fetch('/api/health').then((r) => r.json())
+  .then((h) => { $('ver').textContent = 'v' + h.version; })
+  .catch(() => {});
+</script>
+</body></html>

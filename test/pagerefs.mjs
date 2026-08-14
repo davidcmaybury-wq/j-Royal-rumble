@@ -10,7 +10,7 @@ import { readFileSync } from 'fs';
 let fails = 0;
 const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${d ? '  — ' + d : ''}`); if (!ok) fails++; };
 
-for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html']) {
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html']) {
   const html = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
   const i = html.indexOf('<script type="module">');
   const js = html.slice(i, html.lastIndexOf('</script>'));
@@ -62,7 +62,7 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
 // it matched on had changed. The dialog rendered as unstyled text at the foot
 // of the page — valid HTML, valid JS, no error anywhere, and completely
 // unusable. Checking ids was not enough; classes carry the layout.
-for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html']) {
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html']) {
   const html = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
   const i = html.indexOf('<script type="module">');
   const js = html.slice(i, html.lastIndexOf('</script>'));

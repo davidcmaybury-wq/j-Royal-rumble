@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.47.1",
+  "version": "0.48.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -53,7 +53,8 @@
     "analysis": "node tools/analysis-data.mjs && python3 tools/plot-analysis.py",
     "moved-test": "node test/moved.mjs",
     "health-test": "node test/health.mjs",
-    "workflows-test": "node test/workflows.mjs"
+    "workflows-test": "node test/workflows.mjs",
+    "welcome-test": "node test/welcome.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

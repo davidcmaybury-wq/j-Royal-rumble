@@ -752,6 +752,21 @@ The source is the public dataset on GitHub, not j-archive. The archive's
 maintainer asked not to be crawled, and this keeps us off their server
 entirely.
 
+## The welcome screen
+
+`/` offers **play**, **watch** or **host a match**. It used to serve the host
+setup page, so anybody who typed the domain landed on the controls for running
+a match.
+
+Play and watch ask for the four-letter room code and **check it exists before
+sending anybody anywhere** — a mistyped code used to mean landing on a buzzer
+that simply never connected, which reads as the site being broken rather than
+as a typo. Hosting mints a match over the API and lands on `/setup/CODE` with
+the host key in the URL fragment, which browsers do not send to the server.
+
+A code in the address fragment (`/#ABCD`) skips straight through to the buzzer,
+so a shared link still works in one tap.
+
 ## Deploying
 
 Live at <https://j-royal-rumble.net>: a Lightsail VM in Ohio running the server
