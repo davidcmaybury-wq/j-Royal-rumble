@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble — control room</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;--chalk:#EEEBE1;
+--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:5px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--chalk);
+font:400 15px/1.5 "IBM Plex Sans",system-ui,sans-serif;padding:24px 20px 60px}
+.wrap{max-width:900px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.top a{color:var(--slate);text-decoration:none;font-size:13px}
+.top a:hover{color:var(--brass)}
+h1{font-family:"Anton",Impact,sans-serif;font-size:30px;letter-spacing:.02em;margin:10px 0 2px}
+h1 .j{color:var(--brass)}
+.sub{color:var(--slate);font-size:13px;margin-bottom:20px}
+h2{font-family:"Anton",Impact,sans-serif;font-size:16px;letter-spacing:.05em;
+color:var(--brass);margin:26px 0 9px}
+.warnbox{background:#2A1A08;border:1px solid #6A4A12;border-left-width:3px;
+border-radius:var(--r);padding:12px 14px;font-size:13px;color:#E8C77A;margin-bottom:16px}
+.warnbox code{font-family:"IBM Plex Mono",monospace;background:#00000044;padding:1px 5px;
+border-radius:3px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+color:var(--slate);font-weight:400;padding:0 8px 7px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid #1C2440}
+tr:hover td{background:var(--panel)}
+.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.code{font-family:"IBM Plex Mono",monospace;letter-spacing:.1em;color:var(--chalk)}
+.tag{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;
+border-radius:3px;border:1px solid var(--line);color:var(--slate)}
+.tag.live{border-color:var(--live);color:var(--live)}
+.tag.lobby{border-color:var(--brass);color:var(--brass)}
+.idle{color:var(--slate)}
+.idle.warm{color:var(--brass)}
+.idle.hot{color:var(--alarm)}
+button{font:inherit;background:none;border:1px solid var(--line);color:var(--slate);
+border-radius:var(--r);padding:5px 12px;cursor:pointer;font-size:13px}
+button:hover{border-color:var(--alarm);color:var(--alarm)}
+button.confirm{border-color:var(--alarm);color:var(--ink);background:var(--alarm);font-weight:500}
+a.open{color:var(--slate);text-decoration:none;font-size:12.5px;margin-right:10px}
+a.open:hover{color:var(--brass)}
+.none{color:var(--slate);font-size:13.5px;padding:14px 0}
+.foot{margin-top:30px;color:#3C486E;font-size:12px}
+</style></head>
+<body><div class="wrap">
+  <div class="top"><a href="/">&larr; J! Royal Rumble</a><span class="foot" id="ver"></span></div>
+  <h1><span class="j">J!</span> CONTROL ROOM</h1>
+  <div class="sub" id="sub">Loading...</div>
+  <div id="guard"></div>
+
+  <h2>Matches on this server</h2>
+  <div id="live"></div>
+
+  <h2>Saved logs</h2>
+  <div id="logs"></div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+// The key travels in the fragment, which browsers do not send to the server,
+// so it stays out of logs and referrers. It is only appended to requests.
+const key = location.hash.slice(1);
+const auth = key ? { 'x-admin-key': key } : {};
+let pending = null;               // the match awaiting a second click
+
+const ago = (s) => s < 60 ? s + 's'
+  : s < 3600 ? Math.round(s / 60) + ' min'
+  : (s / 3600).toFixed(1) + ' hr';
+
+async function load() {
+  let d;
+  try {
+    const r = await fetch('/api/control', { headers: auth });
+    d = await r.json();
+    if (d.error) throw new Error(d.error);
+  } catch (e) {
+    $('sub').textContent = e.message === 'bad admin key'
+      ? 'That admin key is wrong. Add it to the address after a # symbol.'
+      : 'Could not reach the server.';
+    return;
+  }
+
+  $('ver').textContent = 'v' + d.version;
+  $('sub').textContent = `Up ${ago(d.uptimeSeconds)}. Matches with no activity for `
+    + `${d.idleMinutes} minutes end themselves.`;
+
+  $('guard').innerHTML = d.guarded ? '' : `<div class="warnbox">
+    This page is <strong>not protected</strong>. Anybody who finds the address can end
+    a match in progress. To lock it, set <code>RUMBLE_ADMIN_KEY</code> on the server
+    and open this page as <code>/control#your-key</code>.</div>`;
+
+  const ms = d.matches || [];
+  $('live').innerHTML = !ms.length
+    ? '<div class="none">Nothing running.</div>'
+    : `<table><tr><th>Room</th><th>State</th><th>People</th><th>Clues</th>
+       <th>Quiet for</th><th></th></tr>${ms.map((m) => {
+      const heat = m.idleSeconds > 480 ? 'hot' : m.idleSeconds > 240 ? 'warm' : '';
+      return `<tr>
+        <td class="code">${m.id}</td>
+        <td><span class="tag ${m.phase}">${m.phase}</span></td>
+        <td class="num">${m.connected}/${m.humans}${m.players > m.humans
+          ? ` <span class="idle">+${m.players - m.humans} bots</span>` : ''}</td>
+        <td class="num">${m.clues}</td>
+        <td class="num idle ${heat}">${ago(m.idleSeconds)}</td>
+        <td style="text-align:right">
+          <a class="open" href="/watch/${m.id}" target="_blank" rel="noopener">watch</a>
+          <button data-end="${m.id}" class="${pending === m.id ? 'confirm' : ''}">${
+            pending === m.id ? 'Really end it?' : 'End'}</button></td></tr>`;
+    }).join('')}</table>`;
+
+  for (const b of $('live').querySelectorAll('[data-end]')) {
+    b.onclick = () => end(b.dataset.end);
+  }
+
+  const ls = d.logs || [];
+  $('logs').innerHTML = !ls.length
+    ? '<div class="none">No logs saved yet.</div>'
+    : `<table><tr><th>When</th><th>Players</th><th>Clues</th><th>Length</th>
+       <th>Winner</th><th></th></tr>
+       ${ls.map((l) => `<tr>
+        <td>${l.at ? new Date(l.at).toLocaleString() : '—'}${
+          l.partial ? ' <span class="tag">partial</span>' : ''}</td>
+        <td class="num">${l.players ?? '—'}</td>
+        <td class="num">${l.clues ?? '—'}</td>
+        <td class="num">${l.minutes != null ? Math.round(l.minutes) + ' min' : '—'}</td>
+        <td>${l.winner || '—'}</td>
+        <td style="text-align:right"><a class="open"
+          href="/api/logs/${encodeURIComponent(l.file)}${key ? '?key=' + encodeURIComponent(key) : ''}"
+          target="_blank" rel="noopener">open</a></td></tr>`).join('')}</table>`;
+  $('foot').textContent = `${ls.length} logs. Reloads every 5 seconds.`;
+}
+
+// Two clicks, because ending somebody's match mid-clue is not undoable.
+async function end(id) {
+  if (pending !== id) {
+    pending = id;
+    await load();
+    setTimeout(() => { if (pending === id) { pending = null; load(); } }, 5000);
+    return;
+  }
+  pending = null;
+  await fetch(`/api/control/${id}/end`, { method: 'POST', headers: auth });
+  await load();
+}
+
+load();
+setInterval(() => { if (!pending) load(); }, 5000);
+</script>
+</body></html>

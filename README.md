@@ -799,6 +799,22 @@ the host key in the URL fragment, which browsers do not send to the server.
 A code in the address fragment (`/#ABCD`) skips straight through to the buzzer,
 so a shared link still works in one tap.
 
+## The control room
+
+`/control` lists every match on the server with how long each has been quiet,
+and ends any of them. Ending a live match records it properly and tells the
+host, rather than dropping it on the floor. Saved logs are on the same page.
+
+**Matches with no activity for ten minutes end themselves.** A match lives in
+memory until somebody ends it, and closing the tab is not ending it — a
+forgotten test match sat live for an hour and blocked a deploy, because the
+deploy guard quite correctly refuses to restart under a game in progress. Set
+`RUMBLE_IDLE_MINUTES` to change the window.
+
+The page is open unless `RUMBLE_ADMIN_KEY` is set, and says so plainly when it
+is not. With a key, open it as `/control#your-key` — the fragment is not sent
+to the server, so it stays out of logs.
+
 ## Deploying
 
 Live at <https://j-royal-rumble.net>: a Lightsail VM in Ohio running the server

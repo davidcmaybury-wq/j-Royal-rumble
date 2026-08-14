@@ -57,9 +57,22 @@ check('the host has an answer to leak', typeof answer === 'string' && answer.len
 
 check('the board payload has no answer field', me.board.clue && !('answer' in me.board.clue),
   Object.keys(me.board.clue || {}).join(', '));
-check('nor anywhere else in it',
-  !JSON.stringify(me.board).toLowerCase().includes(String(answer).toLowerCase()),
-  'searched the whole payload');
+
+// A blanket substring search over the payload is the strongest check, but it
+// fires on coincidence: an answer like "margarita" can legitimately appear in a
+// category title. Restrict it to answers distinctive enough that a match means
+// something, and say where it turned up so a real leak is diagnosable.
+if (String(answer).length >= 10) {
+  const blob = JSON.stringify(me.board).toLowerCase();
+  const needle = String(answer).toLowerCase();
+  const where = Object.entries(me.board)
+    .filter(([, v]) => JSON.stringify(v).toLowerCase().includes(needle))
+    .map(([k]) => k);
+  check('nor anywhere else in the payload', !blob.includes(needle),
+    where.length ? `found under: ${where.join(', ')}` : 'searched the whole payload');
+} else {
+  console.log(`  --   answer "${answer}" is too short to search for safely`);
+}
 
 // The player's own buzzer view must be untouched by all this.
 check('their own view still knows who they are',

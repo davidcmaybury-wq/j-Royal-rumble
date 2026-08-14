@@ -10,7 +10,7 @@ import { readFileSync } from 'fs';
 let fails = 0;
 const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${d ? '  — ' + d : ''}`); if (!ok) fails++; };
 
-for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html']) {
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html', 'control.html']) {
   const html = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
   const i = html.indexOf('<script type="module">');
   const js = html.slice(i, html.lastIndexOf('</script>'));
@@ -62,7 +62,7 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
 // it matched on had changed. The dialog rendered as unstyled text at the foot
 // of the page — valid HTML, valid JS, no error anywhere, and completely
 // unusable. Checking ids was not enough; classes carry the layout.
-for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html']) {
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html', 'control.html']) {
   const html = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
   const i = html.indexOf('<script type="module">');
   const js = html.slice(i, html.lastIndexOf('</script>'));
@@ -234,7 +234,7 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
 // panel — top rope, targeting, bounties, the lag control, the watch link. The
 // executing check above missed it because renderMech returns early in a stub
 // DOM, so this reads the source instead, which is what the bug actually is.
-for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html']) {
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html', 'control.html']) {
   const html = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
   const i = html.indexOf('<script type="module">');
   if (i < 0) continue;
@@ -293,7 +293,7 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
 // never rendered, so every "Save settings" click crashed — on the live site,
 // for several releases. The orphan check only asked whether rendered toggles
 // were read; nothing asked whether reads had anything to read.
-for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html']) {
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html', 'control.html']) {
   const src = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
   const reads = [...new Set([...src.matchAll(/\bg\('([\w-]+)'\)/g)].map((m) => m[1]))];
   // Rendered ids come two ways: literal id="x" markup, and the page's little

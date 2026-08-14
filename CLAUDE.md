@@ -208,6 +208,21 @@ parses. And `pagerefs.mjs` now reads the source for functions that are called
 but never defined, because executing renderers in a stub DOM did not catch it —
 `renderMech` returns early there.
 
+## Abandoned matches
+
+A match lives in memory until somebody ends it; closing the tab does not. One
+forgotten test match blocked a deploy for an hour, because `deploy-remote.sh`
+waits rather than restarting under a live game — correct behaviour, no way to
+clear it short of restarting the box by hand.
+
+Now: `/control` lists and ends matches, and anything silent for ten minutes
+(`RUMBLE_IDLE_MINUTES`) ends itself. A live match ended either way is recorded
+first; an abandoned lobby is just dropped.
+
+`broadcast(m)` at module level exists because the push helpers live inside the
+socket connection closure and close over one socket's match, so the reaper
+cannot use them.
+
 ## Silent failures found in live use
 
 Three in one sitting, all the same shape — the code was correct and said

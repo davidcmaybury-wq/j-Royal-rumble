@@ -750,6 +750,7 @@ class Match {
 
 app.post('/api/match', (req, res) => {
   const m = new Match(req.body?.settings || {});
+  m.lastActivity = Date.now();
   matches.set(m.id, m);
   res.json({ gameId: m.id, hostKey: m.hostKey,
     setupUrl: `/setup/${m.id}#${m.hostKey}`,
@@ -967,6 +968,107 @@ app.get('/api/match/:id/record', (req, res) => {
 });
 
 // The handbook, so the setup page can link to it.
+// The control room: every match on this server, and every log it has kept.
+//
+// Guarded by RUMBLE_ADMIN_KEY when it is set. When it is not, it still works —
+// locking the host out of his own server is worse than the risk at this scale —
+// but the page says so plainly rather than pretending to be secure.
+const ADMIN_KEY = process.env.RUMBLE_ADMIN_KEY || '';
+function adminOk(req) {
+  if (!ADMIN_KEY) return true;
+  const given = req.get('x-admin-key') || req.query.key || '';
+  return given === ADMIN_KEY;
+}
+
+app.get('/control', (_req, res) => res.sendFile(join(__dir, '../public/control.html')));
+
+app.get('/api/control', (req, res) => {
+  if (!adminOk(req)) return res.status(403).json({ error: 'bad admin key' });
+  const now = Date.now();
+  res.json({
+    guarded: !!ADMIN_KEY,
+    idleMinutes: IDLE_MS / 60000,
+    version: VERSION,
+    uptimeSeconds: Math.round((now - BOOTED) / 1000),
+    matches: [...matches.values()].map((m) => ({
+      id: m.id,
+      phase: m.phase,
+      players: m.roster.size,
+      humans: [...m.roster.values()].filter((p) => !p.isBot).length,
+      connected: [...m.roster.values()].filter((p) => p.connected && !p.isBot).length,
+      clues: m.game ? m.game.cluesRevealed : 0,
+      idleSeconds: Math.round((now - (m.lastActivity || now)) / 1000),
+      startedAt: m.startedAt || null,
+    })).sort((a, b) => a.idleSeconds - b.idleSeconds),
+    logs: logs.list().slice(0, 200),
+  });
+});
+
+// Ending somebody's match is destructive, so it is a POST and it records.
+app.post('/api/control/:id/end', (req, res) => {
+  if (!adminOk(req)) return res.status(403).json({ error: 'bad admin key' });
+  const m = matches.get(String(req.params.id || '').toUpperCase());
+  if (!m) return res.status(404).json({ error: 'no such match' });
+  if (m.phase === 'live') {
+    m.phase = 'over';
+    m.endedReason = 'admin';
+    try { m.finishRecord(); m.saveLog(); } catch { /* record what we can */ }
+    broadcast(m);
+    io.to(`${m.id}:host`).emit('error-msg', 'This match was ended from the control room.');
+  } else {
+    matches.delete(m.id);
+  }
+  res.json({ ok: true, id: m.id, phase: m.phase });
+});
+
+// Broadcasting from outside a socket connection.
+//
+// The push helpers live inside the connection closure and close over one
+// socket's match, so the reaper and the admin page cannot use them. This is
+// the same three sends without that assumption.
+function broadcast(m) {
+  if (!m) return;
+  io.to(`${m.id}:host`).emit('state', m.hostView());
+  const wv = m.watchView();
+  io.to(`${m.id}:watch`).emit('state', wv);
+  io.to(`${m.id}:board`).emit('watch-state', wv);
+  for (const p of m.roster.values()) {
+    if (p.socketId) io.to(p.socketId).emit('state', m.playerView(p.token));
+  }
+}
+
+// Matches that nobody is touching.
+//
+// A match lives in memory until somebody ends it, and closing the tab is not
+// ending it — a forgotten test match sat live for an hour and blocked a deploy,
+// because the deploy guard quite correctly refuses to restart under a game in
+// progress. Ten minutes of complete silence is not a game in progress.
+//
+// A live match is ended properly, so it records and appears in the logs; an
+// abandoned lobby is simply dropped, since there is nothing to record.
+const IDLE_MS = Number(process.env.RUMBLE_IDLE_MINUTES || 10) * 60 * 1000;
+
+function reapIdle() {
+  const now = Date.now();
+  for (const [id, m] of matches) {
+    const quiet = now - (m.lastActivity || now);
+    if (quiet < IDLE_MS) continue;
+    if (m.phase === 'live') {
+      m.phase = 'over';
+      m.endedReason = 'idle';
+      try { m.finishRecord(); m.saveLog(); } catch { /* record what we can */ }
+      io.to(`${id}:host`).emit('error-msg',
+        'This match was ended after ten minutes with nobody doing anything.');
+      broadcast(m);
+      console.log(`[reap] ended ${id} after ${Math.round(quiet / 60000)} min idle`);
+    } else if (m.phase !== 'over') {
+      matches.delete(id);
+      console.log(`[reap] dropped idle lobby ${id}`);
+    }
+  }
+}
+setInterval(reapIdle, 60 * 1000).unref?.();
+
 // The saved logs. Guarded by RUMBLE_LOG_KEY when it is set; open when it is
 // not, which is fine for a test deployment and stated plainly in /api/health.
 const logGuard = (req) => {
@@ -1123,6 +1225,8 @@ io.on('connection', (socket) => {
   // Players identify by a durable token stored on their own device, so a
   // reconnect keeps their score, draw number and place in the queue.
   socket.on('join', ({ gameId, token: t, name }, ack) => {
+    const j = matches.get(String(gameId || '').toUpperCase());
+    if (j) j.lastActivity = Date.now();
     const m = matches.get((gameId || '').toUpperCase());
     if (!m) return ack?.({ error: `No game with the code ${(gameId || '').toUpperCase()}. ` +
       `Check the code with your host — it's four letters.` });
@@ -1178,7 +1282,11 @@ io.on('connection', (socket) => {
 
   // Refusing silently is how a button ends up doing nothing with no
   // explanation, so answer the acknowledgement if the caller sent one.
+  // Anything a person does counts as the match being alive.
+  const touch = () => { if (match) match.lastActivity = Date.now(); };
+
   const hostOnly = (fn) => (...args) => {
+    touch();
     const ack = typeof args[args.length - 1] === 'function' ? args[args.length - 1] : null;
     if (!isHost || !match) {
       return ack?.({ error: !match ? 'That match is no longer running'
@@ -1651,6 +1759,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('buzz', ({ ms, status }) => {
+    touch();
     if (!match || !token || !match.race) return;
     const g = match.game;
     const p = g?.players.get(token);
