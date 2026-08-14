@@ -15,9 +15,9 @@ button,input{font:inherit;color:inherit}
 .wrap{width:100%;max-width:660px}
 
 header{text-align:center;margin-bottom:30px}
-h1{font-family:"Anton",Impact,sans-serif;font-size:clamp(34px,9vw,58px);
-letter-spacing:.02em;line-height:.98}
-h1 .j{color:var(--brass)}
+.mark{display:flex;align-items:center;justify-content:center;gap:12px}
+.mark svg{display:block}
+.jbadge{flex:0 0 auto}
 .tag{color:var(--slate);font-size:14.5px;margin-top:8px}
 
 /* Three doors. Play first and biggest: most people arriving here are players,
@@ -64,7 +64,7 @@ footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="j">J!</span> ROYAL RUMBLE</h1>
+    <div class="mark"><span class="jbadge" id="jb"></span><span id="wm"></span></div>
     <p class="tag">Thirty players. Three start. One survives.</p>
   </header>
 
@@ -118,7 +118,10 @@ footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
 </div>
 
 <script type="module">
+import { markBanner, markSmall } from '/brand.js';
 const $ = (id) => document.getElementById(id);
+$('wm').innerHTML = markBanner(430);
+$('jb').innerHTML = markSmall(58);
 let mode = null;
 
 // The code is checked before we send anybody anywhere. A wrong code used to

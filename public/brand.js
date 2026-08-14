@@ -203,3 +203,66 @@ export function brainAvatar(level = 'normie', size = 26) {
 }
 
 export const BRAIN_LEVELS = Object.keys(BRAIN_TIERS);
+
+/**
+ * The banner wordmark, after the 1993 SNES box.
+ *
+ * The shape is the thing: RUMBLE with an oversized R and E and the smaller
+ * letters slung between them, and ROYAL tucked into the gap that leaves over
+ * the top. Chrome on the big word, hot metal on ROYAL.
+ *
+ * The period look comes from restraint rather than filters. Gradients step
+ * through a handful of flat bands instead of blending, the way an indexed
+ * palette had to; every edge is a hard black keyline; and the whole thing sits
+ * on a small viewBox so it scales up in chunks. shape-rendering is left alone
+ * because crispEdges eats the diagonal strokes at small sizes.
+ */
+export function markBanner(width = 520) {
+  const id = uid();
+  // Six letters, big at the ends. x positions are hand-set: metrically even
+  // spacing looks wrong when the outer letters are twice the size.
+  // Tight. On the box the small letters are packed shoulder to shoulder and
+  // the two big ones bracket them; even spacing loses the effect entirely.
+  const R = [['R', 104, 44], ['U', 54, 100], ['M', 54, 145], ['B', 54, 189],
+             ['L', 54, 228], ['E', 104, 274]];
+  const big = (fill, dy, extra = '') => R.map(([c, fs, x]) =>
+    `<text x="${x}" y="${120 + dy}" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+      font-size="${fs}" fill="${fill}" ${extra}>${c}</text>`).join('');
+  // Sits in the notch the two big letters leave, overlapping the small ones.
+  const royal = (fill, dy, extra = '') =>
+    `<text x="158" y="${60 + dy}" text-anchor="middle" font-family="Anton,Impact,sans-serif"
+      font-size="52" letter-spacing="1" fill="${fill}" ${extra}>ROYAL</text>`;
+
+  return `<svg viewBox="0 0 318 138" width="${width}" height="${Math.round(width * 138 / 318)}"
+    role="img" aria-label="J! Royal Rumble" class="banner">
+    <defs>
+      <!-- Chrome, in flat bands. The hard horizon two thirds down is what makes
+           it read as polished metal rather than as a smooth gradient. -->
+      <!-- userSpaceOnUse, so the bands line up straight across the whole word.
+           Per-letter bounding boxes made each letter its own little gradient
+           and the metal stopped reading as one polished surface. -->
+      <linearGradient id="bc-${id}" gradientUnits="userSpaceOnUse" x1="0" y1="42" x2="0" y2="124">
+        <stop offset="0%"   stop-color="#E8EEF9"/><stop offset="30%" stop-color="#E8EEF9"/>
+        <stop offset="30%"  stop-color="#FFFFFF"/><stop offset="47%" stop-color="#FFFFFF"/>
+        <stop offset="47%"  stop-color="#5C6E96"/><stop offset="56%" stop-color="#5C6E96"/>
+        <stop offset="56%"  stop-color="#222C4C"/><stop offset="63%" stop-color="#222C4C"/>
+        <stop offset="63%"  stop-color="#8E9DBE"/><stop offset="80%" stop-color="#8E9DBE"/>
+        <stop offset="80%"  stop-color="#DCE4F2"/>
+      </linearGradient>
+      <!-- Hot metal for ROYAL: the same banding, four colours only. -->
+      <linearGradient id="br-${id}" gradientUnits="userSpaceOnUse" x1="0" y1="22" x2="0" y2="62">
+        <stop offset="0%"  stop-color="#FFE9A8"/><stop offset="30%" stop-color="#FFE9A8"/>
+        <stop offset="30%" stop-color="#F0A93C"/><stop offset="58%" stop-color="#F0A93C"/>
+        <stop offset="58%" stop-color="#C2521A"/><stop offset="80%" stop-color="#C2521A"/>
+        <stop offset="80%" stop-color="#8E2B10"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ROYAL first, so RUMBLE's keyline cuts over it where they meet. -->
+    ${royal('none', 2, 'stroke="#06070C" stroke-width="12" stroke-linejoin="round"')}
+    ${royal(`url(#br-${id})`, 0)}
+
+    ${big('none', 2, 'stroke="#06070C" stroke-width="14" stroke-linejoin="round"')}
+    ${big(`url(#bc-${id})`, 0)}
+  </svg>`;
+}

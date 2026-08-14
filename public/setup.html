@@ -147,7 +147,7 @@ border-radius:var(--r);font-size:13px;color:var(--slate);background:none;cursor:
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { estimate as estimateFor, warnings as warningsFor } from '/estimate.js';
-import { markFull, brainAvatar } from '/brand.js';
+import { markBanner, markSmall, brainAvatar } from '/brand.js';
 import { weaponToken } from '/tokens.js';
 import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import * as sfx from '/sound.js';
@@ -312,7 +312,7 @@ function render(keepEdits) {
   const est = estimate(), s = S.settings;
   root.innerHTML = `
   <a class="backhome" href="/">&larr; J! Royal Rumble</a>
-  <div class="hero">${markFull(84)}<h1>Set up a Rumble</h1></div>
+  <div class="hero">${markSmall(64)}${markBanner(300)}</div>
   <div class="tag">Read the room code aloud. Only people who have it can join.
     <a class="manual" href="/handbook" target="_blank" rel="noopener">Handbook &mdash; rules, mechanics and the design behind them &#8599;</a></div>
 
@@ -320,16 +320,16 @@ function render(keepEdits) {
     <div class="code">
       <span class="big" id="rc">${code}</span>
       <div class="side">
-        Players go to <code>${location.origin}/join</code> and enter this code.<br>
-        Or send them <code>${location.origin}/j/${code}</code> — the code is filled in, they still confirm it.
+        Players go to <code>${location.origin}/join</code> and enter this code.
       </div>
     </div>
-  </div>
-
-  <div class="card"><h2>Signed up <span id="rn" style="color:var(--brass)">${S.roster.length}</span></h2>
-    <div class="who" id="who"></div>
     <ul class="links">
-      <li><b>Watch screen</b> &mdash; put it on the shared screen, or send it to anyone who
+      <li><b>To play</b> &mdash; the code is filled in, they still confirm it.
+        <div class="wrow">
+          <code id="joinurl">${location.origin}/j/${code}</code>
+          <button class="alt" id="copyjoin">Copy</button>
+        </div></li>
+      <li><b>To watch</b> &mdash; put it on the shared screen, or send it to anyone who
         would rather see the board themselves. No key, no login; the answers are never sent to it.
         <div class="wrow">
           <code id="watchurl">${location.origin}/watch/${code}</code>
@@ -337,6 +337,10 @@ function render(keepEdits) {
           <a class="alt" href="/watch/${code}" target="_blank" rel="noopener">Open &#8599;</a>
         </div></li>
     </ul>
+  </div>
+
+  <div class="card"><h2>Signed up <span id="rn" style="color:var(--brass)">${S.roster.length}</span></h2>
+    <div class="who" id="who"></div>
     ${est ? `<p class="est" style="margin:14px 0 0">With ${S.roster.length} players: entry every <b>${est.iv}</b> clues${
         est.auto ? ' (auto)' : ''}, roughly <b>${est.mins} minutes</b>, about ${est.clues} clues.${est.rough ? ' Rough at this size.' : ''}</p>`
       : `<p class="note" style="margin:14px 0 0">Three players minimum.</p>`}
@@ -560,14 +564,21 @@ function renderRoster() {
              : p.tokenArt ? weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) : ''}${p.name}${
         p.isBot ? `<em class="lvl">${p.level || ''}</em>` : ''}</span>`).join('')
     : '<span class="note">Nobody yet. Read them the code.</span>';
-  const cw = document.getElementById('copywatch');
-  if (cw) cw.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(location.origin + '/watch/' + code);
-      cw.textContent = 'Copied';
-      setTimeout(() => { cw.textContent = 'Copy'; }, 1600);
-    } catch (e) { cw.textContent = 'Select it by hand'; }
+  // Both links get the same treatment; the host reads out one and pastes the
+  // other, and which is which changes by the night.
+  const copier = (btnId, url) => {
+    const b = document.getElementById(btnId);
+    if (!b) return;
+    b.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        b.textContent = 'Copied';
+        setTimeout(() => { b.textContent = 'Copy'; }, 1600);
+      } catch (e) { b.textContent = 'Select it by hand'; }
+    };
   };
+  copier('copywatch', location.origin + '/watch/' + code);
+  copier('copyjoin', location.origin + '/j/' + code);
   const b = document.getElementById('start');
   if (b) b.disabled = S.roster.length < 3;
 }
