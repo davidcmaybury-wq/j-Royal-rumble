@@ -39,20 +39,27 @@ export async function unlock() {
   if (ready) return true;
   const first = pool.join || Object.values(pool)[0];
   if (!first) return false;
+  // Silence everything while priming. The browser only needs a play() to have
+  // happened during a gesture, not to have been heard — and unmuted, this fired
+  // all nine cues at once on the first click of the setup screen, which sounded
+  // like the page falling downstairs.
+  const was = new Map();
+  for (const [k, a] of Object.entries(pool)) { was.set(k, a.volume); a.volume = 0; }
+  const restore = () => { for (const [k, a] of Object.entries(pool)) a.volume = was.get(k); };
   try {
     await first.play();
     first.pause();
     first.currentTime = 0;
     ready = true;
     // Prime the rest now that the browser is satisfied.
-    for (const a of Object.values(pool)) {
-      if (a === first) continue;
-      a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
-    }
+    const rest = Object.values(pool).filter((a) => a !== first)
+      .map((a) => a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {}));
+    Promise.all(rest).then(restore);
     return true;
   } catch (e) {
     // No gesture yet, or the file has not loaded. Leave ready false so the
     // next gesture tries again.
+    restore();
     return false;
   }
 }

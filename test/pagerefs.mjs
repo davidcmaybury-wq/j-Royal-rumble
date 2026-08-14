@@ -286,6 +286,24 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
     missing.length === 0, missing.join(', ') || `${called.size} calls checked`);
 }
 
+// --- a read of an element that is never rendered ---------------------------
+//
+// The converse of the orphan-toggle check below, and the direction that
+// actually bit: save() read g('longevity').checked for four toggles that were
+// never rendered, so every "Save settings" click crashed — on the live site,
+// for several releases. The orphan check only asked whether rendered toggles
+// were read; nothing asked whether reads had anything to read.
+for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', 'watch.html', 'welcome.html']) {
+  const src = readFileSync(new URL('../public/' + page, import.meta.url), 'utf8');
+  const reads = [...new Set([...src.matchAll(/\bg\('([\w-]+)'\)/g)].map((m) => m[1]))];
+  // Rendered ids come two ways: literal id="x" markup, and the page's little
+  // component helpers — adv('x', num('x' — which interpolate the id.
+  const made = new Set([...src.matchAll(/\b(?:adv|num|tog|sel)\('([\w-]+)'/g)].map((m) => m[1]));
+  const missing = reads.filter((id) => !src.includes(`id="${id}"`) && !made.has(id));
+  check(`${page}: everything g() reads is actually rendered`,
+    missing.length === 0, missing.join(', ') || `${reads.length} reads`);
+}
+
 // --- a toggle that is never read back is decoration -----------------------
 //
 // Five settings shipped this way: the switch rendered, the host flipped it, and

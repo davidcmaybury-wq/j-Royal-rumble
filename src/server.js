@@ -1176,13 +1176,30 @@ io.on('connection', (socket) => {
 
   // --- host actions ----------------------------------------------------
 
+  // Refusing silently is how a button ends up doing nothing with no
+  // explanation, so answer the acknowledgement if the caller sent one.
   const hostOnly = (fn) => (...args) => {
-    if (!isHost || !match) return;
-    try { fn(...args); } catch (e) { socket.emit('error-msg', e.message); }
+    const ack = typeof args[args.length - 1] === 'function' ? args[args.length - 1] : null;
+    if (!isHost || !match) {
+      return ack?.({ error: !match ? 'That match is no longer running'
+        : 'Only the host can do that — try reopening the setup link' });
+    }
+    try { fn(...args); } catch (e) {
+      socket.emit('error-msg', e.message);
+      ack?.({ error: e.message });
+    }
   };
 
-  socket.on('start-match', hostOnly(() => {
-    match.start();
+  socket.on('start-match', hostOnly((_d, ack) => {
+    if (match.phase !== 'lobby') return ack?.({ error: 'This match has already started' });
+    if (match.roster.size < 3) return ack?.({ error: 'Three players are needed to start' });
+    try {
+      match.start();
+    } catch (e) {
+      // Say what happened rather than leaving the setup screen inert.
+      return ack?.({ error: e.message || 'The match could not be started' });
+    }
+    ack?.({ ok: true });
     io.to(`${match.id}:players`).emit('rumble-starting', {
       entryInterval: match.settings.entryInterval,
       startScore: match.settings.startScore,

@@ -261,8 +261,19 @@ function paintMix() {
   });
 }
 
-const estimate = () => estimateFor(S.roster.length, S.settings);
-const warnings = () => warningsFor(S.roster.length, S.settings);
+// Read the form, not the last saved settings.
+//
+// These used to run against S.settings, which only updates once a save comes
+// back — so typing 10 into the target and looking at the warnings got you an
+// answer about 30, complaining it could not stretch to a number you had just
+// stopped asking for. The estimate is a live preview; it has to read what is
+// on screen.
+function liveSettings() {
+  try { return { ...S.settings, ...collect().settings }; }
+  catch { return S.settings; }          // before the form exists
+}
+const estimate = () => estimateFor(S.roster.length, liveSettings());
+const warnings = () => warningsFor(S.roster.length, liveSettings());
 
 const SRC = [
   ['archive', 'Jeopardy! archive', null],
@@ -439,6 +450,23 @@ function render(keepEdits) {
     </div>
   </div>
 
+  <div class="card"><h2>Standard mechanics</h2>
+    <p class="note" style="margin:-4px 0 14px">On unless you turn them off. These are part of the
+    normal game; switching one off is for a night that wants a simpler shape.</p>
+    ${adv('longevity', 'Longevity bonus', s.longevity,
+      '+500 every 10 clues survived. Pays the early draws for the grinding they do more of; '
+      + 'measured to bring the draw to even without handing the match to anybody.')}
+    ${adv('categorySweep', 'Category sweep', s.categorySweep,
+      'Take every clue in a column for +500, scaled by the overtime multiplier. Counted as the '
+      + 'column is worked through, so a board refresh cannot rob a finished run.')}
+    ${adv('giftFromQueue', 'Gift from the queue', s.giftFromQueue,
+      'Waiting to come in, hand part of your entry to somebody already in the ring. You walk in '
+      + 'lighter by exactly what you gave.')}
+    ${adv('anonymousNext', 'Hidden next entrant', s.anonymousNext,
+      'The room sees when the next player arrives but not who. The countdown stays, the name '
+      + 'goes, and the horn means something.')}
+  </div>
+
   <div class="card"><h2>Advanced mechanics</h2>
     <p class="note" style="margin:-4px 0 14px">All off by default. They change how the game plays,
     not just how it looks — and they lean on keyboard controls, so think twice if the field is on phones.</p>
@@ -521,7 +549,9 @@ function joinChime(n) {
 function renderRoster() {
   const w = document.getElementById('who'), n = document.getElementById('rn');
   if (!w) return;
-  joinChime(S.roster.length);
+  // Humans only. Adding your own robots is not an arrival worth a chime — and
+  // six of them at once made the setup screen ring like a till.
+  joinChime(S.roster.filter((p) => !p.isBot).length);
   n.textContent = S.roster.length;
   renderWarnings();
   w.innerHTML = S.roster.length
@@ -751,9 +781,32 @@ function wire() {
   renderQueue();
 
   document.getElementById('start').onclick = async () => {
-    if (!await save(true)) return;
-    socket.emit('start-match');
-    setTimeout(() => { location.href = `/host/${code}#${hostKey}`; }, 350);
+    const b = document.getElementById('start');
+    // A quiet save meant a failure here showed nothing at all and the button
+    // simply did nothing — say what went wrong instead.
+    if (!await save(false)) {
+      b.textContent = 'Could not save the settings';
+      setTimeout(() => { b.textContent = 'Start the Rumble'; }, 3000);
+      return;
+    }
+    b.disabled = true;
+    b.textContent = 'Starting...';
+    // Wait for the server to confirm rather than navigating on a timer: if the
+    // start is refused, landing on a console for a match that never began is
+    // the least useful thing that can happen.
+    let done = false;
+    socket.emit('start-match', {}, (r) => {
+      done = true;
+      if (r && r.error) {
+        b.disabled = false;
+        b.textContent = r.error;
+        setTimeout(() => { b.textContent = 'Start the Rumble'; }, 4000);
+        return;
+      }
+      location.href = `/host/${code}#${hostKey}`;
+    });
+    // Older servers do not acknowledge; go anyway rather than hang.
+    setTimeout(() => { if (!done) location.href = `/host/${code}#${hostKey}`; }, 1200);
   };
 }
 

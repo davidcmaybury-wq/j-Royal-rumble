@@ -208,6 +208,19 @@ parses. And `pagerefs.mjs` now reads the source for functions that are called
 but never defined, because executing renderers in a stub DOM did not catch it —
 `renderMech` returns early there.
 
+## Silent failures found in live use
+
+Three in one sitting, all the same shape — the code was correct and said
+nothing, so the host could not tell what had happened.
+
+- `unlock()` primed all nine audio cues **at full volume** on the first click.
+  Priming only needs a play() during a gesture; it does not need to be heard.
+- The setup estimate read `S.settings` (last saved) rather than the form, so
+  typing 10 into the target produced a warning about 30.
+- `hostOnly` returned silently when it refused, and the start button saved
+  quietly and navigated on a timer. A refused start looked like a dead button.
+  Refusals now answer the acknowledgement with a reason.
+
 ## Known-flaky patterns, all fixed but worth recognising
 
 - **Double evaluation in a `check()`** — calling the same clock-reading function
@@ -275,6 +288,14 @@ repo** — the library folder is his to fill.
 
 **Handbook figures are hand-typed** in `tools/make-handbook.py` rather than read
 from the code, so they drift. Offered to wire them up twice; no answer.
+
+**Check both directions between renders and reads.** The 0.46.0 "fix" below was
+itself wrong: it claimed four toggles rendered but were not read, when in truth
+they were never rendered at all — and the reads it added crashed every "Save
+settings" click on the live site for several releases, which also made every
+settings change silently not take. `pagerefs.mjs` now checks both ways: every
+rendered toggle is read, and everything `g()` reads is rendered. Do not assert
+what a page contains from memory; grep it.
 
 **A toggle that renders but is never read back is invisible.** Five shipped that
 way — the render landed, the read did not, and the defaults were sensible enough

@@ -50,6 +50,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/startfail.mjs
           node test/themes.mjs
           node test/fullbuzzer.mjs
           node test/welcome.mjs

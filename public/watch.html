@@ -29,16 +29,36 @@ cursor:pointer;white-space:nowrap}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0}
 .stage{padding:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 /* board */
-.board{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;flex:1;min-height:0}
-.col{display:grid;grid-template-rows:auto repeat(5,1fr);gap:7px;min-height:0}
-.cat{background:var(--panel2);border-radius:var(--r);padding:8px 6px;text-align:center;
-font-size:12.5px;line-height:1.2;display:flex;align-items:center;justify-content:center;
-min-height:56px;letter-spacing:.03em}
-.cat .src{display:block;font-size:8.5px;letter-spacing:.14em;color:var(--slate);margin-bottom:3px}
-.cell{background:var(--panel);border-radius:var(--r);display:flex;align-items:center;
-justify-content:center;font:400 clamp(15px,2.1vw,28px) "IBM Plex Mono",monospace;color:var(--brass)}
-.cell.gone{background:#0C1120;color:#1A2138}
-.cell.raised{color:var(--alarm)}
+/* The 1985 set. Each clue is its own CRT: rounded dark bezel, saturated blue
+   tube with a brighter centre where a curved screen catches the studio lights,
+   faint scanlines. The frame around them is the set's warm metal grid. A
+   played clue goes blank — the monitor stays on, showing empty blue, as the
+   Trebek-era board did — rather than to black, so the board keeps its glow.
+   Category cards are the printed kind, not screens: warm white, dark ink. */
+.board{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;flex:1;min-height:0;
+background:linear-gradient(160deg,#8E8578,#6E675C 55%,#57514A);
+padding:11px;border-radius:8px;
+box-shadow:inset 0 1px 0 #B5AC9C,inset 0 -2px 5px #00000066,0 4px 16px #00000066}
+.col{display:grid;grid-template-rows:auto repeat(5,1fr);gap:9px;min-height:0}
+.cat{background:linear-gradient(175deg,#EFE9DC,#CFC7B6);border-radius:5px;
+padding:8px 5px;text-align:center;color:#1C2242;
+font-weight:700;font-size:11.5px;line-height:1.2;letter-spacing:.06em;text-transform:uppercase;
+display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:56px;
+box-shadow:inset 0 1px 0 #FFFFFFAA,inset 0 -2px 3px #00000033,0 2px 4px #00000055;
+border:2px solid #3A352C}
+.cat .src{display:block;font-size:8.5px;letter-spacing:.14em;color:#6E6858;margin-bottom:3px}
+.cell{position:relative;display:flex;align-items:center;justify-content:center;
+border-radius:9px;border:3px solid #26221C;
+background:radial-gradient(ellipse 90% 75% at 50% 40%,#2B2BE0 0%,#1717C2 52%,#0B0B93 100%);
+box-shadow:inset 0 0 22px #000A4ACC,inset 0 2px 8px #6A6AFF33,0 2px 5px #00000077;
+font:400 clamp(16px,2.3vw,30px) "Anton",Impact,sans-serif;letter-spacing:.05em;
+color:#FFF;text-shadow:0 0 7px #9A9AFF,0 2px 2px #000060;overflow:hidden}
+.cell::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:6px;
+background:repeating-linear-gradient(180deg,transparent 0 2px,#00003420 2px 3px),
+linear-gradient(180deg,#FFFFFF14,transparent 30%)}
+.cell.gone{background:radial-gradient(ellipse 90% 75% at 50% 40%,#2222C8 0%,#1212A8 55%,#0A0A85 100%);
+color:transparent;text-shadow:none}
+.cell.raised{color:#FFD24A;text-shadow:0 0 8px #FFB300,0 2px 2px #402800}
 /* clue */
 .clue{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
 text-align:center;padding:20px;gap:18px}
