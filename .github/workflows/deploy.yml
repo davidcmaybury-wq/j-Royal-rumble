@@ -45,6 +45,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/health.mjs
           node test/moved.mjs
           node test/wrestlers.mjs
           node test/mechanics2.mjs
@@ -78,8 +79,30 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Where this goes
+      # Deploys to the Lightsail box once the suite is green, which is the
+      # property the move off Fly had quietly lost: a bare `git pull` on the
+      # box will happily ship a broken commit.
+      #
+      # Skipped entirely until AWS_SSH_KEY is set, so this workflow stays useful
+      # as plain CI in the meantime. See infra/aws/README.md for the two-minute
+      # setup.
+      - name: Deploy to Lightsail
+        if: ${{ secrets.AWS_SSH_KEY != '' }}
+        env:
+          AWS_HOST: ${{ secrets.AWS_HOST }}
         run: |
-          echo "Tests passed. The live site does not deploy from here."
-          echo "SSH the Lightsail box (see infra/aws/HOSTING.md), then:"
-          echo "  cd /home/ubuntu/app && git pull && npm install --omit=dev && sudo systemctl restart rumble"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          ssh-keyscan -H "$AWS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # --wait rather than --force: if a match is being played the deploy
+          # holds until it finishes rather than ending it under them.
+          ssh -i ~/.ssh/deploy -o BatchMode=yes ubuntu@"$AWS_HOST" \
+            'bash /home/ubuntu/app/tools/deploy-remote.sh --wait'
+
+      - name: How to deploy by hand
+        if: ${{ secrets.AWS_SSH_KEY == '' }}
+        run: |
+          echo "Tests passed, but no AWS_SSH_KEY is set, so nothing was deployed."
+          echo "SSH the Lightsail box (infra/aws/HOSTING.md), then:"
+          echo "  bash /home/ubuntu/app/tools/deploy-remote.sh"
+          echo "Set AWS_SSH_KEY and AWS_HOST to have this happen automatically." 

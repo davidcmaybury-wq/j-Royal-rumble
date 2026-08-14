@@ -41,21 +41,24 @@ This has bitten twice.
 `.github/workflows` — those are skipped and listed in the run summary. The
 download card strips `.gz`, so `.tar` is accepted too.
 
-**The live deploy is now manual**, and this is the most important thing to know
-about the current setup:
+`npm run ship` pushes to GitHub; GitHub runs the full suite and, if green, tells
+the Lightsail box to pull. So a push deploys, and a broken commit does not.
+
+That needs the `AWS_HOST` and `AWS_SSH_KEY` secrets. **Without them the workflow
+is plain CI and deploys nothing** — it prints the manual command instead, so if
+a change seems not to have landed, check whether they are set.
+
+By hand on the box:
 
 ```bash
-# SSH via the Lightsail console, then:
-cd /home/ubuntu/app && git pull && npm install --omit=dev && sudo systemctl restart rumble
+bash /home/ubuntu/app/tools/deploy-remote.sh          # refuses mid-match
+bash /home/ubuntu/app/tools/deploy-remote.sh --wait   # deploys when clear
+bash /home/ubuntu/app/tools/deploy-remote.sh --force  # now, regardless
 ```
 
-`npm run ship` still commits and pushes, but **nothing downstream acts on it** —
-the box has to be told to pull. And because the deploy is a bare `git pull`,
-**the test suite no longer gates a release**; on Fly, all 32 suites ran before
-anything shipped. Run them locally before pushing, and say so when handing over
-a tarball.
-
-Restarting kills in-progress matches: they live in memory.
+**A restart ends every match in progress** — they live in memory — so the script
+asks `/api/health` for `matchesInPlay` first and holds rather than pulling the
+rug. Never take that guard out.
 
 I had designed a CloudFormation stack for this migration (EC2 + Caddy + ECR).
 David built something simpler and better suited, so that design was deleted —
@@ -168,6 +171,33 @@ People start slowly.
   robots would take a given clue. All three decline about 0.4% of the time. It
   now plays up to six clues. I dismissed this as flakiness twice before
   measuring it; don't.
+
+## Queued, not started
+
+**1. A welcome screen.** `/` currently serves the host setup page, which means
+anybody who types the domain lands on the controls for running a match. Should
+be a landing page offering **play / host / watch**, with a room-code box.
+Setup moves to `/host`.
+
+**2. Two buzzer modes.** The current buzzer is the *light* one and assumes the
+board is on a shared screen. A *full* mode folds the watch view in — board,
+scores, the live clue — for a player who is not screen-sharing.
+
+**Full mode is desktop only**, by David's decision. Do not try to make the board
+work at phone width; offer light mode there instead and say why.
+
+The buzzer must **never** receive answers: the watch payload is built
+field-by-field for exactly this reason and `test/watch.mjs` asserts the answer
+is absent, so full mode must reuse `watchView()` rather than the host view.
+Copying the host view and deleting fields is the mistake that guard exists to
+catch.
+
+**3. Countdown lights on the watch screen.** The console has a five-light
+lectern (`.lectern`, driven by `startLectern`/`stopLectern` on the race
+opening). The watch screen has the animations but no lights, so a room watching
+it cannot see how long is left. Mirror it. Note the re-toss reopens the race and
+restarts the lights — that already confused a host once, so the watch screen
+should make a second run read as a second race rather than a glitch.
 
 ## Outstanding
 

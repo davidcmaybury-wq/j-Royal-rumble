@@ -19,16 +19,37 @@ job: CloudFront handles TLS without a certificate to renew on the box, and
 Lightsail's flat $7 covers the instance, the disk and the bandwidth in one line
 item.
 
-## Two things worth knowing
+## Deploying
 
-**Deploys no longer run the tests.** On Fly, pushing to `main` ran all 32
-suites before anything shipped. The current deploy is `git pull` over SSH, which
-will happily deploy a broken commit. `npm run ship` still pushes to GitHub, but
-nothing downstream acts on it.
+`npm run ship` pushes to GitHub. GitHub runs the full test suite and, if it is
+green, tells the Lightsail box to pull — so a push deploys again, and a broken
+commit does not.
 
-If that matters, the fix is small: keep the GitHub Actions workflow running the
-test suite on push, and have it finish by asking the Lightsail box to pull. That
-restores the safety net without changing how the box is set up.
+**Two secrets turn that on.** Until they are set the workflow is plain CI and
+prints the manual command instead.
+
+    AWS_HOST      3.15.120.241
+    AWS_SSH_KEY   the private half of a key the box will accept
+
+For the key, either paste the Lightsail default key (Lightsail console →
+Account → SSH keys → download), or better, make one just for deploys:
+
+    ssh-keygen -t ed25519 -f deploy -N ""          # on your machine
+    # paste deploy.pub into ~/.ssh/authorized_keys on the box
+    # paste the contents of `deploy` into the AWS_SSH_KEY secret
+
+Then add both under Settings → Secrets and variables → Actions.
+
+**A restart ends every match in progress** — they live in memory. So the deploy
+does not simply restart: `tools/deploy-remote.sh` asks `/api/health` how many
+matches are being played and holds until they finish. CI calls it with
+`--wait`; by hand it refuses and tells you, unless you pass `--force`.
+
+    bash /home/ubuntu/app/tools/deploy-remote.sh          # refuses mid-match
+    bash /home/ubuntu/app/tools/deploy-remote.sh --wait   # deploys when clear
+    bash /home/ubuntu/app/tools/deploy-remote.sh --force  # now, regardless
+
+It also checks the server actually came back, rather than assuming.
 
 ## The old Fly app
 

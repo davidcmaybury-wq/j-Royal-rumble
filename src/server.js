@@ -893,6 +893,12 @@ app.get('/api/health', (_req, res) => {
     version: VERSION, machine: MACHINE,
     uptimeSeconds: Math.round((Date.now() - BOOTED) / 1000),
     liveMatches: matches.size,
+    // Matches actually being played, as opposed to lobbies and finished ones.
+    // A restart ends these — they live in memory — so the deploy script asks
+    // before it pulls the rug.
+    matchesInPlay: [...matches.values()].filter((m) => m.phase === 'live').length,
+    playersInPlay: [...matches.values()].filter((m) => m.phase === 'live')
+      .reduce((n, m) => n + m.roster.size, 0),
     library: LIBRARY.length,
   });
 });
