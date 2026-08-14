@@ -179,6 +179,16 @@ string.
 
 ## Editing a workflow
 
+Steps run under `bash -e`, so any command failing kills the step with no
+explanation — a deploy once died in 60ms and reported only "exit code 1". Where
+a step can fail for several reasons, turn `-e` off and check each one with a
+message saying what to do about it.
+
+Write secrets to files with `printf %s\n`, never `echo`: a private key pasted
+into a GitHub secret without a trailing newline is rejected by OpenSSH instantly
+as invalid format.
+
+
 `secrets` is **not** available in an `if:`, at step or job level. GitHub rejects
 the whole file — no jobs run, and the run reports as a failure with nothing in
 it, which is confusing to debug. Compute the flag in job-level `env` and test

@@ -98,13 +98,47 @@ jobs:
         env:
           AWS_HOST: ${{ secrets.AWS_HOST }}
         run: |
+          set +e            # diagnose failures rather than dying silently
           mkdir -p ~/.ssh
-          echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
-          ssh-keyscan -H "$AWS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # printf, not echo: a secret pasted without a trailing newline
+          # produces a key OpenSSH rejects instantly as "invalid format", and
+          # under `bash -e` the step dies in milliseconds saying nothing.
+          printf '%s\n' "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+
+          if ! ssh-keygen -y -f ~/.ssh/deploy > /dev/null 2>&1; then
+            echo "::error::AWS_SSH_KEY is not a usable private key."
+            echo "Paste the whole file including the BEGIN and END lines:"
+            echo "  cat ~/.ssh/gh-deploy    (on the Lightsail box)"
+            echo "Note it must be the PRIVATE half, not the .pub file."
+            exit 1
+          fi
+
+          if [ -z "$AWS_HOST" ]; then
+            echo "::error::AWS_HOST is not set. It should be the box's IP."
+            exit 1
+          fi
+
+          ssh-keyscan -H "$AWS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
           # --wait rather than --force: if a match is being played the deploy
           # holds until it finishes rather than ending it under them.
-          ssh -i ~/.ssh/deploy -o BatchMode=yes ubuntu@"$AWS_HOST" \
-            'bash /home/ubuntu/app/tools/deploy-remote.sh --wait'
+          ssh -i ~/.ssh/deploy -o BatchMode=yes -o ConnectTimeout=15 \
+              ubuntu@"$AWS_HOST" \
+              'bash /home/ubuntu/app/tools/deploy-remote.sh --wait'
+          rc=$?
+          if [ $rc -ne 0 ]; then
+            echo "::error::Deploy failed (exit $rc)."
+            case $rc in
+              255) echo "SSH could not connect or authenticate. Check the public half is in";
+                   echo "~/.ssh/authorized_keys on the box, and that AWS_HOST is right." ;;
+              127) echo "deploy-remote.sh is not on the box yet. Pull once by hand:";
+                   echo "  cd /home/ubuntu/app && git pull && npm install --omit=dev && sudo systemctl restart rumble" ;;
+               75) echo "A match was still being played when the wait ran out." ;;
+            esac
+            exit $rc
+          fi
 
       - name: How to deploy by hand
         if: env.HAVE_DEPLOY_KEY != 'true'

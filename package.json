@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.48.0",
+  "version": "0.48.2",
   "private": true,
   "type": "module",
   "engines": {
@@ -54,7 +54,8 @@
     "moved-test": "node test/moved.mjs",
     "health-test": "node test/health.mjs",
     "workflows-test": "node test/workflows.mjs",
-    "welcome-test": "node test/welcome.mjs"
+    "welcome-test": "node test/welcome.mjs",
+    "ping": "node tools/ping-host.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",
