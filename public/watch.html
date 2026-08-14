@@ -5,6 +5,7 @@
 <title>J! Royal Rumble</title>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+
 /* The clue face.
    ITC Korinna Bold is what the show used and is licensed, so this is Bitter at
    700 — the closest free slab serif: heavy, slightly rounded slabs, generous
@@ -69,8 +70,16 @@ linear-gradient(180deg,#FFFFFF14,transparent 30%)}
 color:transparent;text-shadow:none}
 .cell.raised{color:#FFD24A;text-shadow:0 0 8px #FFB300,0 2px 2px #402800}
 /* clue */
+/* The clue on the board's own blue, in the 4:3 the monitors were, rather than
+   floating on the page background. */
 .clue{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
 text-align:center;padding:20px;gap:18px}
+.clue .card43{aspect-ratio:4/3;width:min(92%,calc(78vh * 4 / 3));display:flex;
+flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:3vh 4%;
+border-radius:10px;border:4px solid #26221C;
+background:radial-gradient(ellipse 90% 75% at 50% 40%,#2B2BE0 0%,#1717C2 52%,#0B0B93 100%);
+box-shadow:inset 0 0 60px #000A4A99,0 6px 22px #00000066}
+.clue .meta{color:#AFC0E8}
 .clue .meta{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
 .clue .meta .v{color:var(--brass)}
 .clue .txt{font-size:clamp(24px,3.6vw,54px);line-height:1.28;max-width:22ch}
@@ -255,7 +264,7 @@ function stage() {
     const b = (S.race && S.race.buzzes) || [];
     const chips = b.map((x, i) => '<span class="bz' + (i === 0 ? ' on' : '') + '"><span>'
       + x.name + '</span><span class="t">' + x.ms.toFixed(0) + 'ms</span></span>').join('');
-    return '<div class="clue">'
+    return '<div class="clue"><div class="card43">'
       + '<div class="meta">' + S.clue.category + ' &middot; <span class="v">$'
         + fmt(S.clue.value) + '</span>'
         + (S.retoss ? ' &middot; <span style="color:var(--alarm)">back out ' + S.retoss + '&times;</span>' : '')
@@ -264,7 +273,7 @@ function stage() {
       + lectern()
       + '<div class="race">' + (chips || (S.race && S.race.open
           ? '<span class="idle">Buzzers live</span>' : '<span class="idle">&nbsp;</span>')) + '</div>'
-      + '</div>';
+      + '</div></div>';
   }
   return board();
 }
@@ -423,6 +432,7 @@ socket.on('resolved', (e) => {
 // Only that screen: thirty browsers starting the same clip a fraction apart
 // would be a mess, and this is the same reason the cue audio lives here. If
 // nobody has enabled sound, nothing plays and nothing breaks.
+
 let themeAudio = null;
 let themeFrame = null;
 

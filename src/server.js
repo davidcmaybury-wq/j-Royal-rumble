@@ -1026,6 +1026,32 @@ app.post('/api/control/:id/end', (req, res) => {
   res.json({ ok: true, id: m.id, phase: m.phase });
 });
 
+/**
+ * A player's chosen entrance music, made safe.
+ *
+ * Shared by the sign-in card and the in-match picker, because a rule enforced
+ * in one place and not the other is the same as no rule. A library key is
+ * stripped to bare characters — a chosen theme must never become a way to ask
+ * the server for an arbitrary file — and a supplied link has to be https.
+ */
+function sanitiseTheme(theme) {
+  if (!theme || typeof theme !== 'object') return null;
+  const kind = String(theme.kind || '');
+  if (kind === 'library') {
+    const key = String(theme.key || '').replace(/[^A-Za-z0-9_-]/g, '');
+    return key ? { kind: 'library', key } : null;
+  }
+  if (kind === 'youtube') {
+    const id = String(theme.id || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 20);
+    return id ? { kind: 'youtube', id, start: Math.max(0, Math.floor(theme.start || 0)) } : null;
+  }
+  if (kind === 'url') {
+    const u = String(theme.url || '').slice(0, 500);
+    return /^https:\/\//.test(u) ? { kind: 'url', url: u } : null;
+  }
+  return null;
+}
+
 // Broadcasting from outside a socket connection.
 //
 // The push helpers live inside the connection closure and close over one
@@ -1229,7 +1255,7 @@ io.on('connection', (socket) => {
 
   // Players identify by a durable token stored on their own device, so a
   // reconnect keeps their score, draw number and place in the queue.
-  socket.on('join', ({ gameId, token: t, name, look }, ack) => {
+  socket.on('join', ({ gameId, token: t, name, look, theme }, ack) => {
     const j = matches.get(String(gameId || '').toUpperCase());
     if (j) j.lastActivity = Date.now();
     const m = matches.get((gameId || '').toUpperCase());
@@ -1262,7 +1288,8 @@ io.on('connection', (socket) => {
         const r = m.game.addLatecomer(token, name || 'Player');
         if (r.error) return ack?.({ error: r.error });
         m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
-          connected: true, avatar: null, tokenArt: art, look: chosen, late: true });
+          connected: true, avatar: null, tokenArt: art, look: chosen, late: true,
+        theme: sanitiseTheme(theme) });
         m.note('latecomer', { name: name || 'Player', draw: r.draw });
         socket.join(`${m.id}:players`);
         ack?.({ ok: true, token, late: true, draw: r.draw, state: m.playerView(token) });
@@ -1271,7 +1298,9 @@ io.on('connection', (socket) => {
       }
 
       m.roster.set(token, { token, name: name || 'Player', socketId: socket.id,
-        connected: true, avatar: null, tokenArt: art, look: chosen });
+        connected: true, avatar: null, tokenArt: art, look: chosen,
+        // Chosen on the sign-in card, before there was a match to attach it to.
+        theme: sanitiseTheme(theme) });
     }
     socket.join(`${m.id}:players`);
     ack?.({ ok: true, token, state: m.playerView(token) });
@@ -1355,24 +1384,15 @@ io.on('connection', (socket) => {
     if (!r) return ack?.({ error: 'not in this match' });
     if (!theme) { r.theme = null; pushAll(); return ack?.({ ok: true, theme: null }); }
 
-    const kind = String(theme.kind || '');
-    if (kind === 'library') {
-      // Only a key, never a path — a chosen theme must not become a way to ask
-      // the server for an arbitrary file.
-      const key = String(theme.key || '').replace(/[^A-Za-z0-9_-]/g, '');
-      if (!key) return ack?.({ error: 'no theme chosen' });
-      r.theme = { kind: 'library', key };
-    } else if (kind === 'youtube') {
-      const id = String(theme.id || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 20);
-      if (!id) return ack?.({ error: 'that does not look like a YouTube link' });
-      r.theme = { kind: 'youtube', id, start: Math.max(0, Math.floor(theme.start || 0)) };
-    } else if (kind === 'url') {
-      const u = String(theme.url || '').slice(0, 500);
-      if (!/^https:\/\//.test(u)) return ack?.({ error: 'the link must start with https' });
-      r.theme = { kind: 'url', url: u };
-    } else {
-      return ack?.({ error: 'unknown kind of music' });
+    const clean = sanitiseTheme(theme);
+    if (!clean) {
+      return ack?.({ error: theme && theme.kind === 'url'
+        ? 'The link must start with https'
+        : theme && theme.kind === 'youtube'
+          ? 'That does not look like a YouTube link'
+          : 'That theme is not one I recognise' });
     }
+    r.theme = clean;
     pushAll();
     ack?.({ ok: true, theme: r.theme });
   });

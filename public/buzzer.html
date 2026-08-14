@@ -163,14 +163,27 @@ gap:18px;align-items:start;max-width:1500px;margin:0 auto}
 .board{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
 padding:16px;min-height:60vh}
 .bwait{color:var(--slate);text-align:center;padding:40px 0}
+.bcorner{position:fixed;right:16px;bottom:16px;z-index:60;opacity:0;transform:translateY(10px);
+transition:opacity .18s ease,transform .18s ease;pointer-events:none;text-align:center}
+.bcorner.on{opacity:1;transform:none}
+.bcorner svg{display:block;border-radius:6px;border:2px solid var(--line)}
+.bcap{font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-top:5px;color:var(--slate)}
+.bcap.entry{color:var(--live)}
+.bcap.toss{color:var(--alarm)}
+@media (prefers-reduced-motion:reduce){.bcorner{transition:none}}
 .bgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;
 background:linear-gradient(160deg,#8E8578,#6E675C 55%,#57514A);padding:8px;border-radius:6px;
 box-shadow:inset 0 1px 0 #B5AC9C,inset 0 -2px 4px #00000066}
-.bcat{font-size:10.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.05em;
+/* Fixed height, and the text shrinks rather than the card growing. A long
+   category made one column taller than the rest and pushed its whole stack
+   down; in a narrow window the titles simply overflowed the card. */
+.bcat{height:46px;display:grid;place-items:center;overflow:hidden;
+font-size:clamp(7px,0.85vw,10.5px);line-height:1.15;text-transform:uppercase;letter-spacing:.03em;
 text-align:center;color:#1C2242;font-weight:700;
 background:linear-gradient(175deg,#EFE9DC,#CFC7B6);border:2px solid #3A352C;border-radius:3px;
-padding:7px 3px;margin-bottom:6px;min-height:44px;display:grid;place-items:center;
+padding:4px 3px;margin-bottom:6px;
 box-shadow:inset 0 1px 0 #FFFFFFAA,inset 0 -2px 3px #00000033}
+.bcat span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .bcell{position:relative;border-radius:5px;border:2px solid #26221C;text-align:center;
 padding:11px 2px;margin-bottom:6px;overflow:hidden;
 background:radial-gradient(ellipse 90% 75% at 50% 40%,#2B2BE0 0%,#1717C2 52%,#0B0B93 100%);
@@ -181,14 +194,21 @@ color:#FFF;text-shadow:0 0 5px #9A9AFF,0 1px 1px #000060}
 color:transparent;text-shadow:none}
 .bcol{min-width:0;display:grid;grid-template-rows:auto repeat(5,1fr)}
 .brow .bn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bclue{display:grid;place-items:center;min-height:44vh;text-align:center;padding:18px}
-.bmeta{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate)}
+/* The clue on the board's own blue, in the 4:3 the monitors were. */
+.bclue{aspect-ratio:4/3;width:100%;display:grid;place-items:center;align-content:center;
+text-align:center;padding:24px;gap:14px;border-radius:6px;border:3px solid #26221C;
+background:radial-gradient(ellipse 90% 75% at 50% 40%,#2B2BE0 0%,#1717C2 52%,#0B0B93 100%);
+box-shadow:inset 0 0 40px #000A4A99}
+.bmeta{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#AFC0E8}
 .btext{font-size:clamp(17px,2.1vw,26px);line-height:1.3;margin-top:12px;max-width:26ch}
 .bring{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .brow{display:grid;grid-template-columns:22px 1fr auto;gap:8px;padding:4px 2px;
 font-size:13.5px;align-items:center}
 .brow .bd{color:var(--slate);font-family:"IBM Plex Mono",monospace;font-size:11px;text-align:right}
 .brow .bs{color:var(--brass)}
+/* On the sign-in card the surrounding form is full width, and a full-width
+   button next to a small Join looked like the primary action. */
+.joinmusic{max-width:300px;margin-left:auto;margin-right:auto}
 .fullbtn{display:block;width:100%;margin-top:12px;padding:10px;border:1px solid var(--line);
 border-radius:var(--r);background:none;color:var(--slate);cursor:pointer;font-size:13px}
 .fullbtn:hover{border-color:var(--brass);color:var(--chalk)}
@@ -312,6 +332,7 @@ import { scoreChart } from '/chart.js';
 // The line-art weapons are gone: everyone sees wrestlers now, including the
 // player themselves.
 import { avatar, distinctLook } from '/wrestlers.js';
+import { animation as tossAnimation, SECONDS as TOSS_SECONDS } from '/toss.js';
 import { markFull } from '/brand.js';
 import * as sfx from '/sound.js';
 
@@ -335,6 +356,7 @@ const root = document.getElementById('root');
 // there is nothing to hear on this device — the picker says so rather than
 // leaving somebody tapping preview and wondering.
 let myTheme = null, themeList = null;
+try { myTheme = JSON.parse(localStorage.getItem('rumble:theme') || 'null'); } catch (e) {}
 
 function themeLabel() {
   if (!myTheme) return 'Pick your entrance music';
@@ -409,6 +431,16 @@ async function openMusic() {
 }
 
 function save(theme, el) {
+  // Before joining there is no match on the server to attach a theme to, so
+  // hold it here and send it with the join. Asking the server produced a bare
+  // "no match" on every choice made from the sign-in card.
+  if (!myToken()) {
+    myTheme = theme;
+    try { localStorage.setItem('rumble:theme', JSON.stringify(theme)); } catch (e) {}
+    el.remove();
+    renderJoin();      // the sign-in card carries the label too
+    return;
+  }
   socket.emit('set-theme', { theme }, (r) => {
     if (r && r.ok) { myTheme = r.theme; el.remove(); render(); }
     else if (r && r.error) alert(r.error);
@@ -457,7 +489,60 @@ if (/[?&]light\b/.test(location.search)) {
 }
 let W = null;                       // the watch view, when full mode is on
 
-socket.on('watch-state', (s2) => { W = s2; paintBoard(); });
+// Entrances and tosses in full mode, worked out by diffing the board feed the
+// same way the watch screen does. A player with the board up should see
+// somebody thrown out of the ring, not just a number change.
+let prevRing = null, cornerTimer = null;
+
+function boardCorner(kind, caption, who) {
+  let box = document.getElementById('bcorner');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'bcorner'; box.className = 'bcorner';
+    document.body.appendChild(box);
+  }
+  clearTimeout(cornerTimer);
+  box.innerHTML = tossAnimation(kind, 140, who || {})
+    + `<div class="bcap ${kind}">${caption}</div>`;
+  box.classList.add('on');
+  cornerTimer = setTimeout(() => box.classList.remove('on'),
+    TOSS_SECONDS[kind] * 1000 + 700);
+}
+
+function detectRing(next) {
+  const live = next.live || [];
+  if (!prevRing) { prevRing = live; return; }
+  const was = new Map(prevRing.map((p) => [p.token, p]));
+  const now = new Map(live.map((p) => [p.token, p]));
+  const gone = prevRing.filter((p) => !now.has(p.token));
+  const came = live.filter((p) => !was.has(p.token));
+  if (gone.length) {
+    boardCorner('toss', gone.length === 1 ? `${gone[0].name} is out`
+      : `${gone.length} out at once`, { victim: gone[0].look || null });
+  } else if (came.length) {
+    boardCorner('entry', came.length === 1 ? `${came[0].name} enters`
+      : `${came.length} enter`, { entrant: came[0].look || null });
+  }
+  prevRing = live;
+}
+
+socket.on('watch-state', (s2) => { detectRing(s2); W = s2; paintBoard(); });
+
+// Once we know who we are, honour a full-mode preference from a previous
+// session — the label alone was not enough to actually get the board.
+let fullApplied = false;
+socket.on('state', () => {
+  if (!fullApplied && myToken()) { fullApplied = true; applyStoredFull(); }
+});
+
+// Applied on load as well as on click. The stored preference set the label to
+// "Hide the board" while no board had been asked for, so the first press
+// appeared to do nothing.
+function applyStoredFull() {
+  if (!full) return;
+  document.body.classList.add('full');
+  socket.emit('want-board', { on: true });
+}
 
 function setFull(on) {
   full = !!on && CAN_FULL;
@@ -474,7 +559,7 @@ function boardHtml() {
   if (!full) return '';
   if (!W) return '<aside class="board"><div class="bwait">Loading the board...</div></aside>';
   const cols = (W.board || []).map((c) => '<div class="bcol">'
-    + `<div class="bcat">${c.title}</div>`
+    + `<div class="bcat" title="${c.title}"><span>${c.title}</span></div>`
     // Same as the console: keep the value so the cell keeps its size, and let
     // .gone make it transparent.
     // 'played', not 'gone': .gone already exists on this page as the
@@ -517,7 +602,7 @@ function renderJoin() {
     <div class="tokhint">Pick a token, or add a photo of your own.</div>
     <input id="nm" placeholder="Your name" maxlength="18" autocomplete="off" autocapitalize="words">
     <button id="go" disabled>Join</button>
-    <button class="fullbtn" id="musicjoin" type="button">Pick your entrance music
+    <button class="fullbtn joinmusic" id="musicjoin" type="button">${themeLabel()}
       <span class="fh">plays on the shared screen when you walk in</span></button>
     <a class="backhome" href="/">&larr; Back</a>
     ${joinErr ? `<div class="err">${joinErr}</div>` : ''}
@@ -664,7 +749,8 @@ function squareThumb(file, size) {
 }
 
 function doJoin(name) {
-  socket.emit('join', { gameId: gameId(), token: myToken(), name, look: myLook }, (r) => {
+  socket.emit('join', { gameId: gameId(), token: myToken(), name, look: myLook,
+    theme: myTheme }, (r) => {
     if (r && r.error) { joinErr = r.error; joined = false; return sfx.preload();
 renderJoin(); }
     if (r && r.token) saveToken(r.token);
