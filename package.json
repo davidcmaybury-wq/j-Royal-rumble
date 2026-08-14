@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.46.1",
+  "version": "0.46.2",
   "private": true,
   "type": "module",
   "engines": {
@@ -50,7 +50,8 @@
     "latecomer-test": "node test/latecomer.mjs",
     "mechanics2-test": "node test/mechanics2.mjs",
     "wrestlers-test": "node test/wrestlers.mjs",
-    "analysis": "node tools/analysis-data.mjs && python3 tools/plot-analysis.py"
+    "analysis": "node tools/analysis-data.mjs && python3 tools/plot-analysis.py",
+    "moved-test": "node test/moved.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

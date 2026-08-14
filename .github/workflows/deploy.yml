@@ -45,6 +45,7 @@ jobs:
           node test/perf.mjs
           node test/delay.mjs
           node test/escapes.mjs
+          node test/moved.mjs
           node test/wrestlers.mjs
           node test/mechanics2.mjs
           node test/latecomer.mjs

@@ -16,7 +16,11 @@ how it was built and is the authority for anything about the hosting. Repo
 `https://github.com/davidcmaybury-wq/j-Royal-rumble`.
 
 The old Fly app (`j-royal-rumble.fly.dev`, region `ord`) is what everything
-before August 2026 refers to.
+before August 2026 refers to. It is **still running as a spare**, with the match
+logs already copied across. Because matches live in memory on one instance, two
+reachable hosts means a split group is two separate broken games — set
+`RUMBLE_MOVED_TO=https://j-royal-rumble.net` on the old box and it redirects
+everything, path preserved. See `infra/aws/README.md`.
 
 ## Shipping
 

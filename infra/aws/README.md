@@ -30,6 +30,25 @@ If that matters, the fix is small: keep the GitHub Actions workflow running the
 test suite on push, and have it finish by asking the Lightsail box to pull. That
 restores the safety net without changing how the box is set up.
 
-**`tools/pull-logs.mjs`** moves match logs off a running server over HTTP — use
-it if anything still needs recovering from the old Fly volume before that app is
-destroyed.
+## The old Fly app
+
+Still running as a spare, with the match logs already copied across. Two live
+instances is a hazard worth taking seriously: **matches live in memory on a
+single instance**, so half a group joining `fly.dev` and half joining the new
+address is two separate broken games — and the worst kind, because both halves
+think the match is running fine.
+
+The defence is a variable. On the Fly box only:
+
+    fly secrets set RUMBLE_MOVED_TO=https://j-royal-rumble.net -a j-royal-rumble
+
+Every page then returns a "this has moved" notice and every API call a 308,
+both preserving the path — so an old `/j/ABCD` link lands on the right room at
+the right address. `/api/health` keeps answering so the box can still be
+watched. Unset the variable and it is a normal server again.
+
+It needs one deploy to take effect: set the repository variable
+`DEPLOY_FLY=true`, push, then set it back.
+
+`tools/pull-logs.mjs` moves match logs off a running server over HTTP if
+anything else ever needs recovering.

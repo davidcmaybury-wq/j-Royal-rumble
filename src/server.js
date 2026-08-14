@@ -71,6 +71,37 @@ console.log(`v${VERSION} · machine ${MACHINE} · library ${LIBRARY.length} cate
 
 const app = express();
 app.use(express.json({ limit: '12mb' }));
+
+// A retired host, kept running as a fallback, is a hazard: matches live in
+// memory on one instance, so half a group joining the old address and half the
+// new one is two separate broken games. Set RUMBLE_MOVED_TO on the old box and
+// every page redirects, preserving the path so an old /j/ABCD link lands on the
+// right room at the new address.
+//
+// Deliberately not a hardcoded domain: the old box is the one that needs to
+// know it is old, and it is the only one that should have this set.
+const MOVED_TO = process.env.RUMBLE_MOVED_TO || '';
+if (MOVED_TO) {
+  app.use((req, res, next) => {
+    // Health checks still answer, so the box can be monitored while retired.
+    if (req.path === '/api/health') return next();
+    const to = MOVED_TO.replace(/\/$/, '') + req.originalUrl;
+    if (req.headers.accept && req.headers.accept.includes('text/html')) {
+      return res.status(410).send(`<!doctype html><meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>J! Royal Rumble has moved</title>
+        <style>body{background:#0A0E1C;color:#EEEBE1;font:16px/1.6 system-ui,sans-serif;
+        display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;padding:24px}
+        a{color:#D6A93F}h1{font-size:22px;letter-spacing:.02em}p{color:#7C88AB;max-width:40ch}</style>
+        <div><h1>This address has moved</h1>
+        <p>The game now lives at a new address. This one is kept only as a spare,
+        and a match started here would not be the same match as everyone else's.</p>
+        <p><a href="${to}">${to}</a></p></div>`);
+    }
+    return res.redirect(308, to);
+  });
+}
+
 // The rules engine, served to the browser so the setup page can use the same
 // fairness measurements the server does rather than a second copy that drifts.
 // Served at /src/engine.js so that `../src/engine.js` resolves the same way
