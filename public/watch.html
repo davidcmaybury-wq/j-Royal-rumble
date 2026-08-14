@@ -88,6 +88,13 @@ gap:16px;text-align:center;padding:30px}
 padding:4px 12px 4px 5px;font-size:14px;display:inline-flex;align-items:center;gap:7px}
 .chip svg,.chip img{width:22px;height:22px;border-radius:50%;display:block}
 .chip.bot{border-style:dashed;color:var(--slate)}
+.backhome{display:block;text-align:center;margin-top:14px;color:var(--slate);
+font-size:13.5px;text-decoration:none}
+.backhome:hover{color:var(--brass)}
+.homebtn{display:inline-block;margin-top:18px;padding:11px 26px;
+border:1px solid var(--line);border-radius:var(--r);color:var(--slate);
+text-decoration:none;font-size:14px}
+.homebtn:hover{border-color:var(--brass);color:var(--brass)}
 .fld{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
 color:var(--chalk);padding:12px 14px;font:400 24px "IBM Plex Mono",monospace;
 text-align:center;text-transform:uppercase;letter-spacing:.3em;width:220px}
@@ -139,7 +146,7 @@ function cue(kind) {
   if (k && audioOn) sfx.play(k);
 }
 async function toggleAudio() {
-  if (audioOn) { audioOn = false; sfx.setMuted(true); paintAudio(); return; }
+  if (audioOn) { audioOn = false; sfx.setMuted(true); stopTheme(); paintAudio(); return; }
   const ok = await sfx.unlock();
   audioOn = ok;
   sfx.setMuted(!ok);
@@ -174,7 +181,8 @@ function ask() {
     <div style="color:var(--slate)">Enter the room code the host read out.</div>
     <input class="fld" id="c" maxlength="4" autocomplete="off" value="${code}">
     <button class="go" id="g">Watch</button>
-    <div class="err">${err}</div></div>`;
+    <div class="err">${err}</div>
+    <a class="backhome" href="/">&larr; Back</a></div>`;
   const c = $('c');
   const go = () => {
     code = c.value.trim().toUpperCase();
@@ -273,6 +281,7 @@ function render() {
       ${S.history && S.history.length > 2 ? `<div style="width:min(860px,92vw)">${
         scoreChart(S.history, (S.standings || []).map((p) => ({ token: p.token, name: p.name })),
           { winnerToken: champ && champ.token, width: 860, height: 240 })}</div>` : ''}
+      <a class="homebtn" href="/">Back to the front page</a>
       </div><div class="foot">${S.gameId}</div>`;
     return;
   }
@@ -375,7 +384,53 @@ function corner(kind, caption, who) {
 }
 
 socket.on('state', (s) => { detect(s); S = s; render(); paintCorner(); });
-socket.on('resolved', (e) => { lastWinner = e.winnerId || null; });
+socket.on('resolved', (e) => {
+  lastWinner = e.winnerId || null;
+  for (const en of e.entrances || []) playTheme(en);
+});
+
+// Entrance music, on the one screen that has sound turned on.
+//
+// Only that screen: thirty browsers starting the same clip a fraction apart
+// would be a mess, and this is the same reason the cue audio lives here. If
+// nobody has enabled sound, nothing plays and nothing breaks.
+let themeAudio = null;
+let themeFrame = null;
+
+function stopTheme() {
+  if (themeAudio) { themeAudio.pause(); themeAudio = null; }
+  if (themeFrame) { themeFrame.remove(); themeFrame = null; }
+}
+
+function playTheme(entrance) {
+  if (!audioOn || !entrance || !entrance.theme) return;
+  stopTheme();
+  const t = entrance.theme;
+
+  if (t.kind === 'youtube') {
+    // An iframe rather than an audio element, because that is the only way
+    // YouTube permits playback. Hidden, muted-autoplay-unmuted via the API
+    // parameters, and torn down after the entrance so nothing lingers.
+    const f = document.createElement('iframe');
+    f.width = 0; f.height = 0; f.style.cssText = 'position:absolute;width:0;height:0;border:0';
+    f.allow = 'autoplay';
+    f.src = `https://www.youtube-nocookie.com/embed/${t.id}`
+      + `?autoplay=1&start=${t.start || 0}&controls=0&modestbranding=1`;
+    document.body.appendChild(f);
+    themeFrame = f;
+    setTimeout(stopTheme, 12000);
+    return;
+  }
+
+  const src = t.kind === 'library' ? `/audio/themes/${t.key}.mp3` : t.url;
+  const a = new Audio(src);
+  a.volume = 0.85;
+  themeAudio = a;
+  a.play().catch(() => { /* the browser refused; the entrance still happens */ });
+  a.onended = () => { if (themeAudio === a) themeAudio = null; };
+  // A hard stop, so a long uploaded clip cannot run over the next clue.
+  setTimeout(() => { if (themeAudio === a) stopTheme(); }, 12000);
+}
 socket.on('connect', () => { if (code) join(); else ask(); });
 socket.on('disconnect', () => { /* the state stays on screen until it returns */ });
 

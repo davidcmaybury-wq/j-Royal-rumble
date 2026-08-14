@@ -504,6 +504,38 @@ the recommended interval. **It never refuses anything.** A host who wants a
 two-hour thirty-player match can have one; they should just know late draws will
 run away with it.
 
+## Entrance music
+
+Every player can pick something to walk in to. It plays on **the one screen with
+sound turned on**, the same rule as the game's cues — thirty browsers starting
+the same clip a fraction apart would be a mess.
+
+Three sources: the built-in library, a YouTube link with a start time, or an
+https link to a file. Everything is cut off after twelve seconds so a long clip
+cannot run over the next clue.
+
+### The library
+
+Twelve original 8-bit themes, four each in three moods — horror, wrestling,
+sports — about five seconds apiece and matched to each other by RMS rather than
+peak, because the sparse ones would otherwise sound half the volume of the busy
+ones. `python3 tools/make-themes.py` regenerates them.
+
+Synthesised rather than sourced, for the same reason as the game's cues: the
+licensing is unambiguous. Nothing is borrowed, so nothing can be mistaken for
+somebody's actual entrance music, which is the most aggressively owned part of a
+wrestling broadcast.
+
+Each is a real piece rather than a loop — a hook stated, varied and resolved —
+so a player gets a beginning and an end instead of a fragment fading out. Five
+seconds is short for that shape, so the tempos run fast, which suits the moment:
+an entrance is a door opening, not an interlude.
+
+**The folder is the library.** `/api/themes` reads whatever mp3s are in
+`public/audio/themes`, taking mood and title from the filename, so dropping a
+file in adds it without a deploy and there is no manifest to fall out of step.
+Anything you add yourself is your own call on licensing.
+
 ## Latecomers
 
 Somebody arriving after the bell goes to the back of the queue and enters at the

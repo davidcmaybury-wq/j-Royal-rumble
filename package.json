@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.49.0",
+  "version": "0.50.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -56,7 +56,9 @@
     "workflows-test": "node test/workflows.mjs",
     "welcome-test": "node test/welcome.mjs",
     "ping": "node tools/ping-host.mjs",
-    "fullbuzzer-test": "node test/fullbuzzer.mjs"
+    "fullbuzzer-test": "node test/fullbuzzer.mjs",
+    "themes": "python3 tools/make-themes.py",
+    "themes-test": "node test/themes.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

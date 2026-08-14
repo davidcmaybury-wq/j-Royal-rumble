@@ -258,7 +258,15 @@ should make a second run read as a second race rather than a glitch.
 
 ## Outstanding
 
-**Entrance music** is the one queue item never started: per-player uploaded clip
+**Entrance music** — built in 0.50.0. Twelve original 8-bit themes
+(`tools/make-themes.py`), a folder-is-the-library endpoint at `/api/themes`, a
+picker on the buzzer, and playback on whichever watch screen has sound on.
+YouTube links and https file links are supported too; **do not commit
+copyrighted clips** — the folder is David's to fill and his call on licensing.
+
+Old note follows.
+
+**Entrance music** was the one queue item never started: per-player uploaded clip
 or YouTube link with a start time, plus a library folder seeded with original
 synthesised 8-bit themes in three moods (horror, wrestling, sports), ~10s each,
 loudness-matched. Plays through the watch screen with sound enabled. David

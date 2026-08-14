@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { randomUUID, randomBytes } from 'crypto';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { gunzipSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -903,6 +903,33 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// The entrance-music library: whatever mp3s are in public/audio/themes.
+//
+// Read from the folder rather than a hardcoded list, so dropping a file in adds
+// it without a deploy. Names come from the filename — "wrestling-champion.mp3"
+// becomes mood Wrestling, title Champion — which keeps the folder the single
+// source of truth and means there is no manifest to fall out of step.
+const THEME_DIR = join(__dir, '../public/audio/themes');
+app.get('/api/themes', (_req, res) => {
+  let files = [];
+  try {
+    files = readdirSync(THEME_DIR).filter((f) => /\.(mp3|ogg|m4a|wav)$/i.test(f));
+  } catch { /* no folder yet, which is fine — the library is optional */ }
+  const nice = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+  res.json({
+    themes: files.sort().map((f) => {
+      const key = f.replace(/\.[^.]+$/, '');
+      const [mood, ...rest] = key.split('-');
+      return {
+        key,
+        url: `/audio/themes/${encodeURIComponent(f)}`,
+        mood: rest.length ? nice(mood) : 'Library',
+        title: (rest.length ? rest : [mood]).map(nice).join(' '),
+      };
+    }),
+  });
+});
+
 app.get('/api/library', (_req, res) => {
   const by = {};
   for (const c of LIBRARY) by[c.source] = (by[c.source] || 0) + 1;
@@ -970,7 +997,66 @@ app.get('/api/logs/:file', (req, res) => {
 
 app.get('/handbook', (_req, res) =>
   res.sendFile(join(__dir, '../docs/j-royal-rumble-handbook.pdf')));
-app.get('/rules', (_req, res) => res.sendFile(join(__dir, '../RULES.md')));
+// The rules, rendered for reading rather than served as raw markdown.
+//
+// RULES.md stays the Discord-shaped source — short blocks, paste instructions —
+// and this strips the pasting apparatus and dresses what remains, because the
+// person following a link from the welcome screen wants to read the rules, not
+// instructions for reposting them.
+const RULES_HTML = (() => {
+  let md = readFileSync(join(__dir, '../RULES.md'), 'utf8');
+  md = md
+    .replace(/^# .*\n/, '')                                  // the paste-oriented title
+    .replace(/^Every block below[^]*?---\n/m, '')            // ...and its instructions
+    .replace(/^## THE SHORT VERSION \(pin this\)/m, '## The short version')
+    .replace(/^The Discord-ready copy.*\n/m, '')
+    .replace(/^## HOW TO JOIN \(paste this before a match\)/m, '## How to join');
+  const esc = (x) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = (x) => esc(x)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+  const blocks = md.split(/\n\n+/).map((b) => {
+    b = b.trim();
+    if (!b) return '';
+    if (b === '---') return '<hr>';
+    if (b.startsWith('## ')) return `<h2>${inline(b.slice(3))}</h2>`;
+    if (b.startsWith('# ')) return `<h1>${inline(b.slice(2))}</h1>`;
+    if (/^[-*] /m.test(b)) {
+      return '<ul>' + b.split('\n').map((l) => `<li>${inline(l.replace(/^[-*] /, ''))}</li>`).join('') + '</ul>';
+    }
+    return `<p>${inline(b).replace(/\n/g, ' ')}</p>`;
+  }).join('\n');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble — the rules</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--line:#2A3556;--chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F}
+*{box-sizing:border-box}body{background:var(--ink);color:var(--chalk);margin:0;
+font:400 16px/1.65 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:680px;margin:0 auto;padding:28px 20px 70px}
+.top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.top a{color:var(--slate);text-decoration:none;font-size:13.5px}
+.top a:hover{color:var(--brass)}
+h1{font-family:"Anton",Impact,sans-serif;font-size:38px;letter-spacing:.02em;margin:14px 0 4px}
+h1 .j{color:var(--brass)}
+h2{font-family:"Anton",Impact,sans-serif;font-size:21px;letter-spacing:.03em;
+margin:38px 0 10px;color:var(--brass)}
+p{margin:0 0 14px}
+strong{color:var(--chalk)}
+p,li{color:#C9CCD9}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--panel);
+border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+ul{margin:0 0 14px;padding-left:22px}li{margin-bottom:6px}
+</style></head><body><div class="wrap">
+<div class="top"><a href="/">&larr; J! Royal Rumble</a><a href="/handbook">the design handbook</a></div>
+<h1><span class="j">J!</span> ROYAL RUMBLE &mdash; THE RULES</h1>
+${blocks}
+</div></body></html>`;
+})();
+app.get('/rules', (_req, res) => res.type('html').send(RULES_HTML));
+app.get('/rules.md', (_req, res) => res.sendFile(join(__dir, '../RULES.md')));
 
 app.get('/j/:id', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
 app.get('/join', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
@@ -1113,6 +1199,36 @@ io.on('connection', (socket) => {
   // answer in it and test/watch.mjs asserts as much. Assembling a second
   // "buzzer with board" payload from the host view is exactly how an answer
   // would eventually leak.
+  // A player's entrance music. Either a theme from the library or a link they
+  // supplied; the watch screen with sound on is what actually plays it.
+  socket.on('set-theme', ({ theme }, ack) => {
+    if (!match || !token) return ack?.({ error: 'no match' });
+    const r = match.roster.get(token);
+    if (!r) return ack?.({ error: 'not in this match' });
+    if (!theme) { r.theme = null; pushAll(); return ack?.({ ok: true, theme: null }); }
+
+    const kind = String(theme.kind || '');
+    if (kind === 'library') {
+      // Only a key, never a path — a chosen theme must not become a way to ask
+      // the server for an arbitrary file.
+      const key = String(theme.key || '').replace(/[^A-Za-z0-9_-]/g, '');
+      if (!key) return ack?.({ error: 'no theme chosen' });
+      r.theme = { kind: 'library', key };
+    } else if (kind === 'youtube') {
+      const id = String(theme.id || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 20);
+      if (!id) return ack?.({ error: 'that does not look like a YouTube link' });
+      r.theme = { kind: 'youtube', id, start: Math.max(0, Math.floor(theme.start || 0)) };
+    } else if (kind === 'url') {
+      const u = String(theme.url || '').slice(0, 500);
+      if (!/^https:\/\//.test(u)) return ack?.({ error: 'the link must start with https' });
+      r.theme = { kind: 'url', url: u };
+    } else {
+      return ack?.({ error: 'unknown kind of music' });
+    }
+    pushAll();
+    ack?.({ ok: true, theme: r.theme });
+  });
+
   socket.on('want-board', ({ on }, ack) => {
     if (!match) return ack?.({ error: 'no match' });
     if (on) {
@@ -1347,7 +1463,17 @@ io.on('connection', (socket) => {
     clearTimeout(match.raceTimer);
     match.clue = null; match.race = null; match.retoss = 0;
     pushAll();
+    // Whoever just walked in, and what they walk in to. Added here rather than
+    // in the engine: the engine deals in rules and knows nothing about music.
+    if (entry.entered != null) {
+      const ids = Array.isArray(entry.entered) ? entry.entered : [entry.entered];
+      entry.entrances = ids.map((t) => ({
+        name: match.roster.get(t)?.name,
+        theme: match.roster.get(t)?.theme || null,
+      })).filter((x) => x.name);
+    }
     io.to(`${match.id}:host`).emit('resolved', entry);
+    io.to(`${match.id}:watch`).emit('resolved', entry);
     for (const t of entry.revived || []) {
       const sid = match.roster.get(t)?.socketId;
       if (sid) io.to(sid).emit('revived', {

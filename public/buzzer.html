@@ -176,6 +176,36 @@ border-radius:var(--r);background:none;color:var(--slate);cursor:pointer;font-si
 .fullbtn:hover{border-color:var(--brass);color:var(--chalk)}
 .fullbtn.on{border-color:var(--brass);color:var(--brass)}
 .fullbtn .fh{display:block;font-size:10.5px;opacity:.75;margin-top:3px}
+.sheet{position:fixed;inset:0;background:#050810CC;display:grid;place-items:center;
+z-index:90;padding:16px}
+.sbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+padding:20px;max-width:440px;width:100%;max-height:86vh;overflow:auto}
+.sbox h3{font-size:16px;font-weight:500;margin-bottom:4px}
+.snote{font-size:12.5px;color:var(--slate);line-height:1.5;margin-bottom:14px}
+.smood{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);
+margin:14px 0 7px}
+.sgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.schip{padding:10px;border:1px solid var(--line);border-radius:var(--r);background:none;
+color:var(--chalk);font-size:13.5px;cursor:pointer;text-align:left}
+.schip:hover{border-color:var(--brass)}
+.schip.on{border-color:var(--brass);color:var(--brass);background:#241B08}
+.sbox input[type=text]{width:100%;padding:10px;background:var(--ink);color:var(--chalk);
+border:1px solid var(--line);border-radius:var(--r);font-size:14px}
+.sbox input.bad{border-color:var(--alarm)}
+.srow{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--slate)}
+.srow input{width:74px;padding:7px;background:var(--ink);color:var(--chalk);
+border:1px solid var(--line);border-radius:var(--r)}
+.sbtns{display:flex;gap:8px;margin-top:18px}
+.sbtns button{flex:1;padding:11px;border:1px solid var(--line);border-radius:var(--r);
+background:none;color:var(--slate);cursor:pointer}
+.sbtns .prim{background:var(--brass);color:var(--ink);border-color:var(--brass);font-weight:500}
+.backhome{display:block;text-align:center;margin-top:14px;color:var(--slate);
+font-size:13.5px;text-decoration:none}
+.backhome:hover{color:var(--brass)}
+.homebtn{display:block;text-align:center;margin:16px auto 0;max-width:280px;
+padding:12px;border:1px solid var(--line);border-radius:var(--r);color:var(--slate);
+text-decoration:none;font-size:14px}
+.homebtn:hover{border-color:var(--brass);color:var(--brass)}
 .fullno{margin-top:12px;font-size:11.5px;color:var(--slate);line-height:1.5;text-align:center}
 .watchlink{display:block;text-align:center;margin-top:14px;color:var(--brass);
 text-decoration:none;font-size:13px;border-bottom:1px solid #6A4509;
@@ -281,6 +311,69 @@ const root = document.getElementById('root');
 // whatever you set, because the trim only moves your own buzzer, and at a large
 // positive value every press lands before your arm and becomes a lockout rather
 // than a slow buzz. Both read as "nothing happened".
+// Entrance music. Plays through whichever screen in the room has sound on, so
+// there is nothing to hear on this device — the picker says so rather than
+// leaving somebody tapping preview and wondering.
+let myTheme = null, themeList = null;
+
+function themeLabel() {
+  if (!myTheme) return 'Pick your entrance music';
+  if (myTheme.kind === 'youtube') return 'Your music: a YouTube clip';
+  if (myTheme.kind === 'url') return 'Your music: a link';
+  const t = (themeList || []).find((x) => x.key === myTheme.key);
+  return 'Your music: ' + (t ? t.title : myTheme.key);
+}
+
+async function openMusic() {
+  if (!themeList) {
+    try { themeList = (await (await fetch('/api/themes')).json()).themes || []; }
+    catch { themeList = []; }
+  }
+  const byMood = {};
+  for (const t of themeList) (byMood[t.mood] ??= []).push(t);
+  const el = document.createElement('div');
+  el.className = 'sheet';
+  el.innerHTML = `<div class="sbox">
+    <h3>Entrance music</h3>
+    <p class="snote">Plays on the screen with sound turned on when you walk in.
+      You will not hear it on this device.</p>
+    ${Object.entries(byMood).map(([mood, list]) => `<div class="smood">${mood}</div>
+      <div class="sgrid">${list.map((t) => `<button data-key="${t.key}"
+        class="schip${myTheme && myTheme.key === t.key ? ' on' : ''}">${t.title}</button>`).join('')}</div>`).join('')}
+    <div class="smood">Your own</div>
+    <input type="text" id="tlink" placeholder="Paste a YouTube link"
+           value="${myTheme && myTheme.kind === 'youtube'
+             ? 'https://youtu.be/' + myTheme.id : ''}" autocomplete="off">
+    <div class="srow"><label>Start at</label>
+      <input type="number" id="tstart" min="0" value="${myTheme?.start || 0}"> seconds</div>
+    <div class="sbtns">
+      <button id="tnone">No music</button>
+      <button id="tsave" class="prim">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(el);
+  el.onclick = (ev) => { if (ev.target === el) el.remove(); };
+
+  for (const b of el.querySelectorAll('.schip')) {
+    b.onclick = () => save({ kind: 'library', key: b.dataset.key }, el);
+  }
+  el.querySelector('#tnone').onclick = () => save(null, el);
+  el.querySelector('#tsave').onclick = () => {
+    const raw = el.querySelector('#tlink').value.trim();
+    if (!raw) return save(null, el);
+    const id = (raw.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/) || [])[1];
+    if (!id) { el.querySelector('#tlink').classList.add('bad'); return; }
+    save({ kind: 'youtube', id, start: +el.querySelector('#tstart').value || 0 }, el);
+  };
+}
+
+function save(theme, el) {
+  socket.emit('set-theme', { theme }, (r) => {
+    if (r && r.ok) { myTheme = r.theme; el.remove(); render(); }
+    else if (r && r.error) alert(r.error);
+  });
+}
+
 function lagHint() {
   const v = getLag();
   if (v === 0) return 'buzzing too early? raise this';
@@ -378,6 +471,7 @@ function renderJoin() {
     <div class="tokhint">Pick a token, or add a photo of your own.</div>
     <input id="nm" placeholder="Your name" maxlength="18" autocomplete="off" autocapitalize="words">
     <button id="go" disabled>Join</button>
+    <a class="backhome" href="/">&larr; Back</a>
     ${joinErr ? `<div class="err">${joinErr}</div>` : ''}
     <div class="rules">
       <div class="rt">How it works</div>
@@ -534,7 +628,8 @@ renderJoin(); }
     joined = true; joinErr = '';
     sfx.unlock();
     // Their own confirmation that they are in the room.
-    setTimeout(() => sfx.play('join'), 60);
+    // Deliberately no sound here. Arriving at your own join is not an event
+    // the room needs marking; the cues belong to the match, not the menus.
     const av = localStorage.getItem('rumble:avatar');
     if (av) socket.emit('avatar', { dataUrl: av });
     // Only ask for something the player actually chose.
@@ -707,6 +802,8 @@ renderJoin();
   renderMech(st, you);
   const fb2 = document.getElementById('fullbtn');
   if (fb2) fb2.onclick = () => setFull(!full);
+  const mb = document.getElementById('musicbtn');
+  if (mb) mb.onclick = openMusic;
   maybeGone(st, you);
 }
 
@@ -826,6 +923,8 @@ function renderMech(st, you) {
       <span class="lh">${lagHint()}</span>
       <span class="lastarm" id="lastarm"></span>
     </div>
+    <button class="fullbtn" id="musicbtn">
+      ${themeLabel()}<span class="fh">entrance music</span></button>
     ${CAN_FULL ? `<button class="fullbtn${full ? ' on' : ''}" id="fullbtn">
       ${full ? 'Hide the board' : 'Show the board here'}
       <span class="fh">${full ? 'you are not sharing a screen'
@@ -974,6 +1073,7 @@ function renderResults() {
       <tbody>${rows.map((p) => `<tr class="${p.winner ? 'win' : ''}${me && p.token === me.token ? ' me' : ''}">${
         cols.map(([k]) => `<td class="${k === 'name' ? '' : 'num'}">${cell(p, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="rfoot">Tap a column to sort. Only the last one standing counts.</div>
+    <a class="homebtn" href="/">Back to the front page</a>
   </div></div>`;
   root.querySelectorAll('th[data-k]').forEach((th) => th.onclick = () => {
     const k = th.dataset.k;
