@@ -40,6 +40,45 @@ export const DEFAULT_SETTINGS = {
   // late entrants walked in as the only outsider and paid everybody. Half the
   // ring keeps it a faction rather than a consensus.
   stableMaxFraction: 0.5,
+  // Load the teammates' share onto the outsiders rather than letting the pot
+  // shrink. Measured below; see README.
+  stableFocus: true,
+  // How a stable member's winnings are divided.
+  //
+  //   'winner'   the winner keeps the lot. A stable is a non-aggression pact
+  //              and nothing more; members still race each other flat out.
+  //   'even'     the whole pot split across the stable. The stable behaves as
+  //              one entity, and a strong member is heavily taxed by it.
+  //   'surplus'  the winner banks the clue's face value, and only what the
+  //              stable's protection added on top is shared. A middle course:
+  //              you always earn your own clue, you share the windfall.
+  stableShare: 'even',
+  // What a traitor walks away with. The rest is split among the people they
+  // leave behind. Capped at the stack, never a top-up: without that, somebody
+  // poor would betray to get richer, which is not betrayal, it is a wage.
+  //
+  // A flat amount is worth measuring before setting. As a share of the stack it
+  // is nearly nothing to a leader and everything to a straggler:
+  //
+  //   stack    keep 0   keep 500   keep 1000
+  //     500     100%        0%         0%      free
+  //    1000     100%       50%         0%      free
+  //    3000     100%       83%        67%      still ruinous
+  //    8000     100%       94%        88%      still ruinous
+  //
+  // So a flat keep is an escape hatch for whoever is losing rather than an
+  // option for whoever is winning — the opposite of the interesting betrayal,
+  // which is the leader walking out. A share of the stack scales properly if
+  // that is the behaviour wanted.
+  betrayalKeep: 0,
+  // The same toll as a share of the stack, which is the version that scales:
+  // a flat amount is free to a straggler and irrelevant to a leader. Takes
+  // precedence over betrayalKeep when set.
+  // Half. Enough of a toll that walking out is a real cost, not enough to make
+  // it unthinkable — measured, a defector at 50% wins 16.9% against 25.1% for
+  // staying put, so it is a bad move for an ordinary player and a live question
+  // for anybody who thinks they are better than the room.
+  betrayalKeepFraction: 0.5,
   targeting: false,          // aim your damage at one player, and theirs at you
   bounties: false,           // queued players pay to put a price on a head
   revival: false,            // one more life, at a fraction of the stake
@@ -313,6 +352,24 @@ export function makeRng(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+/**
+ * The stables, in the order they are handed out.
+ *
+ * Gemstones because they give a name and a colour in one, and six is the most
+ * a room can tell apart at a glance — beyond that the highlights stop meaning
+ * anything. Diamond leads because white reads on every screen.
+ */
+export const STABLE_NAMES = [
+  { name: 'Diamond', colour: '#EDF1F7' },
+  { name: 'Ruby', colour: '#E24A3C' },
+  { name: 'Emerald', colour: '#3FA98C' },
+  { name: 'Sapphire', colour: '#4F7FD1' },
+  // Onyx is black, but black on a near-black interface is nothing at all, so
+  // it is the lightest grey that still reads as black.
+  { name: 'Onyx', colour: '#8A93A6' },
+  { name: 'Topaz', colour: '#D6A93F' },
+];
 
 export class RumbleGame {
   // categoryPool: () => { id, title, clues: [{id, row, text, answer}] }
@@ -700,8 +757,17 @@ export class RumbleGame {
       // In a stable, the damage you do lands only on people outside it — your
       // people pay nothing. That is the whole point of joining one, and it is
       // also the whole cost: a big stable takes from very few.
-      const opponents = live.filter((p) => p.id !== winnerId && !this.allied(p, w));
-      const pot = value * opponents.length;
+      // Everyone who could pay, and everyone who actually does.
+      //
+      // A stable's members do not pay each other. Under `stableFocus` the pot
+      // stays the size it would have been — the damage the teammates would have
+      // taken is loaded onto the outsiders instead, so the bigger the stable
+      // the harder each outsider is hit. Without it the pot simply shrinks,
+      // which protected the stable but did nothing to anybody else.
+      const everyone = live.filter((p) => p.id !== winnerId);
+      const opponents = everyone.filter((p) => !this.allied(p, w));
+      const pot = value * ((this.s.stables && this.s.stableFocus)
+        ? everyone.length : opponents.length);
 
       // Who pays, and how much. Three cases, in order of precedence.
       const payers = new Map();
@@ -715,8 +781,10 @@ export class RumbleGame {
         // The winner aimed. All the damage lands on one head.
         payers.set(w.target, pot);
         entry.focused = w.target;
-      } else {
-        for (const p of opponents) payers.set(p.id, value);
+      } else if (opponents.length) {
+        // Split evenly across whoever is left outside the stable.
+        const each = Math.round(pot / opponents.length);
+        for (const p of opponents) payers.set(p.id, each);
       }
 
       let collected = 0;
@@ -730,7 +798,29 @@ export class RumbleGame {
       // contributed. Keeping this path is what lets the harness show why the
       // pot rule exists at all.
       const gain = (this.s.potScoring ? collected : value) * mult(w);
-      w.score += gain;
+      const mates = (this.s.stables && w.stable)
+        ? this.live().filter((p) => p.stable === w.stable) : [w];
+      const mode = this.s.stables && w.stable && mates.length > 1
+        ? this.s.stableShare : 'winner';
+
+      if (mode === 'even') {
+        // The stable acts as one. A strong member is taxed hard by it, which is
+        // the point: protection is bought with earnings.
+        const each = Math.round(gain / mates.length);
+        for (const p of mates) p.score += each;
+        entry.shared = { stable: w.stable, each, mode };
+      } else if (mode === 'surplus') {
+        // You always earn your own clue; only what the stable's protection
+        // added on top is shared out.
+        const own = Math.min(gain, value * mult(w));
+        const extra = Math.max(0, gain - own);
+        const each = Math.round(extra / mates.length);
+        w.score += own;
+        for (const p of mates) p.score += each;
+        entry.shared = { stable: w.stable, own, each, mode };
+      } else {
+        w.score += gain;
+      }
       w.correct += 1;
       entry.gain = gain;
       if (w.topRope) ceilingFreeFor = w.id;   // the point of the risk is the reward
@@ -1106,20 +1196,27 @@ export class RumbleGame {
     return this.stableSize(id) >= cap;
   }
 
-  /** Create a stable and put the founder in it. */
-  createStable(playerId, name) {
+  /**
+   * Create a stable and put the founder in it.
+   *
+   * Named from the list rather than by the player. Six gemstones with six
+   * colours the scoreboards can use: a stable has to be recognisable at a
+   * glance across three different screens, and typed names collide, run long,
+   * and cannot be turned into a colour.
+   */
+  createStable(playerId) {
     if (!this.s.stables) return { error: 'stables are not on in this match' };
     const p = this.players.get(playerId);
     if (!p) return { error: 'no such player' };
-    const clean = String(name || '').trim().slice(0, 24);
-    if (!clean) return { error: 'a stable needs a name' };
-    if ([...this.stables.values()].some((st) => st.name.toLowerCase() === clean.toLowerCase())) {
-      return { error: 'there is already a stable called that' };
-    }
-    const id = 's' + (this.stables.size + 1) + '-' + clean.toLowerCase().replace(/[^a-z0-9]/g, '');
-    this.stables.set(id, { id, name: clean, foundedBy: playerId });
+    if (p.stable) return { error: 'you are already in a stable' };
+    const taken = new Set([...this.stables.values()].map((st) => st.name));
+    const free = STABLE_NAMES.filter((g) => !taken.has(g.name));
+    if (!free.length) return { error: 'every stable is already going' };
+    const gem = free[0];
+    const id = 's-' + gem.name.toLowerCase();
+    this.stables.set(id, { id, name: gem.name, colour: gem.colour, foundedBy: playerId });
     p.stable = id;
-    return { ok: true, id, name: clean };
+    return { ok: true, id, name: gem.name, colour: gem.colour };
   }
 
   /** Join a stable you are not already in. Free — the cost is in leaving. */
@@ -1156,16 +1253,21 @@ export class RumbleGame {
     const from = p.stable;
     const left = this.live().filter((x) => x.id !== playerId && x.stable === from);
     const stack = p.score;
+    // Never more than they had: this is a toll, not a payout.
+    const kept = this.s.betrayalKeepFraction != null
+      ? Math.max(0, Math.round(stack * this.s.betrayalKeepFraction))
+      : Math.min(stack, Math.max(0, this.s.betrayalKeep || 0));
+    const given = stack - kept;
     let each = 0;
-    if (left.length && stack !== 0) {
-      each = Math.round(stack / left.length);
+    if (left.length && given > 0) {
+      each = Math.round(given / left.length);
       for (const x of left) x.score += each;
-      p.score = 0;
+      p.score = kept;
     } else if (left.length === 0) {
       // Nobody to abandon. Walking out of an empty room is not betrayal.
       p.score = stack;
     } else {
-      p.score = 0;
+      p.score = Math.min(stack, kept);
     }
     p.stable = joinId || null;
     return { ok: true, from, fromName: this.stables.get(from)?.name || 'their stable',

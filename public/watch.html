@@ -5,6 +5,12 @@
 <title>J! Royal Rumble</title>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* Stable colours on the scoreboards. A tinted edge and the stone's badge, so a
+   glance tells you who is with whom without reading a single name. */
+.pl.instable,.brow.instable,.row.instable{box-shadow:inset 3px 0 0 var(--gemc)}
+.gem{flex:none;vertical-align:-3px;margin-right:4px}
+.gemname{color:var(--gemc);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+
 /* A sweep: the cleared column held up and shimmering while the bonus floats off
    it. The board replaces a cleared category in the same resolve, so without
    this the celebration plays over a column that is already something else. */
@@ -201,6 +207,7 @@ margin-top:5px;color:var(--alarm)}
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { markFull, markSmall, brainAvatar } from '/brand.js';
+import { gem } from '/gems.js';
 import { weaponToken } from '/tokens.js';
 import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import { scoreChart } from '/chart.js';
@@ -326,13 +333,19 @@ function stage() {
   return board();
 }
 
+// Which stable a row belongs to, for the tint and the badge.
+const stableOf = (id) => ((S && S.stables) || []).find((x) => x.id === id) || null;
+
 function row(p, out) {
   const low = !out && p.score < 600;
-  return '<div class="pl' + (out ? ' out' : '') + (p.topRope ? ' uptop' : '') + '">'
+  const st = p.stable ? stableOf(p.stable) : null;
+  return '<div class="pl' + (out ? ' out' : '') + (p.topRope ? ' uptop' : '')
+    + (st ? ' instable' : '') + '"'
+    + (st ? ' style="--gemc:' + st.colour + '"' : '') + '>'
     + '<span class="ctrl' + (S.control === p.token ? ' on' : '') + '"></span>'
     + '<span class="dr">' + p.draw + '</span>'
     + face(p)
-    + '<span class="nm">' + p.name
+    + '<span class="nm">' + (st ? gem(st.name, st.colour, 15) : '') + p.name
       + (p.topRope ? ' <span class="mk rope">TOP ROPE</span>' : '')
       + ((p.targetedBy || []).length ? ' <span class="mk hunted">&#9678;'
           + (p.targetedBy.length > 1 ? ' \u00D7' + p.targetedBy.length : '') + '</span>' : '')

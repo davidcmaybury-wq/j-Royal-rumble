@@ -337,6 +337,8 @@ class Match {
       };
     }
     return {
+      // The stables, so every board can tint its rows and show the badges.
+      stables: this.settings.stables ? this.stableList() : null,
       phase: this.phase, gameId: this.id, version: VERSION, watching: true,
       clues: g.cluesRevealed,
       ceiling: g.ceiling,
@@ -387,6 +389,8 @@ class Match {
     const r = this.roster.get(p.id);
     return {
       token: p.id, draw: p.drawNumber, name: p.name, score: p.score,
+      // Which stable, so every scoreboard can tint the row the same way.
+      stable: p.stable || null,
       state: p.state, tenure: (p.eliminatedAtClue ?? g.cluesRevealed) - (p.enteredAtClue ?? 0),
       connected: r?.connected ?? false, hasAvatar: !!r?.avatar,
       tokenArt: r?.tokenArt || null, look: r?.look || null, isBot: !!r?.isBot,
@@ -470,6 +474,8 @@ class Match {
     const tenure = (p.eliminatedAtClue ?? g.cluesRevealed) - (p.enteredAtClue ?? 0);
     return {
       token: p.id, draw: p.drawNumber, name: p.name, score: p.score,
+      // Which stable, so every scoreboard can tint the row the same way.
+      stable: p.stable || null,
       state: p.state, pins: p.pins, correct: p.correct, missed: p.missed,
       tenure, connected: this.roster.get(p.id)?.connected ?? false,
       hasAvatar: !!this.roster.get(p.id)?.avatar,
@@ -498,7 +504,8 @@ class Match {
       members.get(p.stable).push({ token: p.id, name: p.name, state: p.state });
     }
     return [...this.game.stables.values()].map((st) => ({
-      id: st.id, name: st.name, members: members.get(st.id) || [] }));
+      id: st.id, name: st.name, colour: st.colour,
+      members: members.get(st.id) || [] }));
   }
 
   raceView() {
@@ -1436,10 +1443,12 @@ io.on('connection', (socket) => {
   // side accordingly.
   const betweenClues = () => !match?.clue;
 
-  socket.on('make-stable', ({ name }, ack) => {
+  socket.on('make-stable', (_d, ack) => {
     if (!match?.game || !token) return ack?.({ error: 'no match' });
     if (!betweenClues()) return ack?.({ error: 'wait until the clue is done' });
-    const r = match.game.createStable(token, name);
+    // Named from the list, not by the player: a stable has to be recognisable
+    // at a glance on three screens, and typed names collide and run long.
+    const r = match.game.createStable(token);
     if (r.error) return ack?.({ error: r.error });
     match.note('stable-made', { name: r.name, by: match.roster.get(token)?.name });
     pushAll();

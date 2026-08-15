@@ -24,11 +24,13 @@ const score = (g, id) => g.players.get(id).score;
 console.log('MAKING AND JOINING');
 {
   const g = mk(3);
-  const r = g.createStable('a', 'The Firm');
+  const r = g.createStable('a');
   check('a stable can be founded', r.ok === true, r.name);
+  check('and is named from the list, with a colour',
+    r.name === 'Diamond' && /^#/.test(r.colour), `${r.name} ${r.colour}`);
   check('the founder is in it', g.players.get('a').stable === r.id);
   check('a second player can join', g.joinStable('b', r.id).ok === true);
-  check('two names the same are refused', !!g.createStable('c', 'the firm').error);
+  check('a second stable takes the next stone', g.createStable('c').name === 'Ruby');
   check('joining twice is refused', !!g.joinStable('b', r.id).error);
   check('you cannot hop straight to another', !!g.joinStable('b', 'nope').error);
 }
@@ -39,18 +41,47 @@ console.log('\nWHO PAYS');
   const g = mk(3);
   const ring = g.live().map((p) => p.id);
   const [A, B, C] = ring;
-  const st = g.createStable(A, 'Wolves').id;
+  const st = g.createStable(A).id;
   g.joinStable(B, st);
   const [s, r] = open(g);
   const before = { a: score(g, A), b: score(g, B), c: score(g, C) };
   const val = r * 100;
   g.resolveClue(s, r, { winnerId: A, missedIds: [] });
-  check('a teammate pays nothing', score(g, B) === before.b,
-    `${before.b} -> ${score(g, B)}`);
-  check('the outsider pays', score(g, C) === before.c - val,
+  // The teammate's share is loaded onto the outsider rather than written off,
+  // so one outsider facing a pair pays for both of them.
+  check('the outsider carries the whole pot', score(g, C) === before.c - val * 2,
     `${before.c} -> ${score(g, C)}`);
-  check('and the winner collects only from them',
-    score(g, A) === before.a + val, `+${score(g, A) - before.a}`);
+  // ...and the pot is split across the stable, so the teammate gains without
+  // having answered. That is what a stable is now: a shared purse.
+  check('the winner takes half of it', score(g, A) === before.a + val,
+    `+${score(g, A) - before.a}`);
+  check('and the teammate takes the other half', score(g, B) === before.b + val,
+    `+${score(g, B) - before.b}`);
+
+  // The older behaviour is still available.
+  const g2 = mk(3, { stableShare: 'winner' });
+  const r2 = g2.live().map((p) => p.id);
+  const s2 = g2.createStable(r2[0]).id;
+  g2.joinStable(r2[1], s2);
+  const [sl2, rw2] = open(g2);
+  const b2 = score(g2, r2[1]);
+  g2.resolveClue(sl2, rw2, { winnerId: r2[0], missedIds: [] });
+  check("with stableShare 'winner' the teammate only avoids paying",
+    score(g2, r2[1]) === b2, `${b2} -> ${score(g2, r2[1])}`);
+}
+
+console.log('\nWITHOUT stableFocus THE POT JUST SHRINKS');
+{
+  const g = mk(3, { stableFocus: false });
+  const [A, B, C] = g.live().map((p) => p.id);
+  const st = g.createStable(A).id;
+  g.joinStable(B, st);
+  const [s, r] = open(g);
+  const val = r * 100;
+  const before = score(g, C);
+  g.resolveClue(s, r, { winnerId: A, missedIds: [] });
+  check('the outsider pays face value only', score(g, C) === before - val,
+    `${before} -> ${score(g, C)}`);
 }
 
 console.log('\nBETRAYAL');
@@ -59,24 +90,25 @@ console.log('\nBETRAYAL');
   // on how many the engine starts.
   const g = mk(3, { stableMaxFraction: 1 });
   const [A, B, C] = g.live().map((p) => p.id);
-  const st = g.createStable(A, 'Kings').id;
+  const st = g.createStable(A).id;
   g.joinStable(B, st); g.joinStable(C, st);
   g.players.get(A).score = 6000;
   const b4 = { b: score(g, B), c: score(g, C) };
   const r = g.betray(A, null);
   check('betrayal is allowed', r.ok === true, JSON.stringify({ stack: r.stack, each: r.each }));
-  check('the traitor leaves with nothing', score(g, A) === 0, String(score(g, A)));
-  // 6000 split between the two left behind.
-  check('the stack is split among those abandoned',
-    score(g, B) === b4.b + 3000 && score(g, C) === b4.c + 3000,
+  // Half by default: a real cost without being unthinkable.
+  check('the traitor keeps half', score(g, A) === 3000, String(score(g, A)));
+  // The other half, split between the two left behind.
+  check('and the other half goes to those abandoned',
+    score(g, B) === b4.b + 1500 && score(g, C) === b4.c + 1500,
     `+${score(g, B) - b4.b} and +${score(g, C) - b4.c}`);
   check('and they are out of the stable', g.players.get(A).stable === null);
 }
 {
   const g = mk(3);
   const [A, B] = g.live().map((p) => p.id);
-  g.createStable(A, 'Alone');
-  const two = g.createStable(B, 'Other').id;
+  g.createStable(A);
+  const two = g.createStable(B).id;
   g.players.get(A).score = 5000;
   const r = g.betray(A, two);
   check('leaving a stable with nobody left in it costs nothing',
@@ -90,7 +122,7 @@ console.log('\nTHE MATCH STILL HAS TO END');
   // eliminations leaving one stable holding the ring, not for people joining.
   const g = mk(3, { stableMaxFraction: 1 });
   const [A, B, C] = g.live().map((p) => p.id);
-  const st = g.createStable(A, 'Everyone').id;
+  const st = g.createStable(A).id;
   g.joinStable(B, st); g.joinStable(C, st);
   check('an all-in ring is spotted', g.stableHasWon() === st);
   const [s, r] = open(g);
@@ -100,11 +132,25 @@ console.log('\nTHE MATCH STILL HAS TO END');
     g.live().every((p) => p.stable === null));
 }
 
+// The toll is a setting, so check both ends of it too.
+{
+  const g = mk(3, { stableMaxFraction: 1, betrayalKeepFraction: 0 });
+  const [A, B] = g.live().map((p) => p.id);
+  const st = g.createStable(A).id;
+  g.joinStable(B, st);
+  g.players.get(A).score = 4000;
+  const before = score(g, B);
+  g.betray(A, null);
+  check('at nothing kept, the traitor leaves empty', score(g, A) === 0, String(score(g, A)));
+  check('and the whole stack changes hands', score(g, B) === before + 4000,
+    `+${score(g, B) - before}`);
+}
+
 console.log('\nSIZE CAP');
 {
   const g = mk(3);
   const [A, B, C] = g.live().map((p) => p.id);
-  const st = g.createStable(A, 'Bloc').id;
+  const st = g.createStable(A).id;
   check('a stable can hold up to half the ring', g.joinStable(B, st).ok === true);
   const third = g.joinStable(C, st);
   check('but not the whole room', !!third.error, third.error);

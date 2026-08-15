@@ -46,7 +46,9 @@ host.emit('pick-clue', { slot: open[0][0], row: open[0][1] });
 await wait(90);
 host.emit('resolve', { winnerToken: ps[0].token });
 await wait(500);
-check('a teammate pays nothing', ps[1].view.you.score === before[1],
+// Under the even split a teammate does better than not paying: they take a
+// share of the pot without having answered anything.
+check('a teammate shares the winnings', ps[1].view.you.score > before[1],
   `${before[1]} -> ${ps[1].view.you.score}`);
 check('the outsider pays', ps[2].view.you.score < before[2],
   `${before[2]} -> ${ps[2].view.you.score}`);
@@ -57,9 +59,12 @@ const benBefore = ps[1].view.you.score;
 const bet = await new Promise((r) => ps[0].s.emit('betray', {}, r));
 check('betrayal works', bet.ok === true, JSON.stringify({ stack: bet.stack, each: bet.each }));
 await wait(400);
-check('the traitor is at zero', ps[0].view.you.score === 0, String(ps[0].view.you.score));
-check('and the abandoned teammate has the stack',
-  ps[1].view.you.score === benBefore + stack, `${benBefore} -> ${ps[1].view.you.score}`);
+// Half the stack, which is the shipped toll.
+check('the traitor keeps half', ps[0].view.you.score === Math.round(stack / 2),
+  `${stack} -> ${ps[0].view.you.score}`);
+check('and the abandoned teammate takes the rest',
+  ps[1].view.you.score === benBefore + (stack - Math.round(stack / 2)),
+  `${benBefore} -> ${ps[1].view.you.score}`);
 
 // Guards.
 host.emit('pick-clue', { slot: open[1][0], row: open[1][1] });

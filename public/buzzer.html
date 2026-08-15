@@ -8,6 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* Stable colours on the scoreboards. A tinted edge and the stone's badge, so a
+   glance tells you who is with whom without reading a single name. */
+.pl.instable,.brow.instable,.row.instable{box-shadow:inset 3px 0 0 var(--gemc)}
+.gem{flex:none;vertical-align:-3px;margin-right:4px}
+.gemname{color:var(--gemc);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+
 /* What the robots say. A robot that is simply marked wrong is a scoring event;
    one that says "Millard Fillmore" is a player. */
 .says{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(8px);
@@ -349,6 +355,7 @@ import { scoreChart } from '/chart.js';
 // The line-art weapons are gone: everyone sees wrestlers now, including the
 // player themselves.
 import { avatar, distinctLook } from '/wrestlers.js';
+import { gem } from '/gems.js';
 import { animation as tossAnimation, SECONDS as TOSS_SECONDS } from '/toss.js';
 import { markFull } from '/brand.js';
 import * as sfx from '/sound.js';
@@ -477,13 +484,15 @@ function stableSheet() {
     <p class="snote">In a stable, the damage you do lands only on people outside
       it — your side pays nothing. Leaving again means betrayal.</p>
     ${list.length ? `<div class="smood">Join one</div><div class="sgrid">
-      ${list.map((s2) => `<button class="schip" data-join="${s2.id}">${s2.name}
+      ${list.map((s2) => `<button class="schip" data-join="${s2.id}"
+        style="--gemc:${s2.colour}">${gem(s2.name, s2.colour, 16)} ${s2.name}
         <span class="fh">${s2.members.length} in</span></button>`).join('')}</div>` : ''}
     <div class="smood">Start your own</div>
-    <input type="text" id="stname" placeholder="Name it" maxlength="24" autocomplete="off">
+    <p class="snote">It will be named for you — the stones are how everybody
+      tells the sides apart on the board.</p>
     <div class="err" id="sterr"></div>
     <div class="sbtns"><button id="stcancel">Never mind</button>
-      <button id="stmake" class="prim">Found it</button></div>
+      <button id="stmake" class="prim">Found one</button></div>
   </div>`;
   document.body.appendChild(el);
   el.onclick = (ev) => { if (ev.target === el) el.remove(); };
@@ -495,13 +504,12 @@ function stableSheet() {
     });
   }
   el.querySelector('#stmake').onclick = () => {
-    const nm = el.querySelector('#stname').value.trim();
-    socket.emit('make-stable', { name: nm }, (r) => {
+    socket.emit('make-stable', {}, (r) => {
       if (r && r.error) el.querySelector('#sterr').textContent = r.error;
       else { el.remove(); say(`${r.name} is yours`); }
     });
   };
-  el.querySelector('#stname').focus();
+
 }
 
 function betraySheet(you) {
@@ -520,7 +528,8 @@ function betraySheet(you) {
          You leave with nothing.`
       : 'There is nobody left in it, so this costs you nothing.'}</p>
     ${list.length ? `<div class="smood">Go to</div><div class="sgrid">
-      ${list.map((s2) => `<button class="schip" data-to="${s2.id}">${s2.name}</button>`).join('')}
+      ${list.map((s2) => `<button class="schip" data-to="${s2.id}"
+        style="--gemc:${s2.colour}">${gem(s2.name, s2.colour, 16)} ${s2.name}</button>`).join('')}
       </div>` : ''}
     <div class="err" id="bterr"></div>
     <div class="sbtns"><button id="btcancel">Stay loyal</button>
@@ -682,9 +691,14 @@ function boardHtml() {
     + c.clues.map((x) => `<div class="bcell${x.revealed ? ' played' : ''}">`
         + '$' + x.value + '</div>').join('')
     + '</div>').join('');
-  const ring = (W.live || []).map((p) => `<div class="brow">`
-    + `<span class="bd">${p.draw}</span><span class="bn">${p.name}</span>`
-    + `<span class="bs num">${money(p.score)}</span></div>`).join('');
+  const stableOf = (id) => (W.stables || []).find((x) => x.id === id) || null;
+  const ring = (W.live || []).map((p) => {
+    const st = p.stable ? stableOf(p.stable) : null;
+    return `<div class="brow${st ? ' instable' : ''}"${st ? ` style="--gemc:${st.colour}"` : ''}>`
+      + `<span class="bd">${p.draw}</span>`
+      + `<span class="bn">${st ? gem(st.name, st.colour, 14) : ''}${p.name}</span>`
+      + `<span class="bs num">${money(p.score)}</span></div>`;
+  }).join('');
   const clue = W.clue
     ? `<div class="bclue"><div class="bmeta">${W.clue.category} &middot; $${W.clue.value}</div>`
       + `<div class="btext">${W.clue.text || ''}</div></div>`

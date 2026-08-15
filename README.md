@@ -577,10 +577,122 @@ Teams, off unless the host turns them on. **The damage you do lands only on
 people outside your stable** — your side pays nothing. That is the whole
 benefit and the whole cost: a big stable takes from very few.
 
-Founded with a name, before the match or during it. **J** to join one, **B** to
+**Stables are named for you, from gemstones** — Diamond, Ruby, Emerald,
+Sapphire, Onyx, Topaz, handed out in that order. Each carries a colour and a
+line-art badge that appears beside every member's name and tints their row on
+all three scoreboards, so a glance tells you who is with whom without reading.
+Six because that is the most a room can tell apart at once; typed names collide,
+run long, and cannot be turned into a colour. Onyx is drawn in the lightest grey
+that still reads as black, because black on a near-black screen is nothing.
+
+**When a stable member wins, the pot is split evenly across the stable.** A
+stable is a shared purse, not just a non-aggression pact — which taxes a strong
+member and is what makes joining one a real decision rather than free. See the
+measurements below; `stableShare: 'winner'` restores the older behaviour where
+the winner kept the lot.
+
+Founded before the match or during it. **J** to join one, **B** to
 betray. Both are declared between clues, never while one is on the board:
 switching sides mid-race would let you see who had buzzed and pick a side
 accordingly.
+
+`betrayalKeepFraction` is the same toll as a share of the stack, which is the
+version that scales. Fifteen players, two stables of five, five stags, one
+member of stable A deciding eighteen clues in — each choice played forward to
+the end from the same position:
+
+| Keep | Stay | Go stag | Cross to B |
+|---|---|---|---|
+| 0% | **25.1%** | 14.8% | 16.6% |
+| 50% | **25.1%** | 16.9% | 20.5% |
+| 100% | **25.1%** | 20.5% | 24.5% |
+
+### The loyalty penalty shrinks with the field
+
+A stable of five, an elite deciding whether to walk out, measured as the ring
+empties. The cost of going stag, in percentage points of win rate:
+
+| Outsiders left | Ring | `winner` | `even` | `surplus` |
+|---|---|---|---|---|
+| 10 | 15 | −13.7 | −30.9 | −28.4 |
+| 7 | 12 | −9.9 | −20.5 | −19.6 |
+| 5 | 10 | −5.1 | −10.0 | −9.3 |
+| 3 | 8 | −1.7 | −1.5 | −1.8 |
+| 2 | 7 | −0.1 | −0.3 | −0.4 |
+| 1 | 6 | −0.1 | 0.0 | 0.0 |
+
+**Loyalty is expensive early and nearly free late.** A stable protects you from
+the people in the ring, so as they leave there is less to be protected from —
+and the toll on your stack is a one-off while the protection is a stream that
+dries up. By three outsiders it costs almost nothing to walk out under any of
+the three rules, and the sharing rules converge with `winner` exactly where they
+stop mattering.
+
+The same shape holds for an ordinary player (−13.4 at ten outsiders, −1.6 at
+three), so this is a property of the mechanic rather than of being strong.
+
+It never turns positive, though. Walking out is never actively **better**, only
+cheaper — so a defection late in a match is a read on the room rather than an
+edge the numbers hand you. `npm run shrink-study` reruns it.
+
+### How winnings are divided: `stableShare`
+
+Three rules, measured at the shipped 50% toll, fifteen players in two stables of
+five with five stags:
+
+| Rule | Elite: stay | go stag | cross | Normie: stay | go stag | cross |
+|---|---|---|---|---|---|---|
+| `winner` | 88.9% | 83.9% | 87.5% | 25.1% | 16.9% | 20.5% |
+| `even` (shipped) | 78.6% | 64.3% | 70.0% | 18.1% | 10.7% | 12.9% |
+| `surplus` | 80.8% | 65.6% | 71.1% | 17.2% | 10.3% | 12.2% |
+
+`winner` keeps the lot — a stable is a non-aggression pact and nothing more.
+`even` splits the pot across the stable, so it acts as one entity. `surplus`
+lets the winner bank the clue's face value and shares only what the stable's
+protection added on top.
+
+**Sharing does slow a strong player**: an elite drops from 88.9% to 78.6%. But
+it makes them *less* likely to walk out, not more — the gap between staying and
+crossing widens from 1.4 points to 8.6. Protection turns out to be worth more
+than the tax, because an outsider under `stableFocus` pays two stables at double
+rate. Wanting a strong player tempted out means loosening the protection, not
+taxing the earnings:
+
+| | elite stays | crossing |
+|---|---|---|
+| `even` + outsider loading | 78.6% | 70.0% |
+| `even`, no outsider loading | 65.2% | 55.5% |
+
+Which is a different trade: it makes the elite much easier to beat overall, and
+still does not tempt them out.
+
+**The toll is 50% by default**, which puts defection where it should be: a bad
+move for an ordinary player and a live question for anybody who thinks they are
+better than the room. What crossing costs at that setting:
+
+| Decider | Stay | Cross | Cost | Share of what they had |
+|---|---|---|---|---|
+| normie | 25.1% | 20.5% | 4.6 pts | 18% |
+| champ | 46.6% | 40.3% | 6.3 pts | 14% |
+| superchamp | 66.8% | 63.9% | 2.9 pts | 4% |
+| elite | 88.9% | 87.5% | 1.4 pts | **2%** |
+
+A normie gives up a fifth of their chances to switch sides. An elite gives up
+one fiftieth — near enough free to be worth doing on a read, which is the
+decision worth having at the table. Above 75% an elite is actively better off
+crossing, which is why the toll is not higher.
+
+Loyalty wins at every setting. Even a free exit only draws level, because the
+stack you hand over goes to the people you are leaving — you pay twice, once in
+what you lose and once in what they gain. Crossing beats going stag throughout,
+so if somebody does defect they should take a side rather than go it alone.
+
+`betrayalKeep` lets a traitor walk away with a fixed amount, capped at what they
+had — never a top-up. Worth measuring before setting: as a share of the stack a
+flat keep is nearly nothing to a leader and everything to a straggler, so it is
+an escape hatch for whoever is losing rather than an option for whoever is
+winning. At 1,000 it wipes the toll entirely below 1,000 and still takes 88% off
+a stack of 8,000.
 
 **Betrayal moves your whole stack**, not just your winnings, split evenly among
 the people you walk out on. Leaving with nothing is the price of switching
@@ -596,6 +708,32 @@ below became routine rather than an event.
 If the last players standing are all in one stable — through eliminations, not
 recruitment — nobody can take anything from anybody and the match cannot end.
 The stable has won: it dissolves and they settle it between themselves.
+
+**When a stable member wins, the pot stays full size and lands entirely on the
+outsiders.** The damage the teammates would have taken is loaded onto whoever is
+left outside, so a stable of five facing two outsiders makes each of them pay
+for three and a half people. The bigger the stable, the harder it hits.
+
+The first version simply let the pot shrink — teammates paid nothing and the
+winner collected less. That protected the stable and did nothing to anybody
+else, which made banding together useless against a strong player and mildly
+counterproductive: `stableFocus: false` restores it if you want to see the
+difference.
+
+**Even so, a stable is only a partial answer to a strong player.** One elite in a
+field of normies wins 73% of twelve-player matches and 94% of six-player ones.
+A pack helps, monotonically, but does not level it:
+
+| Field | No stable | Biggest legal pack | Old rule, same pack |
+|---|---|---|---|
+| 6 | 94.1% | 90.5% | 92.0% |
+| 8 | 86.9% | 84.2% | 85.0% |
+| 10 | 80.5% | 77.1% | 79.4% |
+| 12 | 73.1% | 68.2% | 71.7% |
+
+The pack can only use its advantage on clues it wins, and against somebody
+taking most of them there are not many. Ganging up directly on one player is
+what targeting is for.
 
 **Stables shift the draw advantage to early entrants**, and the host should know
 that before turning them on. A stable is formed by whoever is in the ring first,

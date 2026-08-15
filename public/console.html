@@ -8,6 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* Stable colours on the scoreboards. A tinted edge and the stone's badge, so a
+   glance tells you who is with whom without reading a single name. */
+.pl.instable,.brow.instable,.row.instable{box-shadow:inset 3px 0 0 var(--gemc)}
+.gem{flex:none;vertical-align:-3px;margin-right:4px}
+.gemname{color:var(--gemc);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+
 /* A sweep. The column that was just cleared is held up for a moment, shimmering
    in brass with the bonus floating off it — the board used to swap the new
    category in during the same resolve, so the celebration played over a column
@@ -374,6 +380,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, brainAvatar } from '/brand.js';
+import { gem } from '/gems.js';
 import { markBanner } from '/banner.js';
 import { weaponToken } from '/tokens.js';
 import { avatar as wrestlerAvatar } from '/wrestlers.js';
@@ -677,7 +684,11 @@ function render() {
   const on = buzzes[0];
   live.slice().sort((a, b) => b.score - a.score).forEach((p) => {
     const d = document.createElement('div');
-    d.className = 'pl' + (p.score < 600 ? ' hot' : '') + (p.capped ? ' capped' : '')
+    // Tint the row with the stable's stone.
+    const st = p.stable ? ((S.stables || []).find((x) => x.id === p.stable) || null) : null;
+    if (st) d.style.setProperty('--gemc', st.colour);
+    d.className = 'pl' + (st ? ' instable' : '')
+      + (p.score < 600 ? ' hot' : '') + (p.capped ? ' capped' : '')
       + (locked.indexOf(p.token) >= 0 ? ' miss' : '')
       + (buzzed.has(p.token) ? ' buzzed' : '')
       + (on && on.token === p.token ? ' onclock' : '')
@@ -696,7 +707,7 @@ function render() {
           : p.tokenArt ? '<span class="av brain">'
             + weaponToken(p.tokenArt.art, 24, p.tokenArt.colour) + '</span>'
           : '<span class="av ph"></span>')
-      + '<span class="nm">' + p.name
+      + '<span class="nm">' + (st ? gem(st.name, st.colour, 15) : '') + p.name
       + (p.connected ? '' : ' <span style="color:var(--alarm);font-size:10px">&#9676;</span>')
       + (p.pins ? ' <span class="tko" title="toss outs">&#9670;' + p.pins + '</span>' : '')
       + (p.topRope ? ' <span class="mk rope">TOP ROPE</span>' : '')
