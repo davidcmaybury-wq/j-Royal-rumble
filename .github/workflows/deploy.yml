@@ -55,6 +55,7 @@ jobs:
           node test/startfail.mjs
           node test/themes.mjs
           node test/fullbuzzer.mjs
+          node test/guides.mjs
           node test/welcome.mjs
           node test/workflows.mjs
           node test/health.mjs

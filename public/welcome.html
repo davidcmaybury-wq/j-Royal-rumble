@@ -56,6 +56,17 @@ padding:0 24px;font-weight:500;cursor:pointer;white-space:nowrap}
 margin-top:12px;text-decoration:underline;text-underline-offset:3px}
 .back:hover{color:var(--chalk)}
 
+/* Two ways in for somebody who has never played. Deliberately below the three
+   doors and above the small print: a returning player skips them without
+   noticing, a new one cannot miss them. */
+.learn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+@media (max-width:560px){.learn{grid-template-columns:1fr}}
+.lbtn{display:block;padding:13px 15px;border:1px solid var(--line);
+border-radius:var(--r);text-decoration:none;background:#101731}
+.lbtn:hover{border-color:var(--brass)}
+.lbtn b{display:block;color:var(--chalk);font-weight:500;font-size:14.5px}
+.lbtn span{display:block;color:var(--slate);font-size:12.5px;margin-top:3px;line-height:1.45}
+.lbtn:hover b{color:var(--brass)}
 footer{text-align:center;margin-top:26px;color:#3C486E;font-size:12.5px}
 footer a{color:var(--slate);text-decoration:none;border-bottom:1px solid #2A3556}
 footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
@@ -110,8 +121,15 @@ footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
     <button class="back" id="back">Back</button>
   </div>
 
+  <div class="learn">
+    <a class="lbtn" href="/how-to-play"><b>New here? How to play</b>
+      <span>What you need, and the five steps to get a game going.</span></a>
+    <a class="lbtn" href="/rules-101"><b>Royal Rumble rules 101</b>
+      <span>Scoring, elimination, overtime and the advanced mechanics.</span></a>
+  </div>
+
   <footer>
-    <a href="/rules">Rules</a><span class="sep">·</span>
+    <a href="/rules">Full rules</a><span class="sep">·</span>
     <a href="/handbook">Handbook</a><span class="sep">·</span>
     <a id="ver" href="/control" title="Control room">&nbsp;</a>
   </footer>

@@ -104,6 +104,24 @@ that no import goes unused, then executes the renderers against a stub DOM. It
 has caught several bugs mid-build, including CSS patches that silently missed
 their anchor.
 
+## The player-facing documentation ships with the code
+
+`docs/discord-rules-v2.md` and `docs/discord-advanced-mechanics.md` are the copy
+David posts before a match, and they are the **source** for `/rules-101` — the
+page renders those files, so the message in the channel and the page on the site
+cannot drift apart. `docs/handbook.html` and the PDF are the design write-up.
+
+**Keep all of these current with every change to the rules, and keep them in the
+package.** A rules change that lands in the engine and not in these files is
+half a change: the room is still playing the old game.
+
+`public/howto.html` is the illustrated guide for somebody who has never played.
+It assumes nothing — what a video call is for, who reads the clues, that the
+board can live in the buzzer window. `test/guides.mjs` checks these pages serve,
+that the welcome screen links to them, and that the guide's markup balances,
+because unclosed step divs once nested every step inside the first and stretched
+the page to four times its height.
+
 ## Conventions that matter
 
 **Comments explain why, not what.** Especially where a decision looks wrong:

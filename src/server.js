@@ -1247,6 +1247,54 @@ ${blocks}
 </div></body></html>`;
 })();
 app.get('/rules', (_req, res) => res.type('html').send(RULES_HTML));
+
+// The Discord explainers, rendered for the web. These are the copy David posts
+// before a match, kept in docs/ as the source and dressed here — one file, so
+// the message in the channel and the page on the site cannot drift apart.
+const DISCORD_HTML = (() => {
+  const esc = (x) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = (x) => esc(x)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/(https?:\/\/[^\s<]+|\bj-royal-rumble\.net\b)/g,
+      (m) => `<a href="${m.startsWith('http') ? m : 'https://' + m}">${m}</a>`);
+  const render = (md) => md.split(/\n\n+/).map((b) => {
+    b = b.trim();
+    if (!b) return '';
+    if (b.startsWith('**J!')) return `<h2>${inline(b)}</h2>`;
+    return `<p>${inline(b).replace(/\n/g, ' ')}</p>`;
+  }).join('\n');
+  const a = readFileSync(join(__dir, '../docs/discord-rules-v2.md'), 'utf8');
+  const b = readFileSync(join(__dir, '../docs/discord-advanced-mechanics.md'), 'utf8');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble — rules 101</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--line:#2A3556;--chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F}
+*{box-sizing:border-box}body{background:var(--ink);color:var(--chalk);margin:0;
+font:400 16px/1.65 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:26px 20px 70px}
+.top{display:flex;justify-content:space-between;align-items:baseline}
+.top a{color:var(--slate);text-decoration:none;font-size:13.5px}
+.top a:hover{color:var(--brass)}
+h1{font-family:"Anton",Impact,sans-serif;font-size:34px;letter-spacing:.02em;margin:14px 0 18px}
+h1 .j{color:var(--brass)}
+h2{font-family:"Anton",Impact,sans-serif;font-size:19px;letter-spacing:.03em;
+color:var(--brass);margin:34px 0 12px}
+p{margin:0 0 14px;color:#C9CCD9}
+strong{color:var(--chalk)}
+a{color:var(--brass)}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+</style></head><body><div class="wrap">
+<div class="top"><a href="/">&larr; J! Royal Rumble</a><a href="/how-to-play">how to play &rarr;</a></div>
+<h1><span class="j">J!</span> RULES 101</h1>
+${render(a)}<hr>${render(b)}
+</div></body></html>`;
+})();
+app.get('/rules-101', (_req, res) => res.type('html').send(DISCORD_HTML));
+app.get('/how-to-play', (_req, res) => res.sendFile(join(__dir, '../public/howto.html')));
 app.get('/rules.md', (_req, res) => res.sendFile(join(__dir, '../RULES.md')));
 
 app.get('/j/:id', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));

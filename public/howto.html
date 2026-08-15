@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble — how to play</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;--chalk:#EEEBE1;
+--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:6px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--chalk);
+font:400 16px/1.62 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:26px 20px 80px}
+.top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.top a{color:var(--slate);text-decoration:none;font-size:13.5px}
+.top a:hover{color:var(--brass)}
+h1{font-family:"Anton",Impact,sans-serif;font-size:clamp(28px,6vw,40px);
+letter-spacing:.02em;margin:14px 0 6px}
+h1 .j{color:var(--brass)}
+.lede{color:var(--slate);font-size:15.5px;margin-bottom:8px}
+
+/* Each step is a numbered card with its own picture. Numbered because people
+   arriving here have not done this before and want to know where they are. */
+/* min-content on the number, minmax(0,1fr) on the body: without the explicit
+   minimum the text column collapses to its longest word. */
+.step{display:grid;grid-template-columns:34px minmax(0,1fr);gap:16px;align-items:start;
+background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+padding:20px;margin-top:16px}
+.n{width:34px;height:34px;border-radius:50%;background:var(--brass);color:var(--ink);
+display:grid;place-items:center;font-family:"Anton",Impact,sans-serif;font-size:19px}
+.step h2{font-size:18px;font-weight:500;margin-bottom:6px}
+.step p{color:#C9CCD9;margin-bottom:10px}
+.step p:last-child{margin-bottom:0}
+.pic{margin:14px 0 4px;background:var(--ink);border:1px solid var(--line);
+border-radius:var(--r);padding:14px;overflow:hidden}
+.pic svg{display:block;width:100%;height:auto}
+.cap{color:var(--slate);font-size:13px;margin-top:8px}
+strong{color:var(--chalk)}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--panel2);
+border:1px solid var(--line);border-radius:3px;padding:1px 6px}
+
+/* The one thing people got wrong in testing gets its own treatment. */
+.warn{background:#2A1A08;border:1px solid #6A4A12;border-left-width:4px;
+border-radius:var(--r);padding:18px 20px;margin-top:20px}
+.warn h2{font-size:17px;color:#F0C862;margin-bottom:8px}
+.warn p{color:#E8C77A}
+.foot{margin-top:34px;color:var(--slate);font-size:14px;text-align:center}
+.foot a{color:var(--brass)}
+</style></head>
+<body><div class="wrap">
+  <div class="top"><a href="/">&larr; J! Royal Rumble</a><a href="/rules-101">the rules &rarr;</a></div>
+  <h1><span class="j">J!</span> HOW TO PLAY</h1>
+  <p class="lede">Never done this before? Nothing here is assumed. Five steps and
+    you are in.</p>
+
+  <div class="step"><div class="n">1</div><div>
+    <h2>Get everybody on a call</h2>
+    <p>Zoom, Google Meet, Teams, Discord — whichever your group already uses. The
+      game does not run the call; it runs alongside it. <strong>The host reads
+      the clues aloud</strong>, so everyone needs to hear each other.</p>
+    <div class="pic">
+      <svg viewBox="0 0 640 130" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="10" width="624" height="110" rx="8" fill="#131A30" stroke="#2A3556"/>
+        <text x="24" y="34" fill="#7C88AB" font-family="IBM Plex Sans" font-size="12">Your video call</text>
+        <g>
+          <rect x="24" y="46" width="112" height="60" rx="4" fill="#1B2444" stroke="#2A3556"/>
+          <circle cx="80" cy="70" r="11" fill="#D6A93F"/><rect x="66" y="84" width="28" height="12" rx="6" fill="#D6A93F"/>
+          <text x="80" y="102" fill="#0A0E1C" font-family="IBM Plex Sans" font-size="9" text-anchor="middle">HOST</text>
+        </g>
+        <g fill="#2A3556">
+          <rect x="148" y="46" width="112" height="60" rx="4" fill="#1B2444" stroke="#2A3556"/>
+          <circle cx="204" cy="70" r="11" fill="#4F7FD1"/><rect x="190" y="84" width="28" height="12" rx="6" fill="#4F7FD1"/>
+          <rect x="272" y="46" width="112" height="60" rx="4" fill="#1B2444" stroke="#2A3556"/>
+          <circle cx="328" cy="70" r="11" fill="#4FB286"/><rect x="314" y="84" width="28" height="12" rx="6" fill="#4FB286"/>
+          <rect x="396" y="46" width="112" height="60" rx="4" fill="#1B2444" stroke="#2A3556"/>
+          <circle cx="452" cy="70" r="11" fill="#E24A3C"/><rect x="438" y="84" width="28" height="12" rx="6" fill="#E24A3C"/>
+          <rect x="520" y="46" width="96" height="60" rx="4" fill="#1B2444" stroke="#2A3556"/>
+          <circle cx="568" cy="70" r="11" fill="#8A93A6"/><rect x="554" y="84" width="28" height="12" rx="6" fill="#8A93A6"/>
+        </g>
+      </svg>
+      <div class="cap">Any call will do. The host talks; everybody listens.</div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="n">2</div><div>
+    <h2>The host starts a game and reads out the code</h2>
+    <p>One person presses <strong>Host a match</strong> on the front page. They
+      get a <strong>four-letter room code</strong> — they read it out on the call,
+      or paste the join link into the chat.</p>
+    <div class="pic">
+      <svg viewBox="0 0 640 120" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="10" width="300" height="100" rx="8" fill="#131A30" stroke="#2A3556"/>
+        <text x="28" y="36" fill="#7C88AB" font-family="IBM Plex Sans" font-size="11" letter-spacing="2">ROOM CODE</text>
+        <text x="28" y="86" fill="#D6A93F" font-family="Anton" font-size="46" letter-spacing="4">EHSS</text>
+        <path d="M330 60h44" stroke="#7C88AB" stroke-width="2"/>
+        <path d="M368 54l8 6-8 6" fill="none" stroke="#7C88AB" stroke-width="2"/>
+        <rect x="392" y="24" width="240" height="72" rx="8" fill="#1B2444" stroke="#2A3556"/>
+        <text x="412" y="52" fill="#EEEBE1" font-family="IBM Plex Sans" font-size="13">&#8220;The code is</text>
+        <text x="412" y="74" fill="#D6A93F" font-family="IBM Plex Mono" font-size="17">E &#8212; H &#8212; S &#8212; S&#8221;</text>
+      </svg>
+      <div class="cap">Said aloud, or pasted in the chat. Either works.</div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="n">3</div><div>
+    <h2>Everybody else opens their buzzer</h2>
+    <p>Go to the front page, press <strong>Play</strong>, type the code, pick a
+      name. Your phone or laptop is now your buzzer. <strong>Leave that page
+      open</strong> — it is your buzzer for the whole match.</p>
+    <div class="pic">
+      <svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+        <rect x="150" y="8" width="150" height="134" rx="12" fill="#131A30" stroke="#2A3556"/>
+        <text x="225" y="34" fill="#7C88AB" font-family="IBM Plex Sans" font-size="10" text-anchor="middle" letter-spacing="2">YOUR SCORE</text>
+        <text x="225" y="60" fill="#EEEBE1" font-family="Anton" font-size="24" text-anchor="middle">3,000</text>
+        <circle cx="225" cy="104" r="27" fill="#1B2444" stroke="#4F7FD1" stroke-width="2"/>
+        <text x="225" y="108" fill="#7C88AB" font-family="Anton" font-size="12" text-anchor="middle">WAIT</text>
+        <path d="M318 75h40" stroke="#7C88AB" stroke-width="2"/>
+        <path d="M352 69l8 6-8 6" fill="none" stroke="#7C88AB" stroke-width="2"/>
+        <rect x="376" y="8" width="150" height="134" rx="12" fill="#131A30" stroke="#4FB286" stroke-width="2"/>
+        <circle cx="451" cy="80" r="44" fill="#14351F" stroke="#4FB286" stroke-width="3"/>
+        <text x="451" y="88" fill="#4FB286" font-family="Anton" font-size="21" text-anchor="middle">BUZZ</text>
+        <text x="451" y="132" fill="#7C88AB" font-family="IBM Plex Sans" font-size="10" text-anchor="middle">tap it, or hit space</text>
+      </svg>
+      <div class="cap">It waits, then goes green. Tap the circle or press the space bar.</div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="n">4</div><div>
+    <h2>Somebody needs to show the board</h2>
+    <p>Two ways, pick either:</p>
+    <p><strong>If the host shares their screen</strong> on the call, everyone
+      watches the board there and just uses their phone to buzz.</p>
+    <p><strong>If nobody is sharing a screen</strong>, each player presses
+      <strong>Show the board here</strong> on their buzzer and gets the board
+      alongside it. That needs a laptop or desktop — the board does not fit on a
+      phone.</p>
+    <div class="pic">
+      <svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+        <text x="14" y="20" fill="#7C88AB" font-family="IBM Plex Sans" font-size="11">SCREEN SHARED &#8212; phone is enough</text>
+        <rect x="14" y="30" width="180" height="104" rx="6" fill="#131A30" stroke="#2A3556"/>
+        <g fill="#1717C2" stroke="#26221C">
+          <rect x="26" y="54" width="36" height="20" rx="3"/><rect x="70" y="54" width="36" height="20" rx="3"/>
+          <rect x="114" y="54" width="36" height="20" rx="3"/><rect x="158" y="54" width="24" height="20" rx="3"/>
+          <rect x="26" y="80" width="36" height="20" rx="3"/><rect x="70" y="80" width="36" height="20" rx="3"/>
+          <rect x="114" y="80" width="36" height="20" rx="3"/><rect x="158" y="80" width="24" height="20" rx="3"/>
+        </g>
+        <rect x="208" y="52" width="42" height="70" rx="6" fill="#131A30" stroke="#4FB286"/>
+        <circle cx="229" cy="87" r="13" fill="#14351F" stroke="#4FB286"/>
+        <line x1="292" y1="24" x2="292" y2="140" stroke="#2A3556" stroke-dasharray="4 4"/>
+        <text x="312" y="20" fill="#7C88AB" font-family="IBM Plex Sans" font-size="11">NOBODY SHARING &#8212; use a laptop</text>
+        <rect x="312" y="30" width="70" height="104" rx="6" fill="#131A30" stroke="#4FB286"/>
+        <circle cx="347" cy="76" r="19" fill="#14351F" stroke="#4FB286"/>
+        <text x="347" y="118" fill="#7C88AB" font-family="IBM Plex Sans" font-size="9" text-anchor="middle">buzzer</text>
+        <rect x="392" y="30" width="234" height="104" rx="6" fill="#131A30" stroke="#D6A93F"/>
+        <g fill="#1717C2" stroke="#26221C">
+          <rect x="404" y="52" width="48" height="22" rx="3"/><rect x="460" y="52" width="48" height="22" rx="3"/>
+          <rect x="516" y="52" width="48" height="22" rx="3"/><rect x="572" y="52" width="42" height="22" rx="3"/>
+          <rect x="404" y="82" width="48" height="22" rx="3"/><rect x="460" y="82" width="48" height="22" rx="3"/>
+          <rect x="516" y="82" width="48" height="22" rx="3"/><rect x="572" y="82" width="42" height="22" rx="3"/>
+        </g>
+        <text x="509" y="126" fill="#7C88AB" font-family="IBM Plex Sans" font-size="9" text-anchor="middle">the same window, board shown</text>
+      </svg>
+      <div class="cap">Left: watch the shared screen, buzz on your phone.
+        Right: the board and the buzzer in one window.</div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="n">5</div><div>
+    <h2>Play</h2>
+    <p>The host reads a clue, then arms the buzzers. Five lights count down.
+      <strong>Fastest thumb takes it</strong> — answer out loud on the call and
+      the host rules yes or no.</p>
+    <p>Get it right and <strong>every other player pays you</strong> the clue's
+      value. Get it wrong and you lose it, and they can steal it. Drop below zero
+      and you are out. Last one standing wins.</p>
+  </div></div>
+
+  <div class="warn">
+    <h2>&#9888; The space bar only works when the buzzer window is in front</h2>
+    <p>This catches people out. If you have clicked over to the video call, or
+      to another tab, <strong>your space bar goes to that window instead</strong>
+      and your buzz never happens. Click once on the buzzer page to bring it
+      back, and you are armed again.</p>
+    <p>Safest habit: <strong>tap the big circle</strong> rather than using the
+      space bar. It cannot be stolen by another window, and it is exactly as
+      fast.</p>
+  </div>
+
+  <div class="foot">
+    That is everything. <a href="/rules-101">The rules in more detail</a> &middot;
+    <a href="/handbook">the design handbook</a>
+  </div>
+</div></body></html>
