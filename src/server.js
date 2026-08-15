@@ -1075,6 +1075,34 @@ function sanitiseTheme(theme) {
   return null;
 }
 
+/**
+ * The robot on the clock says what it has, before the host adjudicates.
+ *
+ * Only the one who actually took the buzz — everybody else's answer is noise,
+ * and in the room only the player on the clock ever speaks. A short settle
+ * first, because a slower buzz can still arrive and take the lead.
+ *
+ * Module level because robots do not buzz through the socket handler: they are
+ * driven by timers, so a hook on the incoming 'buzz' event never saw them and
+ * the announcement silently never fired.
+ */
+function announceLeader(match) {
+  if (!match || match.saidTimer || match.saidFor) return;
+  match.saidTimer = setTimeout(() => {
+    match.saidTimer = null;
+    const lead = (match.race?.buzzes || []).filter((b) => !b.spectator)[0];
+    if (!lead || !lead.bot || !match.clue) return;
+    match.saidFor = lead.token;
+    const line = lead.botCorrect
+      ? { kind: 'right', text: match.clue.answer }
+      : { kind: 'wrong', text: match.wrongAnswer || "...I'll pass" };
+    for (const room of ['host', 'watch', 'board']) {
+      io.to(`${match.id}:${room}`).emit('bot-said',
+        { said: [{ token: lead.token, name: lead.name, ...line }] });
+    }
+  }, (match.settings?.lockout || 250) + 450);
+}
+
 // Broadcasting from outside a socket connection.
 //
 // The push helpers live inside the connection closure and close over one
@@ -1514,6 +1542,9 @@ io.on('connection', (socket) => {
     // Work out the robots' wrong answer now, while the host is still reading.
     // Doing it at buzz time would put a network call inside the race.
     match.wrongAnswer = null;
+    clearTimeout(match.saidTimer);
+    match.saidTimer = null;
+    match.saidFor = null;
     const siblings = g.board.flatMap((c) => c.clues.map((x) => x.answer))
       .filter((a) => a && a !== clue.answer);
     wrongAnswer(match.clue, siblings).then((w) => { match.wrongAnswer = w; });
@@ -1600,6 +1631,7 @@ io.on('connection', (socket) => {
         match.race.buzzes.push({ token: p.id, name: p.name, ms: plan.ms,
           early: false, spectator: false, bot: true, botCorrect: plan.correct });
         match.race.buzzes.sort((a, b) => a.ms - b.ms);
+        announceLeader(match);
         if (!match.fastest || plan.ms < match.fastest.ms) {
           match.fastest = { ms: plan.ms, name: p.name, clue: match.game.cluesRevealed + 1,
             category: match.clue?.category, value: match.clue?.value };
@@ -1713,39 +1745,26 @@ io.on('connection', (socket) => {
         theme: match.roster.get(t)?.theme || null,
       })).filter((x) => x.name);
     }
-    // What the robots said.
+    // Whoever holds the board calls the next clue.
     //
-    // A robot that is simply marked wrong is a scoring event; one that says
-    // "Millard Fillmore" is a player. The room can only enjoy the race if it
-    // hears what the robots actually offered.
-    const said = [];
-    // The snapshot taken before the clue resolved: match.race is already gone
-    // by this point, which is why the answers never appeared the first time.
-    for (const b of buzzes) {
-      if (!b.bot) continue;
-      if (b.botCorrect && b.token === winnerToken) {
-        said.push({ token: b.token, name: b.name, kind: 'right', text: clueMeta.answer });
-      } else if (!b.botCorrect) {
-        const w = match.wrongAnswer;
-        said.push({ token: b.token, name: b.name, kind: 'wrong',
-          text: w || "...I'll pass" });
-      }
-    }
-    // And whoever took it calls the next one, the way a board leader does.
-    if (winnerToken && match.bots.has(winnerToken)) {
+    // Control passes to whoever answered correctly and stays put on a stumper,
+    // the way it does on the show — so a robot that was already leading the
+    // board keeps calling clues until somebody takes it off them.
+    if (winnerToken) match.control = winnerToken;
+    const caller = match.control;
+    if (caller && match.bots.has(caller)
+        && match.game.players.get(caller)?.state === 'live') {
       const open = [];
-      match.game.board.forEach((c, si) => c.clues.forEach((x) => {
+      match.game.board.forEach((c) => c.clues.forEach((x) => {
         if (!x.revealed) open.push({ category: c.title, value: [100, 200, 300, 400, 500][x.row - 1] });
       }));
       if (open.length) {
         const pick = open[Math.floor(Math.random() * open.length)];
-        said.push({ token: winnerToken, name: match.roster.get(winnerToken)?.name,
-          kind: 'pick', text: `${pick.category} for $${pick.value}` });
-      }
-    }
-    if (said.length) {
-      for (const room of ['host', 'watch', 'board']) {
-        io.to(`${match.id}:${room}`).emit('bot-said', { said });
+        for (const room of ['host', 'watch', 'board']) {
+          io.to(`${match.id}:${room}`).emit('bot-said', { said: [{
+            token: caller, name: match.roster.get(caller)?.name,
+            kind: 'pick', text: `${pick.category} for $${pick.value}` }] });
+        }
       }
     }
 
@@ -1967,6 +1986,8 @@ io.on('connection', (socket) => {
       match.fastest = { ms: rec.ms, name: rec.name, clue: g.cluesRevealed + 1,
         category: match.clue?.category, value: match.clue?.value };
     }
+    if (!spectator) announceLeader(match);
+
     // Re-rank the whole race, not just the buzz that arrived.
     //
     // Ranking once at insert froze a warm-up buzz against whoever happened to

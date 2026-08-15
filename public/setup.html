@@ -281,8 +281,15 @@ function liveSettings() {
   try { return { ...S.settings, ...collect().settings }; }
   catch { return S.settings; }          // before the form exists
 }
-const estimate = () => estimateFor(S.roster.length, liveSettings());
-const warnings = () => warningsFor(S.roster.length, liveSettings());
+// One settings read, one estimate, used for both the line and the warnings.
+// Two reads could land either side of a save and disagree.
+function preview() {
+  const s = liveSettings();
+  const e = estimateFor(S.roster.length, s);
+  return { s, e, warnings: warningsFor(S.roster.length, s, e) };
+}
+const estimate = () => preview().e;
+const warnings = () => preview().warnings;
 
 const SRC = [
   ['archive', 'Jeopardy! archive', null],
@@ -591,10 +598,11 @@ function renderRoster() {
   if (b) b.disabled = S.roster.length < 3;
 }
 
-function renderWarnings() {
+function renderWarnings() { paintWarnings(preview().warnings); }
+
+function paintWarnings(ws) {
   const w = document.getElementById('warn');
   if (!w) return;
-  const ws = warnings();
   w.innerHTML = ws.map((x, i) => `<div class="wrn ${x.level}">
     <span>${x.text}</span>${x.fix ? `<button class="wfix" data-fix="${i}">${x.fix}</button>` : ''}</div>`).join('');
   w.querySelectorAll('[data-fix]').forEach((b) => b.onclick = async () => {
@@ -775,11 +783,12 @@ function wire() {
     const el = document.getElementById(id);
     if (el) el.oninput = () => {
       S.settings[id] = id === 'entryInterval' && el.value === '' ? null : +el.value;
-      const e = estimate();
+      // One preview, both surfaces, so they cannot drift apart.
+      const { e, warnings: ws } = preview();
       const est = document.querySelector('.est');
       if (e && est) est.innerHTML = `With ${S.roster.length} players: entry every <b>${e.iv}</b> clues${
         e.auto ? ' (auto)' : ''}, roughly <b>${e.mins} minutes</b>, about ${e.clues} clues.${e.rough ? ' Rough at this size.' : ''}`;
-      renderWarnings();
+      paintWarnings(ws);
     };
   });
   [['entryMode', 'ivwrap'], ['decayMode', 'decaywrap'], ['ceilingMode', 'ceilwrap']]

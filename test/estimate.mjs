@@ -98,5 +98,32 @@ for (const n of [4, 5, 6, 8, 10]) {
     ws.some((x) => x.level === 'bad' && x.interval > 0));
 }
 
+// The line and the warnings must describe the same match.
+//
+// A screenshot arrived with the estimate saying entry every 10 clues and 15
+// minutes while the warning beside it complained auto could not stretch to 30.
+// Passing one estimate to both makes that impossible.
+{
+  const s = { targetMinutes: 15, secondsPerClue: 17.5, entryInterval: null,
+    startScore: 3000, ceiling: null, ceilingFloor: 3000, stumperFraction: 0.5 };
+  const e = estimate(6, s);
+  const ws = warnings(6, s, e);
+  const stretch = ws.find((w) => /can.t stretch/.test(w.text));
+  check('a reachable target draws no stretch warning', !stretch,
+    stretch ? stretch.text.slice(0, 70) : `${e.mins} min, every ${e.iv}`);
+
+  // And when it is genuinely unreachable it says so, about the right number.
+  const s2 = { ...s, targetMinutes: 30 };
+  const e2 = estimate(6, s2);
+  const w2 = warnings(6, s2, e2).find((w) => /can.t stretch/.test(w.text));
+  check('an unreachable one does', !!w2, w2 && w2.text.slice(0, 60));
+  check('and names the target actually asked for',
+    !w2 || w2.text.includes('30 minutes'), w2 && w2.text.slice(0, 40));
+
+  // The warning must never describe a different estimate from the one shown.
+  check('the warning agrees with the line it sits under',
+    !w2 || w2.text.includes(String(e2.mins)), `line says ${e2.mins} min`);
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

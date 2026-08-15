@@ -51,8 +51,15 @@ export function reachable(playerCount, settings) {
 
 // Returns { level, text, fix?, target? }. `fix` is button copy; `target` is
 // the target-minutes value that button would set.
-export function warnings(playerCount, settings) {
-  const e = estimate(playerCount, settings);
+export function warnings(playerCount, settings, precomputed = null) {
+  // The estimate can be handed in, and the setup page does hand it in.
+  //
+  // The line above the warnings and the warnings themselves used to each work
+  // one out, and a screenshot arrived showing them disagreeing at the same
+  // moment — the line saying entry every 10 and 15 minutes, the warning
+  // complaining it could not reach 30. Whatever let them drift apart, taking
+  // one estimate and using it for both makes it impossible by construction.
+  const e = precomputed || estimate(playerCount, settings);
   if (!e) return [];
   const n = playerCount, s = settings, out = [];
   const reach = reachable(n, s);

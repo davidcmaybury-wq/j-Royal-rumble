@@ -538,10 +538,15 @@ Anything you add yourself is your own call on licensing.
 
 ## What the robots say
 
-When a clue resolves, the robots that buzzed say what they had. A robot that is
-simply marked wrong is a scoring event; one that says "Millard Fillmore" is a
-player — and the wrong answers were the last part of the race the room could not
-see. Whoever took the clue also calls the next one, the way a board leader does.
+**The robot on the clock answers before the host adjudicates**, so there is
+something to rule on. Only that one: everybody else's answer is noise, and in
+the room only the player on the clock ever speaks. A robot that is simply marked
+wrong is a scoring event; one that says "Millard Fillmore" is a player.
+
+**Whoever holds the board calls the next clue**, after the host says yes or no.
+Control passes on a correct answer and stays put on a stumper, the way it does
+on the show — so a robot that is leading the board keeps calling clues until
+somebody takes it off them.
 
 **Wrong answers are written by Claude** when `ANTHROPIC_API_KEY` is set on the
 server, because a wrong answer has to be wrong the way a person is wrong: the
