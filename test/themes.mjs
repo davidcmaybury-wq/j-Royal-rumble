@@ -88,6 +88,36 @@ if (withEntry) {
     typeof withEntry.entrances[0].name === 'string');
 }
 
+// Entrance music is five seconds, whatever the source.
+//
+// A YouTube clip is played through a covered iframe rather than a hidden one —
+// browsers refuse autoplay to a player with no size, which is how the first
+// version failed silently. The cover is what makes it audio only.
+{
+  const { readFileSync } = await import('fs');
+  const watch = readFileSync(new URL('../public/watch.html', import.meta.url), 'utf8');
+  check('the clip is cut off after five seconds', /stopTheme, 5000/.test(watch));
+  check('the player is covered, not hidden',
+    watch.includes('ytcover') && !/width\s*=\s*.?0/.test(watch));
+  const buzz = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
+  check('and the test does the same', /}, 5000\)/.test(buzz) && buzz.includes('trycover'));
+}
+
+// Entrance music is five seconds, whatever the source.
+//
+// A YouTube clip is played through a covered iframe rather than a hidden one —
+// browsers refuse autoplay to a player with no size, which is how the first
+// version failed silently. The cover is what makes it audio only.
+{
+  const { readFileSync } = await import('fs');
+  const watch = readFileSync(new URL('../public/watch.html', import.meta.url), 'utf8');
+  check('the clip is cut off after five seconds', /stopTheme, 5000/.test(watch));
+  check('the player is covered, not hidden',
+    watch.includes('ytcover') && !/width\s*=\s*.?0/.test(watch));
+  const buzz = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
+  check('and the test does the same', /}, 5000\)/.test(buzz) && buzz.includes('trycover'));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); ps.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);

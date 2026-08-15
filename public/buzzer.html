@@ -260,8 +260,12 @@ border:1px solid var(--line);border-radius:var(--r)}
 background:none;color:var(--slate);cursor:pointer;font-size:13px}
 .tryb:hover{border-color:var(--brass);color:var(--brass)}
 .trywrap{margin-top:10px}
-.tryframe{width:100%;aspect-ratio:16/9;border:1px solid var(--line);border-radius:var(--r);
-background:#000}
+.trybox{position:relative;width:100%;aspect-ratio:16/9;border:1px solid var(--line);
+border-radius:var(--r);overflow:hidden;background:#000}
+.trybox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.trycover{position:absolute;inset:0;background:var(--panel);display:flex;
+align-items:center;justify-content:center;gap:10px;color:var(--chalk);font-size:14px}
+.trycover .note{color:var(--brass);font-size:24px;line-height:1}
 .sbtns{display:flex;gap:8px;margin-top:18px}
 .sbtns button{flex:1;padding:11px;border:1px solid var(--line);border-radius:var(--r);
 background:none;color:var(--slate);cursor:pointer}
@@ -438,8 +442,12 @@ async function openMusic() {
   // Clicking a chip plays it here, on this device, so you can hear what you are
   // choosing. The room only ever hears it on the screen with sound enabled, but
   // picking blind was silly.
-  let preview = null;
-  const stopPreview = () => { if (preview) { preview.pause(); preview = null; } };
+  let preview = null, tryTimer = null;
+  const stopPreview = () => {
+    if (preview) { preview.pause(); preview = null; }
+    clearTimeout(tryTimer);
+    el.querySelector('.trybox iframe')?.remove();
+  };
   for (const b of el.querySelectorAll('.schip')) {
     b.onclick = () => {
       for (const o of el.querySelectorAll('.schip')) o.classList.remove('on');
@@ -469,10 +477,21 @@ async function openMusic() {
     }
     stopPreview();
     const at = +el.querySelector('#tstart').value || 0;
-    wrap.innerHTML = `<iframe class="tryframe" allow="autoplay"
-      src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&start=${at}&rel=0"></iframe>
-      <div class="snote">If it plays here it will play on the night. If it shows
-      an error, the clip is blocked and you should pick something else.</div>`;
+    // The same shape as the real thing: audio only, five seconds, and the
+    // player covered rather than hidden — hidden players are refused autoplay.
+    wrap.innerHTML = `<div class="trybox">
+      <iframe allow="autoplay; encrypted-media" playsinline
+        src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&start=${at}&controls=0&rel=0&playsinline=1"></iframe>
+      <div class="trycover"><span class="note">&#9835;</span>
+        <span id="trystate">Playing five seconds...</span></div></div>
+      <div class="snote">This is exactly what the room will hear. If you get
+      silence or an error, the clip is blocked and you should pick another.</div>`;
+    clearTimeout(tryTimer);
+    tryTimer = setTimeout(() => {
+      const st = el.querySelector('#trystate');
+      wrap.querySelector('.trybox iframe')?.remove();
+      if (st) st.textContent = 'That is the five seconds.';
+    }, 5000);
   };
 
   el.querySelector('#tnone').onclick = () => save(null, el);

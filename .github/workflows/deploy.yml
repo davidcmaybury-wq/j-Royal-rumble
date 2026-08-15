@@ -148,14 +148,37 @@ jobs:
             echo "Worth fixing the secret so this step does not have to guess."
           fi
 
+          # A fresh host key every time. The box's key changes when it is
+          # rebuilt, and a stale entry makes ssh refuse with 255 and a message
+          # nobody sees — which is indistinguishable from a bad password.
+          ssh-keygen -R "$HOST" > /dev/null 2>&1 || true
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          # Is anything listening at all? A box that is down and a key that is
+          # wrong both come back as 255, and they need different fixes.
+          if ! timeout 10 bash -c "cat < /dev/null > /dev/tcp/$HOST/22" 2>/dev/null; then
+            echo "::error::Nothing is answering on port 22 at that address."
+            echo "The instance is probably stopped, or the firewall no longer allows SSH."
+            echo "Check it in the Lightsail console before looking at the key."
+            exit 1
+          fi
 
           # --wait rather than --force: if a match is being played the deploy
           # holds until it finishes rather than ending it under them.
+          #
+          # ssh's own stderr is kept and echoed: it says exactly what went wrong
+          # ("Permission denied", "Host key verification failed", "Connection
+          # timed out"), and without this the log shows only "exit 255".
           ssh -i ~/.ssh/deploy -o BatchMode=yes -o ConnectTimeout=15 \
+              -o StrictHostKeyChecking=accept-new \
               ubuntu@"$HOST" \
-              'bash /home/ubuntu/app/tools/deploy-remote.sh --wait'
+              'bash /home/ubuntu/app/tools/deploy-remote.sh --wait' 2> /tmp/ssh.err
           rc=$?
+          if [ -s /tmp/ssh.err ]; then
+            echo "--- what ssh said ---"
+            cat /tmp/ssh.err
+            echo "---------------------"
+          fi
           if [ $rc -ne 0 ]; then
             echo "::error::Deploy failed (exit $rc)."
             case $rc in

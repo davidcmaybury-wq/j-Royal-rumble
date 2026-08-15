@@ -511,8 +511,16 @@ sound turned on**, the same rule as the game's cues — thirty browsers starting
 the same clip a fraction apart would be a mess.
 
 Three sources: the built-in library, a YouTube link with a start time, or an
-https link to a file. Everything is cut off after twelve seconds so a long clip
-cannot run over the next clue.
+https link to a file. **Everything stops after five seconds** — an entrance, not
+an interlude, and the next clue should not wait on it.
+
+A YouTube clip plays through a **covered** player rather than a hidden one:
+browsers refuse autoplay to an iframe with no size, which is how the first
+version failed silently. It is rendered at full size and then covered, so the
+sound comes through and the video does not — the room sees a card naming who is
+walking in rather than somebody's chosen music video. The **Test it** button in
+the picker does exactly the same thing, so what you hear there is what the room
+will hear.
 
 ### The library
 

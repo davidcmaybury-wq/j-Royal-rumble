@@ -56,8 +56,15 @@ white-space:nowrap}
 
 /* The entrance player, when somebody has chosen a YouTube clip. Small and in
    the corner: a hidden player is refused autoplay outright. */
-.ytframe{position:fixed;right:14px;bottom:14px;width:240px;height:135px;border:2px solid var(--line);
-border-radius:6px;z-index:70;background:#000}
+/* The player is present and full size so autoplay is allowed, and covered so
+   only the sound gets through. */
+.ytbox{position:fixed;right:14px;bottom:14px;width:240px;height:135px;z-index:70;
+border:2px solid var(--line);border-radius:6px;overflow:hidden;background:#000}
+.ytbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.ytcover{position:absolute;inset:0;background:var(--panel);display:flex;
+align-items:center;justify-content:center;gap:10px;text-align:center;padding:12px;
+color:var(--chalk);font-size:14px}
+.ytcover .note{color:var(--brass);font-size:26px;line-height:1}
 
 
 /* The clue face.
@@ -581,16 +588,31 @@ function playTheme(entrance) {
     // Even so, a browser can still refuse to autoplay somebody else's audio.
     // If it does, the entrance simply passes without music; a file link plays
     // through a normal audio element and does not have this problem.
+    // Audio only, but the player still has to exist at a real size.
+    //
+    // A hidden or zero-sized iframe is refused autoplay outright — that was the
+    // original failure. So it is rendered full size and then covered: the sound
+    // comes through, the video does not, and the room sees a small card saying
+    // what is playing rather than somebody's chosen music video.
+    const box = document.createElement('div');
+    box.className = 'ytbox';
     const f = document.createElement('iframe');
-    f.className = 'ytframe';
     f.width = 240; f.height = 135;
     f.allow = 'autoplay; encrypted-media';
     f.setAttribute('playsinline', '');
     f.src = `https://www.youtube-nocookie.com/embed/${t.id}`
       + `?autoplay=1&start=${t.start || 0}&controls=0&modestbranding=1&rel=0&playsinline=1`;
-    document.body.appendChild(f);
-    themeFrame = f;
-    setTimeout(stopTheme, 12000);
+    box.appendChild(f);
+    const cover = document.createElement('div');
+    cover.className = 'ytcover';
+    cover.innerHTML = `<span class="note">&#9835;</span>
+      <span>${entrance.name ? entrance.name + ' is coming in' : 'Entrance music'}</span>`;
+    box.appendChild(cover);
+    document.body.appendChild(box);
+    themeFrame = box;
+    // Five seconds, the same as the library themes: an entrance, not an
+    // interlude, and the next clue should not wait on it.
+    setTimeout(stopTheme, 5000);
     return;
   }
 
