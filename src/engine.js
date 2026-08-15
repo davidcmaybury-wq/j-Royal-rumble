@@ -331,7 +331,7 @@ export class RumbleGame {
     }
 
     this.players = new Map();
-    const order = shuffle(players.slice(), this.rng);
+    const order = drawOrderFor(players, this.rng);
     order.forEach((p, i) => {
       this.players.set(p.id, {
         id: p.id, name: p.name, drawNumber: i + 1,
@@ -1032,6 +1032,42 @@ export class RumbleGame {
     const faster = liveBuzzTimes.filter((t) => t < ms).length;
     return { ms, place: faster + 1, outOf: liveBuzzTimes.length + 1 };
   }
+}
+
+/**
+ * The draw, with robots spread through it rather than clumped.
+ *
+ * A straight shuffle of a half-robot roster regularly deals three or four bots
+ * in a row, and a stretch of the match where nobody real walks in is the part
+ * a room notices — the entrances are the event. So the humans are shuffled,
+ * the robots are shuffled, and then the robots are dealt into the gaps at even
+ * spacing.
+ *
+ * Both groups are still shuffled first, so no individual player's number is
+ * predictable; what is fixed is only the pattern of human-and-robot, which
+ * nobody can exploit because it says nothing about who is where.
+ *
+ * With no robots, or none of one kind, this is exactly a shuffle.
+ */
+export function drawOrderFor(players, rng) {
+  const humans = shuffle(players.filter((p) => !p.isBot), rng);
+  const bots = shuffle(players.filter((p) => p.isBot), rng);
+  if (!bots.length || !humans.length) return shuffle(players.slice(), rng);
+
+  // n gaps for the humans to sit in, bots distributed across them evenly.
+  const total = humans.length + bots.length;
+  const out = new Array(total);
+  const step = total / bots.length;
+  const slots = new Set();
+  for (let i = 0; i < bots.length; i++) {
+    // Half a step in, so bots never take both the first and last places.
+    let at = Math.round(i * step + step / 2);
+    while (slots.has(at) || at >= total) at = (at + 1) % total;
+    slots.add(at);
+  }
+  let bi = 0, hi = 0;
+  for (let i = 0; i < total; i++) out[i] = slots.has(i) ? bots[bi++] : humans[hi++];
+  return out;
 }
 
 function shuffle(arr, rng) {

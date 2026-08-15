@@ -257,7 +257,10 @@ class Match {
   }
 
   start() {
-    const players = [...this.roster.values()].map((p) => ({ id: p.token, name: p.name }));
+    // isBot goes through: the engine spreads robots evenly through the draw so
+    // a stretch of the match does not pass with nobody real walking in.
+    const players = [...this.roster.values()]
+      .map((p) => ({ id: p.token, name: p.name, isBot: !!p.isBot }));
     if (players.length < 3) throw new Error('need at least 3 players');
     this.rng = makeRng(Date.now() & 0x7fffffff);
     if (this.settings.entryInterval == null) {

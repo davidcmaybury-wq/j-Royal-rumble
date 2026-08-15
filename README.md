@@ -536,6 +536,18 @@ an entrance is a door opening, not an interlude.
 file in adds it without a deploy and there is no manifest to fall out of step.
 Anything you add yourself is your own call on licensing.
 
+## Robots in the draw
+
+Robots are spread evenly through the entry order rather than shuffled in with
+everybody else. A straight shuffle of a half-robot roster regularly deals three
+or four in a row, and a stretch of the match where nobody real walks in is the
+part a room notices — the entrances are the event.
+
+Humans and robots are each shuffled first and then interleaved, so no
+individual number is predictable. What is fixed is only the human-and-robot
+pattern, which gives nothing away about who is where. With one kind only it is
+exactly a shuffle.
+
 ## Latecomers
 
 Somebody arriving after the bell goes to the back of the queue and enters at the
