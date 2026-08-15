@@ -14,9 +14,11 @@ font:400 16px/1.62 "IBM Plex Sans",system-ui,sans-serif}
 .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
 .top a{color:var(--slate);text-decoration:none;font-size:13.5px}
 .top a:hover{color:var(--brass)}
-h1{font-family:"Anton",Impact,sans-serif;font-size:clamp(28px,6vw,40px);
-letter-spacing:.02em;margin:14px 0 6px}
-h1 .j{color:var(--brass)}
+/* The banner does the identifying; the heading just says what this page is. */
+.mark{margin:16px 0 6px}
+.mark svg{display:block;max-width:100%;height:auto}
+h1{font-family:"Anton",Impact,sans-serif;font-size:clamp(22px,4.4vw,30px);
+letter-spacing:.05em;margin:0 0 6px;color:var(--brass)}
 .lede{color:var(--slate);font-size:15.5px;margin-bottom:8px}
 
 /* Each step is a numbered card with its own picture. Numbered because people
@@ -49,7 +51,8 @@ border-radius:var(--r);padding:18px 20px;margin-top:20px}
 </style></head>
 <body><div class="wrap">
   <div class="top"><a href="/">&larr; J! Royal Rumble</a><a href="/rules-101">the rules &rarr;</a></div>
-  <h1><span class="j">J!</span> HOW TO PLAY</h1>
+  <div class="mark" id="wm"></div>
+  <h1>HOW TO PLAY</h1>
   <p class="lede">Never done this before? Nothing here is assumed. Five steps and
     you are in.</p>
 
@@ -190,4 +193,9 @@ border-radius:var(--r);padding:18px 20px;margin-top:20px}
     That is everything. <a href="/rules-101">The rules in more detail</a> &middot;
     <a href="/handbook">the design handbook</a>
   </div>
-</div></body></html>
+</div>
+<script type="module">
+import { markBanner } from '/banner.js';
+document.getElementById('wm').innerHTML = markBanner(Math.min(360, window.innerWidth - 56));
+</script>
+</body></html>

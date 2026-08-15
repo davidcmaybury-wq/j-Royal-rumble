@@ -34,6 +34,15 @@ check('every step is illustrated',
   (g.match(/class="pic"/g) || []).length >= 4,
   `${(g.match(/class="pic"/g) || []).length} pictures`);
 check('and the focus warning is there', /in front/i.test(g));
+check('the banner identifies the page, not a bare heading',
+  g.includes("markBanner") && /HOW TO PLAY/.test(g));
+
+// The advanced rules must cover every mechanic that exists, or a player reads
+// them and is surprised mid-match.
+const adv = await (await fetch(`${U}/rules-101`)).text();
+for (const m of ['TOP ROPE', 'TARGETING', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
+  check(`rules 101 covers ${m}`, adv.includes(m));
+}
 
 // The Discord copy is the source for the rules page; both must exist.
 const { readFileSync } = await import('fs');

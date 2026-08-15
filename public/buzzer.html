@@ -256,6 +256,12 @@ border:1px solid var(--line);border-radius:var(--r);font-size:14px}
 .srow{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--slate)}
 .srow input{width:74px;padding:7px;background:var(--ink);color:var(--chalk);
 border:1px solid var(--line);border-radius:var(--r)}
+.tryb{margin-left:auto;padding:7px 14px;border:1px solid var(--line);border-radius:var(--r);
+background:none;color:var(--slate);cursor:pointer;font-size:13px}
+.tryb:hover{border-color:var(--brass);color:var(--brass)}
+.trywrap{margin-top:10px}
+.tryframe{width:100%;aspect-ratio:16/9;border:1px solid var(--line);border-radius:var(--r);
+background:#000}
 .sbtns{display:flex;gap:8px;margin-top:18px}
 .sbtns button{flex:1;padding:11px;border:1px solid var(--line);border-radius:var(--r);
 background:none;color:var(--slate);cursor:pointer}
@@ -390,6 +396,10 @@ function themeLabel() {
   return 'Your music: ' + (t ? t.title : myTheme.key);
 }
 
+// The id out of any of the shapes a YouTube link comes in.
+const ytId = (raw) =>
+  (String(raw).match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{6,})/) || [])[1] || null;
+
 async function openMusic() {
   let chosen = null;
   if (!themeList) {
@@ -412,7 +422,9 @@ async function openMusic() {
            value="${myTheme && myTheme.kind === 'youtube'
              ? 'https://youtu.be/' + myTheme.id : ''}" autocomplete="off">
     <div class="srow"><label>Start at</label>
-      <input type="number" id="tstart" min="0" value="${myTheme?.start || 0}"> seconds</div>
+      <input type="number" id="tstart" min="0" value="${myTheme?.start || 0}"> seconds
+      <button class="tryb" id="ttry">Test it</button></div>
+    <div class="trywrap" id="trywrap"></div>
     <p class="snote" style="margin:14px 0 0">Tap a theme to hear it. Nothing is
       saved until you press Save.</p>
     <div class="sbtns">
@@ -442,13 +454,34 @@ async function openMusic() {
   el.addEventListener('remove', stopPreview);
   const origRemove = el.remove.bind(el);
   el.remove = () => { stopPreview(); origRemove(); };
+  // Hear it before committing.
+  //
+  // A link that is private, age-gated, blocked in the host's country or simply
+  // mistyped fails silently at the worst possible moment — as somebody walks
+  // in. Better to find out here, in a player they can see.
+  el.querySelector('#ttry').onclick = () => {
+    const raw = el.querySelector('#tlink').value.trim();
+    const id = ytId(raw);
+    const wrap = el.querySelector('#trywrap');
+    if (!id) {
+      wrap.innerHTML = '<div class="err">That does not look like a YouTube link.</div>';
+      return;
+    }
+    stopPreview();
+    const at = +el.querySelector('#tstart').value || 0;
+    wrap.innerHTML = `<iframe class="tryframe" allow="autoplay"
+      src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&start=${at}&rel=0"></iframe>
+      <div class="snote">If it plays here it will play on the night. If it shows
+      an error, the clip is blocked and you should pick something else.</div>`;
+  };
+
   el.querySelector('#tnone').onclick = () => save(null, el);
   el.querySelector('#tsave').onclick = () => {
     // A library pick made by ear wins over a stale link in the box.
     if (chosen) return save(chosen, el);
     const raw = el.querySelector('#tlink').value.trim();
     if (!raw) return save(null, el);
-    const id = (raw.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/) || [])[1];
+    const id = ytId(raw);
     if (!id) { el.querySelector('#tlink').classList.add('bad'); return; }
     save({ kind: 'youtube', id, start: +el.querySelector('#tstart').value || 0 }, el);
   };
