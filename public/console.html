@@ -8,6 +8,50 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* A sweep. The column that was just cleared is held up for a moment, shimmering
+   in brass with the bonus floating off it — the board used to swap the new
+   category in during the same resolve, so the celebration played over a column
+   that had already become something else. */
+.sweepover{position:absolute;z-index:55;pointer-events:none;border-radius:6px;
+overflow:hidden;animation:sweepfade 2.6s ease-out forwards}
+.sweepover .sc{position:absolute;inset:0;border-radius:6px;
+background:linear-gradient(115deg,#7A5A12 0%,#D6A93F 38%,#FFF3C4 50%,#D6A93F 62%,#7A5A12 100%);
+background-size:260% 100%;animation:sweepshine 1.5s ease-in-out 2}
+.sweepover .st{position:absolute;inset:0;display:flex;flex-direction:column;
+align-items:center;justify-content:center;gap:4px;text-align:center;padding:8px;
+color:#2A1D06;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+font-size:11px;line-height:1.2}
+.sweepfloat{position:absolute;z-index:56;pointer-events:none;white-space:nowrap;
+font-family:"Anton",Impact,sans-serif;font-size:26px;letter-spacing:.02em;
+color:var(--brass);text-shadow:0 2px 0 #2A1D06,0 0 14px #D6A93F88;
+animation:sweeprise 2.4s ease-out forwards}
+@keyframes sweepshine{0%{background-position:120% 0}100%{background-position:-40% 0}}
+@keyframes sweepfade{0%{opacity:0}8%{opacity:1}72%{opacity:1}100%{opacity:0}}
+@keyframes sweeprise{0%{opacity:0;transform:translate(-50%,10px) scale(.9)}
+15%{opacity:1;transform:translate(-50%,0) scale(1)}
+100%{opacity:0;transform:translate(-50%,-70px) scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  .sweepover,.sweepover .sc,.sweepfloat{animation:none}
+  .sweepover{opacity:1} .sweepfloat{opacity:1;transform:translate(-50%,-30px)}
+}
+
+/* What the robots say. A robot that is simply marked wrong is a scoring event;
+   one that says "Millard Fillmore" is a player. */
+.says{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(8px);
+z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;
+pointer-events:none;opacity:0;transition:opacity .16s ease,transform .16s ease}
+.says.on{opacity:1;transform:translateX(-50%)}
+.sayrow{display:flex;align-items:baseline;gap:10px;padding:10px 16px;border-radius:999px;
+background:#131A30EE;border:1px solid var(--line);max-width:78vw}
+.sayrow .who{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);
+flex:none}
+.sayrow .what{font-size:17px;color:var(--chalk);overflow:hidden;text-overflow:ellipsis;
+white-space:nowrap}
+.sayrow.right{border-color:var(--live)} .sayrow.right .what{color:var(--live)}
+.sayrow.wrong{border-color:var(--alarm)} .sayrow.wrong .what{color:#F0A99E}
+.sayrow.pick{border-color:var(--brass)} .sayrow.pick .what{color:var(--brass)}
+@media (prefers-reduced-motion:reduce){.says{transition:none}}
+
 /* The clue face.
    ITC Korinna Bold is what the show used and is licensed, so this is Bitter at
    700 — the closest free slab serif: heavy, slightly rounded slabs, generous
@@ -375,6 +419,30 @@ socket.on('avatar', ({ token, dataUrl }) => { AVATARS.set(token, dataUrl); rende
 const avatarOf = (p) => (p && p.hasAvatar ? AVATARS.get(p.token) : null) || null;
 socket.on('state', apply);
 socket.on('error-msg', (m) => say(m));
+
+// What the robots said about the clue just gone.
+//
+// Shown for a few seconds and then dropped: it is colour, not information the
+// room has to act on, and a panel that stays up would compete with the board.
+let sayTimer = null;
+socket.on('bot-said', (d) => {
+  const rows = (d.said || []);
+  if (!rows.length) return;
+  let box = document.getElementById('saysbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'saysbox'; box.className = 'says';
+    document.body.appendChild(box);
+  }
+  clearTimeout(sayTimer);
+  const label = { right: 'says', wrong: 'says', pick: "I'll take" };
+  box.innerHTML = rows.map((r) => `<div class="sayrow ${r.kind}">
+    <span class="who">${r.name} ${label[r.kind] || 'says'}</span>
+    <span class="what">${r.text}</span></div>`).join('');
+  box.classList.add('on');
+  sayTimer = setTimeout(() => box.classList.remove('on'), 4200);
+});
+
 socket.on('resolved', (e) => {
   if (e.overtimeStarted) overtimeSplash('OVERTIME', 'Stakes start climbing',
     'Nobody else is coming. From here the clue values double every few clues until somebody breaks.');
@@ -411,7 +479,7 @@ socket.on('resolved', (e) => {
   }
   // A sweep is rare enough to be worth a moment.
   if (e.sweep) {
-    ripple(e.sweep.category);
+    sweepCelebrate(e.sweep, e.categoryWas, nameOf(e.sweep.playerId));
     pulse(e.sweep.playerId, 'swept');
     say(nameOf(e.sweep.playerId) + ' swept ' + e.sweep.category
       + ' — ' + fmt(e.sweep.bonus), 'sweep');
@@ -508,6 +576,47 @@ function pulse(token, kind) {
 }
 
 // The column washes brass, top to bottom.
+
+/**
+ * Hold the swept column up while it is celebrated.
+ *
+ * The engine replaces a cleared category in the same resolve that awards the
+ * bonus, so anything drawn afterwards lands on the new one. This paints the old
+ * column over the top — by slot, not by name — shimmers it, and floats the
+ * bonus off it.
+ */
+function sweepCelebrate(sweep, was, who) {
+  // Wait for the board to come back. `resolved` arrives while the clue is
+  // still on screen, so measuring the column now finds nothing at all — which
+  // is why the celebration silently did nothing the first time.
+  const cols = [...document.querySelectorAll('.col')];
+  if (!cols.length) {
+    return setTimeout(() => sweepCelebrate(sweep, was, who), 120);
+  }
+  const col = cols[sweep.slot] || (was && cols[was.slot]);
+  if (!col) return;
+  const box = col.getBoundingClientRect();
+  const host = document.createElement('div');
+  host.className = 'sweepover';
+  host.style.cssText += `left:${box.left}px;top:${box.top}px;`
+    + `width:${box.width}px;height:${box.height}px`;
+  host.innerHTML = `<div class="sc"></div>
+    <div class="st"><div>${(was && was.title) || sweep.category}</div>
+      <div style="font-size:15px">SWEPT</div></div>`;
+  document.body.appendChild(host);
+  setTimeout(() => host.remove(), 2700);
+
+  const f = document.createElement('div');
+  f.className = 'sweepfloat';
+  f.textContent = `${who} +${fmt(sweep.bonus)}`;
+  // From the middle of the column, not the top: floating up from the header
+   // put it half off the screen.
+  f.style.cssText += `left:${box.left + box.width / 2}px;`
+    + `top:${box.top + box.height * 0.42}px`;
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 2500);
+}
+
 function ripple(category) {
   const cols = [...document.querySelectorAll('.col')];
   const col = cols.find((c) => (c.querySelector('.cat')?.textContent || '')

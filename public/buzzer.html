@@ -8,6 +8,23 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* What the robots say. A robot that is simply marked wrong is a scoring event;
+   one that says "Millard Fillmore" is a player. */
+.says{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(8px);
+z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;
+pointer-events:none;opacity:0;transition:opacity .16s ease,transform .16s ease}
+.says.on{opacity:1;transform:translateX(-50%)}
+.sayrow{display:flex;align-items:baseline;gap:10px;padding:10px 16px;border-radius:999px;
+background:#131A30EE;border:1px solid var(--line);max-width:78vw}
+.sayrow .who{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);
+flex:none}
+.sayrow .what{font-size:17px;color:var(--chalk);overflow:hidden;text-overflow:ellipsis;
+white-space:nowrap}
+.sayrow.right{border-color:var(--live)} .sayrow.right .what{color:var(--live)}
+.sayrow.wrong{border-color:var(--alarm)} .sayrow.wrong .what{color:#F0A99E}
+.sayrow.pick{border-color:var(--brass)} .sayrow.pick .what{color:var(--brass)}
+@media (prefers-reduced-motion:reduce){.says{transition:none}}
+
 /* The clue face.
    ITC Korinna Bold is what the show used and is licensed, so this is Bitter at
    700 — the closest free slab serif: heavy, slightly rounded slabs, generous
@@ -598,6 +615,30 @@ function detectRing(next) {
   }
   prevRing = live;
 }
+
+
+// What the robots said about the clue just gone.
+//
+// Shown for a few seconds and then dropped: it is colour, not information the
+// room has to act on, and a panel that stays up would compete with the board.
+let sayTimer = null;
+socket.on('bot-said', (d) => {
+  const rows = (d.said || []);
+  if (!rows.length) return;
+  let box = document.getElementById('saysbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'saysbox'; box.className = 'says';
+    document.body.appendChild(box);
+  }
+  clearTimeout(sayTimer);
+  const label = { right: 'says', wrong: 'says', pick: "I'll take" };
+  box.innerHTML = rows.map((r) => `<div class="sayrow ${r.kind}">
+    <span class="who">${r.name} ${label[r.kind] || 'says'}</span>
+    <span class="what">${r.text}</span></div>`).join('');
+  box.classList.add('on');
+  sayTimer = setTimeout(() => box.classList.remove('on'), 4200);
+});
 
 socket.on('watch-state', (s2) => { detectRing(s2); W = s2; paintBoard(); });
 

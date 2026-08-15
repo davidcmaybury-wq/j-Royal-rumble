@@ -536,6 +536,24 @@ an entrance is a door opening, not an interlude.
 file in adds it without a deploy and there is no manifest to fall out of step.
 Anything you add yourself is your own call on licensing.
 
+## What the robots say
+
+When a clue resolves, the robots that buzzed say what they had. A robot that is
+simply marked wrong is a scoring event; one that says "Millard Fillmore" is a
+player — and the wrong answers were the last part of the race the room could not
+see. Whoever took the clue also calls the next one, the way a board leader does.
+
+**Wrong answers are written by Claude** when `ANTHROPIC_API_KEY` is set on the
+server, because a wrong answer has to be wrong the way a person is wrong: the
+right kind of thing, a near miss rather than nonsense. It is generated while the
+host is still reading, so no network call sits inside the race, and it is
+checked against the real answer before use — a "wrong" answer that happens to be
+right is worse than none.
+
+Without a key there is a local fallback that borrows another answer from the
+same board. Cruder, but the categories are themed so it is usually the right
+sort of thing and reliably the wrong one. Nothing fails and no match waits.
+
 ## Robots in the draw
 
 Robots are spread evenly through the entry order rather than shuffled in with

@@ -767,7 +767,10 @@ export class RumbleGame {
       if (tally.get(taker.id) === cat.clues.length) {
         const bonus = this.s.sweepBonus * otBefore;
         taker.score += bonus;
-        entry.sweep = { playerId: taker.id, category: cat.title, bonus };
+        // The slot, not just the title: the category is replaced later in this
+        // same resolve, so by the time anybody draws the celebration the name
+        // on screen is the new one and a lookup by title finds nothing.
+        entry.sweep = { playerId: taker.id, category: cat.title, bonus, slot: slotIndex };
       }
     }
 
@@ -853,6 +856,10 @@ export class RumbleGame {
     if (!cat.clues.some((c) => !c.revealed)) {
       this.board[slotIndex] = this.drawCategory();
       entry.categoryReplaced = this.board[slotIndex].title;
+      // What was there, so a screen can hold the old column up for a moment
+      // rather than swapping it out from under the celebration.
+      entry.categoryWas = { slot: slotIndex, title: cat.title,
+        values: cat.clues.map((c) => [100, 200, 300, 400, 500][c.row - 1]) };
     }
 
     const liveAfter = this.live();

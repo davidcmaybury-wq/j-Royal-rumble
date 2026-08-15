@@ -10,6 +10,7 @@ import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
 import { assignToken, resolveChoice } from './tokens-server.js';
 import { distinctLook, looksAlike } from '../public/wrestlers.js';
+import { wrongAnswer } from './wrongs.js';
 import * as logs from './logstore.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS,
          loadDistributions, drawReadJitter, referenceHumanMedian,
@@ -1509,6 +1510,14 @@ io.on('connection', (socket) => {
     match.race = { open: false, activatedAt: null, buzzes: [], lockedOut: new Set() };
     match.retoss = 0;
     clearTimeout(match.raceTimer);
+
+    // Work out the robots' wrong answer now, while the host is still reading.
+    // Doing it at buzz time would put a network call inside the race.
+    match.wrongAnswer = null;
+    const siblings = g.board.flatMap((c) => c.clues.map((x) => x.answer))
+      .filter((a) => a && a !== clue.answer);
+    wrongAnswer(match.clue, siblings).then((w) => { match.wrongAnswer = w; });
+
     pushHost();
     io.to(`${match.id}:players`).emit('clue-shown', { value: match.clue.value });
     pushPlayers();
@@ -1704,6 +1713,42 @@ io.on('connection', (socket) => {
         theme: match.roster.get(t)?.theme || null,
       })).filter((x) => x.name);
     }
+    // What the robots said.
+    //
+    // A robot that is simply marked wrong is a scoring event; one that says
+    // "Millard Fillmore" is a player. The room can only enjoy the race if it
+    // hears what the robots actually offered.
+    const said = [];
+    // The snapshot taken before the clue resolved: match.race is already gone
+    // by this point, which is why the answers never appeared the first time.
+    for (const b of buzzes) {
+      if (!b.bot) continue;
+      if (b.botCorrect && b.token === winnerToken) {
+        said.push({ token: b.token, name: b.name, kind: 'right', text: clueMeta.answer });
+      } else if (!b.botCorrect) {
+        const w = match.wrongAnswer;
+        said.push({ token: b.token, name: b.name, kind: 'wrong',
+          text: w || "...I'll pass" });
+      }
+    }
+    // And whoever took it calls the next one, the way a board leader does.
+    if (winnerToken && match.bots.has(winnerToken)) {
+      const open = [];
+      match.game.board.forEach((c, si) => c.clues.forEach((x) => {
+        if (!x.revealed) open.push({ category: c.title, value: [100, 200, 300, 400, 500][x.row - 1] });
+      }));
+      if (open.length) {
+        const pick = open[Math.floor(Math.random() * open.length)];
+        said.push({ token: winnerToken, name: match.roster.get(winnerToken)?.name,
+          kind: 'pick', text: `${pick.category} for $${pick.value}` });
+      }
+    }
+    if (said.length) {
+      for (const room of ['host', 'watch', 'board']) {
+        io.to(`${match.id}:${room}`).emit('bot-said', { said });
+      }
+    }
+
     io.to(`${match.id}:host`).emit('resolved', entry);
     io.to(`${match.id}:watch`).emit('resolved', entry);
     for (const t of entry.revived || []) {

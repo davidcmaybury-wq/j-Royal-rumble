@@ -273,6 +273,9 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
     'prompt', 'io', 'structuredClone', 'queueMicrotask', 'atob', 'btoa',
     'if', 'for', 'while', 'switch', 'catch', 'return', 'typeof', 'function',
     'super', 'this', 'await', 'new', 'delete', 'void', 'in', 'of', 'do', 'else',
+    // CSS functions that appear inside strings the stripper does not reach —
+    // an inline style attribute built by concatenation, for instance.
+    'var', 'calc', 'clamp', 'min', 'max', 'rgba', 'rgb', 'url', 'translate',
     'async', 'resolve', 'reject', 'require', 'addEventListener',
     'removeEventListener', 'matchMedia', 'getComputedStyle', 'URL',
     'AudioContext', 'Audio', 'Image', 'FileReader', 'Blob', 'FormData']);
