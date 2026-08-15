@@ -1799,6 +1799,23 @@ io.on('connection', (socket) => {
     match.race.open = true;
     match.race.activatedAt = Date.now() + match.settings.delay;
     match.retoss = (match.retoss || 0) + 1;
+
+    // A fresh race needs a fresh answer.
+    //
+    // These are cleared per clue, which meant a robot picking up the rebound
+    // never spoke: the marker from the first race was still set and the
+    // announcement bailed out. The wrong answer is regenerated too, so the
+    // second robot does not repeat the first one's guess.
+    clearTimeout(match.saidTimer);
+    match.saidTimer = null;
+    match.saidFor = null;
+    const said = match.wrongAnswer;
+    match.wrongAnswer = null;
+    {
+      const sibs = match.game.board.flatMap((c) => c.clues.map((x) => x.answer))
+        .filter((a) => a && a !== match.clue.answer && a !== said);
+      wrongAnswer(match.clue, sibs).then((w) => { match.wrongAnswer = w || said; });
+    }
     io.to(`${match.id}:players`).emit('activate-buzzers',
       { at: match.race.activatedAt, lockout: match.settings.lockout });
     io.to(`${match.id}:host`).emit('retoss', { lockedOut: [...match.race.lockedOut] });
