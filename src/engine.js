@@ -340,6 +340,7 @@ export class RumbleGame {
         eliminatedAtClue: null, placement: null,
         pins: 0, correct: 0, missed: 0,
         topRope: false, topRopeAt: null, target: null,
+        bankedLastClue: false,
         revivals: 0, bountyPlaced: 0,
       });
     });
@@ -718,9 +719,15 @@ export class RumbleGame {
       // Clipping it on the spot was the thing that made escalation look broken:
       // a clue worth 2,000 paid the winner 500 while charging the loser the
       // full 2,000, so the stakes only ever went one way and it was invisible.
-      // They are still clipped on the next clue, so the falling roof takes it
-      // back unless they keep winning — which is the pressure overtime is for.
-      if (otBefore > 1) ceilingFreeFor = w.id;
+      // They are clipped on the next clue instead, so the falling roof takes it
+      // back unless they keep winning.
+      //
+      // "Unless they keep winning" turned out to be the whole game. In a
+      // two-handed overtime the stronger player wins most clues, was exempted
+      // every time, and never met the ceiling at all — one live match ended
+      // with 12,520 against a ceiling of 4,560. So the exemption cannot run two
+      // clues in a row: bank it once, then face the roof whatever happens next.
+      if (otBefore > 1 && !w.bankedLastClue) ceilingFreeFor = w.id;
     } else if (this.s.stumperFraction > 0) {
       const d = Math.round(value * this.s.stumperFraction);
       for (const p of live) p.score -= d * mult(p);
@@ -765,6 +772,8 @@ export class RumbleGame {
     // reach past it.
     const cap = this.ceiling;
     for (const p of this.live()) {
+      // Remember who banked above the cap, so the exemption cannot repeat.
+      p.bankedLastClue = p.id === ceilingFreeFor && p.score > cap;
       if (p.id === ceilingFreeFor) continue;
       if (p.score > cap) p.score = cap;
     }

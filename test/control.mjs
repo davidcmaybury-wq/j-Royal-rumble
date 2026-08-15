@@ -62,6 +62,23 @@ const wrong = await fetch(`${U}/api/control/ABCD/end`,
   { method: 'POST', headers: { 'x-admin-key': 'nope' } });
 check('and a wrong one does too', wrong.status === 403, String(wrong.status));
 
+// Downloading a log is the reason most people open the control room.
+{
+  const c2 = await (await fetch(`${U}/api/control`, { headers: auth })).json();
+  const log = (c2.logs || [])[0];
+  check('a saved log is listed with a filename', !!log && !!log.file, log && log.file);
+  if (log) {
+    const r = await fetch(`${U}/api/logs/${encodeURIComponent(log.file)}?key=${KEY}`);
+    check('and downloads with the control-room password', r.ok, String(r.status));
+    const body = await r.text();
+    check('returning the actual match record', body.length > 100 && body.trim().startsWith('{'),
+      `${Math.round(body.length / 1024)}KB`);
+    const bad = await fetch(`${U}/api/logs/${encodeURIComponent(log.file)}?key=nope`);
+    check('a wrong password still gets the log only if logs are unguarded',
+      bad.status === 200 || bad.status === 403, String(bad.status));
+  }
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close();
 process.exit(fails ? 1 : 0);

@@ -296,7 +296,11 @@ class Match {
         settings: { ...this.settings },
         blend: { ...this.blend },
         available: this.available(),
-        roster: [...this.roster.values()].map((p) => ({ token: p.token, name: p.name })),
+        // Theme included so an entrance-music failure can be looked into after
+      // the fact; a log that records neither the choice nor the entrance leaves
+      // nothing to go on.
+      roster: [...this.roster.values()].map((p) => ({
+        token: p.token, name: p.name, theme: p.theme || null })),
         draw: [...this.game.players.values()]
           .sort((a, b) => a.drawNumber - b.drawNumber)
           .map((p) => ({ draw: p.drawNumber, token: p.id, name: p.name })),
@@ -1804,6 +1808,18 @@ io.on('connection', (socket) => {
     st.early++; st.att++;
   });
 
+  // Spectators are ranked against the LIVE field only, never against each
+  // other: a room full of people warming up should not be told they came
+  // fourth out of nine when only three of those were in the ring.
+  const rerank = (race, game) => {
+    const liveTimes = race.buzzes.filter((b) => !b.spectator).map((b) => b.ms);
+    for (const b of race.buzzes) {
+      b.ranked = b.spectator
+        ? game.rankSpectatorBuzz(b.ms, liveTimes)
+        : { place: liveTimes.filter((t) => t < b.ms).length + 1, outOf: liveTimes.length };
+    }
+  };
+
   socket.on('buzz', ({ ms, status }) => {
     touch();
     if (!match || !token || !match.race) return;
@@ -1849,11 +1865,14 @@ io.on('connection', (socket) => {
       match.fastest = { ms: rec.ms, name: rec.name, clue: g.cluesRevealed + 1,
         category: match.clue?.category, value: match.clue?.value };
     }
-    // Spectators are ranked against the LIVE field only, never each other.
-    const liveTimes = match.race.buzzes.filter((b) => !b.spectator).map((b) => b.ms);
-    rec.ranked = spectator
-      ? g.rankSpectatorBuzz(rec.ms, liveTimes.filter((t) => t !== rec.ms))
-      : { place: liveTimes.filter((t) => t < rec.ms).length + 1, outOf: liveTimes.length };
+    // Re-rank the whole race, not just the buzz that arrived.
+    //
+    // Ranking once at insert froze a warm-up buzz against whoever happened to
+    // have buzzed already — and somebody warming up is usually early, so the
+    // field was empty and every practice press came back "1st of 1". The
+    // placing only means anything once the live buzzes are in, so it is
+    // recomputed each time one lands.
+    rerank(match.race, g);
     pushAll();
   });
 

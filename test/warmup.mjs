@@ -90,6 +90,65 @@ const warm = rec.clues.flatMap((c) => c.buzzes).filter((x) => x.spectator);
 check('the log still records the practice presses', warm.length === 8, `${warm.length}`);
 check('flagged so they can be told apart', warm.every((x) => x.spectator === true));
 
+// --- a warm-up buzz that lands first --------------------------------------
+//
+// The placing used to be worked out once, at the moment the buzz arrived.
+// Somebody warming up is usually early, so the live field was still empty and
+// every practice press came back "1st of 1" no matter how slow it was.
+{
+  const m2 = await (await fetch(`${U}/api/match`, { method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ settings: { entryInterval: 999, delay: 0 } }) })).json();
+  const h2 = io(U, { transports: ['websocket'] });
+  await once(h2, 'connect');
+  let s2 = null;
+  h2.on('state', (x) => { s2 = x; });
+  await new Promise((r) => h2.emit('host-join', { gameId: m2.gameId, hostKey: m2.hostKey },
+    (x) => { s2 = x.state; r(); }));
+
+  const people = [];
+  for (const n of ['R1', 'R2', 'R3', 'Watcher']) {
+    const c = io(U, { transports: ['websocket'] });
+    await once(c, 'connect');
+    const p = { c, name: n };
+    await new Promise((r) => c.emit('join', { gameId: m2.gameId, name: n }, (x) => { p.token = x.token; r(); }));
+    people.push(p);
+  }
+  await wait(300);
+  h2.emit('start-match', {}, () => {});
+  await wait(400);
+  const open2 = [];
+  s2.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) open2.push([si, x.row]); }));
+  h2.emit('pick-clue', { slot: open2[0][0], row: open2[0][1] });
+  await wait(90);
+  h2.emit('activate');
+  await wait(60);
+
+  // The person in the queue presses first, and slowly.
+  const spec = people[3];
+  let specView = null;
+  spec.c.on('state', (v) => { specView = v; });
+  spec.c.emit('buzz', { ms: 900, status: 'good' });
+  await wait(200);
+  // Then the ring buzzes, all faster.
+  for (const [i, p] of people.slice(0, 3).entries()) {
+    p.c.emit('buzz', { ms: 200 + i * 40, status: 'good' });
+    await wait(60);
+  }
+  await wait(500);
+
+  // The host view hides warm-up buzzes on purpose, so the placing has to be
+  // read where the player actually sees it: their own myBuzz.
+  const mine = specView && specView.myBuzz;
+  check('a warm-up buzz comes back ranked', !!mine && mine.outOf != null,
+    mine ? JSON.stringify(mine) : 'nothing');
+  check('and is not stuck at 1st of 1', mine && mine.outOf > 1,
+    mine ? `${mine.place} of ${mine.outOf}` : '-');
+  check('a slow practice press places last', mine && mine.place === mine.outOf,
+    mine ? `${mine.place} of ${mine.outOf}` : '-');
+  h2.close(); people.forEach((p) => p.c.close());
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); ps.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);

@@ -1,0 +1,64 @@
+// The ceiling has to keep binding in overtime.
+//
+// The winner of a raised clue banks the full amount and meets the ceiling on
+// the next clue, so the falling roof takes it back. But the exemption used to
+// re-arm every time they won, and in a two-handed overtime the stronger player
+// wins most clues — so they never met the ceiling at all. One live match ended
+// with 12,520 against a ceiling of 4,560.
+import { RumbleGame, makeRng } from '../src/engine.js';
+let fails = 0;
+const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${d ? '  — ' + d : ''}`); if (!ok) fails++; };
+
+const ROW = [100, 200, 300, 400, 500];
+let cn = 0;
+const pool = () => { cn++; return { id: 'c' + cn, title: 'C' + cn,
+  clues: ROW.map((v, i) => ({ id: `c${cn}-${i}`, row: i + 1, text: '', answer: '' })) }; };
+
+const g = new RumbleGame({
+  players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }],
+  rng: makeRng(5), categoryPool: pool,
+  settings: { entryInterval: 999, startScore: 3000, ceiling: 6000, ceilingFloor: 3000,
+    ceilingDecayPerClue: -120, overtime: true, overtimeEvery: 2, overtimeMax: 8,
+    longevity: false, categorySweep: false },
+});
+const open = () => { const o = []; g.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) o.push([si, x.row]); })); return o[0]; };
+
+// A always wins, which is the case that broke it.
+let mult = 1, over = 0;
+for (let i = 0; i < 60 && !g.finished; i++) {
+  const [s, r] = open();
+  g.resolveClue(s, r, { winnerId: 'a', missedIds: [] });
+  const a = g.players.get('a');
+  if (a.score > g.ceiling) over++;
+  mult = Math.max(mult, 2 ** (g.overtimeSteps || 0));
+}
+const a = g.players.get('a');
+check('overtime actually opened', mult > 1, `x${mult}`);
+check('a repeat winner does not outrun the ceiling for ever',
+  a.score <= g.ceiling * 1.05, `${a.score} against ${g.ceiling}`);
+check('and is above it at most briefly', over <= 15, `${over} of 30 clues above`);
+
+// The banked-then-clipped behaviour still has to work for a single big win.
+const g2 = new RumbleGame({
+  players: [{ id: 'x', name: 'X' }, { id: 'y', name: 'Y' }, { id: 'z', name: 'Z' }],
+  rng: makeRng(9), categoryPool: pool,
+  settings: { entryInterval: 999, startScore: 3000, ceiling: 6000, ceilingFloor: 3000,
+    ceilingDecayPerClue: -120, overtime: true, overtimeEvery: 2, overtimeMax: 8,
+    longevity: false, categorySweep: false },
+});
+const open2 = () => { const o = []; g2.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) o.push([si, x.row]); })); return o[0]; };
+let banked = false;
+for (let i = 0; i < 60 && !g2.finished; i++) {
+  const [s, r] = open2();
+  // alternate the winner so nobody is exempt twice running
+  g2.resolveClue(s, r, { winnerId: i % 2 ? 'y' : 'x', missedIds: [] });
+  if ((g2.overtimeSteps || 0) > 0) {
+    const w = g2.players.get(i % 2 ? 'y' : 'x');
+    if (w.score > g2.ceiling) banked = true;
+  }
+}
+check('a raised clue can still be banked in full', banked,
+  banked ? 'seen above the cap' : 'never exceeded — the fix went too far');
+
+console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
+process.exit(fails ? 1 : 0);

@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.58.0",
+  "version": "0.60.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -59,7 +59,8 @@
     "fullbuzzer-test": "node test/fullbuzzer.mjs",
     "themes": "python3 tools/make-themes.py",
     "themes-test": "node test/themes.mjs",
-    "drawmix-test": "node test/drawmix.mjs"
+    "drawmix-test": "node test/drawmix.mjs",
+    "otcap-test": "node test/otcap.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

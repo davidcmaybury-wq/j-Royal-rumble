@@ -5,6 +5,11 @@
 <title>J! Royal Rumble</title>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* The entrance player, when somebody has chosen a YouTube clip. Small and in
+   the corner: a hidden player is refused autoplay outright. */
+.ytframe{position:fixed;right:14px;bottom:14px;width:240px;height:135px;border:2px solid var(--line);
+border-radius:6px;z-index:70;background:#000}
+
 
 /* The clue face.
    ITC Korinna Bold is what the show used and is licensed, so this is Bitter at
@@ -447,14 +452,24 @@ function playTheme(entrance) {
   const t = entrance.theme;
 
   if (t.kind === 'youtube') {
-    // An iframe rather than an audio element, because that is the only way
-    // YouTube permits playback. Hidden, muted-autoplay-unmuted via the API
-    // parameters, and torn down after the entrance so nothing lingers.
+    // A real, visible player rather than a hidden one.
+    //
+    // The first version used a 0x0 iframe tucked off-screen, and it never
+    // played: browsers refuse autoplay in a cross-origin frame that has no
+    // size, and YouTube declines to start a player nobody can see. So it sits
+    // in the corner at a genuine size — small, but present — which is also
+    // honest about where the sound is coming from.
+    //
+    // Even so, a browser can still refuse to autoplay somebody else's audio.
+    // If it does, the entrance simply passes without music; a file link plays
+    // through a normal audio element and does not have this problem.
     const f = document.createElement('iframe');
-    f.width = 0; f.height = 0; f.style.cssText = 'position:absolute;width:0;height:0;border:0';
-    f.allow = 'autoplay';
+    f.className = 'ytframe';
+    f.width = 240; f.height = 135;
+    f.allow = 'autoplay; encrypted-media';
+    f.setAttribute('playsinline', '');
     f.src = `https://www.youtube-nocookie.com/embed/${t.id}`
-      + `?autoplay=1&start=${t.start || 0}&controls=0&modestbranding=1`;
+      + `?autoplay=1&start=${t.start || 0}&controls=0&modestbranding=1&rel=0&playsinline=1`;
     document.body.appendChild(f);
     themeFrame = f;
     setTimeout(stopTheme, 12000);
