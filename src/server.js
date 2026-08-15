@@ -487,6 +487,19 @@ class Match {
     };
   }
 
+  /** Every stable and who is in it, for the pickers and the scoreboards. */
+  stableList() {
+    if (!this.game) return [];
+    const members = new Map();
+    for (const p of this.game.players.values()) {
+      if (!p.stable) continue;
+      if (!members.has(p.stable)) members.set(p.stable, []);
+      members.get(p.stable).push({ token: p.id, name: p.name, state: p.state });
+    }
+    return [...this.game.stables.values()].map((st) => ({
+      id: st.id, name: st.name, members: members.get(st.id) || [] }));
+  }
+
   raceView() {
     if (!this.race) return null;
     return {
@@ -725,6 +738,7 @@ class Match {
         tokenArt: this.roster.get(token)?.tokenArt || null,
         topRope: !!p.topRope,
         topRopeWait: g.topRopeWait(p.id),
+        stable: p.stable || null,
         target: p.target || null,
         targetedBy: [...g.players.values()].filter((x) => x.target === token && x.state === 'live')
           .map((x) => x.name),
@@ -748,6 +762,7 @@ class Match {
       delay: this.settings.delay,
       overtime: g.overtime ? g.overtime() : null,
       myBuzz: mine ? { ms: mine.ms, early: mine.early, ...(mine.ranked || {}) } : null,
+      stables: this.settings.stables ? this.stableList() : null,
       ...(this.phase === 'over'
         ? { standings: this.standings(), fastest: this.fastest, history: this.history,
             draw: [...this.game.players.values()].map((p) => ({ token: p.id, name: p.name, draw: p.drawNumber })) }
@@ -1383,6 +1398,48 @@ io.on('connection', (socket) => {
     r.look = distinctLook(token + ':' + Date.now(), taken);
     pushAll();
     ack?.({ ok: true, look: r.look });
+  });
+
+  // --- stables ---------------------------------------------------------
+  //
+  // Declared between clues like the top rope, never while one is on the board:
+  // switching sides mid-race would let somebody see who had buzzed and pick a
+  // side accordingly.
+  const betweenClues = () => !match?.clue;
+
+  socket.on('make-stable', ({ name }, ack) => {
+    if (!match?.game || !token) return ack?.({ error: 'no match' });
+    if (!betweenClues()) return ack?.({ error: 'wait until the clue is done' });
+    const r = match.game.createStable(token, name);
+    if (r.error) return ack?.({ error: r.error });
+    match.note('stable-made', { name: r.name, by: match.roster.get(token)?.name });
+    pushAll();
+    ack?.(r);
+  });
+
+  socket.on('join-stable', ({ id }, ack) => {
+    if (!match?.game || !token) return ack?.({ error: 'no match' });
+    if (!betweenClues()) return ack?.({ error: 'wait until the clue is done' });
+    const r = match.game.joinStable(token, id);
+    if (r.error) return ack?.({ error: r.error });
+    match.note('stable-joined', { name: r.name, who: match.roster.get(token)?.name });
+    io.to(`${match.id}:host`).emit('stable-news',
+      { kind: 'join', who: match.roster.get(token)?.name, stable: r.name });
+    pushAll();
+    ack?.(r);
+  });
+
+  socket.on('betray', ({ id }, ack) => {
+    if (!match?.game || !token) return ack?.({ error: 'no match' });
+    if (!betweenClues()) return ack?.({ error: 'wait until the clue is done' });
+    const r = match.game.betray(token, id || null);
+    if (r.error) return ack?.({ error: r.error });
+    const who = match.roster.get(token)?.name;
+    match.note('betrayal', { who, from: r.fromName, to: r.toName, stack: r.stack });
+    io.to(`${match.id}:host`).emit('stable-news',
+      { kind: 'betray', who, from: r.fromName, to: r.toName, stack: r.stack, each: r.each });
+    pushAll();
+    ack?.(r);
   });
 
   socket.on('set-theme', ({ theme }, ack) => {

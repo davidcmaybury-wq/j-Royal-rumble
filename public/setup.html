@@ -481,6 +481,13 @@ function render(keepEdits) {
       'A player can climb up between clues, then must wait five clues before climbing again. '
       + 'That clue is worth double to them in both directions — '
       + 'and their winnings ignore the ceiling, so the leaders have a reason to risk it too.')}
+    ${adv('stables', 'Stables', s.stables,
+      'Players can team up. Damage you do lands only on people outside your stable, '
+      + 'so your side pays nothing — and a big stable takes from very few. Founded '
+      + 'with a name before or during the match; joined with J. Leaving means '
+      + 'betrayal (B): your whole stack is split among the people you walk out on. '
+      + 'If the last players standing are all in one stable it dissolves and they '
+      + 'settle it between themselves.')}
     ${adv('savePlayer', 'Save a player', s.savePlayer,
       'Anyone still in the ring can put money up to buy an eliminated player back. '
       + 'Declared with S, settled at the next clue so nothing pauses, and several '
@@ -638,6 +645,7 @@ function collect() {
 
       topRope: g('topRope').checked, targeting: g('targeting').checked,
       savePlayer: g('savePlayer').checked,
+      stables: g('stables').checked,
       bounties: g('bounties').checked, revival: g('revival').checked,
       longevity: g('longevity').checked,
       categorySweep: g('categorySweep').checked,

@@ -329,7 +329,8 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 <script type="module">
 import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
-import { markSmall, markFull, wordmark, brainAvatar } from '/brand.js';
+import { markSmall, markFull, brainAvatar } from '/brand.js';
+import { markBanner } from '/banner.js';
 import { weaponToken } from '/tokens.js';
 import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import { animation, SECONDS } from '/toss.js';
@@ -671,7 +672,7 @@ function showFinish() {
   const rows = S.standings || [];
   const champ = rows.find((p) => p.winner);
   const d = document.createElement('div'); d.className = 'fin';
-  d.innerHTML = `<div class="finmark">${wordmark(460)}</div>` + (champ
+  d.innerHTML = `<div class="finmark">${markBanner(420)}</div>` + (champ
     ? `${avatarOf(champ) || champ.avatar ? `<img class="finav" src="${avatarOf(champ) || champ.avatar}" alt="">` : ''}
        <div class="lbl">Last one standing</div>
        <div class="nm mq">${champ.name}</div>

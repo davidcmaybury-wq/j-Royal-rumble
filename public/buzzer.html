@@ -447,6 +447,79 @@ function save(theme, el) {
   });
 }
 
+// --- stables --------------------------------------------------------------
+
+const stableName = (id) => ((V.stables || []).find((s2) => s2.id === id) || {}).name || 'your stable';
+
+function stableSheet() {
+  const list = V.stables || [];
+  const el = document.createElement('div');
+  el.className = 'sheet';
+  el.innerHTML = `<div class="sbox">
+    <h3>Stables</h3>
+    <p class="snote">In a stable, the damage you do lands only on people outside
+      it — your side pays nothing. Leaving again means betrayal.</p>
+    ${list.length ? `<div class="smood">Join one</div><div class="sgrid">
+      ${list.map((s2) => `<button class="schip" data-join="${s2.id}">${s2.name}
+        <span class="fh">${s2.members.length} in</span></button>`).join('')}</div>` : ''}
+    <div class="smood">Start your own</div>
+    <input type="text" id="stname" placeholder="Name it" maxlength="24" autocomplete="off">
+    <div class="err" id="sterr"></div>
+    <div class="sbtns"><button id="stcancel">Never mind</button>
+      <button id="stmake" class="prim">Found it</button></div>
+  </div>`;
+  document.body.appendChild(el);
+  el.onclick = (ev) => { if (ev.target === el) el.remove(); };
+  el.querySelector('#stcancel').onclick = () => el.remove();
+  for (const b of el.querySelectorAll('[data-join]')) {
+    b.onclick = () => socket.emit('join-stable', { id: b.dataset.join }, (r) => {
+      if (r && r.error) el.querySelector('#sterr').textContent = r.error;
+      else { el.remove(); say(`You are with ${r.name}`); }
+    });
+  }
+  el.querySelector('#stmake').onclick = () => {
+    const nm = el.querySelector('#stname').value.trim();
+    socket.emit('make-stable', { name: nm }, (r) => {
+      if (r && r.error) el.querySelector('#sterr').textContent = r.error;
+      else { el.remove(); say(`${r.name} is yours`); }
+    });
+  };
+  el.querySelector('#stname').focus();
+}
+
+function betraySheet(you) {
+  const list = (V.stables || []).filter((s2) => s2.id !== you.stable);
+  const mine = (V.stables || []).find((s2) => s2.id === you.stable);
+  const others = (mine ? mine.members : []).filter((mm) => mm.token !== you.token
+    && mm.state === 'live');
+  const each = others.length ? Math.round((you.score || 0) / others.length) : 0;
+  const el = document.createElement('div');
+  el.className = 'sheet';
+  el.innerHTML = `<div class="sbox">
+    <h3>Betray ${stableName(you.stable)}?</h3>
+    <p class="snote">${others.length
+      ? `Your whole stack — ${(you.score || 0).toLocaleString()} — is split among
+         the ${others.length} you walk out on, ${each.toLocaleString()} each.
+         You leave with nothing.`
+      : 'There is nobody left in it, so this costs you nothing.'}</p>
+    ${list.length ? `<div class="smood">Go to</div><div class="sgrid">
+      ${list.map((s2) => `<button class="schip" data-to="${s2.id}">${s2.name}</button>`).join('')}
+      </div>` : ''}
+    <div class="err" id="bterr"></div>
+    <div class="sbtns"><button id="btcancel">Stay loyal</button>
+      <button id="btstag" class="prim">Go stag</button></div>
+  </div>`;
+  document.body.appendChild(el);
+  el.onclick = (ev) => { if (ev.target === el) el.remove(); };
+  const go = (id) => socket.emit('betray', { id }, (r) => {
+    if (r && r.error) el.querySelector('#bterr').textContent = r.error;
+    else { el.remove(); say(r.to ? `You are with ${r.toName} now` : 'You are on your own'); }
+  });
+  el.querySelector('#btcancel').onclick = () => el.remove();
+  el.querySelector('#btstag').onclick = () => go(null);
+  for (const b of el.querySelectorAll('[data-to]')) b.onclick = () => go(b.dataset.to);
+}
+
 function lagHint() {
   const v = getLag();
   if (v === 0) return 'buzzing too early? raise this';
@@ -853,6 +926,15 @@ addEventListener('keydown', (e) => {
   if (e.code === 'Space') { e.preventDefault(); press(); return; }
   const you = (V && V.you) || {}, M = (V && V.mechanics) || {};
   const k = (e.key || '').toLowerCase();
+  // J to join or found, B to betray. Between clues only — switching sides
+  // mid-race would let you see who had buzzed and pick a side accordingly.
+  if (k === 'j' && M.stables && you.state === 'live' && !V.clueUp && !you.stable) {
+    e.preventDefault(); return stableSheet();
+  }
+  if (k === 'b' && M.stables && you.state === 'live' && !V.clueUp && you.stable) {
+    e.preventDefault(); return betraySheet(you);
+  }
+
   if (k === 'r' && M.topRope && you.state === 'live' && !V.clueUp
       && (you.topRope || !(you.topRopeWait > 0))) {
     e.preventDefault(); socket.emit('top-rope', { on: !you.topRope });
@@ -933,6 +1015,10 @@ renderJoin();
   if (fb2) fb2.onclick = () => setFull(!full);
   const mb = document.getElementById('musicbtn');
   if (mb) mb.onclick = openMusic;
+  const sb = document.getElementById('m-stable');
+  if (sb) sb.onclick = stableSheet;
+  const bb = document.getElementById('m-betray');
+  if (bb) bb.onclick = () => betraySheet(you);
   maybeGone(st, you);
 }
 
@@ -1052,6 +1138,11 @@ function renderMech(st, you) {
       <span class="lh">${lagHint()}</span>
       <span class="lastarm" id="lastarm"></span>
     </div>
+    ${M.stables && st === 'live' ? (you.stable
+      ? `<button class="mbtn on" id="m-betray" ${V.clueUp ? 'disabled' : ''}>
+           ${stableName(you.stable)}<span class="k">B</span></button>`
+      : `<button class="mbtn" id="m-stable" ${V.clueUp ? 'disabled' : ''}>
+           Join a stable<span class="k">J</span></button>`) : ''}
     <button class="fullbtn" id="musicbtn">
       ${themeLabel()}<span class="fh">entrance music</span></button>
     ${CAN_FULL ? `<button class="fullbtn${full ? ' on' : ''}" id="fullbtn">

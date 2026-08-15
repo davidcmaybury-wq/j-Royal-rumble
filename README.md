@@ -548,6 +548,48 @@ individual number is predictable. What is fixed is only the human-and-robot
 pattern, which gives nothing away about who is where. With one kind only it is
 exactly a shuffle.
 
+## Stables
+
+Teams, off unless the host turns them on. **The damage you do lands only on
+people outside your stable** — your side pays nothing. That is the whole
+benefit and the whole cost: a big stable takes from very few.
+
+Founded with a name, before the match or during it. **J** to join one, **B** to
+betray. Both are declared between clues, never while one is on the board:
+switching sides mid-race would let you see who had buzzed and pick a side
+accordingly.
+
+**Betrayal moves your whole stack**, not just your winnings, split evenly among
+the people you walk out on. Leaving with nothing is the price of switching
+sides, and it is what stops a stable being a coat you put on and take off.
+Walking out of a stable nobody else is left in costs nothing — there was nobody
+to betray.
+
+A stable can hold **at most half the ring**. Without that cap everybody joins
+the first one founded: simulated at twenty players the biggest stable reached
+fifteen, and the ring dissolved five to thirteen times a match, so the ending
+below became routine rather than an event.
+
+If the last players standing are all in one stable — through eliminations, not
+recruitment — nobody can take anything from anybody and the match cannot end.
+The stable has won: it dissolves and they settle it between themselves.
+
+**Stables shift the draw advantage to early entrants**, and the host should know
+that before turning them on. A stable is formed by whoever is in the ring first,
+so a late arrival walks in as an outsider paying people who are protected from
+them. Measured across 1,500 matches per setting:
+
+| Field | No stables | Several factions | One dominant stable |
+|---|---|---|---|
+| 10 | 0.96x | 0.77x | 0.90x |
+| 20 | 1.12x | 0.85x | 0.44x |
+| 30 | 1.07x | 0.84x | 0.31x |
+
+Below 1.00 favours early draws. A room that splits into factions plays close to
+fair; a room that forms one bloc hands the match to whoever entered first. Skill
+also matters less with stables on — at twenty players the three strongest win
+41% of the time without them and 37% with.
+
 ## Latecomers
 
 Somebody arriving after the bell goes to the back of the queue and enters at the

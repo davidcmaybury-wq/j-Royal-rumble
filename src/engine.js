@@ -29,6 +29,17 @@ export const DEFAULT_SETTINGS = {
   // which is a bigger change to how a match reads than a scoring tweak, and it
   // leans on a keyboard control.
   savePlayer: false,
+  // Teams. Off by default: it changes who pays whom, which is the deepest
+  // change any of these mechanics makes.
+  stables: false,
+  // The largest share of the ring one stable may hold.
+  //
+  // Without a cap everybody joins the first one founded: simulated at twenty
+  // players the biggest stable reached fifteen, the ring dissolved five to
+  // thirteen times a match, and the draw spread went from 1.12 to 0.69 because
+  // late entrants walked in as the only outsider and paid everybody. Half the
+  // ring keeps it a faction rather than a consensus.
+  stableMaxFraction: 0.5,
   targeting: false,          // aim your damage at one player, and theirs at you
   bounties: false,           // queued players pay to put a price on a head
   revival: false,            // one more life, at a fraction of the stake
@@ -340,12 +351,14 @@ export class RumbleGame {
         eliminatedAtClue: null, placement: null,
         pins: 0, correct: 0, missed: 0,
         topRope: false, topRopeAt: null, target: null,
+        stable: null,              // stable id, or null for going stag
         bankedLastClue: false,
         revivals: 0, bountyPlaced: 0,
       });
     });
     this.drawOrder = order.map((p) => p.id);
     this.eliminationOrder = [];
+    this.stables = new Map();      // id -> { id, name, foundedBy }
     this.sweepTaken = new Map();   // category slot -> Map(playerId -> count)
     this.pendingSaves = [];        // { by, target, amount } declared, not yet paid
     this.bounties = [];        // { placer, target, amount }
@@ -377,6 +390,7 @@ export class RumbleGame {
       overtimeFrom: this.overtimeFrom,
       stalledClues: this.stalledClues,
       overtimeSteps: this.overtimeSteps,
+      stables: [...this.stables.values()].map((st) => ({ ...st })),
       cluesRevealed: this.cluesRevealed,
       fieldClears: this.fieldClears,
       vetoedThisMatch: this.vetoedThisMatch,
@@ -398,6 +412,7 @@ export class RumbleGame {
     this.overtimeFrom = d.overtimeFrom ?? null;
     this.stalledClues = d.stalledClues ?? 0;
     this.overtimeSteps = d.overtimeSteps ?? 0;
+    if (d.stables) this.stables = new Map(d.stables.map((st) => [st.id, { ...st }]));
     this.cluesRevealed = d.cluesRevealed;
     this.fieldClears = d.fieldClears;
     this.vetoedThisMatch = d.vetoedThisMatch;
@@ -680,7 +695,12 @@ export class RumbleGame {
 
     if (winnerId && liveIds.has(winnerId)) {
       const w = this.players.get(winnerId);
-      const opponents = live.filter((p) => p.id !== winnerId);
+      // Who is on the other side of the exchange.
+      //
+      // In a stable, the damage you do lands only on people outside it — your
+      // people pay nothing. That is the whole point of joining one, and it is
+      // also the whole cost: a big stable takes from very few.
+      const opponents = live.filter((p) => p.id !== winnerId && !this.allied(p, w));
       const pot = value * opponents.length;
 
       // Who pays, and how much. Three cases, in order of precedence.
@@ -776,6 +796,17 @@ export class RumbleGame {
       p.bankedLastClue = p.id === ceilingFreeFor && p.score > cap;
       if (p.id === ceilingFreeFor) continue;
       if (p.score > cap) p.score = cap;
+    }
+
+    // If the last people standing are all in one stable, nobody can take
+    // anything from anybody and the match cannot end. The stable has won; it
+    // dissolves and they settle it between themselves.
+    const won = this.stableHasWon();
+    if (won) {
+      entry.stableWon = { id: won, name: this.stables.get(won)?.name || 'The stable',
+        members: this.live().map((p) => p.id) };
+      for (const p of this.live()) p.stable = null;
+      this.stables.delete(won);
     }
 
     this.applyEliminations(entry, winnerId);
@@ -1037,6 +1068,104 @@ export class RumbleGame {
 
   // Spectator feedback: an eliminated or queued player's buzz ranked against
   // the live field only, never against other spectators.
+  /** Two players on the same side. Nobody is allied with themselves. */
+  allied(a, b) {
+    if (!this.s.stables || !a || !b) return false;
+    return a.id !== b.id && a.stable && a.stable === b.stable;
+  }
+
+  /**
+   * Everybody left in the ring is in one stable.
+   *
+   * Nobody can take anything from anybody, so the match cannot resolve — the
+   * stall-breaker would eventually escalate stakes that are multiplied by zero
+   * opponents. When it happens the stable has served its purpose and dissolves,
+   * which is also the only ending that reads as a story rather than a bug.
+   */
+  stableHasWon() {
+    if (!this.s.stables) return null;
+    const live = this.live();
+    if (live.length < 2) return null;
+    const first = live[0].stable;
+    if (!first || !live.every((p) => p.stable === first)) return null;
+    return first;
+  }
+
+  /** How many are in a stable, and whether it can take another. */
+  stableSize(id) { return this.live().filter((p) => p.stable === id).length; }
+
+  stableFull(id) {
+    const cap = Math.max(2, Math.floor(this.live().length * this.s.stableMaxFraction));
+    return this.stableSize(id) >= cap;
+  }
+
+  /** Create a stable and put the founder in it. */
+  createStable(playerId, name) {
+    if (!this.s.stables) return { error: 'stables are not on in this match' };
+    const p = this.players.get(playerId);
+    if (!p) return { error: 'no such player' };
+    const clean = String(name || '').trim().slice(0, 24);
+    if (!clean) return { error: 'a stable needs a name' };
+    if ([...this.stables.values()].some((st) => st.name.toLowerCase() === clean.toLowerCase())) {
+      return { error: 'there is already a stable called that' };
+    }
+    const id = 's' + (this.stables.size + 1) + '-' + clean.toLowerCase().replace(/[^a-z0-9]/g, '');
+    this.stables.set(id, { id, name: clean, foundedBy: playerId });
+    p.stable = id;
+    return { ok: true, id, name: clean };
+  }
+
+  /** Join a stable you are not already in. Free — the cost is in leaving. */
+  joinStable(playerId, stableId) {
+    if (!this.s.stables) return { error: 'stables are not on in this match' };
+    const p = this.players.get(playerId);
+    if (!p) return { error: 'no such player' };
+    if (!this.stables.has(stableId)) return { error: 'no such stable' };
+    if (p.stable === stableId) return { error: 'you are already in that one' };
+    if (p.stable) return { error: 'leave your stable first — press B to betray' };
+    if (this.stableFull(stableId)) return { error: 'that stable is full' };
+    p.stable = stableId;
+    return { ok: true, id: stableId, name: this.stables.get(stableId).name };
+  }
+
+  /**
+   * Betrayal. Your stack goes to the people you are walking out on.
+   *
+   * The whole score moves, not just the winnings: leaving with nothing is the
+   * price of switching sides, and it is what stops a stable being a coat you
+   * put on and take off. Split evenly among whoever is left; if nobody is left
+   * there was nobody to betray, so it is simply leaving.
+   */
+  betray(playerId, joinId = null) {
+    if (!this.s.stables) return { error: 'stables are not on in this match' };
+    const p = this.players.get(playerId);
+    if (!p) return { error: 'no such player' };
+    if (!p.stable) return { error: 'you are not in a stable' };
+    if (joinId && joinId !== p.stable && !this.stables.has(joinId)) {
+      return { error: 'no such stable' };
+    }
+    if (joinId === p.stable) return { error: 'that is the stable you are leaving' };
+
+    const from = p.stable;
+    const left = this.live().filter((x) => x.id !== playerId && x.stable === from);
+    const stack = p.score;
+    let each = 0;
+    if (left.length && stack !== 0) {
+      each = Math.round(stack / left.length);
+      for (const x of left) x.score += each;
+      p.score = 0;
+    } else if (left.length === 0) {
+      // Nobody to abandon. Walking out of an empty room is not betrayal.
+      p.score = stack;
+    } else {
+      p.score = 0;
+    }
+    p.stable = joinId || null;
+    return { ok: true, from, fromName: this.stables.get(from)?.name || 'their stable',
+      to: joinId, toName: joinId ? this.stables.get(joinId)?.name : null,
+      stack, each, abandoned: left.map((x) => x.id) };
+  }
+
   rankSpectatorBuzz(ms, liveBuzzTimes) {
     const faster = liveBuzzTimes.filter((t) => t < ms).length;
     return { ms, place: faster + 1, outOf: liveBuzzTimes.length + 1 };
