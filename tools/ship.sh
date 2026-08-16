@@ -22,6 +22,19 @@ rm -f data/library.json
 npm install --silent
 
 msg="${1:-Update}"
+
+# Record it, so the history page stays true without anybody maintaining it.
+# A changelog that depends on discipline is a changelog that stops halfway.
+ver=$(node -p "require('./package.json').version")
+if ! grep -q "^## $ver " docs/CHANGELOG.md 2>/dev/null; then
+  tmp=$(mktemp)
+  awk -v v="$ver" -v m="$msg" '
+    !done && /^## / { print "## " v " — " m; print ""; done=1 }
+    { print }
+  ' docs/CHANGELOG.md > "$tmp" && mv "$tmp" docs/CHANGELOG.md
+  echo "changelog: added $ver"
+fi
+
 git add -A
 if git diff --cached --quiet; then
   echo "nothing to commit"

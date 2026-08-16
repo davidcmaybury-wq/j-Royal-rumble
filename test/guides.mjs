@@ -10,6 +10,7 @@ for (const [path, must] of [
   ['/how-to-play', 'space bar'],
   ['/rules-101', 'Thirty players'],
   ['/rules', 'ROYAL RUMBLE'],
+  ['/history', 'VERSION HISTORY'],
 ]) {
   const r = await fetch(`${U}${path}`);
   const body = await r.text();

@@ -241,6 +241,13 @@ first; an abandoned lobby is just dropped.
 socket connection closure and close over one socket's match, so the reaper
 cannot use them.
 
+## Deploy during downtime
+
+People play on this now. Restarting ends every match in progress, so a deploy
+in the evening can end somebody else's game — the guard in
+`tools/deploy-remote.sh` waits rather than doing that, but a deploy that waits
+twenty minutes and then fails is its own nuisance. Ship in the morning.
+
 ## Silent failures found in live use
 
 Three in one sitting, all the same shape — the code was correct and said

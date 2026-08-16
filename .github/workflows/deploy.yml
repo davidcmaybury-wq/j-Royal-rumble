@@ -169,7 +169,11 @@ jobs:
           # ssh's own stderr is kept and echoed: it says exactly what went wrong
           # ("Permission denied", "Host key verification failed", "Connection
           # timed out"), and without this the log shows only "exit 255".
+          # Keepalives, because the wait can sit for minutes between messages
+          # and a silent session gets dropped in the middle — which surfaced as
+          # exit 255 and looked exactly like an authentication failure.
           ssh -i ~/.ssh/deploy -o BatchMode=yes -o ConnectTimeout=15 \
+              -o ServerAliveInterval=20 -o ServerAliveCountMax=30 \
               -o StrictHostKeyChecking=accept-new \
               ubuntu@"$HOST" \
               'bash /home/ubuntu/app/tools/deploy-remote.sh --wait' 2> /tmp/ssh.err
@@ -182,11 +186,15 @@ jobs:
           if [ $rc -ne 0 ]; then
             echo "::error::Deploy failed (exit $rc)."
             case $rc in
-              255) echo "SSH could not connect or authenticate. Check the public half is in";
-                   echo "~/.ssh/authorized_keys on the box, and that AWS_HOST is right." ;;
+              255) echo "SSH failed. If it says 'Broken pipe' above, the connection was";
+                   echo "dropped mid-deploy — re-run and it will pick up. If it says";
+                   echo "'Permission denied', the public half is missing from";
+                   echo "~/.ssh/authorized_keys on the box." ;;
               127) echo "deploy-remote.sh is not on the box yet. Pull once by hand:";
                    echo "  cd /home/ubuntu/app && git pull && npm install --omit=dev && sudo systemctl restart rumble" ;;
-               75) echo "A match was still being played when the wait ran out." ;;
+               75) echo "A match was still being played after twenty minutes of waiting.";
+                   echo "Nothing is wrong — re-run this once the game has finished, or end";
+                   echo "it from /control." ;;
             esac
             exit $rc
           fi

@@ -51,6 +51,13 @@ matches are being played and holds until they finish. CI calls it with
 
 It also checks the server actually came back, rather than assuming.
 
+While waiting it prints a line every twenty seconds. That is not decoration: a
+silent SSH session was dropped mid-wait by something in the middle, the deploy
+died with "Broken pipe", and the exit code was 255 — which is also what a
+rejected key looks like, so the log sent us hunting for the wrong thing. The
+workflow now sends keepalives as well, and the wait gives up after twenty
+minutes rather than an hour.
+
 ## The old Fly app
 
 Still running as a spare, with the match logs already copied across. Two live

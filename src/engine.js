@@ -167,8 +167,28 @@ export const DEFAULT_SETTINGS = {
 //    24        10,500       0.98
 //    30        10,500       1.01
 export function autoCeiling(playerCount) {
-  if (playerCount <= 8) return 6000;
-  if (playerCount <= 16) return 7500;
+  // Small fields were tightest of all, which was backwards.
+  //
+  // At six players the cap was twice the starting stake, so a leader only had
+  // to double up to hit it — and then every further correct answer gained them
+  // nothing. A real 53-clue match had the winner pinned for 20 of them and the
+  // ceiling swallowed 11,930 points. Measured over 2,000 six-player matches:
+  //
+  //   ceiling   clues pinned   points swallowed
+  //     6,000        22%             5,361
+  //     9,000        11%             2,884
+  //    10,500         8%             2,061
+  //    12,000         6%             1,440
+  //
+  // 10,500 is the knee: the cap still binds when somebody runs away, and stops
+  // being the thing the match is about.
+  //
+  // The ladder is deliberately not monotonic. A small field needs the MOST
+  // headroom, not the least: a lone strong player there faces the fewest
+  // opponents per clue, so they climb slowly, and the match runs long enough
+  // for that slow climb to hit the cap and stay there. The old ladder had it
+  // exactly backwards.
+  if (playerCount <= 8) return 10500;
   if (playerCount <= 20) return 9000;
   return 10500;
 }

@@ -115,6 +115,20 @@ border-bottom:1px solid #6A4509;font-size:13px}
 .verlink:hover{color:var(--brass);border-bottom-color:var(--brass)}
 .links{list-style:none;margin:14px 0 0;padding:0;border-top:1px solid var(--line);padding-top:12px}
 .links li{font-size:13.5px;color:var(--slate);line-height:1.5}
+/* The join link and the match length side by side: the two things a host sets
+   before every single game. */
+.playrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:start}
+@media (max-width:680px){.playrow{grid-template-columns:1fr}}
+.lenbox{border-left:1px solid var(--line);padding-left:20px;min-width:190px}
+.lenbox label{display:block;color:var(--chalk);font-weight:500;font-size:14.5px;
+margin-bottom:7px}
+.lenrow{display:flex;align-items:baseline;gap:8px}
+.lenrow input{width:84px;padding:9px 10px;background:var(--ink);color:var(--brass);
+border:1px solid var(--line);border-radius:var(--r);
+font-family:"IBM Plex Mono",monospace;font-size:21px;text-align:center}
+.lenrow input:focus{outline:none;border-color:var(--brass)}
+.lenrow span{color:var(--slate);font-size:13px}
+.lenhint{color:var(--slate);font-size:12px;margin-top:6px;line-height:1.4;min-height:2.4em}
 .links b{color:var(--chalk);font-weight:500}
 .links .wrow{margin-top:8px}
 .wrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -332,10 +346,21 @@ function render(keepEdits) {
       </div>
     </div>
     <ul class="links">
-      <li><b>To play</b> &mdash; the code is filled in, they still confirm it.
+      <li class="playrow"><div>
+        <b>To play</b> &mdash; the code is filled in, they still confirm it.
         <div class="wrow">
           <code id="joinurl">${location.origin}/j/${code}</code>
           <button class="alt" id="copyjoin">Copy</button>
+        </div></div>
+        <!-- The one setting a host changes every time, so it sits with the
+             thing they are already doing rather than three cards down. -->
+        <div class="lenbox">
+          <label for="targetMinutes2">How long?</label>
+          <div class="lenrow">
+            <input type="number" id="targetMinutes2" min="5" max="180"
+                   value="${s.targetMinutes}"> <span>minutes</span>
+          </div>
+          <div class="lenhint" id="lenhint"></div>
         </div></li>
       <li><b>To watch</b> &mdash; put it on the shared screen, or send it to anyone who
         would rather see the board themselves. No key, no login; the answers are never sent to it.
@@ -594,6 +619,40 @@ function renderRoster() {
   };
   copier('copywatch', location.origin + '/watch/' + code);
   copier('copyjoin', location.origin + '/j/' + code);
+
+  // Two boxes, one setting.
+  //
+  // The prominent one at the top and the one in Game setup are the same
+  // number, so each writes to the other and both go through the same preview.
+  // Left to themselves they would drift, and the host would have no way to
+  // know which one the match was actually using.
+  const lenTop = document.getElementById('targetMinutes2');
+  const lenSetup = document.getElementById('targetMinutes');
+  const syncLength = (from, to) => {
+    if (!from || !to) return;
+    from.oninput = () => {
+      to.value = from.value;
+      S.settings.targetMinutes = +from.value;
+      const { e, warnings: ws } = preview();
+      const hint = document.getElementById('lenhint');
+      if (hint) {
+        // With nobody signed up there is nothing to estimate against, so say
+        // that rather than leaving an empty line where a number should be.
+        hint.textContent = e
+          ? `${S.roster.length} players, entry every ${e.iv} clues`
+            + `${e.auto ? ' (auto)' : ''} — about ${e.clues} clues.`
+          : 'Once people sign up this will estimate the clue count.';
+      }
+      const est = document.querySelector('.est');
+      if (e && est) est.innerHTML = `With ${S.roster.length} players: entry every <b>${e.iv}</b> clues${
+        e.auto ? ' (auto)' : ''}, roughly <b>${e.mins} minutes</b>, about ${e.clues} clues.${e.rough ? ' Rough at this size.' : ''}`;
+      paintWarnings(ws);
+    };
+    from.onchange = () => save(true);
+  };
+  syncLength(lenTop, lenSetup);
+  syncLength(lenSetup, lenTop);
+  if (lenTop) lenTop.oninput.call(lenTop);   // paint the hint on first render
   const b = document.getElementById('start');
   if (b) b.disabled = S.roster.length < 3;
 }

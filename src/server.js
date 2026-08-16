@@ -709,7 +709,7 @@ class Match {
         att: st.att, early: st.early, won: st.won,
         // Practice presses, kept apart so a queued or eliminated player can
         // still see what they did without it counting for anything.
-        warmAtt: st.warmAtt || 0,
+        warmAtt: st.warmAtt || 0, warmEarly: st.warmEarly || 0,
         avg: times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length * 10) / 10 : null,
         best: times.length ? Math.min(...times) : null,
       };
@@ -1294,6 +1294,57 @@ ${render(a)}<hr>${render(b)}
 </div></body></html>`;
 })();
 app.get('/rules-101', (_req, res) => res.type('html').send(DISCORD_HTML));
+
+// What changed and when. Rendered from docs/CHANGELOG.md, which `npm run ship`
+// writes to — a history page maintained by hand is one that stops halfway.
+app.get('/history', (_req, res) => {
+  let md = '';
+  try { md = readFileSync(join(__dir, '../docs/CHANGELOG.md'), 'utf8'); }
+  catch { return res.status(404).send('No history recorded yet.'); }
+  const esc = (x) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = (x) => esc(x)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+  const body = md.split(/\n\n+/).map((b) => {
+    b = b.trim();
+    if (!b) return '';
+    if (b.startsWith('# ')) return '';
+    if (b.startsWith('## ')) {
+      const [v, ...rest] = b.slice(3).split(' — ');
+      return `<h2><span class="v">${esc(v)}</span>${rest.length
+        ? ' <span class="t">' + inline(rest.join(' — ')) + '</span>' : ''}</h2>`;
+    }
+    return `<p>${inline(b).replace(/\n/g, ' ')}</p>`;
+  }).join('\n');
+  res.type('html').send(`<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble — version history</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--line:#2A3556;--chalk:#EEEBE1;--slate:#7C88AB;--brass:#D6A93F}
+*{box-sizing:border-box}body{background:var(--ink);color:var(--chalk);margin:0;
+font:400 16px/1.62 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:26px 20px 70px}
+.top{display:flex;justify-content:space-between;align-items:baseline}
+.top a{color:var(--slate);text-decoration:none;font-size:13.5px}
+.top a:hover{color:var(--brass)}
+h1{font-family:"Anton",Impact,sans-serif;font-size:32px;letter-spacing:.02em;margin:14px 0 4px}
+h1 .j{color:var(--brass)}
+.now{color:var(--slate);font-size:13.5px;margin-bottom:26px}
+h2{margin:30px 0 8px;font-size:16px;font-weight:500;display:flex;gap:10px;
+align-items:baseline;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px}
+h2 .v{font-family:"IBM Plex Mono",monospace;color:var(--brass);font-size:14px;flex:none}
+h2 .t{color:var(--chalk)}
+p{margin:0 0 12px;color:#C9CCD9;font-size:15px}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--panel);
+border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+</style></head><body><div class="wrap">
+<div class="top"><a href="/">&larr; J! Royal Rumble</a><a href="/handbook">the handbook &rarr;</a></div>
+<h1><span class="j">J!</span> VERSION HISTORY</h1>
+<div class="now">Running ${VERSION} right now.</div>
+${body}
+</div></body></html>`);
+});
 app.get('/how-to-play', (_req, res) => res.sendFile(join(__dir, '../public/howto.html')));
 app.get('/rules.md', (_req, res) => res.sendFile(join(__dir, '../RULES.md')));
 
@@ -1997,9 +2048,20 @@ io.on('connection', (socket) => {
 
   socket.on('early-buzz', () => {
     if (!match || !token) return;
+    const st = match.stat(token);
+    // Warm-up presses stay out of the live record, jumping the lights
+    // included. This was checked on the buzz path and not here, so somebody
+    // practising in the queue racked up live attempts: one player finished a
+    // real match credited with 28 attempts across a tenure of one clue.
+    const p = match.game?.players.get(token);
+    const live = p && p.state === 'live' && match.race && match.clue;
+    if (!live) {
+      st.warmEarly = (st.warmEarly || 0) + 1;
+      st.warmAtt = (st.warmAtt || 0) + 1;
+      return;
+    }
     // Counted as an attempt as well as an early one, so `early` can never
     // exceed `att` — which is what made the table look broken.
-    const st = match.stat(token);
     st.early++; st.att++;
   });
 

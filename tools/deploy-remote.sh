@@ -30,10 +30,17 @@ N=$(in_play)
 if [ "$N" != "0" ] && [ "$FORCE" = "0" ]; then
   if [ "$WAIT" = "1" ]; then
     echo "A match is in play. Waiting for it to finish..."
-    for _ in $(seq 1 180); do          # up to an hour
+    # Say something every poll.
+    #
+    # Silence was not just unhelpful: an SSH session with no traffic for four
+    # minutes was dropped by something in the middle, the deploy died with
+    # "Broken pipe", and the exit code was 255 — indistinguishable from a bad
+    # key. Printing a line keeps the connection alive and the log honest.
+    for i in $(seq 1 60); do           # up to twenty minutes
       sleep 20
       N=$(in_play)
-      [ "$N" = "0" ] && break
+      if [ "$N" = "0" ]; then echo "  ...clear, deploying now."; break; fi
+      echo "  ...still $N match(es) in play ($((i * 20))s waited)"
     done
   fi
   if [ "$N" != "0" ]; then

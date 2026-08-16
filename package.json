@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.73.1",
+  "version": "0.76.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -66,7 +66,8 @@
     "stable-charts": "node tools/stable-chart-data.mjs && python3 tools/plot-stables.py",
     "betrayal-study": "node tools/betrayal-study.mjs",
     "shrink-study": "node tools/shrink-study.mjs",
-    "guides-test": "node test/guides.mjs"
+    "guides-test": "node test/guides.mjs",
+    "small-field": "node tools/small-field.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

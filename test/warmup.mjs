@@ -149,6 +149,83 @@ check('flagged so they can be told apart', warm.every((x) => x.spectator === tru
   h2.close(); people.forEach((p) => p.c.close());
 }
 
+// --- jumping the lights while warming up ----------------------------------
+//
+// The early-buzz path counted an attempt without checking whether the player
+// was in the ring, so practice presses landed in the live record: a real match
+// finished with somebody credited with 28 attempts across a tenure of one clue.
+{
+  const m3 = await (await fetch(`${U}/api/match`, { method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    // A short interval so the warmer-up actually enters: somebody who never
+    // reaches the ring is left out of the standings altogether, so there would
+    // be no row to inspect.
+    body: JSON.stringify({ settings: { entryInterval: 1, delay: 0 } }) })).json();
+  const h3 = io(U, { transports: ['websocket'] });
+  await once(h3, 'connect');
+  let v3 = null;
+  h3.on('state', (x) => { v3 = x; });
+  await new Promise((r) => h3.emit('host-join', { gameId: m3.gameId, hostKey: m3.hostKey },
+    (x) => { v3 = x.state; r(); }));
+
+  const crowd = [];
+  for (const n of ['A1', 'B1', 'C1', 'D1']) {
+    const c = io(U, { transports: ['websocket'] });
+    await once(c, 'connect');
+    const p = { c, name: n, view: null };
+    c.on('state', (v) => { p.view = v; });
+    await new Promise((r) => c.emit('join', { gameId: m3.gameId, name: n },
+      (x) => { p.token = x.token; p.view = x.state; r(); }));
+    crowd.push(p);
+  }
+  await wait(300);
+  h3.emit('start-match', {}, () => {});
+  await wait(500);
+
+  // Whoever the draw left in the queue, not whoever I named last: three of the
+  // four start and which one sits out is shuffled.
+  const bench = crowd.find((p) => p.view?.you?.state === 'queued');
+  check('somebody is in the queue to warm up', !!bench,
+    crowd.map((p) => `${p.name}:${p.view?.you?.state}`).join(' '));
+
+  if (bench) {
+    for (let i = 0; i < 6; i++) { bench.c.emit('early-buzz'); await wait(40); }
+    await wait(400);
+
+    // Play a couple of clues so they come in off the queue, then end it.
+    for (let k = 0; k < 2; k++) {
+      const o3 = [];
+      v3.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) o3.push([si, x.row]); }));
+      h3.emit('pick-clue', { slot: o3[0][0], row: o3[0][1] });
+      await wait(120);
+      h3.emit('resolve', { winnerToken: null });
+      await wait(250);
+    }
+    h3.emit('end-match');
+
+    let row = null;
+    for (let i = 0; i < 60 && !row; i++) {
+      await wait(200);
+      try {
+        const list = await (await fetch(`${U}/api/logs`)).json();
+        const mine = (list.matches || []).find((x) => (x.file || '').includes(m3.gameId));
+        if (!mine) continue;
+        const log = await (await fetch(`${U}/api/logs/${encodeURIComponent(mine.file)}`)).json();
+        row = (log.standings || []).find((p) => p.name === bench.name) || null;
+      } catch { /* not written yet */ }
+    }
+    check('the queued player is in the saved record', !!row, row ? 'found' : 'never appeared');
+    if (row) {
+      check('jumping the lights in the queue is not a live attempt',
+        row.att === 0, `att ${row.att}`);
+      check('nor an early buzz against their record',
+        (row.early || 0) === 0, `early ${row.early}`);
+      check('but it is still kept as practice',
+        (row.warmAtt || 0) >= 6, `warmAtt ${row.warmAtt}`);
+    }
+  }
+  h3.close(); crowd.forEach((p) => p.c.close());
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
-host.close(); ps.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);

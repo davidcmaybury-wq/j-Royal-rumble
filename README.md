@@ -478,10 +478,31 @@ confounded by it.
 
 | Field | Ceiling |
 |---|---|
-| up to 8 | 6,000 |
-| 9–16 | 7,500 |
-| 17–20 | 9,000 |
+| up to 8 | 10,500 |
+| 9–20 | 9,000 |
 | 21+ | 10,500 |
+
+**Not monotonic, deliberately.** A small field needs the *most* headroom, which
+the first ladder had backwards. A lone strong player in a six-hander faces the
+fewest opponents per clue, so they climb slowly — and the match runs long enough
+for that slow climb to reach the cap and stay there. A real 53-clue match had
+the winner pinned at 6,000 for 20 clues while the ceiling swallowed 11,930
+points: half the match, they answered correctly and gained nothing.
+
+Measured over 2,000 six-player matches:
+
+| Ceiling | Clues pinned | Points swallowed |
+|---|---|---|
+| 6,000 | 22% | 5,361 |
+| 9,000 | 11% | 2,884 |
+| **10,500** | **8%** | **2,061** |
+| 12,000 | 6% | 1,440 |
+
+**Ceiling decay was tried again and rejected again.** It makes both problems
+worse — 29% pinned at −40 and 36% at −80, swallowing more rather than less,
+because a falling cap is one the leader meets sooner. It also brings back the
+late-draw bias it was found to cause the first time: the back half of the draw
+wins 52% with no decay and 59% at −80.
 
 With that fixed, draw fairness holds across a much wider range of entry
 intervals than it appeared to — twenty players are fine out to every 8 clues,

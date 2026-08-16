@@ -79,9 +79,17 @@ for (const n of [4, 5, 6, 8, 10]) {
 
   // The ceiling turned out to matter more than the interval, and measuring
   // fairness with it fixed gave badly wrong answers.
-  check('the ceiling scales with the field',
-    autoCeiling(8) < autoCeiling(20) && autoCeiling(20) < autoCeiling(30),
-    `${autoCeiling(8)} / ${autoCeiling(20)} / ${autoCeiling(30)}`);
+  //
+  // It does not simply rise with the field. A small field needs the most
+  // headroom — a lone strong player there faces the fewest opponents per clue,
+  // climbs slowly, and the match runs long enough to sit at the cap. A live
+  // 53-clue six-player match had the winner pinned for 20 clues.
+  check('every field size gets a ceiling well clear of the stake',
+    [6, 10, 16, 20, 30].every((n) => autoCeiling(n) >= 3000 * 2.5),
+    [6, 10, 16, 20, 30].map((n) => `${n}:${autoCeiling(n)}`).join(' '));
+  check('and the smallest fields are not the tightest',
+    autoCeiling(6) >= autoCeiling(16),
+    `${autoCeiling(6)} vs ${autoCeiling(16)}`);
 
   check('the grid covers small and large fields',
     predictMatch(6, 4) && predictMatch(30, 4));
