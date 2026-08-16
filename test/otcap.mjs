@@ -60,5 +60,49 @@ for (let i = 0; i < 60 && !g2.finished; i++) {
 check('a raised clue can still be banked in full', banked,
   banked ? 'seen above the cap' : 'never exceeded — the fix went too far');
 
+// --- walking into overtime ------------------------------------------------
+//
+// A real match: Randall entered at clue 150 with the standard 3,000 into x2,
+// lasted six clues without winning a race, was revived at 1,500 into x4 where
+// the top row paid 2,000, and was gone after one. He never had a hand to play.
+//
+// Overtime only opens once the queue is empty, so revival is the way people
+// actually arrive into it — which is why the stake is set in admit() and tested
+// there rather than through a whole match.
+{
+  const mkq = (extra) => new RumbleGame({
+    players: [...Array(8)].map((_, i) => ({ id: 'q' + i, name: 'Q' + i })),
+    rng: makeRng(3), categoryPool: pool,
+    settings: { entryInterval: 999, startScore: 3000, ceiling: 99999,
+      ceilingFloor: 0, ceilingDecayPerClue: 0, overtime: true, overtimeMax: 8,
+      longevity: false, categorySweep: false, ...extra },
+  });
+
+  for (const [steps, want] of [[0, 3000], [1, 6000], [2, 12000]]) {
+    const g3 = mkq({});
+    g3.overtimeSteps = steps;
+    const q = g3.queued()[0];
+    g3.admit('test');
+    check(`at x${2 ** steps} an entrant starts on ${want.toLocaleString()}`,
+      q.score === want, String(q.score));
+  }
+
+  // A revival is half of the scaled stake, not half of the flat one: that was
+  // the second half of what happened to Randall.
+  const g4 = mkq({ revivalFraction: 0.5 });
+  g4.overtimeSteps = 2;
+  const r = g4.queued()[0];
+  r.revivals = 1;
+  g4.admit('test');
+  check('a revival at x4 is half of the scaled stake', r.score === 6000, String(r.score));
+
+  // And with the scaling turned off, nothing has changed.
+  const g5 = mkq({ scaleEntryStake: false });
+  g5.overtimeSteps = 2;
+  const q5 = g5.queued()[0];
+  g5.admit('test');
+  check('with scaling off it is the flat stake', q5.score === 3000, String(q5.score));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

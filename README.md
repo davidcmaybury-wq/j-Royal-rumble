@@ -782,6 +782,23 @@ fair; a room that forms one bloc hands the match to whoever entered first. Skill
 also matters less with stables on — at twenty players the three strongest win
 41% of the time without them and 37% with.
 
+## Walking into overtime
+
+A new entrant's stake is multiplied by the overtime level they arrive into, and
+so is a revival. A fixed 3,000 walked into a ring where single clues were worth
+2,000: in a real match Randall entered at clue 150 into x2, lasted six clues
+without winning a race, was revived at 1,500 into x4 where the top row paid
+2,000, and was gone after one. He never had a hand to play.
+
+Measured over 3,000 matches, for everybody arriving at x2 or above:
+
+| Stake | Median clues survived | Died within 3 | Survived |
+|---|---|---|---|
+| Fixed 3,000 | 3 | 58% | 21% |
+| **Scaled to the multiplier** | **7** | **9%** | **32%** |
+
+`scaleEntryStake: false` restores the old behaviour.
+
 ## Latecomers
 
 Somebody arriving after the bell goes to the back of the queue and enters at the

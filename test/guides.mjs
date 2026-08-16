@@ -74,17 +74,46 @@ for (const f of ['discord-rules-v2.md', 'discord-advanced-mechanics.md']) {
   check('the printable copy is still there', pdf.ok, String(pdf.status));
 }
 
+// The player-facing docs have to describe the game that is actually running.
+//
+// These drifted four releases deep before anybody noticed — the rules people
+// read still described a fixed entry stake after it had been changed. Each
+// entry here is a rule a player would be surprised by.
+{
+  const { readFileSync } = await import('fs');
+  const read = (f) => readFileSync(new URL('../docs/' + f, import.meta.url), 'utf8');
+  const both = read('discord-rules-v2.md') + read('discord-advanced-mechanics.md');
+  for (const [what, needle] of [
+    ['the entry stake scales in overtime', 'stake climbs with it'],
+    ['stables are named after gemstones', 'Diamond'],
+    ['revival scales too', 'stake scales with it'],
+    ['there is a way to report a problem', 'Report a problem'],
+    ['every advanced mechanic is listed', 'STABLES'],
+  ]) {
+    check(`the rules mention ${what}`, both.includes(needle), needle);
+  }
+}
+
 // Old links must not lead to a stale copy.
 const pdf = await fetch(`${U}/handbook.pdf`, { redirect: 'manual' });
 check('the old PDF link redirects to the real handbook',
   pdf.status === 301 && /\/handbook$/.test(pdf.headers.get('location') || ''),
   `${pdf.status} -> ${pdf.headers.get('location')}`);
 
-// And the handbook it lands on has to know about the current rules.
+// And the handbook it lands on has to know about the current rules. It is the
+// long form and the easiest thing to forget: it went four releases describing
+// an identical entry stake after that had stopped being true.
 const hb = await (await fetch(`${U}/handbook`)).text();
-for (const rule of ['Stable', '10,500']) {
-  check(`the handbook covers ${rule}`, hb.includes(rule));
+for (const [what, needle] of [
+  ['stables', 'Stable'],
+  ['the small-field ceiling', '10,500'],
+  ['the gemstone names', 'Diamond'],
+  ['the stake riding the multiplier', 'rides the overtime'],
+]) {
+  check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }
+check('and no longer claims the stake is identical for everybody',
+  !/identical\s+starting\s+stake/.test(hb.replace(/\s+/g, ' ')));
 
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

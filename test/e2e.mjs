@@ -56,8 +56,23 @@ const byToken = (t) => players.find((p) => p.token === t);
 host.emit('pick-clue', { slot: 0, row: 3 });
 await wait(120);
 check('clue on the board', !!state.clue, state.clue && state.clue.category);
-check('players are not sent the answer',
-  players.every((p) => !JSON.stringify(p.view || {}).includes(state.clue.answer)));
+// Check the field, not a substring of the whole view.
+//
+// A blanket search matches on coincidence — a short answer like "Bounty" hits
+// because the payload names the bounties mechanic — and CI failed on a commit
+// that touched nothing near player payloads. What actually matters is that the
+// clue object carries no answer at all.
+check('the clue a player is sent has no answer field',
+  players.every((p) => !p.view?.clue || !('answer' in p.view.clue)),
+  players.map((p) => Object.keys(p.view?.clue || {}).join('/')).join(' | ') || 'no clue yet');
+// The blanket search is still worth running, but only where a match means
+// something rather than being a common word.
+if (state.clue.answer.length >= 10) {
+  check('and it appears nowhere else in the payload',
+    players.every((p) => !JSON.stringify(p.view || {}).toLowerCase()
+      .includes(state.clue.answer.toLowerCase())),
+    state.clue.answer.slice(0, 30));
+}
 
 host.emit('activate');
 await wait(300);

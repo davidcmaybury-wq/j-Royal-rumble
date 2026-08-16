@@ -116,9 +116,15 @@ serve a PDF from `tools/make-handbook.py` and the two drifted badly — the PDF
 was months behind while the HTML sat unlinked. **The HTML is now the document;
 `docs/handbook.html` IS the handbook, served at `/handbook`.**
 
-David writes and maintains it; I have not been regenerating it, which is worth
-knowing rather than assuming. **When a rule changes, say so** — the handbook
-will not update itself and neither of us should discover the gap in a match.
+**I wrote it and it is mine to keep current** — I once told David it was his,
+which was wrong and meant it sat un-updated for several releases while I assumed
+somebody else had it. It went four versions describing an identical entry stake
+after that stopped being true.
+
+Update it in the same change as the rule, alongside `docs/discord-*.md`. The
+handbook is the long form — it carries the reasoning and the measurements, and
+keeps its overturned answers on the page marked as such, which is the point of
+it.
 The PDF that `tools/make-handbook.py` used to produce is gone: its figures were
 typed in by hand, it drifted, and having two handbooks that disagreed was worse
 than having one. `/handbook.pdf` redirects.
@@ -135,6 +141,15 @@ because unclosed step divs once nested every step inside the first and stretched
 the page to four times its height.
 
 ## Conventions that matter
+
+**Update the player-facing docs in the same change as the rule.** The files in
+`docs/` drifted four releases deep — the rules people read still described a
+fixed entry stake long after it had changed, and nobody noticed until David
+asked. The README is not enough: `discord-rules-v2.md` and
+`discord-advanced-mechanics.md` are what the room actually reads, and
+`/rules-101` renders them directly. `test/guides.mjs` now asserts that specific
+rules appear by name; add to it whenever you add a rule, or the next one drifts
+the same way.
 
 **American English.** David is American and the game is American. Use it in
 player-facing copy, comments, and commit messages alike — colour/color,

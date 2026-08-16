@@ -8,6 +8,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* Board control is followed from across the room, so it lights the whole row
+   rather than a 7px dot. It was too subtle to read at a glance. */
+.pl.control,.brow.control{background:linear-gradient(90deg,#3A2D08 0%,#1B2444 78%)
+  !important;box-shadow:inset 4px 0 0 var(--brass)!important}
+.pl.control .nm,.brow.control .bn{color:var(--brass)}
+.pl.control .sc,.brow.control .bs{color:#FFD98A}
+.ctrlflag{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+color:var(--brass);margin-left:6px;opacity:.9}
+
 /* Stable colours on the scoreboards. A tinted edge and the stone's badge, so a
    glance tells you who is with whom without reading a single name. */
 .pl.instable,.brow.instable,.row.instable{box-shadow:inset 3px 0 0 var(--gemc)}
@@ -200,13 +209,16 @@ box-shadow:inset 0 1px 0 #B5AC9C,inset 0 -2px 4px #00000066}
 /* Fixed height, and the text shrinks rather than the card growing. A long
    category made one column taller than the rest and pushed its whole stack
    down; in a narrow window the titles simply overflowed the card. */
-.bcat{height:46px;display:grid;place-items:center;overflow:hidden;
+.bcat{min-height:46px;max-height:74px;display:grid;place-items:center;overflow:hidden;
 font-size:clamp(7px,0.85vw,10.5px);line-height:1.15;text-transform:uppercase;letter-spacing:.03em;
 text-align:center;color:#1C2242;font-weight:700;
 background:linear-gradient(175deg,#EFE9DC,#CFC7B6);border:2px solid #3A352C;border-radius:3px;
 padding:4px 3px;margin-bottom:6px;
 box-shadow:inset 0 1px 0 #FFFFFFAA,inset 0 -2px 3px #00000033}
 .bcat span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.bcat .note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+text-transform:none;letter-spacing:0;font-style:italic;font-weight:400;font-size:8.5px;
+line-height:1.25;color:#6A4A12;margin-top:2px}
 .bcell{position:relative;border-radius:5px;border:2px solid #26221C;text-align:center;
 padding:11px 2px;margin-bottom:6px;overflow:hidden;
 background:radial-gradient(ellipse 90% 75% at 50% 40%,#2B2BE0 0%,#1717C2 52%,#0B0B93 100%);
@@ -741,7 +753,8 @@ function boardHtml() {
   if (!full) return '';
   if (!W) return '<aside class="board"><div class="bwait">Loading the board...</div></aside>';
   const cols = (W.board || []).map((c) => '<div class="bcol">'
-    + `<div class="bcat" title="${c.title}"><span>${c.title}</span></div>`
+    + `<div class="bcat" title="${c.title}"><span>${c.title}</span>${
+        c.note ? `<span class="note">${c.note}</span>` : ''}</div>`
     // Same as the console: keep the value so the cell keeps its size, and let
     // .gone make it transparent.
     // 'played', not 'gone': .gone already exists on this page as the
@@ -753,7 +766,8 @@ function boardHtml() {
   const stableOf = (id) => (W.stables || []).find((x) => x.id === id) || null;
   const ring = (W.live || []).map((p) => {
     const st = p.stable ? stableOf(p.stable) : null;
-    return `<div class="brow${st ? ' instable' : ''}"${st ? ` style="--gemc:${st.colour}"` : ''}>`
+    return `<div class="brow${st ? ' instable' : ''}${W.control === p.token ? ' control' : ''}"${
+      st ? ` style="--gemc:${st.colour}"` : ''}>`
       + `<span class="bd">${p.draw}</span>`
       + `<span class="bn">${st ? gem(st.name, st.colour, 14) : ''}${p.name}</span>`
       + `<span class="bs num">${money(p.score)}</span></div>`;

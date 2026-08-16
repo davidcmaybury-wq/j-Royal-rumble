@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.77.1",
+  "version": "0.78.2",
   "private": true,
   "type": "module",
   "engines": {
@@ -68,7 +68,8 @@
     "shrink-study": "node tools/shrink-study.mjs",
     "guides-test": "node test/guides.mjs",
     "small-field": "node tools/small-field.mjs",
-    "reports-test": "node test/reports.mjs"
+    "reports-test": "node test/reports.mjs",
+    "late-entry": "node tools/late-entry.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

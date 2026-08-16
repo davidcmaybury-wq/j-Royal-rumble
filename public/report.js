@@ -7,7 +7,7 @@
 // which screen, which room, which clue, which version, who they are.
 
 const CSS = `
-.rbtn{position:fixed;right:12px;bottom:12px;z-index:75;padding:7px 12px;
+.rbtn{position:fixed;right:12px;bottom:12px;z-index:40;padding:7px 12px;
 border:1px solid var(--line);border-radius:var(--r,5px);background:#131A30E6;
 color:var(--slate);font:inherit;font-size:12.5px;cursor:pointer}
 .rbtn:hover{border-color:var(--brass);color:var(--brass)}
@@ -40,7 +40,7 @@ background:none;color:var(--slate);cursor:pointer;font:inherit}
  * — which clue, what phase — change while the page is open, and a snapshot
  * taken at load time would describe the wrong moment.
  */
-export function mountReportButton(screen, getContext) {
+export function mountReportButton(screen, getContext, opts = {}) {
   if (document.getElementById('rbtn')) return;
   const style = document.createElement('style');
   style.textContent = CSS;
@@ -48,7 +48,11 @@ export function mountReportButton(screen, getContext) {
 
   const b = document.createElement('button');
   b.id = 'rbtn'; b.className = 'rbtn'; b.type = 'button';
-  b.textContent = 'Report a problem';
+  // Where it sits is the caller's call. Bottom-right is fine on a watch screen
+  // and wrong on the host console, where it landed on top of Arm buzzers — the
+  // single most-pressed control in the game.
+  if (opts.place) b.style.cssText = opts.place;
+  b.textContent = opts.label || 'Report a problem';
   b.onclick = () => open(screen, getContext);
   document.body.appendChild(b);
 }

@@ -5,6 +5,15 @@
 <title>J! Royal Rumble</title>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* Board control is followed from across the room, so it lights the whole row
+   rather than a 7px dot. It was too subtle to read at a glance. */
+.pl.control,.brow.control{background:linear-gradient(90deg,#3A2D08 0%,#1B2444 78%)
+  !important;box-shadow:inset 4px 0 0 var(--brass)!important}
+.pl.control .nm,.brow.control .bn{color:var(--brass)}
+.pl.control .sc,.brow.control .bs{color:#FFD98A}
+.ctrlflag{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+color:var(--brass);margin-left:6px;opacity:.9}
+
 /* Stable colours on the scoreboards. A tinted edge and the stone's badge, so a
    glance tells you who is with whom without reading a single name. */
 .pl.instable,.brow.instable,.row.instable{box-shadow:inset 3px 0 0 var(--gemc)}
@@ -111,13 +120,31 @@ background:linear-gradient(160deg,#8E8578,#6E675C 55%,#57514A);
 padding:11px;border-radius:8px;
 box-shadow:inset 0 1px 0 #B5AC9C,inset 0 -2px 5px #00000066,0 4px 16px #00000066}
 .col{display:grid;grid-template-rows:auto repeat(5,1fr);gap:9px;min-height:0}
+/* Roomier, because the hint is load-bearing.
+   A category can say "each answer is five letters long" and the room cannot
+   play it without reading that. It used to clamp to one ellipsized line at 9px
+   on a screen people watch from across a room. The card now scales with the
+   viewport and gives the note real space. */
 .cat{background:linear-gradient(175deg,#EFE9DC,#CFC7B6);border-radius:5px;
-padding:8px 5px;text-align:center;color:#1C2242;
-font-weight:700;font-size:11.5px;line-height:1.2;letter-spacing:.06em;text-transform:uppercase;
-display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:56px;
+padding:9px 7px;text-align:center;color:#1C2242;
+font-weight:700;font-size:clamp(11px,1.15vw,15px);line-height:1.22;letter-spacing:.04em;
+text-transform:uppercase;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+/* A FIXED height, not a minimum. A card that grows to fit a long hint pushes
+   its own column down and the board stops lining up — the same failure the
+   titles caused before. Every card is the same height; the hint clamps inside
+   it. */
+height:clamp(92px,14vh,130px);gap:3px;
 box-shadow:inset 0 1px 0 #FFFFFFAA,inset 0 -2px 3px #00000033,0 2px 4px #00000055;
 border:2px solid #3A352C}
+/* The hint, in sentence case and not clipped: three lines rather than one. */
+.cat .note{width:100%;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+overflow:hidden;text-transform:none;letter-spacing:0;font-style:italic;font-weight:400;
+font-size:clamp(9.5px,0.95vw,12.5px);line-height:1.3;color:#6A4A12;margin-top:4px;
+max-width:100%}
 .cat .src{display:block;font-size:8.5px;letter-spacing:.14em;color:#6E6858;margin-bottom:3px}
+.cat .ttl{width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+overflow:hidden}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;
 border-radius:9px;border:3px solid #26221C;
 background:radial-gradient(ellipse 90% 75% at 50% 40%,#2B2BE0 0%,#1717C2 52%,#0B0B93 100%);
@@ -308,11 +335,24 @@ function lectern() {
     (_, i) => `<i class="${i < lit ? 'lit' : ''}"></i>`).join('') + '</div>';
 }
 
+const esc = (x) => String(x == null ? '' : x)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 function board() {
   const face2 = [100, 200, 300, 400, 500];
   return '<div class="board">' + (S.board || []).map((c) => '<div class="col">'
-    + '<div class="cat"><span>' + (c.source ? '<span class="src">'
-        + (c.source === 'original' ? 'TTG' : 'J!') + '</span>' : '') + c.title + '</span></div>'
+    // The hint was never drawn here at all. A category can say "each answer is
+    // five letters long" and the room cannot play it without that — in one live
+    // match they needed it and it simply was not on the screen.
+    + '<div class="cat" title="' + esc(c.title + (c.note ? ' — ' + c.note : '')) + '">'
+      // The source tag is a sibling, not a child of the title. Inside the
+      // title it counted as one of the two clamped lines, so every long
+      // category ellipsized after a single line.
+      + (c.source ? '<span class="src">'
+          + (c.source === 'original' ? 'TTG' : 'J!') + '</span>' : '')
+      + '<span class="ttl">' + c.title + '</span>'
+      + (c.note ? '<span class="note">' + esc(c.note) + '</span>' : '')
+      + '</div>'
     + c.clues.map((x) => {
         const worth = x.value ?? face2[x.row - 1];
         return '<div class="cell' + (x.revealed ? ' gone' : '')
@@ -348,12 +388,13 @@ function row(p, out) {
   const low = !out && p.score < 600;
   const st = p.stable ? stableOf(p.stable) : null;
   return '<div class="pl' + (out ? ' out' : '') + (p.topRope ? ' uptop' : '')
-    + (st ? ' instable' : '') + '"'
+    + (st ? ' instable' : '') + (S.control === p.token ? ' control' : '') + '"'
     + (st ? ' style="--gemc:' + st.colour + '"' : '') + '>'
     + '<span class="ctrl' + (S.control === p.token ? ' on' : '') + '"></span>'
     + '<span class="dr">' + p.draw + '</span>'
     + face(p)
     + '<span class="nm">' + (st ? gem(st.name, st.colour, 15) : '') + p.name
+      + (S.control === p.token ? '<span class="ctrlflag">board</span>' : '')
       + (p.topRope ? ' <span class="mk rope">TOP ROPE</span>' : '')
       + ((p.targetedBy || []).length ? ' <span class="mk hunted">&#9678;'
           + (p.targetedBy.length > 1 ? ' \u00D7' + p.targetedBy.length : '') + '</span>' : '')

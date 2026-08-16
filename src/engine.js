@@ -84,6 +84,8 @@ export const DEFAULT_SETTINGS = {
   revival: false,            // one more life, at a fraction of the stake
   revivalLimit: 1,
   revivalFraction: 0.5,
+  // Multiply a new entrant's stake by the overtime level they walk into.
+  scaleEntryStake: true,
   bountyMaxFraction: 0.5,    // most of their stake a queued player may stake
   // Two evenly matched players trade the same points back and forth forever.
   // Once the queue is empty and only a couple remain, the stakes climb until
@@ -1174,9 +1176,18 @@ export class RumbleGame {
     const next = this.queued()[0];
     if (!next) return null;
     next.state = 'live';
-    const stake = next.revivals > 0
+    // The stake rides the overtime multiplier.
+    //
+    // A fixed 3,000 walked into a ring where clues were worth 2,000 a piece.
+    // A real match: Randall entered at clue 150 into x2, lasted six clues
+    // without winning a race, was revived at 1,500 into x4 where the top row
+    // paid 2,000, and was gone after one. He never had a hand to play. The
+    // stake now buys the same number of clues whenever you arrive.
+    const mult = this.s.scaleEntryStake ? this.overtimeMultiplier() : 1;
+    const base = next.revivals > 0
       ? Math.round(this.s.startScore * this.s.revivalFraction)
       : this.s.startScore;
+    const stake = base * mult;
     next.score = Math.min(stake - next.bountyPlaced - (next.gifted || 0), this.ceiling);
     next.enteredAtClue = this.cluesRevealed;
     this.log.push({ type: 'entry', playerId: next.id, draw: next.drawNumber, cause });
@@ -1185,6 +1196,11 @@ export class RumbleGame {
 
   // Spectator feedback: an eliminated or queued player's buzz ranked against
   // the live field only, never against other spectators.
+  /** What every clue is currently multiplied by: 1, 2, 4, up to overtimeMax. */
+  overtimeMultiplier() {
+    return Math.min(this.s.overtimeMax || 1, 2 ** (this.overtimeSteps || 0));
+  }
+
   /** Two players on the same side. Nobody is allied with themselves. */
   allied(a, b) {
     if (!this.s.stables || !a || !b) return false;

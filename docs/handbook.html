@@ -72,9 +72,16 @@ where the clues come from — the televised archive, house-written boards, or a 
 category runs dry, a fresh one takes its place. The board never empties. The host can also
 reroll a category that isn't landing; three rerolls retires it for good.</p>
 <p>Everyone draws an entry number before the match. Three players start in the ring; everyone
-else waits in the queue and enters one at a time, on a fixed clock, each with an identical
-starting stake. You'll know your moment is coming: your buzzer counts down your final three
-clues in the queue — and your entrance music plays as you walk in.</p>
+else waits in the queue and enters one at a time, on a fixed clock. You'll know your moment is
+coming: your buzzer counts down your final three clues in the queue — and your entrance music
+plays as you walk in.</p>
+<p>The stake is the same for everybody at face value, but it <strong>rides the overtime
+multiplier</strong>: walk in at 4&times; and you walk in with four times the money. This was not
+the original design and it was not a guess. In a live match Randall entered at clue 150 into
+2&times; overtime, lasted six clues without winning a single race, was revived at half stake into
+4&times; where the top row paid $2,000, and was gone after one more. He never had a hand to play.
+Across 3,000 simulated matches, entrants arriving at 2&times; or above who died within three clues
+fell from 58% to 9% once the stake scaled.</p>
 <p>The match ends when the queue is empty and one player is left standing. There is no second place.</p>
 
 <h3>2 · Scoring</h3>
@@ -163,7 +170,10 @@ a kamikaze on the same button. Your target is visible to everyone, they get an a
 collects it — you enter that much lighter. If they survive the match, they keep it. If they
 eliminate <em>you</em>, they keep it anyway. Choose carefully.</p></div>
 <div class="rulecard"><p>💎 <strong>STABLES</strong> — Teams, named for you from a list of
-gemstones. Press <kbd>J</kbd> to join one, <kbd>B</kbd> to betray. When you win a clue,
+gemstones: Diamond, Ruby, Emerald, Sapphire, Onyx, Topaz. Each carries a colour and a badge that
+tints its members' rows on every scoreboard, so the sides read at a glance without anybody
+reading a name. Six because that is the most a room can tell apart at once.
+Press <kbd>J</kbd> to join one, <kbd>B</kbd> to betray. When you win a clue,
 <em>your stable pays nothing and the whole pot lands on everybody outside it</em>, so the bigger
 your side the harder each outsider is hit — and the pot is then split evenly across your stable.
 A stable can hold at most half the ring. Leaving means betrayal: half your stack is split among
@@ -249,7 +259,10 @@ again — a falling cap is one the leader meets sooner, so it made pinning worse
 <p>Two more findings round out the ceiling's story. It — not the entry interval — is the
 dominant fairness lever, a fact obscured for months by a hidden step in the old code (the cap
 jumped 7,500 → 11,000 at 25 players, which made 24-player matches look far less fair than
-30-player ones until the confound was found; it now scales with field size). And no
+30-player ones until the confound was found; it is now a measured ladder rather than a slope, and deliberately not monotonic: small
+fields get the <em>most</em> headroom, because a lone strong player there faces the fewest
+opponents per clue, climbs slowly, and the match runs long enough for that slow climb to reach
+the cap and sit at it. A live 53-clue six-player match had the winner pinned for 20 of them). And no
 formula predicted fairness well across configurations (best fit r = 0.71), so the engine ships a
 measured lookup — 3,000 simulated matches per field-size-and-interval pair — instead of a rule
 someone guessed.</p>

@@ -3,7 +3,21 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
-## 0.77.1 — Bug reports, bulk download, retire the stale handbook PDF
+## 0.78.2 — Overtime entry stakes, board control, category hints, all docs caught up
+
+## 0.78.0 — walking into overtime
+
+A new entrant's stake now rides the overtime multiplier, and so does a revival.
+A fixed 3,000 walked into a ring where single clues paid 2,000: in a real match
+Randall entered at clue 150 into x2, lasted six clues without winning a race,
+was revived at 1,500 into x4 where the top row paid 2,000, and was gone after
+one. Measured over 3,000 matches, entrants at x2 or above who died within three
+clues fell from 58% to 9%.
+
+Also: board control lights the whole score row rather than a 7px dot; the watch
+screen now draws the category hint at all, which is why a live room could not
+play a category that depended on it; and the report button moved off Arm
+buzzers on the host console.
 
 ## 0.75.0 — the ceiling for small fields
 
