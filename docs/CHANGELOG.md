@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.82.0 — Targeting is standard
+
 ## 0.81.0 — how fast people are fed in
 
 Measured, and written up as Figure 12 in the handbook. The entry interval turns

@@ -495,6 +495,12 @@ function render(keepEdits) {
     ${adv('longevity', 'Longevity bonus', s.longevity,
       '+500 every 10 clues survived. Pays the early draws for the grinding they do more of; '
       + 'measured to bring the draw to even without handing the match to anybody.')}
+    ${adv('targeting', 'Targeting', s.targeting,
+      'Press T and pick somebody. Take the clue and the whole pot comes out of them alone, '
+      + 'everyone else spared; miss, and if they take it you pay them the whole pot yourself. '
+      + 'The room can see who is hunting whom. This is how a table deals with somebody running '
+      + 'away with it — several people aiming at one leader is the only thing that reliably '
+      + 'catches them.')}
     ${adv('categorySweep', 'Category sweep', s.categorySweep,
       'Take every clue in a column for +500, scaled by the overtime multiplier. Counted as the '
       + 'column is worked through, so a board refresh cannot rob a finished run.')}
@@ -525,9 +531,6 @@ function render(keepEdits) {
       + 'Declared with S, settled at the next clue so nothing pauses, and several '
       + 'people can chip in for one player. Partial amounts are allowed — a cheap '
       + 'save is a weak save.')}
-    ${adv('targeting', 'Targeting', s.targeting,
-      'Aim at one player. Get it right and the whole pot comes out of them alone, everyone else spared. '
-      + 'Get it wrong and they answer, and you pay the whole pot yourself. Visible to the room.')}
     ${adv('bounties', 'Bounties', s.bounties,
       'A player waiting in the queue can put part of their own stake on somebody\'s head. Whoever '
       + 'knocks them out collects. Survive to the end and you keep it — knock out the person who '

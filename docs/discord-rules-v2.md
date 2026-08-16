@@ -16,6 +16,10 @@ Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
 
 ☠️ **Elimination.** Drop below zero and you're out. Exactly zero survives.
 
+🎯 **Want to deal with a bully?** Press **T** and pick them. Take the clue and the **whole pot comes out of that player alone** — everybody else pays nothing. Miss, and if *they* convert it you pay them the whole pot yourself while the ring watches for free. Press 0 to stand down. Everyone can see who you're hunting.
+
+**Gang up.** One person aiming at the runaway leader is a gamble; three people aiming at them is a collection. It is the only thing in the game that reliably catches somebody who is running away with it, and it costs nothing to agree out loud on the call.
+
 📈 **The ceiling.** There's a maximum score, sized to the field. Anything above it gets clipped — a big lead buys you room, not immunity.
 
 ⚔️ **Overtime.** When the queue empties (or the match stalls long enough), the stakes start climbing: clue values double every six clues, up to 8×, and the ceiling starts falling. The climb never resets. Somebody's going in the water. **If you walk in once overtime has started, your stake climbs with it** — enter at 4× and you enter with four times the money, because a normal stake against quadrupled clues is a death sentence.

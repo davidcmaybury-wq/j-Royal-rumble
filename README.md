@@ -476,6 +476,14 @@ made a 24-player field look far less fair than a 30-player one — it was the
 ceiling doing that, not the field size. Every earlier fairness measurement was
 confounded by it.
 
+**Targeting is standard**, not an advanced toggle: it is the only mechanic that
+reliably catches somebody running away with a match. Measured against one champ
+in a normie field, a room ganging up takes their win rate from 52.5% to 50.6% at
+six players and 31.9% to 30.7% at sixteen. The cost is a draw that leans late in
+a big field — 48.4% to 66.3% back-half wins at sixteen — because the leader is
+nearly always an early entrant, so late draws are never the ones being hunted.
+Small fields barely move. Switch it off for a big room.
+
 Two players cannot share a name: the room has nothing else to tell them apart,
 and the host calls people by name. A second Dave is turned away and asked for
 another.

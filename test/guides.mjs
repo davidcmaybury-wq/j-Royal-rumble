@@ -44,7 +44,8 @@ check('the banner identifies the page, not a bare heading',
 // The advanced rules must cover every mechanic that exists, or a player reads
 // them and is surprised mid-match.
 const adv = await (await fetch(`${U}/rules-101`)).text();
-for (const m of ['TOP ROPE', 'TARGETING', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
+// Targeting is standard now, so it lives in the main rules rather than here.
+for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
   check(`rules 101 covers ${m}`, adv.includes(m));
 }
 
@@ -66,7 +67,8 @@ for (const f of ['discord-rules-v2.md', 'discord-advanced-mechanics.md']) {
   const r = await fetch(`${U}/handbook`);
   check('the handbook is served as a page', /text\/html/.test(r.headers.get('content-type') || ''),
     r.headers.get('content-type'));
-  for (const m of ['TOP ROPE', 'TARGETING', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
+  // Targeting is standard now, so it lives in the main rules rather than here.
+for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     check(`the handbook covers ${m}`, hb.includes(m));
   }
   check('and is current on the ceiling', /10,500/.test(hb));
@@ -89,6 +91,8 @@ for (const f of ['discord-rules-v2.md', 'discord-advanced-mechanics.md']) {
     ['revival scales too', 'stake scales with it'],
     ['there is a way to report a problem', 'Report a problem'],
     ['every advanced mechanic is listed', 'STABLES'],
+    ['targeting, which is standard now', 'deal with a bully'],
+    ['and that ganging up is the point of it', 'Gang up'],
   ]) {
     check(`the rules mention ${what}`, both.includes(needle), needle);
   }

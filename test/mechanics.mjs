@@ -191,7 +191,13 @@ console.log('\nOFF BY DEFAULT');
   const g = game({});
   const [a, b] = live(g);
   check('top rope refuses when off', g.setTopRope(a, true) === false);
-  check('targeting refuses when off', g.setTarget(a, b) === false);
+  // Targeting is standard now — on unless the host turns it off. It is the only
+  // mechanic that reliably catches somebody running away with a match, so it is
+  // no longer something a room has to know to ask for.
+  check('targeting is on without being asked for', g.setTarget(a, b) !== false);
+  const off = game({ targeting: false });
+  const [c, d] = live(off);
+  check('and still refuses when the host turns it off', off.setTarget(c, d) === false);
   check('bounties refuse when off', !!g.placeBounty(g.queued()[0]?.id || 'x', b, 100).error);
   const wasB = score(g, b);
   g.players.get(b).score = 10;

@@ -79,7 +79,11 @@ export const DEFAULT_SETTINGS = {
   // staying put, so it is a bad move for an ordinary player and a live question
   // for anybody who thinks they are better than the room.
   betrayalKeepFraction: 0.5,
-  targeting: false,          // aim your damage at one player, and theirs at you
+  // On by default. It is the only tool a room has for dealing with somebody
+  // who is running away with it — and unlike stables, which turned out to do
+  // nothing against a strong player, this one actually bites: it puts the whole
+  // pot on one head.
+  targeting: true,           // aim your damage at one player, and theirs at you
   bounties: false,           // queued players pay to put a price on a head
   revival: false,            // one more life, at a fraction of the stake
   revivalLimit: 1,
