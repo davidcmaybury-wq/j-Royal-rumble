@@ -989,7 +989,7 @@ Off by default.
 
     RULES-SHORT.md                     one paste for Discord, 1,507 characters
     RULES.md                           the full rules in postable sections
-    docs/j-royal-rumble-handbook.pdf   design and rules, with the numbers
+    docs/handbook.html                 design and rules, with the numbers
 
     python3 tools/make-handbook.py     rebuilds the PDF
 

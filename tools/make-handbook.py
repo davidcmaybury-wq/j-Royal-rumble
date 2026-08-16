@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Builds the J! Royal Rumble design and rules document.
+"""SUPERSEDED — do not run this expecting the current handbook.
 
-    python3 tools/make-handbook.py
+docs/handbook.html is the handbook now, written and maintained by David and
+served at /handbook. This script builds a PDF whose figures are typed in here by
+hand rather than read from the code, so it drifted from the game, and then from
+the HTML as well. Two handbooks that disagree are worse than one.
 
-Every figure in here comes from either the simulator (tools/sim-mechanics.mjs,
-test/harness.js) or a recorded match. Nothing is illustrative.
+Kept only because the prose in it records why several decisions were made. If
+you want a PDF, print /handbook.
 """
+
 import os, subprocess
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.units import mm

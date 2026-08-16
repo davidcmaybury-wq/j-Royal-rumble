@@ -25,7 +25,8 @@ check('settings save', p.settings.targetMinutes===45 && p.settings.startScore===
 const again=await (await fetch(`${U}/api/match/${m.gameId}`,{headers:H})).json();
 check('and survive a re-read', again.settings.startScore===5555);
 const hb=await fetch(`${U}/handbook`);
-check('the handbook is served', hb.ok && hb.headers.get('content-type').includes('pdf'),
+// HTML now, not a PDF: the generated PDF drifted and has been retired.
+check('the handbook is served', hb.ok && hb.headers.get('content-type').includes('html'),
   hb.headers.get('content-type'));
 console.log(`\n${fails?fails+' FAILURES':'all checks passed'}`);
 process.exit(fails?1:0);

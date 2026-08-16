@@ -11,6 +11,9 @@ for (const [path, must] of [
   ['/rules-101', 'Thirty players'],
   ['/rules', 'ROYAL RUMBLE'],
   ['/history', 'VERSION HISTORY'],
+  // The handbook is David's HTML, not the generated PDF. That PDF drifted for
+  // weeks and still described a game without stables in it.
+  ['/handbook', 'Royal Rumble'],
 ]) {
   const r = await fetch(`${U}${path}`);
   const body = await r.text();
@@ -51,6 +54,36 @@ for (const f of ['discord-rules-v2.md', 'discord-advanced-mechanics.md']) {
   let ok = true;
   try { readFileSync(new URL('../docs/' + f, import.meta.url)); } catch { ok = false; }
   check(`docs/${f} ships with the package`, ok);
+}
+
+// The handbook has to describe the game as it is now.
+//
+// It served a PDF that was months behind while the current HTML sat in docs/
+// unlinked, and nothing noticed. These are the mechanics that exist; if one is
+// added and this is not updated, that is the reminder.
+{
+  const hb = await (await fetch(`${U}/handbook`)).text();
+  const r = await fetch(`${U}/handbook`);
+  check('the handbook is served as a page', /text\/html/.test(r.headers.get('content-type') || ''),
+    r.headers.get('content-type'));
+  for (const m of ['TOP ROPE', 'TARGETING', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
+    check(`the handbook covers ${m}`, hb.includes(m));
+  }
+  check('and is current on the ceiling', /10,500/.test(hb));
+  const pdf = await fetch(`${U}/handbook.pdf`);
+  check('the printable copy is still there', pdf.ok, String(pdf.status));
+}
+
+// Old links must not lead to a stale copy.
+const pdf = await fetch(`${U}/handbook.pdf`, { redirect: 'manual' });
+check('the old PDF link redirects to the real handbook',
+  pdf.status === 301 && /\/handbook$/.test(pdf.headers.get('location') || ''),
+  `${pdf.status} -> ${pdf.headers.get('location')}`);
+
+// And the handbook it lands on has to know about the current rules.
+const hb = await (await fetch(`${U}/handbook`)).text();
+for (const rule of ['Stable', '10,500']) {
+  check(`the handbook covers ${rule}`, hb.includes(rule));
 }
 
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);

@@ -3,7 +3,7 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
-## 0.77.0 — Bug reports and bulk download
+## 0.77.1 — Bug reports, bulk download, retire the stale handbook PDF
 
 ## 0.75.0 — the ceiling for small fields
 

@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Context for picking this project up cold. Read this first, then `README.md` for
-what the thing does and `docs/j-royal-rumble-handbook.pdf` for why it does it
+what the thing does and `docs/handbook.html` for why it does it
 that way.
 
 ## What this is
@@ -110,6 +110,18 @@ their anchor.
 David posts before a match, and they are the **source** for `/rules-101` — the
 page renders those files, so the message in the channel and the page on the site
 cannot drift apart. `docs/handbook.html` and the PDF are the design write-up.
+
+`docs/handbook.html` is the live handbook, served at `/handbook`. It used to
+serve a PDF from `tools/make-handbook.py` and the two drifted badly — the PDF
+was months behind while the HTML sat unlinked. **The HTML is now the document;
+`docs/handbook.html` IS the handbook, served at `/handbook`.**
+
+David writes and maintains it; I have not been regenerating it, which is worth
+knowing rather than assuming. **When a rule changes, say so** — the handbook
+will not update itself and neither of us should discover the gap in a match.
+The PDF that `tools/make-handbook.py` used to produce is gone: its figures were
+typed in by hand, it drifted, and having two handbooks that disagreed was worse
+than having one. `/handbook.pdf` redirects.
 
 **Keep all of these current with every change to the rules, and keep them in the
 package.** A rules change that lands in the engine and not in these files is
