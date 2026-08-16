@@ -3,7 +3,7 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
-## 0.76.0 — Match length up front, and a version history
+## 0.76.0 — YouTube clip length, up to ten seconds
 
 ## 0.75.0 — the ceiling for small fields
 
