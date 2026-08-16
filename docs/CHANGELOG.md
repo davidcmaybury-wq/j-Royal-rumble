@@ -10,18 +10,30 @@ stake, with half off their buzz for the next 40 races. Once each, and only for
 players with fewer than three clues to their name.
 
 **The gate is the design.** Ungated, the same mechanic is a subsidy for the
-strong — they take their free life too and end up further ahead. Measured in a
-six-player field with one elite and one champ: the bottom four go from 1.5% of
-match wins to 41.9%, and the elite from 93.8% to 38.6%. A fair share for those
-four would be 66.7%, so it moves toward even without overshooting.
+strong — they take their free life too and end up further ahead. In the study's
+six-player field (one 95ms elite, one at 130, a mid, and three casuals at
+210/240/270), gated at 40 races:
 
-**Those figures are for a 70% discount, which is not what shipped.** The
-mechanic was tuned at 70% and set to 50% before release, so every number above
-is an upper bound on what the shipped setting does — the direction holds, the
-magnitude is unmeasured. `npm run comeback-study` has a row for the shipped
-configuration; this entry should be corrected from it rather than left standing.
-The house rule is to measure before shipping, and this shipped ahead of the
-measurement on purpose.
+| | elite | second | mid | the three casuals |
+|---|---|---|---|---|
+| ungated, 70% | 48.7% | 35.9% | 12.5% | 2.9% |
+| **gated, 70%** | **61.9%** | **17.1%** | **10.0%** | **11.0%** |
+
+Ungated pulls the elite down further and does nothing for the people it was
+built for. Gated, the casuals take ten times the share.
+
+**The boost is a threshold, not a dial** — found the hard way. It shipped at 50%
+and was corrected to 70% the same evening, because 50% measures as very nearly
+nothing: casuals 2.1% against 11.0%, with the elite taking back 12.5 points. The
+reason is that the discount only counts if it puts a slow player under a fast
+one, and against a 95ms elite the three casuals need 54.8%, 60.4% and 64.8%
+respectively. At 50% none of them get there. Below ~55% the mechanic is
+decorative; the useful range starts around 65%.
+
+**The figures first published with this entry were not reproducible** — "bottom
+four 1.5% → 41.9%, elite 93.8% → 38.6%" matches no row the study produces, and
+has been replaced above with its actual output. Retune against
+`npm run comeback-study` and the threshold table in `engine.js`, not by feel.
 
 **It costs draw fairness**, which is worth knowing. The back half of the draw
 goes from 50% to 59% at sixteen players, because a late entrant is likelier to

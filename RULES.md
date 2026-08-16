@@ -25,7 +25,7 @@ Thirty players. Three start. One survives.
 
 **Below zero and you're out.** Zero is still alive.
 
-**Flattened early?** Drop under with fewer than three clues taken and you stay up instead — half stake, buzz halved for 40 races. Once each.
+**Flattened early?** Drop under with fewer than three clues taken and you stay up — half stake, 70% off your buzz for 40 races. Once each.
 
 **Still standing?** +$500 every 10 clues you survive — being early in the draw is hard work, and this pays for it.
 
@@ -102,7 +102,7 @@ If a clue would somehow wipe the entire ring, the highest score survives.
 
 **If you'd go out with fewer than three clues to your name, you don't go out.**
 You stay in the ring on half a starting stake, and for the next 40 races your
-buzz counts at half the time you actually pressed. Once each, and it happens by
+buzz counts at 30% of the time you actually pressed. Once each, and it happens by
 itself — there's nothing to declare and nothing to press.
 
 The gate is the whole point. It's for somebody flattened before they ever got

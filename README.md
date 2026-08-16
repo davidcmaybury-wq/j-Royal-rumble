@@ -897,18 +897,36 @@ that list seen from the other end: instead of taxing the leader's milliseconds
 it hands them to whoever never got going.
 
 **The gate is the entire design.** Ungated, the same mechanic is a subsidy for
-the strong — they spend their free life too and finish further ahead, and the
-casual's chance only reaches 1.9%. Gated, in a six-player field with one elite
-and one champ:
+the strong — they spend their free life too and finish further ahead, and it
+does nothing for the people it was built for. Measured over 1,500 matches per
+row in a six-player field (a 95ms elite, a 130ms second, a mid at 160, and three
+casuals at 210/240/270), the comeback lasting 40 races:
 
-| | bottom four | the elite |
-|---|---|---|
-| without it | 1.5% | 93.8% |
-| with it | 41.9% | 38.6% |
+| | elite | second | mid | the three casuals |
+|---|---|---|---|---|
+| ungated, 70% | 48.7% | 35.9% | 12.5% | 2.9% |
+| **gated, 70%** | **61.9%** | **17.1%** | **10.0%** | **11.0%** |
+| gated, 50% | 74.4% | 19.0% | 4.5% | 2.1% |
 
-An even share for those four would be 66.7%, so it moves toward fair without
-overshooting. It is close to sandbag-proof, too: staying under the gate means
-not scoring.
+Gating costs the elite less and pays the casuals ten times more, which is the
+whole trade. It is close to sandbag-proof, too: staying under the gate means not
+scoring.
+
+### The boost is a threshold, not a dial
+
+**Found by shipping the wrong value.** 0.5 looked like the moderate choice and
+measures as very nearly nothing — the bottom row above. The discount only counts
+if it puts a slow player under a fast one, and against a 95ms elite:
+
+| | median | at 50% off | at 70% off | needed to beat the elite |
+|---|---|---|---|---|
+| CasualA | 210ms | 105ms | 63ms | 54.8% |
+| CasualB | 240ms | 120ms | 72ms | 60.4% |
+| CasualC | 270ms | 135ms | 81ms | 64.8% |
+
+At 50% not one of them reaches him. At 70% all three clear him. **Below about
+55% the mechanic is decorative and above about 65% it works**, so retune it
+against that table rather than by feel — feel is what produced 0.5.
 
 **It costs draw fairness.** The back half of the draw goes from 50% to 59% at
 sixteen players, because a late entrant is likelier to still be under the gate
@@ -922,10 +940,8 @@ The edge is counted in races rather than clues so a run of stumpers cannot burn
 it, and the **recorded** reaction time is always the real one. The discount is a
 ranking rule for who takes the clue, not a rewrite of the log.
 
-⚠️ **Every figure above was measured at a 70% discount and the mechanic ships
-at 50%.** It was tuned at 70% and turned down before release, so these are upper
-bounds: the direction holds, the magnitudes do not. `npm run comeback-study`
-carries a row for the shipped configuration — run it and correct this table.
+`npm run comeback-study` reproduces every row above; the shipped configuration
+is marked in the output.
 
 ## Advanced mechanics
 

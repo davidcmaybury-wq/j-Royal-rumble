@@ -21,7 +21,7 @@ Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
 
 ☠️ **Elimination.** Drop below zero and you're out. Exactly zero survives.
 
-🩹 **One foot on the floor.** Go under before you've taken three clues and you don't go out at all — you stay up on half a starting stake, with **half knocked off your buzz time for the next 40 races**. Once each. It's for people flattened before they got going: if you were in the match and lost it, you go out properly. Nothing to press, it just happens.
+🩹 **One foot on the floor.** Go under before you've taken three clues and you don't go out at all — you stay up on half a starting stake, with **70% knocked off your buzz time for the next 40 races**. Once each. It's for people flattened before they got going: if you were in the match and lost it, you go out properly. Nothing to press, it just happens.
 
 🎯 **Want to deal with a bully?** Press **T** and pick them. Take the clue and the **whole pot comes out of that player alone** — everybody else pays nothing. Miss, and if *they* convert it you pay them the whole pot yourself while the ring watches for free. Press 0 to stand down. Everyone can see who you're hunting.
 

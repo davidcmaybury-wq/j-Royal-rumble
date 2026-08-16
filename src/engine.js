@@ -101,12 +101,27 @@ export const DEFAULT_SETTINGS = {
   comeback: true,
   comebackGate: 3,           // clues taken, below which you qualify
   comebackStake: 0.5,        // share of the starting stake you return with
-  // How much of your buzz time the edge takes off. Was 0.7 when the mechanic
-  // was first measured; David set it to 0.5 before it ever shipped, on the
-  // grounds that 70% was more help than the moment called for. Every figure
-  // quoted for this mechanic was measured at 0.7 and is therefore an upper
-  // bound on what 0.5 does — `npm run comeback-study` re-measures it.
-  comebackBoost: 0.5,
+  // How much of your buzz time the edge takes off.
+  //
+  // THIS IS A THRESHOLD, NOT A DIAL. It shipped at 0.5 for one release on the
+  // reasonable-sounding grounds that 70% was more help than the moment needed.
+  // Measured, 0.5 does almost nothing: the three casuals in the study field go
+  // from 11.0% of match wins at 0.7 to 2.1% at 0.5, and the strongest player
+  // takes back 12.5 points. Not "half as strong" — about a tenth.
+  //
+  // The reason is that the boost only matters if it puts a slow player under a
+  // fast one. Against the study's 95ms elite:
+  //
+  //   player     median   @0.5    @0.7   boost needed to beat the elite
+  //   CasualA     210ms   105ms    63ms          54.8%
+  //   CasualB     240ms   120ms    72ms          60.4%
+  //   CasualC     270ms   135ms    81ms          64.8%
+  //
+  // At 0.5 not one of them reaches him and the mechanic is decorative; at 0.7
+  // all three clear him. Anything below ~0.55 is dead, and the useful range
+  // starts around 0.65. If this is ever retuned, move it against that table
+  // rather than by feel — feel is what produced 0.5.
+  comebackBoost: 0.7,
   comebackRaces: 40,         // races the edge lasts
   bounties: false,           // queued players pay to put a price on a head
   revival: false,            // one more life, at a fraction of the stake
@@ -1260,7 +1275,7 @@ export class RumbleGame {
     if (!this.s.comeback) return 1;
     const p = this.players.get(playerId);
     if (!p || p.comebackUntil == null || this.racesRun > p.comebackUntil) return 1;
-    return 1 - (this.s.comebackBoost ?? 0.5);
+    return 1 - (this.s.comebackBoost ?? 0.7);
   }
 
   /** Is this player currently on the way back? */

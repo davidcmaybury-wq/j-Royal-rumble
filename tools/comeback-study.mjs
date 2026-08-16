@@ -158,10 +158,13 @@ run('comeback 15 + progressive',      { comeback: true, duration: 15, progressiv
 run('comeback 40/70% + short-swingy', { comeback: true, duration: 40, boost: 0.7,
   settings: { startScore: 1500, ceiling: 5000, entryInterval: autoEntryInterval(6, 15, 17.5) } });
 console.log('--- refinement: gate the comeback to players who never got going');
-run('gated comeback 40, boost 70%', { comeback: true, duration: 40, boost: 0.7, gated: true });
-// The shipped configuration. The mechanic was tuned at 70% and shipped at 50%,
-// so this row — not the one above it — is the one the docs should quote.
-run('gated comeback 40, boost 50%  <-- SHIPPED', { comeback: true, duration: 40, boost: 0.5, gated: true });
+run('gated comeback 40, boost 70%  <-- SHIPPED', { comeback: true, duration: 40, boost: 0.7, gated: true });
+// Kept as evidence, not as a candidate. 0.5 shipped for one release and is the
+// row that showed the boost is a threshold rather than a dial: no casual in
+// this field gets under the 95ms elite at 0.5, so the mechanic stops working
+// almost entirely — casuals 11.0% -> 2.1%. Delete this row and somebody will
+// propose 0.5 again as the moderate option.
+run('gated comeback 40, boost 50%  (dead — kept as evidence)', { comeback: true, duration: 40, boost: 0.5, gated: true });
 run('gated comeback 999 (rest of match), 70%', { comeback: true, duration: 999, boost: 0.7, gated: true });
 run('gated 40/70% + stables', { comeback: true, duration: 40, boost: 0.7, gated: true, stables: true,
   settings: { startScore: 3000, ceiling: 7500, stables: true, stableFocus: true,

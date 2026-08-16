@@ -39,6 +39,15 @@ p.mut { color: var(--ink2); }
 .figure .fc { font-size: 12px; color: var(--muted); margin: 10px 0 2px; line-height: 1.5; }
 .callout { border-left: 3px solid var(--accent); background: var(--surface);
   border-radius: 0 10px 10px 0; padding: 12px 16px; margin: 18px 0; }
+/* Measured rows, where a chart would be more ceremony than three numbers need.
+   Wrapped so a narrow screen scrolls the table rather than the page. */
+table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13.5px;
+  font-variant-numeric: tabular-nums; display: block; overflow-x: auto; }
+th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid);
+  white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; color: var(--ink2); }
+thead th { color: var(--muted); font-weight: 600; font-size: 12px;
+  text-transform: uppercase; letter-spacing: .04em; }
 .callout .tag { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 .overturned { border-left-color: var(--s2); }
 .overturned .tag { color: var(--s2); }
@@ -100,7 +109,7 @@ players at once, they all go together, and the answerer is credited a toss out f
 clue somehow eliminates the entire ring, the highest score survives.</p>
 <p><strong>One foot on the floor.</strong> With one exception: if you would go out having taken
 fewer than three clues, you don't go out at all. You stay up on half a starting stake, and for
-the next 40 races your buzz is ranked at half the time you actually pressed. Once each,
+the next 40 races your buzz is ranked at 30% of the time you actually pressed. Once each,
 automatic, nothing to declare. The gate is the design — it catches somebody flattened before
 they ever got going, and a player who was in the match and lost it goes out properly. Because
 no elimination is recorded, a bounty on that player doesn't pay and a revival life isn't spent.
@@ -455,20 +464,34 @@ inverted: rather than taxing the leader's milliseconds it hands them to whoever 
 going, which is the same trade seen from the other end and much easier to explain at the
 table.</p>
 <p><strong>The gate is the entire mechanism.</strong> Ungated, it is a subsidy for the sharks —
-they spend their free life too and finish further ahead, and the casual's chance only reaches
-1.9%. Gated at three clues taken, in a six-player field with one elite and one champ, the
-bottom four go from 1.5% of wins to 41.9% and the elite from 93.8% to 38.6%. An even share for
-those four would be 66.7%, so it moves toward fair without overshooting into a lottery. It is
-close to sandbag-proof: staying under the gate means not scoring.</p>
-<p><strong>Two things to hold against it.</strong> First, it costs draw fairness — the back
-half of the draw goes from 50% to 59% at sixteen players, because a late entrant is likelier to
-still be under the gate when trouble arrives. Fairness by skill and fairness by draw pull
-against each other here for the first time in this document, and the honest position is that
-the trade was made deliberately rather than avoided. Second, and more awkwardly: the figures
-above were all measured at a 70% buzz discount, and the mechanic shipped at 50%. The direction
-survives that change; the magnitudes do not, and no one has measured the shipped setting yet.
-Treat every number in this section as an upper bound until <code>comeback-study</code> is run
-against the configuration that is actually live.</p></div>
+they spend their free life too, finish further ahead, and the people it was built for get
+nothing. Measured over 1,500 matches per row in a six-player field (a 95ms elite, a 130ms
+second, a mid at 160, three casuals at 210/240/270), the comeback lasting 40 races:</p>
+<table><thead><tr><th></th><th>elite</th><th>second</th><th>mid</th><th>the three casuals</th></tr></thead>
+<tbody>
+<tr><td>ungated, 70%</td><td>48.7%</td><td>35.9%</td><td>12.5%</td><td>2.9%</td></tr>
+<tr><td><strong>gated, 70%</strong></td><td><strong>61.9%</strong></td><td><strong>17.1%</strong></td><td><strong>10.0%</strong></td><td><strong>11.0%</strong></td></tr>
+<tr><td>gated, 50%</td><td>74.4%</td><td>19.0%</td><td>4.5%</td><td>2.1%</td></tr>
+</tbody></table>
+<p>Gating costs the elite less than ungating does and pays the casuals ten times more, which is
+the trade. It is close to sandbag-proof, too: staying under the gate means not scoring.</p>
+<p><strong>The boost is a threshold, not a dial</strong> — the third row is how we know, and it
+shipped that way for one release before being corrected. The discount only counts if it puts a
+slow player under a fast one, and against a 95ms elite the three casuals need 54.8%, 60.4% and
+64.8% respectively. At 50% not one of them gets there and the mechanic is decorative; at 70%
+all three clear him. Below about 55% it does nothing, and the useful range starts near 65%. The
+lesson generalizes past this one setting: a parameter that has to cross another player's number
+to matter has no moderate position, and picking one by feel lands on whichever side of the
+cliff you happened to be standing.</p>
+<p><strong>It costs draw fairness</strong>, which is the honest price. The back half of the
+draw goes from 50% to 59% at sixteen players, because a late entrant is likelier to still be
+under the gate when trouble arrives. Fairness by skill and fairness by draw pull against each
+other here for the first time in this document, and the trade was made deliberately rather than
+avoided.</p>
+<p class="mut">A correction worth recording: the figures first published with this mechanic —
+"bottom four 1.5% to 41.9%, elite 93.8% to 38.6%" — match no row the study produces, and have
+been replaced above with its actual output. A measurement nobody can reproduce is worse than no
+measurement, because it survives review.</p></div>
 <p class="mut">Method, in one paragraph: the rules engine is a plain module with no framework
 and no network, driven by a Monte Carlo harness that replays hundreds of matches per
 configuration before every deployment. The harness once caught a scoring regression that would

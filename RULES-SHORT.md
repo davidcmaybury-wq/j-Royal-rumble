@@ -11,7 +11,7 @@ Thirty players. Three start. One survives.
 
 **Below zero and you're out.** Zero is still alive.
 
-**Flattened early?** Drop under with fewer than three clues taken and you stay up instead — half stake, buzz halved for 40 races. Once each.
+**Flattened early?** Drop under with fewer than three clues taken and you stay up — half stake, 70% off your buzz for 40 races. Once each.
 
 **Still standing?** +$500 every 10 clues you survive — being early in the draw is hard work, and this pays for it.
 

@@ -303,14 +303,25 @@ default, `comeback: false` turns it off, and `tools/comeback-study.mjs` is the
 measurement. **The gate is the whole mechanism** — ungated it is a subsidy for
 the strong, who spend the free life too and finish further ahead.
 
-Two things to carry forward. It **costs draw fairness** (back half 50% → 59% at
-sixteen), which is the first time the two axes have pulled against each other
-here. And it was **tuned at a 70% buzz discount and shipped at 50%**, so every
-published figure for it is an upper bound — the direction holds, the magnitudes
-are unmeasured. `npm run comeback-study` has a row marked SHIPPED; run it and
-correct the README table, the changelog entry and the handbook from it. Until
-somebody does, this mechanic is the exception to the house rule below rather
-than an example of it.
+Measured, 1,500 matches a row, six-player field: gated at 70% the three casuals
+take **11.0%** of the wins and the elite 61.9%; ungated it is 2.9% and 48.7%,
+which is the whole argument for the gate.
+
+**The boost is a threshold, not a dial — do not "moderate" it.** It shipped at
+50% for one release and measures as very nearly nothing: casuals 2.1%, elite
+back up to 74.4%. The discount only counts if it puts a slow player under a fast
+one, and against the study's 95ms elite the casuals need 54.8%, 60.4% and 64.8%.
+At 50% none of them get there. Below ~55% it is decorative; the useful range
+starts near 65%. The table is in `engine.js` above the setting — retune against
+it, never by feel.
+
+It also **costs draw fairness** (back half 50% → 59% at sixteen), the first time
+the two axes have pulled against each other here.
+
+**And the figures it first shipped with were not reproducible** — "bottom four
+1.5% → 41.9%, elite 93.8% → 38.6%" matches no row `comeback-study` produces.
+They are corrected now. Treat any number arriving with a change but absent from
+the tool that supposedly made it as unverified until you have run the tool.
 
 Old note follows.
 

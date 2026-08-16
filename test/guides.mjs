@@ -117,11 +117,12 @@ for (const [what, needle] of [
   ['the gemstone names', 'Diamond'],
   ['the stake riding the multiplier', 'rides the overtime'],
   ['one foot on the floor', 'One foot on the floor'],
-  // The mechanic was tuned at 70% and shipped at 50%. Every figure quoted for
-  // it came from the 70% run, so the handbook has to say so until somebody
-  // re-measures — a number that quietly describes a setting nobody is running
-  // is worse than no number.
-  ['that its figures were measured at a setting that is not shipped', 'upper bound'],
+  // The comeback boost shipped at 50% for one release, which measures as very
+  // nearly nothing because no casual gets under the elite at that value. The
+  // handbook has to keep saying why, or the next person to find 70% "generous"
+  // will move it back and rediscover the cliff in a live match.
+  ['why the comeback boost is not a dial', 'threshold, not a dial'],
+  ['and quotes a reproducible figure for it', '11.0%'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }
