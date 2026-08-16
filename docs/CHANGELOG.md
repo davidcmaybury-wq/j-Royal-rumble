@@ -3,7 +3,23 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
-## 0.82.0 — Targeting is standard
+## 0.83.0 — the handbook, rewritten against nine matches
+
+Part IV replaced with an analysis of all nine recorded human matches rather than
+the two it was built on. Four new figures: the estimator against live play, pace
+by match, race-win rate against reaction time, and the competitive picture.
+
+The estimator comes out humbled — seven of nine within a handful of clues, with
+two structural misses it cannot currently model: a four-player match that ran
+2.3x its prediction because tiny fields trade points without eliminating, and
+one that ran 180 clues against 75 predicted because of latecomers, revival and
+a long overtime. It models none of those three.
+
+It also puts a number on something David had only suspected: the winner was the
+fastest buzzer in the field in half the decided matches, and race-win rate is
+monotone against reaction time across every player with enough buzzes to judge.
+Fairness by draw is measured and fine; fairness by skill has never been measured
+at all. That is now written down as an open question with a definition of done.
 
 ## 0.81.0 — how fast people are fed in
 

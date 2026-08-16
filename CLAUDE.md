@@ -116,6 +116,11 @@ serve a PDF from `tools/make-handbook.py` and the two drifted badly — the PDF
 was months behind while the HTML sat unlinked. **The HTML is now the document;
 `docs/handbook.html` IS the handbook, served at `/handbook`.**
 
+`docs/analysis/` holds the CSVs behind Part IV and an anonymization key mapping
+the handbook's P-labels to real names. **Keep that key out of anything
+player-facing** — the handbook anonymizes on purpose. Only `public/` is served,
+so `docs/analysis/` is not reachable from the web; do not move it.
+
 **I wrote it and it is mine to keep current** — I once told David it was his,
 which was wrong and meant it sat un-updated for several releases while I assumed
 somebody else had it. It went four versions describing an identical entry stake
@@ -273,6 +278,46 @@ first; an abandoned lobby is just dropped.
 `broadcast(m)` at module level exists because the push helpers live inside the
 socket connection closure and close over one socket's match, so the reaper
 cannot use them.
+
+## The open design question: fairness by skill
+
+David, from the Aug 16 analysis: *"I'm concerned that the game is too friendly
+to elite players, and everyone is just cannon fodder. I want everyone to have
+SOME chance to win in this."*
+
+Nine recorded human matches back the concern. The winner was the fastest buzzer
+in the field in 4 of 8 decided matches and second-fastest in 2 more. Three
+players entered 6 of those 8 and won 5. In QPAL two players took 125 of 165
+races; the other five entrants split 23 over 48 minutes. Race-win percentage is
+monotone against median reaction time across all 18 players with 20+ contested
+buzzes. Upsets happen — one win from 5th of 7, one from 3rd of 4 — so it is not
+deterministic, but a bottom-half buzzer is around 1-in-4 overall and close to
+zero when a Luigi-class buzzer is in the room.
+
+**This is a second axis and the harness does not measure it.** Fairness by draw
+— the back-half win rate — has been measured to death and is fine. Fairness by
+skill has never been measured at all. Proposed definition of done, so a harness
+run can answer it: **P(a bottom-half-median buzzer wins), with an elite in the
+field.** Report it alongside back-half and skill%.
+
+Candidate levers, from the analysis, in the order they look worth trying:
+
+1. ~~Scale entry and revival stakes with the overtime multiplier.~~ **Done in
+   0.78** — this was the Randall case, and it moved death-within-three-clues
+   from 58% to 9%.
+2. **A buzz-timing handicap priced in score.** The leader gives up milliseconds.
+   The lockout mechanic already prices time in exactly this way, so the plumbing
+   exists. The only lever that touches the skill gap directly rather than draw
+   position — and therefore the only one that can actually answer the question.
+3. **A progressive pot.** Leaders pay more into pots they lose. Redistributive
+   without touching the buzzer, which makes it easier to explain to a room.
+4. **Lean on the existing skill dial.** The harness already reports skill% per
+   configuration and shorter, swingier configs are measurably less
+   skill-determined.
+
+Measure before shipping any of them, per the house rule. Note that 2 is the only
+one that addresses the stated problem: 1, 3 and 4 all move money around, and a
+player who wins every race will still win the match.
 
 ## Deploy during downtime
 

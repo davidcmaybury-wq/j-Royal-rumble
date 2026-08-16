@@ -1,0 +1,10 @@
+match,date,players,predicted_clues,actual_clues,predicted_min,actual_min,median_s_per_clue,winner,winner_speed_rank,field_size
+TQUV,2026-08-13,7,100,84,29,31,19.3,Colin,5,7
+RYRP,2026-08-13,6,75,69,22,21,16.8,matt,2,6
+UVQC,2026-08-15,8,54,50,16,17,16.4,rowan,2,8
+TAQU,2026-08-15,5,52,48,15,12,14.9,rowan,1,5
+MBTR,2026-08-15,6,75,53,22,18,17.1,BriggySmalls,1,6
+GETM,2026-08-15,5,75,31,22,11,19.6,ended early,,6
+FTGL,2026-08-15,4,37,84,11,30,19.8,CASCADIA,3,4
+QPAL,2026-08-16,8,75,180,22,48,14.1,Luigi,1,8
+JHLZ,2026-08-16,4,37,32,11,7,12.9,rowan,1,4
