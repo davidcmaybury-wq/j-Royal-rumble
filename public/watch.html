@@ -274,10 +274,17 @@ function cue(kind) {
   if (k && audioOn) sfx.play(k);
 }
 async function toggleAudio() {
-  if (audioOn) { audioOn = false; sfx.setMuted(true); stopTheme(); paintAudio(); return; }
+  // The host needs to know whether anything will be heard, so the server is
+  // told either way.
+  if (audioOn) {
+    audioOn = false; sfx.setMuted(true); stopTheme(); paintAudio();
+    socket.emit('watch-sound', { on: false });
+    return;
+  }
   const ok = await sfx.unlock();
   audioOn = ok;
   sfx.setMuted(!ok);
+  socket.emit('watch-sound', { on: ok });
   paintAudio(ok ? '' : 'the browser refused — try again');
 }
 function paintAudio(msg) {
@@ -596,7 +603,6 @@ const nameOfToken = (t) => (((S && S.live) || []).concat((S && S.out) || [])
 socket.on('resolved', (e) => {
   if (e.sweep) sweepCelebrate(e.sweep, e.categoryWas, nameOfToken(e.sweep.playerId));
   lastWinner = e.winnerId || null;
-  for (const en of e.entrances || []) playTheme(en);
 });
 
 // Entrance music, on the one screen that has sound turned on.
@@ -605,69 +611,14 @@ socket.on('resolved', (e) => {
 // would be a mess, and this is the same reason the cue audio lives here. If
 // nobody has enabled sound, nothing plays and nothing breaks.
 
-let themeAudio = null;
-let themeFrame = null;
+// Kept so the sound toggle can still silence anything mid-flight.
+function stopTheme() { /* nothing plays here any more */ }
 
-function stopTheme() {
-  if (themeAudio) { themeAudio.pause(); themeAudio = null; }
-  if (themeFrame) { themeFrame.remove(); themeFrame = null; }
-}
-
-function playTheme(entrance) {
-  if (!audioOn || !entrance || !entrance.theme) return;
-  stopTheme();
-  const t = entrance.theme;
-
-  if (t.kind === 'youtube') {
-    // A real, visible player rather than a hidden one.
-    //
-    // The first version used a 0x0 iframe tucked off-screen, and it never
-    // played: browsers refuse autoplay in a cross-origin frame that has no
-    // size, and YouTube declines to start a player nobody can see. So it sits
-    // in the corner at a genuine size — small, but present — which is also
-    // honest about where the sound is coming from.
-    //
-    // Even so, a browser can still refuse to autoplay somebody else's audio.
-    // If it does, the entrance simply passes without music; a file link plays
-    // through a normal audio element and does not have this problem.
-    // Audio only, but the player still has to exist at a real size.
-    //
-    // A hidden or zero-sized iframe is refused autoplay outright — that was the
-    // original failure. So it is rendered full size and then covered: the sound
-    // comes through, the video does not, and the room sees a small card saying
-    // what is playing rather than somebody's chosen music video.
-    const box = document.createElement('div');
-    box.className = 'ytbox';
-    const f = document.createElement('iframe');
-    f.width = 240; f.height = 135;
-    f.allow = 'autoplay; encrypted-media';
-    f.setAttribute('playsinline', '');
-    f.src = `https://www.youtube-nocookie.com/embed/${t.id}`
-      + `?autoplay=1&start=${t.start || 0}&controls=0&modestbranding=1&rel=0&playsinline=1`;
-    box.appendChild(f);
-    const cover = document.createElement('div');
-    cover.className = 'ytcover';
-    cover.innerHTML = `<span class="note">&#9835;</span>
-      <span>${entrance.name ? entrance.name + ' is coming in' : 'Entrance music'}</span>`;
-    box.appendChild(cover);
-    document.body.appendChild(box);
-    themeFrame = box;
-    // As long as the player asked for, up to ten. The library themes are five;
-    // a link can run a little longer, but not so long the room is waiting on
-    // somebody's music before the next clue.
-    setTimeout(stopTheme, Math.min(10, Math.max(1, t.seconds || 5)) * 1000);
-    return;
-  }
-
-  const src = t.kind === 'library' ? `/audio/themes/${t.key}.mp3` : t.url;
-  const a = new Audio(src);
-  a.volume = 0.85;
-  themeAudio = a;
-  a.play().catch(() => { /* the browser refused; the entrance still happens */ });
-  a.onended = () => { if (themeAudio === a) themeAudio = null; };
-  // A hard stop, so a long uploaded clip cannot run over the next clue.
-  setTimeout(() => { if (themeAudio === a) stopTheme(); }, 12000);
-}
+// Entrance music no longer plays here.
+//
+// The watch screen is optional, and betting the music on it meant a live match
+// where nobody had one open heard nothing at all. It comes out of the buzzers
+// and the host console instead — see public/theme-player.js.
 socket.on('connect', () => { if (code) join(); else ask(); });
 socket.on('disconnect', () => { /* the state stays on screen until it returns */ });
 

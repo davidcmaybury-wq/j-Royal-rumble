@@ -8,6 +8,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+.soundwarn{position:fixed;left:50%;transform:translateX(-50%);top:44px;z-index:45;
+background:#2A1A08;border:1px solid #6A4A12;border-radius:5px;padding:7px 14px;
+color:#F0C862;font-size:12.5px;max-width:70vw;text-align:center}
+
 /* Board control is followed from across the room, so it lights the whole row
    rather than a 7px dot. It was too subtle to read at a glance. */
 .pl.control,.brow.control{background:linear-gradient(90deg,#3A2D08 0%,#1B2444 78%)
@@ -370,6 +374,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
     </span>
   </header>
   <div class="main">
+    <div id="soundwarn" class="soundwarn" style="display:none"></div>
     <section class="stage" id="stage" aria-label="Board"></section>
       <div class="lectern" id="lectern" aria-hidden="true"></div>
     <aside class="rail">
@@ -394,6 +399,7 @@ import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, brainAvatar } from '/brand.js';
 import { gem } from '/gems.js';
+import { playTheme } from '/theme-player.js';
 import { mountReportButton } from '/report.js';
 import { markBanner } from '/banner.js';
 import { weaponToken } from '/tokens.js';
@@ -496,6 +502,8 @@ socket.on('resolved', (e) => {
     say(`${p ? p.name : 'A player'} gets a second life`, 'enter');
   }
   lastWinner = e.winnerId || null;
+  // The host's own speakers, which is what the room hears over the call.
+  for (const en of e.entrances || []) playTheme(en, !muted);
   if (e.eliminated && e.eliminated.length) sfxElim(e.eliminated.length);
 
   // A longevity payment fires for several players at once and several times a
@@ -695,6 +703,18 @@ function render() {
   if (dv && !delayDirty && document.activeElement !== dv && S.delay != null) dv.value = S.delay;
   if (S.version) $('ver').innerHTML = '<a href="/control" title="Control room" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">v' + S.version + '</a>'
     + (S.recording ? ' \u25CF rec' : '') + (S.corrections ? ' \u00B7 ' + S.corrections + ' fixed' : '');
+  // Entrance music comes out of this console and the players' own buzzers now,
+  // so the only way it goes unheard here is the host muting themselves. Worth
+  // saying, because the host's speakers are what the call hears.
+  const sw = $('soundwarn');
+  if (sw) {
+    const quiet = (S.themesChosen || 0) > 0 && muted;
+    sw.style.display = quiet ? '' : 'none';
+    sw.textContent = quiet
+      ? `${S.themesChosen} player${S.themesChosen > 1 ? 's have' : ' has'} entrance music. `
+        + 'Your sound is off, so the call will not hear it.'
+      : '';
+  }
   const u = $('undo'); if (u) u.disabled = !S.canUndo;
   if (S.phase === 'lobby') return renderLobby();
   if (S.clue) renderClue(); else renderBoard();

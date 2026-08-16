@@ -1074,6 +1074,18 @@ screen, who they are, which clue was up. A report written five minutes later has
 lost all of that, and it is what turns "the buzzer did something weird" into
 something anybody can chase.
 
+**Entrance music plays from the buzzers and the host console.** It used to play
+only on a watch screen with sound turned on, which was the wrong bet: a watch
+screen is optional. In a live match nobody had one open with sound, so every
+entrance passed in silence — and the bug report came from the host console, the
+one screen that could not have played it.
+
+Now every player hears the walk-in on their own device, and the host's speakers
+carry it to the call. The music stops when the buzzers arm: a clip still running
+while people are racing is worse than one that ends early. The console warns if
+the host has muted themselves while somebody has a theme chosen, since the
+host's sound is what the room hears.
+
 Read them in the control room. **Take a copy** bundles the logs and reports
 added since the last download; the marker lives on the server, not the browser,
 so opening the page from a different machine does not silently skip a batch, and

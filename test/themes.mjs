@@ -106,11 +106,23 @@ if (withEntry) {
 // version failed silently. The cover is what makes it audio only.
 {
   const { readFileSync } = await import('fs');
-  const watch = readFileSync(new URL('../public/watch.html', import.meta.url), 'utf8');
+  // The player moved out of watch.html into a shared module: the buzzers and
+  // the host console play entrances now, because a watch screen is optional.
+  const tp = readFileSync(new URL('../public/theme-player.js', import.meta.url), 'utf8');
   check('the clip is cut off at the chosen length, capped at ten',
-    /Math\.min\(10, Math\.max\(1, t\.seconds \|\| 5\)\) \* 1000/.test(watch));
+    /Math\.min\(10, Math\.max\(1, t\.seconds \|\| 5\)\)/.test(tp));
+  // The point is a real-sized player with a card over it. A zero-sized or
+  // display:none player is refused autoplay outright, which is how this failed
+  // the first time.
   check('the player is covered, not hidden',
-    watch.includes('ytcover') && !/width\s*=\s*.?0/.test(watch));
+    tp.includes('ytcover') && /f\.width = \d\d+/.test(tp) && !/display:\s*none/.test(tp));
+  const watch = readFileSync(new URL('../public/watch.html', import.meta.url), 'utf8');
+  check('and the watch screen no longer plays it',
+    !/new Audio\(src\)/.test(watch) && !watch.includes('youtube-nocookie'));
+  for (const [who, file] of [['the buzzer', 'buzzer.html'], ['the console', 'console.html']]) {
+    const page = readFileSync(new URL('../public/' + file, import.meta.url), 'utf8');
+    check(`${who} plays entrances`, page.includes('theme-player.js'));
+  }
   const buzz = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
   check('and the test does the same', /}, secs \* 1000\)/.test(buzz) && buzz.includes('trycover'));
 }
@@ -122,13 +134,57 @@ if (withEntry) {
 // version failed silently. The cover is what makes it audio only.
 {
   const { readFileSync } = await import('fs');
-  const watch = readFileSync(new URL('../public/watch.html', import.meta.url), 'utf8');
+  // The player moved out of watch.html into a shared module: the buzzers and
+  // the host console play entrances now, because a watch screen is optional.
+  const tp = readFileSync(new URL('../public/theme-player.js', import.meta.url), 'utf8');
   check('the clip is cut off at the chosen length, capped at ten',
-    /Math\.min\(10, Math\.max\(1, t\.seconds \|\| 5\)\) \* 1000/.test(watch));
+    /Math\.min\(10, Math\.max\(1, t\.seconds \|\| 5\)\)/.test(tp));
+  // The point is a real-sized player with a card over it. A zero-sized or
+  // display:none player is refused autoplay outright, which is how this failed
+  // the first time.
   check('the player is covered, not hidden',
-    watch.includes('ytcover') && !/width\s*=\s*.?0/.test(watch));
+    tp.includes('ytcover') && /f\.width = \d\d+/.test(tp) && !/display:\s*none/.test(tp));
+  const watch = readFileSync(new URL('../public/watch.html', import.meta.url), 'utf8');
+  check('and the watch screen no longer plays it',
+    !/new Audio\(src\)/.test(watch) && !watch.includes('youtube-nocookie'));
+  for (const [who, file] of [['the buzzer', 'buzzer.html'], ['the console', 'console.html']]) {
+    const page = readFileSync(new URL('../public/' + file, import.meta.url), 'utf8');
+    check(`${who} plays entrances`, page.includes('theme-player.js'));
+  }
   const buzz = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
   check('and the test does the same', /}, secs \* 1000\)/.test(buzz) && buzz.includes('trycover'));
+}
+
+// --- the host is told when nothing can be heard ---------------------------
+//
+// Entrance music plays on the one watch screen with sound enabled, and nowhere
+// else. A live match produced a bug report saying "entrance music didn't play",
+// filed from the host console — which never plays it. The mechanism was fine;
+// the silence was invisible.
+{
+  check('the host view counts who chose a theme', (hs.themesChosen || 0) > 0,
+    String(hs.themesChosen));
+
+  // Entrances go to the players, not just the watchers: a watch screen is
+  // optional and betting the music on one meant a live match heard nothing.
+  const pl = io(U, { transports: ['websocket'] });
+  await once(pl, 'connect');
+  let heard = null;
+  pl.on('entrances', (d) => { heard = d.entrances; });
+  await new Promise((r) => pl.emit('join', { gameId: m.gameId, name: 'Ears' }, r));
+  await wait(300);
+
+  const open2 = [];
+  hs.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) open2.push([si, x.row]); }));
+  host.emit('pick-clue', { slot: open2[0][0], row: open2[0][1] });
+  await wait(150);
+  host.emit('resolve', { winnerToken: null });
+  await wait(700);
+  check('a buzzer is told about the entrance', Array.isArray(heard) && heard.length > 0,
+    JSON.stringify(heard));
+  check('and it carries the theme to play',
+    heard && heard[0] && 'theme' in heard[0], JSON.stringify(heard && heard[0]));
+  pl.close();
 }
 
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);

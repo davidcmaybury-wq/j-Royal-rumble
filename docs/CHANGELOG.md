@@ -3,7 +3,16 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
-## 0.78.2 — Overtime entry stakes, board control, category hints, all docs caught up
+## 0.79.0 — entrance music moves to the buzzers and the console
+
+A live bug report said "entrance music didn't play", filed from the host console
+— which never played it. The mechanism was working; it was pointed at the wrong
+screen. Music played only on a watch screen with sound enabled, and a watch
+screen is optional; nobody had one open that night.
+
+It now comes out of every player's buzzer and the host console, which always
+exist. The player code is one shared module rather than a copy per page, and the
+music stops when the buzzers arm.
 
 ## 0.78.0 — walking into overtime
 

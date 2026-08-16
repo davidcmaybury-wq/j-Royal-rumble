@@ -463,6 +463,9 @@ class Match {
         ...(this.phase === 'over' ? { history: this.history } : {}),
         historyLength: this.history.length,
         recording: !!this.record,
+        // So the console can say when an entrance will pass in silence.
+        soundScreens: soundScreens.size,
+        themesChosen: [...this.roster.values()].filter((p) => p.theme).length,
         corrections: this.corrections.length,
         canUndo: this.undoStack.length > 0,
         ...(this.phase === 'over' ? { standings: this.standings() } : {}),
@@ -1181,6 +1184,10 @@ function announceLeader(match) {
   }, (match.settings?.lockout || 250) + 450);
 }
 
+// Watch screens that have turned their sound on. A set of socket ids, so a
+// closed tab stops counting the moment it disconnects.
+const soundScreens = new Set();
+
 // Broadcasting from outside a socket connection.
 //
 // The push helpers live inside the connection closure and close over one
@@ -1548,6 +1555,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+    // A closed watch tab takes its sound with it, and the host needs to know:
+    // otherwise the warning stays hidden and the next entrance is silent again.
+    if (soundScreens.delete(socket.id) && match) pushHost();
     if (!match || !token) return;
     const p = match.roster.get(token);
     // Harsh and simple: a disconnected player keeps bleeding and can be
@@ -1690,6 +1700,20 @@ io.on('connection', (socket) => {
       socket.leave(`${match.id}:board`);
     }
     ack?.({ ok: true, on: !!on });
+  });
+
+  // Which screens can actually make a noise.
+  //
+  // Entrance music plays on the one watch screen with sound enabled. If nobody
+  // has enabled it — or nobody has a watch screen open at all — the entrance
+  // passes in silence and the host has no way to know why. That is what
+  // happened in a live match: a bug report saying "entrance music didn't play",
+  // filed from the host console, which never plays it in the first place.
+  socket.on('watch-sound', ({ on }, ack) => {
+    if (!match) return ack?.({ error: 'no match' });
+    if (on) soundScreens.add(socket.id); else soundScreens.delete(socket.id);
+    pushHost();
+    ack?.({ ok: true });
   });
 
   socket.on('watch-game', ({ gameId }, ack) => {
@@ -1961,6 +1985,13 @@ io.on('connection', (socket) => {
 
     io.to(`${match.id}:host`).emit('resolved', entry);
     io.to(`${match.id}:watch`).emit('resolved', entry);
+    // Entrance music comes out of the buzzers and the host console now. A watch
+    // screen is optional and in a live match nobody had one open with sound, so
+    // every entrance passed in silence. The players always have a buzzer open;
+    // that is the whole point of it.
+    if (entry.entrances?.length) {
+      io.to(`${match.id}:players`).emit('entrances', { entrances: entry.entrances });
+    }
     for (const t of entry.revived || []) {
       const sid = match.roster.get(t)?.socketId;
       if (sid) io.to(sid).emit('revived', {

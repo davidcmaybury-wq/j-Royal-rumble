@@ -379,6 +379,7 @@ import { scoreChart } from '/chart.js';
 import { avatar, distinctLook } from '/wrestlers.js';
 import { gem } from '/gems.js';
 import { mountReportButton } from '/report.js';
+import { playTheme, stopTheme } from '/theme-player.js';
 import { animation as tossAnimation, SECONDS as TOSS_SECONDS } from '/toss.js';
 import { markFull } from '/brand.js';
 import * as sfx from '/sound.js';
@@ -993,6 +994,22 @@ socket.on('state', (v) => {
 });
 
 socket.on('rumble-starting', () => sfx.unlock());
+
+// Somebody is walking in. Every buzzer plays it, so the music does not depend
+// on anybody having a watch screen open.
+//
+// Guarded by the same unlock the buzzer cues use: a page nobody has tapped
+// cannot make a sound anyway, and the join screen asks for that tap.
+socket.on('entrances', ({ entrances }) => {
+  for (const en of entrances || []) playTheme(en, sfx.isReady() && !sfx.isMuted());
+});
+
+// Buzzers arming cuts the music short: the entrance is over, and a clip still
+// running while people are racing is worse than one that ends early.
+//
+// There is no 'clue' event — I wired this to one that does not exist first,
+// which would have been silent dead code.
+socket.on('activate-buzzers', () => stopTheme());
 
 // Sound and colour are driven off state transitions, so a reconnect can't
 // replay a horn that already sounded.
