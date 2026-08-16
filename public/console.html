@@ -381,6 +381,7 @@ import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, brainAvatar } from '/brand.js';
 import { gem } from '/gems.js';
+import { mountReportButton } from '/report.js';
 import { markBanner } from '/banner.js';
 import { weaponToken } from '/tokens.js';
 import { avatar as wrestlerAvatar } from '/wrestlers.js';
@@ -408,6 +409,10 @@ const sfxElim = (n) => sfx.chops(n);
 const sfxWin = () => { sfx.play('entry'); setTimeout(() => sfx.play('entry'), 1120); };
 
 $('brand').innerHTML = markSmall(28);
+
+mountReportButton('host', () => ({
+  gameId: S?.gameId, version: S?.version, clue: S?.clues, phase: S?.phase,
+}));
 
 socket.on('connect', () => {
   syncClock();

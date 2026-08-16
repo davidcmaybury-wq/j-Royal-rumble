@@ -51,6 +51,7 @@ jobs:
           node test/delay.mjs
           node test/escapes.mjs
           node test/stables-live.mjs
+          node test/reports.mjs
           node test/control.mjs
           node test/startfail.mjs
           node test/themes.mjs

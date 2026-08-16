@@ -56,9 +56,20 @@ const pick = await new Promise((r) => ps[3].s.emit('set-theme',
 check('a player can choose a theme', pick.ok === true, JSON.stringify(pick.theme));
 
 const yt = await new Promise((r) => ps[2].s.emit('set-theme',
-  { theme: { kind: 'youtube', id: 'dQw4w9WgXcQ', start: 42 } }, r));
+  { theme: { kind: 'youtube', id: 'dQw4w9WgXcQ', start: 42, seconds: 8 } }, r));
 check('or supply a YouTube link with a start time',
   yt.ok && yt.theme.id === 'dQw4w9WgXcQ' && yt.theme.start === 42, JSON.stringify(yt.theme));
+check('and choose how long it plays for', yt.theme.seconds === 8, `${yt.theme.seconds}s`);
+
+// Ten seconds is the ceiling: the room should not wait on somebody's music.
+const long = await new Promise((r) => ps[2].s.emit('set-theme',
+  { theme: { kind: 'youtube', id: 'dQw4w9WgXcQ', seconds: 45 } }, r));
+check('a longer clip is capped at ten seconds', long.theme.seconds === 10,
+  `${long.theme.seconds}s`);
+const short = await new Promise((r) => ps[2].s.emit('set-theme',
+  { theme: { kind: 'youtube', id: 'dQw4w9WgXcQ', seconds: 0 } }, r));
+check('and a zero-length one still plays', short.theme.seconds >= 1,
+  `${short.theme.seconds}s`);
 
 // A chosen key must not be able to reach outside the folder.
 const eviltoken = await new Promise((r) => ps[1].s.emit('set-theme',
@@ -96,11 +107,12 @@ if (withEntry) {
 {
   const { readFileSync } = await import('fs');
   const watch = readFileSync(new URL('../public/watch.html', import.meta.url), 'utf8');
-  check('the clip is cut off after five seconds', /stopTheme, 5000/.test(watch));
+  check('the clip is cut off at the chosen length, capped at ten',
+    /Math\.min\(10, Math\.max\(1, t\.seconds \|\| 5\)\) \* 1000/.test(watch));
   check('the player is covered, not hidden',
     watch.includes('ytcover') && !/width\s*=\s*.?0/.test(watch));
   const buzz = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
-  check('and the test does the same', /}, 5000\)/.test(buzz) && buzz.includes('trycover'));
+  check('and the test does the same', /}, secs \* 1000\)/.test(buzz) && buzz.includes('trycover'));
 }
 
 // Entrance music is five seconds, whatever the source.
@@ -111,11 +123,12 @@ if (withEntry) {
 {
   const { readFileSync } = await import('fs');
   const watch = readFileSync(new URL('../public/watch.html', import.meta.url), 'utf8');
-  check('the clip is cut off after five seconds', /stopTheme, 5000/.test(watch));
+  check('the clip is cut off at the chosen length, capped at ten',
+    /Math\.min\(10, Math\.max\(1, t\.seconds \|\| 5\)\) \* 1000/.test(watch));
   check('the player is covered, not hidden',
     watch.includes('ytcover') && !/width\s*=\s*.?0/.test(watch));
   const buzz = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
-  check('and the test does the same', /}, 5000\)/.test(buzz) && buzz.includes('trycover'));
+  check('and the test does the same', /}, secs \* 1000\)/.test(buzz) && buzz.includes('trycover'));
 }
 
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);

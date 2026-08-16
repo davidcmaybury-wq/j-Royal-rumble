@@ -366,6 +366,7 @@ import { scoreChart } from '/chart.js';
 // player themselves.
 import { avatar, distinctLook } from '/wrestlers.js';
 import { gem } from '/gems.js';
+import { mountReportButton } from '/report.js';
 import { animation as tossAnimation, SECONDS as TOSS_SECONDS } from '/toss.js';
 import { markFull } from '/brand.js';
 import * as sfx from '/sound.js';
@@ -426,7 +427,10 @@ async function openMusic() {
            value="${myTheme && myTheme.kind === 'youtube'
              ? 'https://youtu.be/' + myTheme.id : ''}" autocomplete="off">
     <div class="srow"><label>Start at</label>
-      <input type="number" id="tstart" min="0" value="${myTheme?.start || 0}"> seconds
+      <input type="number" id="tstart" min="0" value="${myTheme?.start || 0}"> seconds</div>
+    <div class="srow"><label>Play for</label>
+      <input type="number" id="tsecs" min="1" max="10"
+             value="${myTheme?.seconds || 5}"> seconds
       <button class="tryb" id="ttry">Test it</button></div>
     <div class="trywrap" id="trywrap"></div>
     <p class="snote" style="margin:14px 0 0">Tap a theme to hear it. Nothing is
@@ -477,21 +481,22 @@ async function openMusic() {
     }
     stopPreview();
     const at = +el.querySelector('#tstart').value || 0;
+    const secs = Math.min(10, Math.max(1, +el.querySelector('#tsecs').value || 5));
     // The same shape as the real thing: audio only, five seconds, and the
     // player covered rather than hidden — hidden players are refused autoplay.
     wrap.innerHTML = `<div class="trybox">
       <iframe allow="autoplay; encrypted-media" playsinline
         src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&start=${at}&controls=0&rel=0&playsinline=1"></iframe>
       <div class="trycover"><span class="note">&#9835;</span>
-        <span id="trystate">Playing five seconds...</span></div></div>
+        <span id="trystate">Playing ${secs} seconds...</span></div></div>
       <div class="snote">This is exactly what the room will hear. If you get
       silence or an error, the clip is blocked and you should pick another.</div>`;
     clearTimeout(tryTimer);
     tryTimer = setTimeout(() => {
       const st = el.querySelector('#trystate');
       wrap.querySelector('.trybox iframe')?.remove();
-      if (st) st.textContent = 'That is the five seconds.';
-    }, 5000);
+      if (st) st.textContent = `That is your ${secs} seconds.`;
+    }, secs * 1000);
   };
 
   el.querySelector('#tnone').onclick = () => save(null, el);
@@ -502,7 +507,9 @@ async function openMusic() {
     if (!raw) return save(null, el);
     const id = ytId(raw);
     if (!id) { el.querySelector('#tlink').classList.add('bad'); return; }
-    save({ kind: 'youtube', id, start: +el.querySelector('#tstart').value || 0 }, el);
+    save({ kind: 'youtube', id,
+      start: +el.querySelector('#tstart').value || 0,
+      seconds: Math.min(10, Math.max(1, +el.querySelector('#tsecs').value || 5)) }, el);
   };
 }
 
@@ -1418,6 +1425,13 @@ function renderResults() {
 
 sfx.preload();
 sfx.armUnlock();
+
+// The context is read fresh each time: which clue is up changes while the page
+// is open, and a snapshot taken at load would describe the wrong moment.
+mountReportButton('buzzer', () => ({
+  gameId: gameId(), version: V?.version, name: V?.you?.name,
+  token: myToken(), clue: V?.clues, phase: V?.phase,
+}));
 renderJoin();
 </script>
 </body>

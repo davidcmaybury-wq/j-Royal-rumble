@@ -124,6 +124,12 @@ the page to four times its height.
 
 ## Conventions that matter
 
+**American English.** David is American and the game is American. Use it in
+player-facing copy, comments, and commit messages alike — colour/color,
+favours/favors, recognise/recognize, behaviour/behavior. Existing text will
+still be British in places; fix it when you are already editing that line
+rather than sweeping for it.
+
 **Comments explain why, not what.** Especially where a decision looks wrong:
 every non-obvious constant should say what was measured to land on it.
 
@@ -272,6 +278,39 @@ nothing, so the host could not tell what had happened.
   measuring it; don't.
 
 ## Queued, not started
+
+**Show the year on an archive category card.** A J! category should say when it
+was written — "STATE OF THE UNION ADDRESSES · 2005" — so the room knows whether
+a clue is of its time. No data work needed: archive categories already carry
+`provenance.airDate` (e.g. `2005-09-12`) and `provenance.season`. Original
+boards have `provenance.title` and `author` instead and should show nothing, so
+key off `source === 'archive'`.
+
+The card is drawn in three places and they must agree: `.cat` in console.html
+and watch.html, and `.bcat` in buzzer.html for the full board. Note the card is
+a fixed height with the title clamped — see the note about a long category
+pushing its column out of line — so the year needs to fit inside that, probably
+as a small dim line under the title rather than appended to it.
+
+**Point every version number at the history, not the control room.** The
+welcome screen already does it; these do not:
+
+| Where | Now | Wanted |
+|---|---|---|
+| `setup.html:562` | links to `/control` | link to `/history`, plus a separate Control link |
+| `console.html:675` | links to `/control` | same |
+| `watch.html:423` | plain text, no link | link to `/history` |
+
+The rule: **the version number means "what is this?" and belongs to `/history`;
+the control room is a separate errand and gets its own link.** Check the whole
+set when doing it — the buzzer shows no version at all, which is probably right
+for a player's phone but worth a glance.
+
+**Move the match-length box.** It currently sits in the Room code card beside
+the join link, where it gets lost against the four-letter code. Move it into the
+Signed up card with the incoming players, and retitle it "How long should the
+match last?" — the two boxes must stay in step with the one in Game setup, which
+is what `syncLength` in setup.html is for.
 
 **1. ~~Two buzzer modes~~ — built in 0.49.0, layout unverified.** Desktop-only
 board beside the buzzer, opt-in, remembered per device. Reuses `watchView()` on

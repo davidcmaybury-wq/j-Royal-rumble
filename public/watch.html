@@ -215,6 +215,7 @@ margin-top:5px;color:var(--alarm)}
 <script type="module">
 import { markFull, markSmall, brainAvatar } from '/brand.js';
 import { gem } from '/gems.js';
+import { mountReportButton } from '/report.js';
 import { weaponToken } from '/tokens.js';
 import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import { scoreChart } from '/chart.js';
@@ -610,9 +611,10 @@ function playTheme(entrance) {
     box.appendChild(cover);
     document.body.appendChild(box);
     themeFrame = box;
-    // Five seconds, the same as the library themes: an entrance, not an
-    // interlude, and the next clue should not wait on it.
-    setTimeout(stopTheme, 5000);
+    // As long as the player asked for, up to ten. The library themes are five;
+    // a link can run a little longer, but not so long the room is waiting on
+    // somebody's music before the next clue.
+    setTimeout(stopTheme, Math.min(10, Math.max(1, t.seconds || 5)) * 1000);
     return;
   }
 
@@ -636,6 +638,10 @@ setInterval(() => {
     if (el) el.outerHTML = lectern();
   }
 }, 120);
+
+mountReportButton('watch', () => ({
+  gameId: S?.gameId, version: S?.version, clue: S?.clues, phase: S?.phase,
+}));
 
 sfx.preload();
 if (!code) ask();

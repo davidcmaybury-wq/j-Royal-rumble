@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { randomUUID, randomBytes } from 'crypto';
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, writeFileSync } from 'fs';
 import { gunzipSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -11,6 +11,7 @@ import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson 
 import { assignToken, resolveChoice } from './tokens-server.js';
 import { distinctLook, looksAlike } from '../public/wrestlers.js';
 import { wrongAnswer } from './wrongs.js';
+import * as reports from './reports.js';
 import * as logs from './logstore.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS,
          loadDistributions, drawReadJitter, referenceHumanMedian,
@@ -1017,6 +1018,15 @@ function adminOk(req) {
 
 app.get('/control', (_req, res) => res.sendFile(join(__dir, '../public/control.html')));
 
+// Anybody can file one — no key, no account. That is the point: the people
+// hitting bugs are players, and a form that asks them to sign up is a form
+// nobody fills in. The guards are in reports.js: a length cap and a rate limit.
+app.post('/api/report', (req, res) => {
+  const r = reports.save(req.body || {});
+  if (r.error) return res.status(400).json(r);
+  res.json(r);
+});
+
 app.get('/api/control', (req, res) => {
   if (!adminOk(req)) return res.status(403).json({ error: 'bad admin key' });
   const now = Date.now();
@@ -1036,7 +1046,64 @@ app.get('/api/control', (req, res) => {
       startedAt: m.startedAt || null,
     })).sort((a, b) => a.idleSeconds - b.idleSeconds),
     logs: logs.list().slice(0, 200),
+    reports: reports.list().slice(0, 200),
+    reportStatus: reports.status(),
+    newSince: sinceMarker(),
+    newCount: countSince(sinceMarker()),
   });
+});
+
+// --- bulk download -------------------------------------------------------
+//
+// Everything added since the last time somebody took a copy, in one file.
+//
+// The marker lives on disk beside the files, not in the browser: a timestamp in
+// local storage means opening this page from a different machine either
+// re-downloads everything or silently skips a batch. And it only moves once the
+// download has actually been written, because a dropped connection that had
+// already advanced the marker would lose reports with no way to know which.
+const MARKER = join(reports.dir(), '.last-download');
+
+function sinceMarker() {
+  try { return readFileSync(MARKER, 'utf8').trim() || null; } catch { return null; }
+}
+function countSince(since) {
+  const newer = (x) => !since || x.at > since;
+  return logs.list().filter(newer).length + reports.list().filter(newer).length;
+}
+
+app.get('/api/control/download', (req, res) => {
+  if (!adminOk(req)) return res.status(403).json({ error: 'bad admin key' });
+  const all = req.query.all === '1';
+  const since = all ? null : sinceMarker();
+  const newer = (x) => !since || x.at > since;
+
+  const bundle = {
+    takenAt: new Date().toISOString(),
+    since: since || 'the beginning',
+    logs: [], reports: [],
+  };
+  for (const l of logs.list().filter(newer)) {
+    const body = logs.read(l.file);
+    if (body) { try { bundle.logs.push({ file: l.file, match: JSON.parse(body) }); }
+      catch { /* skip a half-written file rather than fail the lot */ } }
+  }
+  for (const r of reports.list().filter(newer)) {
+    const body = reports.read(r.file);
+    if (body) { try { bundle.reports.push({ file: r.file, report: JSON.parse(body) }); }
+      catch { /* same */ } }
+  }
+
+  const name = `rumble-${all ? 'everything' : 'new'}-${bundle.takenAt.slice(0, 10)}.json`;
+  res.setHeader('content-type', 'application/json');
+  res.setHeader('content-disposition', `attachment; filename="${name}"`);
+  res.send(JSON.stringify(bundle, null, 2));
+
+  // Only now, and never for a full archive dump — that is a copy, not a
+  // handover, and moving the marker would hide the next batch.
+  if (!all) {
+    try { writeFileSync(MARKER, bundle.takenAt); } catch { /* nothing to do */ }
+  }
 });
 
 // Ending somebody's match is destructive, so it is a POST and it records.
@@ -1073,7 +1140,11 @@ function sanitiseTheme(theme) {
   }
   if (kind === 'youtube') {
     const id = String(theme.id || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 20);
-    return id ? { kind: 'youtube', id, start: Math.max(0, Math.floor(theme.start || 0)) } : null;
+    // Up to ten seconds. Long enough for a hook, short enough that the room is
+    // not waiting on somebody's music before the next clue.
+    const secs = Math.min(10, Math.max(1, Math.floor(theme.seconds || 5)));
+    return id ? { kind: 'youtube', id, seconds: secs,
+      start: Math.max(0, Math.floor(theme.start || 0)) } : null;
   }
   if (kind === 'url') {
     const u = String(theme.url || '').slice(0, 500);

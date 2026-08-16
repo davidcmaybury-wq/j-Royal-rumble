@@ -532,8 +532,10 @@ sound turned on**, the same rule as the game's cues — thirty browsers starting
 the same clip a fraction apart would be a mess.
 
 Three sources: the built-in library, a YouTube link with a start time, or an
-https link to a file. **Everything stops after five seconds** — an entrance, not
-an interlude, and the next clue should not wait on it.
+https link to a file. The library themes run five seconds; a YouTube clip can
+run **up to ten**, chosen by the player. Capped there deliberately — an
+entrance, not an interlude, and the room should not be waiting on somebody's
+music before the next clue.
 
 A YouTube clip plays through a **covered** player rather than a hidden one:
 browsers refuse autoplay to an iframe with no size, which is how the first
@@ -1042,6 +1044,25 @@ the host key in the URL fragment, which browsers do not send to the server.
 
 A code in the address fragment (`/#ABCD`) skips straight through to the buzzer,
 so a shared link still works in one tap.
+
+## Bug reports and feature requests
+
+A **Report a problem** button on the buzzer, the host console and the watch
+screen — the three places somebody actually is when something goes wrong. No
+account, no third-party form: it posts to the server and lands as a file beside
+the match logs, under `/data` so it survives a deploy.
+
+**The context is attached rather than asked for**: room code, version, which
+screen, who they are, which clue was up. A report written five minutes later has
+lost all of that, and it is what turns "the buzzer did something weird" into
+something anybody can chase.
+
+Read them in the control room. **Take a copy** bundles the logs and reports
+added since the last download; the marker lives on the server, not the browser,
+so opening the page from a different machine does not silently skip a batch, and
+it only moves once the download has been served. "Or everything" takes a full
+archive and deliberately leaves the marker alone — that is a copy, not a
+handover.
 
 ## The control room
 

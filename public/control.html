@@ -57,6 +57,19 @@ padding:5px 12px;color:var(--slate);text-decoration:none;font-size:13px}
 a.dl:hover{border-color:var(--brass);color:var(--brass)}
 .sz{color:#3C486E;font-size:11.5px;margin-left:8px;font-family:"IBM Plex Mono",monospace}
 .none{color:var(--slate);font-size:13.5px;padding:14px 0}
+/* Reports read as a list of things somebody said, not a table of rows. */
+.rep{border:1px solid var(--line);border-left-width:3px;border-radius:var(--r);
+padding:12px 14px;margin-bottom:9px;background:var(--panel)}
+.rep.bug{border-left-color:var(--alarm)}
+.rep.idea{border-left-color:var(--live)}
+.rhead{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap;margin-bottom:7px}
+.tag.bug{border-color:var(--alarm);color:var(--alarm)}
+.tag.idea{border-color:var(--live);color:var(--live)}
+.rwho{color:var(--chalk);font-size:13.5px}
+.rmeta{color:var(--slate);font-size:11.5px;font-family:"IBM Plex Mono",monospace}
+.rwhen{margin-left:auto;color:#3C486E;font-size:11.5px}
+.rtext{color:#C9CCD9;font-size:14.5px;line-height:1.5;white-space:pre-wrap}
+#bulk{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .foot{margin-top:30px;color:#3C486E;font-size:12px}
 </style></head>
 <body><div class="wrap">
@@ -67,6 +80,12 @@ a.dl:hover{border-color:var(--brass);color:var(--brass)}
 
   <h2>Matches on this server</h2>
   <div id="live"></div>
+
+  <h2>Take a copy</h2>
+  <div id="bulk"></div>
+
+  <h2>What people have told us</h2>
+  <div id="reports"></div>
 
   <h2>Saved logs</h2>
   <div id="logs"></div>
@@ -168,6 +187,32 @@ async function load() {
           <span class="sz">${l.bytes ? Math.round(l.bytes / 1024) + 'KB' : ''}</span>
         </td></tr>`).join('')}</table>`;
   $('foot').textContent = `${ls.length} logs. Reloads every 5 seconds.`;
+
+  // Reports. Escaped on the way in: this is text a stranger typed, going onto a
+  // page the host opens.
+  const esc = (x) => String(x == null ? '' : x)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const rs = d.reports || [];
+  $('reports').innerHTML = !rs.length
+    ? '<div class="none">Nothing reported yet.</div>'
+    : rs.map((r) => `<div class="rep ${r.kind}">
+        <div class="rhead">
+          <span class="tag ${r.kind}">${r.kind === 'idea' ? 'idea' : 'bug'}</span>
+          <span class="rwho">${esc(r.name) || 'somebody'}</span>
+          <span class="rmeta">${esc(r.screen)}${r.gameId ? ' &middot; ' + esc(r.gameId) : ''}${
+            r.clue != null ? ' &middot; clue ' + r.clue : ''}${
+            r.version ? ' &middot; v' + esc(r.version) : ''}</span>
+          <span class="rwhen">${r.at ? new Date(r.at).toLocaleString() : ''}</span>
+        </div>
+        <div class="rtext">${esc(r.text)}</div></div>`).join('');
+
+  // The bulk download, with what is waiting.
+  const since = d.newSince ? new Date(d.newSince).toLocaleDateString() : 'the beginning';
+  $('bulk').innerHTML = `<a class="dl" href="/api/control/download?key=${encodeURIComponent(key)}"
+      >Download what is new</a>
+    <span class="sz">${d.newCount || 0} since ${since}</span>
+    <a class="open" href="/api/control/download?all=1&key=${encodeURIComponent(key)}"
+      >or everything</a>`;
 }
 
 // Two clicks, because ending somebody's match mid-clue is not undoable.
