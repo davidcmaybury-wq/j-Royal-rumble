@@ -3,6 +3,27 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.80.0 — five things from game night
+
+**Two sounds on one entrance.** The horn played under the player's own music.
+If somebody brought a theme, that is the entrance; the horn only fills in for
+people who did not choose one.
+
+**Two players called Dave were one player.** A duplicate name was accepted and
+the room had nothing else to tell them apart. A second Dave is now turned away
+with an explanation. Worse, the join screen never came back after a refusal —
+`return sfx.preload();` sat in front of the `renderJoin()` meant to redraw it,
+so anybody rejected was stuck looking at nothing.
+
+**Back to home and Start a new game** on the finished-match screen. The console
+was a dead end and the host had to know the URLs.
+
+**Entries come faster in a small field.** The cap was 15 clues and four-to-six
+player games always hit it, so every small match had identical pacing. Ten now.
+
+**Reports can be marked resolved or deleted** from the control room. Settled
+ones sort below the rest rather than scrolling the live ones away.
+
 ## 0.79.0 — entrance music moves to the buzzers and the console
 
 A live bug report said "entrance music didn't play", filed from the host console

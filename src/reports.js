@@ -7,8 +7,8 @@
 // The same /data rule as the logs — that is the mounted volume, and anything
 // written into the app directory is wiped by the next deploy.
 
-import { mkdirSync, writeFileSync, readdirSync, readFileSync, statSync, existsSync }
-  from 'fs';
+import { mkdirSync, writeFileSync, readdirSync, readFileSync, statSync, existsSync,
+  unlinkSync } from 'fs';
 import { join } from 'path';
 
 const DIR = process.env.RUMBLE_REPORT_DIR
@@ -97,12 +97,40 @@ export function list() {
           file: f, bytes: s.size, at: r.at || s.mtime.toISOString(),
           kind: r.kind || 'bug', text: r.text || '', gameId: r.gameId || '',
           version: r.version || '', screen: r.screen || '', name: r.name || '',
-          clue: r.clue ?? null,
+          clue: r.clue ?? null, resolved: r.resolved || null,
         };
       })
-      .sort((a, b) => (a.at < b.at ? 1 : -1));
+      // Unresolved first, then newest: the ones still needing something done
+      // should not scroll away under a pile of settled ones.
+      .sort((a, b) => (!!a.resolved - !!b.resolved) || (a.at < b.at ? 1 : -1));
   } catch {
     return [];
+  }
+}
+
+/**
+ * Mark one as dealt with, or throw it away.
+ *
+ * Resolving keeps the file and stamps it, because a report that turned out to
+ * matter is worth still having; deleting is for the ones that are noise. Both
+ * are the control room's business, not a player's.
+ */
+export function update(file, { resolved, remove } = {}) {
+  if (!ensure()) return { error: lastError || 'cannot write reports here' };
+  const safe = String(file).replace(/[^A-Za-z0-9._-]/g, '');
+  const full = join(DIR, safe);
+  if (!existsSync(full)) return { error: 'no such report' };
+  if (remove) {
+    try { unlinkSync(full); return { ok: true, removed: safe }; }
+    catch (e) { return { error: e.message }; }
+  }
+  try {
+    const r = JSON.parse(readFileSync(full, 'utf8'));
+    r.resolved = resolved ? new Date().toISOString() : null;
+    writeFileSync(full, JSON.stringify(r, null, 2));
+    return { ok: true, resolved: r.resolved };
+  } catch (e) {
+    return { error: e.message };
   }
 }
 

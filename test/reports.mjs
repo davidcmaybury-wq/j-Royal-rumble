@@ -68,5 +68,39 @@ const noKey = await fetch(`${U}/api/control/download`);
 check('the download needs the control-room password', noKey.status === 403,
   String(noKey.status));
 
+// Dealing with them: resolved is reversible, deleted is not.
+{
+  const list = await (await fetch(`${U}/api/control`, { headers: auth })).json();
+  const one = (list.reports || [])[0];
+  check('there is something to act on', !!one, one && one.file);
+  if (one) {
+    const post = (body) => fetch(`${U}/api/control/report/${encodeURIComponent(one.file)}`,
+      { method: 'POST', headers: { 'content-type': 'application/json', ...auth },
+        body: JSON.stringify(body) }).then((r) => r.json());
+
+    const done = await post({ resolved: true });
+    check('a report can be marked resolved', !!done.resolved, done.resolved);
+    let now = await (await fetch(`${U}/api/control`, { headers: auth })).json();
+    check('and it comes back marked',
+      (now.reports.find((r) => r.file === one.file) || {}).resolved, 'stamped');
+    check('with settled ones sorted below the rest',
+      !now.reports[0].resolved || now.reports.every((r) => r.resolved));
+
+    await post({ resolved: false });
+    now = await (await fetch(`${U}/api/control`, { headers: auth })).json();
+    check('resolving is reversible',
+      !(now.reports.find((r) => r.file === one.file) || {}).resolved);
+
+    const n0 = now.reports.length;
+    await post({ remove: true });
+    now = await (await fetch(`${U}/api/control`, { headers: auth })).json();
+    check('and a spurious one can be deleted', now.reports.length === n0 - 1,
+      `${n0} -> ${now.reports.length}`);
+  }
+
+  const noKey = await fetch(`${U}/api/control/report/anything.json`, { method: 'POST' });
+  check('acting on a report needs the password', noKey.status === 403, String(noKey.status));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
+/* The one obvious next step on a finished match. */
+.prim{background:var(--brass);color:var(--ink);border-color:var(--brass);font-weight:500}
 .soundwarn{position:fixed;left:50%;transform:translateX(-50%);top:44px;z-index:45;
 background:#2A1A08;border:1px solid #6A4A12;border-radius:5px;padding:7px 14px;
 color:#F0C862;font-size:12.5px;max-width:70vw;text-align:center}
@@ -548,7 +550,13 @@ function detectEvents() {
   const now = new Set(S.live.map((p) => p.token));
   const entered = S.live.filter((p) => !was.has(p.token));
   const gone = prev.live.filter((p) => !now.has(p.token));
-  if (entered.length) { sfxEntry(); banner(entered); }
+  // The horn is the stand-in for an entrance. If the player brought their own
+  // music, that IS the entrance — playing both was two sounds over each other.
+  if (entered.length) {
+    const hasTheme = (e.entrances || []).some((x) => x && x.theme);
+    if (!hasTheme) sfxEntry();
+    banner(entered);
+  }
   gone.forEach((p) => say(p.name + ' out — survived ' + p.tenure + ' clues', 'elim'));
   if (gone.length) showToss(gone, lastWinner);
 
@@ -860,6 +868,32 @@ function showFinish() {
   }
   const bs = document.createElement('button'); bs.textContent = 'Share results \u25BE';
   bs.onclick = (e) => { e.stopPropagation(); shareMenu(bs); };
+  // Somewhere to go next. The match is over and the console is a dead end
+  // otherwise — the host had to know the URLs by heart.
+  const bh = document.createElement('button');
+  bh.textContent = 'Back to home';
+  bh.onclick = () => { location.href = '/'; };
+  more.appendChild(bh);
+
+  const bn = document.createElement('button');
+  bn.className = 'prim';
+  bn.textContent = 'Start a new game';
+  bn.onclick = async () => {
+    bn.disabled = true; bn.textContent = 'Setting one up...';
+    try {
+      const r = await fetch('/api/match', { method: 'POST',
+        headers: { 'content-type': 'application/json' }, body: '{}' });
+      const j = await r.json();
+      if (!j.gameId) throw new Error('no game came back');
+      // Straight into setup, host key in the fragment so it stays out of logs.
+      location.href = `/setup/${j.gameId}#${j.hostKey}`;
+    } catch (e) {
+      bn.disabled = false;
+      bn.textContent = 'Could not start one — try again';
+    }
+  };
+  more.appendChild(bn);
+
   const b2 = document.createElement('button'); b2.textContent = 'Hide';
   b2.onclick = () => d.remove();
   more.append(bs, b1, b2); d.appendChild(more);

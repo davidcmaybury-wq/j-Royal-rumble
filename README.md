@@ -476,6 +476,10 @@ made a 24-player field look far less fair than a 30-player one — it was the
 ceiling doing that, not the field size. Every earlier fairness measurement was
 confounded by it.
 
+Two players cannot share a name: the room has nothing else to tell them apart,
+and the host calls people by name. A second Dave is turned away and asked for
+another.
+
 | Field | Ceiling |
 |---|---|
 | up to 8 | 10,500 |

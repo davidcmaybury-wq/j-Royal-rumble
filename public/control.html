@@ -69,6 +69,15 @@ padding:12px 14px;margin-bottom:9px;background:var(--panel)}
 .rmeta{color:var(--slate);font-size:11.5px;font-family:"IBM Plex Mono",monospace}
 .rwhen{margin-left:auto;color:#3C486E;font-size:11.5px}
 .rtext{color:#C9CCD9;font-size:14.5px;line-height:1.5;white-space:pre-wrap}
+.racts{display:flex;gap:8px;align-items:center;margin-top:10px}
+.ract{padding:4px 10px;border:1px solid var(--line);border-radius:var(--r);background:none;
+color:var(--slate);cursor:pointer;font:inherit;font-size:12px}
+.ract:hover{border-color:var(--brass);color:var(--brass)}
+.ract.del:hover{border-color:var(--alarm);color:var(--alarm)}
+.rdone{color:var(--live);font-size:11.5px}
+/* Settled ones stay readable but stop competing for attention. */
+.rep.done{opacity:.5}
+.rep.done .rtext{color:var(--slate)}
 #bulk{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .foot{margin-top:30px;color:#3C486E;font-size:12px}
 </style></head>
@@ -195,7 +204,7 @@ async function load() {
   const rs = d.reports || [];
   $('reports').innerHTML = !rs.length
     ? '<div class="none">Nothing reported yet.</div>'
-    : rs.map((r) => `<div class="rep ${r.kind}">
+    : rs.map((r) => `<div class="rep ${r.kind}${r.resolved ? ' done' : ''}">
         <div class="rhead">
           <span class="tag ${r.kind}">${r.kind === 'idea' ? 'idea' : 'bug'}</span>
           <span class="rwho">${esc(r.name) || 'somebody'}</span>
@@ -204,7 +213,33 @@ async function load() {
             r.version ? ' &middot; v' + esc(r.version) : ''}</span>
           <span class="rwhen">${r.at ? new Date(r.at).toLocaleString() : ''}</span>
         </div>
-        <div class="rtext">${esc(r.text)}</div></div>`).join('');
+        <div class="rtext">${esc(r.text)}</div>
+        <div class="racts">
+          <button class="ract" data-done="${esc(r.file)}" data-on="${r.resolved ? '0' : '1'}"
+            >${r.resolved ? 'Reopen' : 'Mark resolved'}</button>
+          <button class="ract del" data-del="${esc(r.file)}">Delete</button>
+          ${r.resolved ? `<span class="rdone">resolved ${
+            new Date(r.resolved).toLocaleDateString()}</span>` : ''}
+        </div></div>`).join('');
+
+  // Deleting is one click too few, so it asks. Resolving is reversible and
+  // does not need to.
+  const act = async (file, body) => {
+    await fetch(`/api/control/report/${encodeURIComponent(file)}`, {
+      method: 'POST', headers: { 'content-type': 'application/json', ...auth() },
+      body: JSON.stringify(body),
+    });
+    load();
+  };
+  for (const b of $('reports').querySelectorAll('[data-done]')) {
+    b.onclick = () => act(b.dataset.done, { resolved: b.dataset.on === '1' });
+  }
+  for (const b of $('reports').querySelectorAll('[data-del]')) {
+    b.onclick = () => {
+      if (b.textContent === 'Delete') { b.textContent = 'Really delete?'; return; }
+      act(b.dataset.del, { remove: true });
+    };
+  }
 
   // The bulk download, with what is waiting.
   const since = d.newSince ? new Date(d.newSince).toLocaleDateString() : 'the beginning';

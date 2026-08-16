@@ -1056,6 +1056,14 @@ app.get('/api/control', (req, res) => {
   });
 });
 
+// Dealt with, or noise. Guarded like the rest of the control room.
+app.post('/api/control/report/:file', (req, res) => {
+  if (!adminOk(req)) return res.status(403).json({ error: 'bad admin key' });
+  const r = reports.update(req.params.file, req.body || {});
+  if (r.error) return res.status(400).json(r);
+  res.json(r);
+});
+
 // --- bulk download -------------------------------------------------------
 //
 // Everything added since the last time somebody took a copy, in one file.
@@ -1510,6 +1518,24 @@ io.on('connection', (socket) => {
       `Check the code with your host — it's four letters.` });
     match = m;
     token = t && m.roster.has(t) ? t : (t || randomUUID());
+
+    // Two people cannot share a name.
+    //
+    // Names are how the host calls the room and how everybody reads the board,
+    // so a second Dave is not a cosmetic problem: with nothing else to go on
+    // the room treats them as one person. Ask for a different one rather than
+    // quietly letting it happen.
+    const wanted = String(name || '').trim();
+    if (wanted) {
+      const clash = [...m.roster.values()].some((p) =>
+        p.token !== token && String(p.name || '').trim().toLowerCase() === wanted.toLowerCase());
+      if (clash) {
+        return ack?.({ error: `Somebody is already playing as ${wanted}. `
+          + 'Pick a different name — the host calls people by name, so two of '
+          + 'you would be one person on the board.', nameTaken: true });
+      }
+    }
+
     const existing = m.roster.get(token);
     if (existing) {
       existing.socketId = socket.id;

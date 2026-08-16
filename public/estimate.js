@@ -8,7 +8,13 @@
 import { fairnessWarning, predictMatch } from '../src/engine.js';
 
 export const IV_MIN = 2;
-export const IV_MAX = 15;
+// Nobody should sit out more than ten clues waiting to play.
+//
+// The cap used to be 15, and with four to six players the arithmetic always
+// hit it: three people spread across a half-hour match is 20-odd clues apart,
+// clamped to 15. Every small game therefore got exactly the same pacing and
+// the queue took most of the match to empty.
+export const IV_MAX = 10;
 
 // A match is the queue emptying plus an endgame. Small rosters are almost all
 // endgame — three players have no queue at all, so entry pacing tells you

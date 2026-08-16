@@ -953,8 +953,24 @@ function squareThumb(file, size) {
 function doJoin(name) {
   socket.emit('join', { gameId: gameId(), token: myToken(), name, look: myLook,
     theme: myTheme }, (r) => {
-    if (r && r.error) { joinErr = r.error; joined = false; return sfx.preload();
-renderJoin(); }
+    if (r && r.error) {
+      // Redraw the form. The `return` used to come before renderJoin(), so a
+      // rejected join preloaded some audio and left the player looking at
+      // nothing — which is how somebody turned away for a duplicate name
+      // found themselves stuck with no way to type a different one.
+      joinErr = r.error;
+      joined = false;
+      if (r.nameTaken) {
+        // Forget the name that was refused, so the form comes back empty
+        // rather than re-submitting the same one on the next reload.
+        try { localStorage.removeItem('rumble:name'); } catch (e) {}
+      }
+      sfx.preload();
+      renderJoin();
+      const box = document.getElementById('nm');
+      if (box) { box.focus(); box.select(); }
+      return;
+    }
     if (r && r.token) saveToken(r.token);
     joined = true; joinErr = '';
     sfx.unlock();
@@ -1016,7 +1032,12 @@ socket.on('activate-buzzers', () => stopTheme());
 function cues() {
   const you = V.you || {}, was = prev && prev.you ? prev.you : null;
   if (!was) return;
-  if (was.state === 'queued' && you.state === 'live') { sfx.play('entry'); lastCountdown = null; }
+  // Same on the buzzer: your own walk-in music replaces the horn rather than
+  // playing under it.
+  if (was.state === 'queued' && you.state === 'live') {
+    if (!myTheme) sfx.play('entry');
+    lastCountdown = null;
+  }
   if (was.state === 'live' && you.state === 'eliminated') sfx.chops(1);
   const n = you.state === 'queued' ? you.cluesToEntry : null;
   if (n !== null && n <= 3 && n >= 1 && n !== lastCountdown) {
