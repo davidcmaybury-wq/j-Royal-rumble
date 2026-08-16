@@ -3,6 +3,20 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.81.0 — how fast people are fed in
+
+Measured, and written up as Figure 12 in the handbook. The entry interval turns
+out to be nearly free at small fields — every value from 3 to 20 lands within a
+few points of an even draw — and dangerous at scale: twelve players on a
+20-clue gap hand the back half 66% of the wins. What it really controls is
+length. The cap drops from 15 to 10, which leaves fairness alone and takes a
+third off a small match.
+
+Eight measured just as well and was tried first, but it made a six-player
+fifteen-minute game unreachable on auto, so the estimator warned every time.
+That also turned up a long-standing flaw: the "set the target to N" button
+suggested a number that clamped again and re-raised the same warning.
+
 ## 0.80.0 — five things from game night
 
 **Two sounds on one entrance.** The horn played under the player's own music.

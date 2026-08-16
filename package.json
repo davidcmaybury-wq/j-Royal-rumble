@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.80.0",
+  "version": "0.81.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -69,7 +69,8 @@
     "guides-test": "node test/guides.mjs",
     "small-field": "node tools/small-field.mjs",
     "reports-test": "node test/reports.mjs",
-    "late-entry": "node tools/late-entry.mjs"
+    "late-entry": "node tools/late-entry.mjs",
+    "entry-pace": "node tools/entry-pace.mjs && python3 tools/plot-entry-pace.py"
   },
   "dependencies": {
     "express": "^4.21.2",
