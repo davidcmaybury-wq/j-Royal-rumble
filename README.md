@@ -469,6 +469,48 @@ read as a magnifying glass, the boot as a chess pawn, the morningstar as a
 blob, and the bone as a dumbbell. `tools/` has no generator for these; they are
 hand-drawn paths in `public/tokens.js`.
 
+## Quick and expert setup
+
+The setup page opens in **quick** mode: the room code, who has signed up, two
+dropdowns and a button that adds robots. **Expert** is the full card — every
+mechanic, the clue mix, uploads, timing. The choice is remembered per browser in
+`localStorage` under `rumble:setupMode`, because it is a preference about how
+somebody likes to set a game up rather than a property of the match.
+
+**Rule set**
+
+| | what it does |
+|---|---|
+| Tournament | every standard rule except targeting — the match is settled on the buzzer |
+| Standard | the normal game, targeting and one foot on the floor included |
+| Chaos | everything, advanced mechanics as well |
+
+**Game speed**
+
+| | what it does |
+|---|---|
+| Blitz | a new player every 5 clues, whatever the roster |
+| Standard | paced to about 20 minutes, entries scale to the field |
+| Extended | paced to about 40 minutes |
+
+**A preset writes into the real controls rather than living beside them.** Pick
+Tournament and switch to Expert and you see targeting switched off, because that
+is literally what happened — there is no second set of quick-mode settings and
+no separate path through `collect()`. It also means the dropdown reads **Custom**
+the moment the settings stop matching, so a host who turns targeting back on by
+hand is never left looking at a box that still claims Tournament.
+
+**Expert renders in both modes and is hidden with CSS**, never left out of the
+markup. `collect()` reads every control by id when it saves, so a card that is
+genuinely absent takes the Save button down with it — and the host sees a dead
+button, which is the failure this project keeps rediscovering. Hiding rather
+than omitting also means switching modes cannot lose an edit.
+
+`test/pagerefs.mjs` checks that every mechanic on the page is named by one of
+the rule sets. A mechanic added to the page but left out of the presets would
+keep whatever the last preset happened to leave it at, so choosing Tournament
+could silently carry somebody's experiment into a match.
+
 ## Pacing, and what the setup card warns about
 
 **The ceiling scales with the field**, and this turned out to matter more than

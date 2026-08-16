@@ -251,6 +251,24 @@ it, which is confusing to debug. Compute the flag in job-level `env` and test
 `env.X` in the step instead. A YAML parser will not catch this; `test/workflows.mjs`
 will, and also checks that every suite a workflow names actually exists.
 
+## Quick setup hides expert, it does not omit it
+
+`setup.html` has two modes, quick (default) and expert, remembered per browser
+in `localStorage` under `rumble:setupMode`. **Every expert control renders in
+both modes and is hidden with CSS.** `collect()` reads each one by id on save,
+so a card that is genuinely absent from the DOM throws and takes the Save button
+with it — the dead-button failure this file is already full of. Hiding also
+means switching modes cannot lose an edit.
+
+The presets write into the real controls and then save, which is why the order
+in `applyPreset` matters: paint, save, paint. Saving first collects the controls
+the preset was meant to replace, and repainting with `render(true)` restores
+them over the top, because `keepEdits` captures every control and puts it back.
+Both mistakes silently undo the preset and neither throws.
+
+`pagerefs.mjs` checks every mechanic on the page is named by a rule set, so a
+new mechanic cannot quietly inherit whatever the last preset left it at.
+
 ## A whole panel can vanish silently
 
 `lagHint()` was called from `renderMech` and defined nowhere, for several

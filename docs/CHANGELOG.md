@@ -3,10 +3,28 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.85.0 — quick setup
+
+The setup page opens on two dropdowns instead of forty controls: a rule set
+(Tournament, Standard, Chaos) and a game speed (Blitz, Standard, Extended),
+the roster, and a button that adds robots. **Expert** is the old full card, one
+click away and remembered per browser.
+
+Tournament is every standard rule except targeting — nobody can be ganged up
+on, so it comes down to the buzzer. Chaos is everything, advanced mechanics
+included. Blitz feeds a player in every 5 clues; Standard and Extended pace to
+20 and 40 minutes and let the entries scale to whoever turns up.
+
+**The presets write into the real controls rather than living beside them**, so
+switching to Expert shows exactly what a preset did, and the dropdown reads
+Custom the moment a hand-edit stops matching it. Expert renders in both modes
+and is hidden with CSS: `collect()` reads every control by id when it saves, and
+a card that is genuinely absent takes the Save button down with it.
+
 ## 0.84.0 — one foot on the floor
 
 Somebody knocked out before they ever got going comes straight back on half a
-stake, with half off their buzz for the next 40 races. Once each, and only for
+stake, with 70% off their buzz for the next 40 races. Once each, and only for
 players with fewer than three clues to their name.
 
 **The gate is the design.** Ungated, the same mechanic is a subsidy for the

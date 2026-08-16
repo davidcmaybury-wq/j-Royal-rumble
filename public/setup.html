@@ -154,6 +154,29 @@ border:1px solid var(--line);text-align:left;color:var(--chalk);cursor:pointer}
 .bebox .rm{width:100%;margin-top:9px;padding:10px;border:1px solid var(--line);
 border-radius:var(--r);font-size:13px;color:var(--slate);background:none;cursor:pointer}
 .bebox .rm:hover{border-color:var(--alarm);color:var(--alarm)}
+
+/* --- quick / expert setup -------------------------------------------------
+   Everything expert renders in both modes and is hidden with CSS rather than
+   left out of the markup. collect() reads every control by id on save, so a
+   card that is genuinely absent takes the Save button down with it — and the
+   host would see a dead button, which is the exact failure this project keeps
+   finding. Hiding also means switching modes cannot lose an edit. */
+.mode-quick .expert-only{display:none}
+.mode-expert .quick-only{display:none}
+.modes{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);
+overflow:hidden;margin-bottom:18px}
+.modebtn{padding:7px 16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+color:var(--slate);background:none}
+.modebtn:hover{color:var(--chalk)}
+.modebtn.sel{background:var(--panel2);color:var(--brass)}
+.qgrid{display:flex;gap:14px;flex-wrap:wrap}
+.qsf{flex:1 1 230px;min-width:230px}
+.qsf label{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+color:var(--slate);margin-bottom:5px}
+.qsf select{width:100%}
+.qwhat{font-size:11.5px;color:var(--slate);font-style:italic;margin:7px 0 0;min-height:2.6em}
+.qbots{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px;
+padding-top:14px;border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -172,6 +195,21 @@ let hostKey = location.hash.slice(1);
 let lastBots = [];
 let S = null, msg = null, mix = { archive: 100, original: 0, upload: 0 };
 const root = document.getElementById('root');
+
+// Quick unless this host has said otherwise, remembered on their own machine.
+// Per browser rather than per match: it is a preference about how somebody
+// likes to set a game up, not a property of the game.
+const MODE_KEY = 'rumble:setupMode';
+let MODE = 'quick';
+try {
+  const saved = localStorage.getItem(MODE_KEY);
+  if (saved === 'quick' || saved === 'expert') MODE = saved;
+} catch (e) { /* private browsing; quick is the right default anyway */ }
+const setMode = (m) => {
+  MODE = m;
+  try { localStorage.setItem(MODE_KEY, m); } catch (e) {}
+  root.className = 'wrap mode-' + m;
+};
 const fmt = (n) => (n ?? 0).toLocaleString();
 
 const api = async (path, opts = {}) => {
@@ -219,6 +257,91 @@ socket.on('avatar', ({ token, dataUrl }) => {
 });
 
 // Blend weights on the server are relative; the host thinks in percentages.
+// --- quick setup ----------------------------------------------------------
+//
+// Two dropdowns instead of forty controls. Most nights the host wants a shape,
+// not a settings page, and the full card is a wall of switches to somebody
+// setting up a game with people already waiting.
+//
+// The presets write into the real controls rather than living beside them, so
+// switching to Expert shows exactly what the preset did and nothing is hidden
+// from the host. There is no separate quick-mode code path in collect().
+
+// The six that are on unless a host turns them off.
+const STANDARD_RULES = ['longevity', 'comeback', 'targeting', 'categorySweep',
+  'giftFromQueue', 'anonymousNext'];
+// The five that are off unless a host turns them on.
+const ADVANCED_RULES = ['topRope', 'stables', 'savePlayer', 'bounties', 'revival'];
+
+const rules = (on) => Object.fromEntries(
+  [...STANDARD_RULES, ...ADVANCED_RULES].map((k) => [k, on.includes(k)]));
+
+const RULESETS = {
+  tournament: {
+    label: 'Tournament',
+    // Everything standard except targeting. Targeting is the one standard rule
+    // the room aims deliberately, so taking it out leaves the result to the
+    // buzzer — which is what a tournament is for. It costs the room its only
+    // reliable answer to somebody running away with the match.
+    what: 'Every standard rule except targeting. Nobody can be ganged up on, so the '
+        + 'match is settled on the buzzer — the fairest shape, and the least merciful '
+        + 'if one player is quicker than the rest.',
+    set: rules(STANDARD_RULES.filter((k) => k !== 'targeting')),
+  },
+  standard: {
+    label: 'Standard',
+    what: 'The normal game: targeting, longevity, category sweeps, gifts from the queue, '
+        + 'and one foot on the floor for anybody knocked out before they got going.',
+    set: rules(STANDARD_RULES),
+  },
+  chaos: {
+    label: 'Chaos',
+    what: 'Everything switched on — top rope, stables, saves, bounties and revival on top '
+        + 'of the standard rules. Expect a long match and a keyboard-heavy one.',
+    set: rules([...STANDARD_RULES, ...ADVANCED_RULES]),
+  },
+};
+
+const SPEEDS = {
+  blitz: {
+    label: 'Blitz',
+    what: 'A new player every 5 clues, whatever the roster. The ring fills fast and stays full.',
+    // A fixed interval, so the target length stops driving the pacing and is
+    // left alone rather than being given a number that does nothing.
+    set: { entryInterval: 5 },
+  },
+  standard: {
+    label: 'Standard',
+    what: 'Paced to finish in about 20 minutes — entries scale to however many turn up.',
+    set: { entryInterval: null, targetMinutes: 20 },
+  },
+  extended: {
+    label: 'Extended',
+    what: 'Paced to about 40 minutes. More clues each, and the draw matters more.',
+    set: { entryInterval: null, targetMinutes: 40 },
+  },
+};
+
+// Which preset the current settings correspond to, or '' for none.
+//
+// Derived rather than remembered: a host who picks Tournament, switches to
+// Expert and turns targeting back on must not still be looking at a dropdown
+// that says Tournament. It reads "Custom" the moment the settings stop
+// matching, which is the honest answer.
+function presetOf(kind) {
+  const s = S.settings || {};
+  if (kind === 'rules') {
+    for (const [k, p] of Object.entries(RULESETS)) {
+      if (Object.entries(p.set).every(([id, on]) => !!s[id] === on)) return k;
+    }
+    return '';
+  }
+  for (const [k, p] of Object.entries(SPEEDS)) {
+    if (Object.entries(p.set).every(([id, v]) => (s[id] ?? null) === v)) return k;
+  }
+  return '';
+}
+
 function toPct(blend, avail) {
   const usable = SRC.map(([k]) => k).filter((k) => (avail[k] || 0) > 0);
   const total = usable.reduce((n, k) => n + (blend[k] || 0), 0);
@@ -332,11 +455,44 @@ function restoreEdits(saved) {
 function render(keepEdits) {
   const edits = keepEdits ? captureEdits() : null;
   const est = estimate(), s = S.settings;
+  root.className = 'wrap mode-' + MODE;
+  const rsNow = presetOf('rules'), spNow = presetOf('speed');
+  const opts = (table, cur) => Object.entries(table)
+    .map(([k, p]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${p.label}</option>`).join('')
+    + (cur ? '' : '<option value="" selected>Custom</option>');
   root.innerHTML = `
   <a class="backhome" href="/">&larr; J! Royal Rumble</a>
   <div class="hero">${markBanner(340)}</div>
   <div class="tag">Read the room code aloud. Only people who have it can join.
     <a class="manual" href="/handbook" target="_blank" rel="noopener">Handbook &mdash; rules, mechanics and the design behind them &#8599;</a></div>
+
+  <div class="modes" role="group" aria-label="How much setup to show">
+    <button class="modebtn ${MODE === 'quick' ? 'sel' : ''}" id="mquick"
+      aria-pressed="${MODE === 'quick'}">Quick</button>
+    <button class="modebtn ${MODE === 'expert' ? 'sel' : ''}" id="mexpert"
+      aria-pressed="${MODE === 'expert'}">Expert</button>
+  </div>
+
+  <div class="card quick-only"><h2>Game</h2>
+    <div class="qgrid">
+      <div class="qsf"><label for="ruleset">Rule set</label>
+        <select id="ruleset">${opts(RULESETS, rsNow)}</select>
+        <p class="qwhat" id="rswhat">${rsNow ? RULESETS[rsNow].what
+          : 'Set by hand in Expert. Pick one here to overwrite it.'}</p></div>
+      <div class="qsf"><label for="speed">Game speed</label>
+        <select id="speed">${opts(SPEEDS, spNow)}</select>
+        <p class="qwhat" id="spwhat">${spNow ? SPEEDS[spNow].what
+          : 'Set by hand in Expert. Pick one here to overwrite it.'}</p></div>
+    </div>
+    <div class="qbots">
+      <button class="alt" id="qaddbots">Add robots</button>
+      ${(S.roster || []).some((p) => p.isBot)
+        ? '<button class="alt" id="qrmbots">Remove all robots</button>' : ''}
+      <span class="note">Six mixed robots on this game's own buzzer scale.
+        Expert has the count and the standards.</span>
+    </div>
+    <div class="botlist" id="qbotlist"></div>
+  </div>
 
   <div class="card"><h2>Room code</h2>
     <div class="code">
@@ -354,7 +510,7 @@ function render(keepEdits) {
         </div></div>
         <!-- The one setting a host changes every time, so it sits with the
              thing they are already doing rather than three cards down. -->
-        <div class="lenbox">
+        <div class="lenbox expert-only">
           <label for="targetMinutes2">How long?</label>
           <div class="lenrow">
             <input type="number" id="targetMinutes2" min="5" max="180"
@@ -380,7 +536,7 @@ function render(keepEdits) {
     <div id="warn"></div>
   </div>
 
-  <div class="card"><h2>Robot players</h2>
+  <div class="card expert-only"><h2>Robot players</h2>
     <p class="note" style="margin:-4px 0 12px">For testing, or for filling out a thin roster.
     They buzz on a real clock with reaction times drawn from their skill, so the race fills in
     the way it does with people. The console tells you whether each one is about to be right.</p>
@@ -409,7 +565,7 @@ function render(keepEdits) {
     <div class="botlist" id="botlist"></div>
   </div>
 
-  <div class="card"><h2>Game setup</h2>
+  <div class="card expert-only"><h2>Game setup</h2>
     <div class="row">
       ${num('targetMinutes', 'Target length (min)', s.targetMinutes,
             'how long you want this to run — everything else scales to it')}
@@ -452,7 +608,7 @@ function render(keepEdits) {
     </div>
   </div>
 
-  <div class="card"><h2>Clue material</h2>
+  <div class="card expert-only"><h2>Clue material</h2>
     <div class="mix">${SRC.map(([k, t, d]) => {
       const pct = mix[k] ?? 0, avail = S.available[k] || 0;
       const [lo, hi] = s.seasonRange || S.seasons;
@@ -474,7 +630,7 @@ function render(keepEdits) {
     </div>
   </div>
 
-  <div class="card"><h2>Add fresh material</h2>
+  <div class="card expert-only"><h2>Add fresh material</h2>
     <div class="up" id="drop">
       Drop files here, or <label style="color:var(--brass);cursor:pointer;text-decoration:underline">choose
       <input type="file" id="file" multiple accept=".json,.csv" hidden></label><br>
@@ -489,7 +645,7 @@ function render(keepEdits) {
     <div class="msg" id="msg"></div>
   </div>
 
-  <div class="card"><h2>Standard mechanics</h2>
+  <div class="card expert-only"><h2>Standard mechanics</h2>
     <p class="note" style="margin:-4px 0 14px">On unless you turn them off. These are part of the
     normal game; switching one off is for a night that wants a simpler shape.</p>
     ${adv('longevity', 'Longevity bonus', s.longevity,
@@ -519,7 +675,7 @@ function render(keepEdits) {
       + 'goes, and the horn means something.')}
   </div>
 
-  <div class="card"><h2>Advanced mechanics</h2>
+  <div class="card expert-only"><h2>Advanced mechanics</h2>
     <p class="note" style="margin:-4px 0 14px">All off by default. They change how the game plays,
     not just how it looks — and they lean on keyboard controls, so think twice if the field is on phones.</p>
     ${adv('topRope', 'Top rope', s.topRope,
@@ -555,7 +711,7 @@ function render(keepEdits) {
     </div>
   </div>
 
-  <div class="card"><h2>Timing</h2>
+  <div class="card expert-only"><h2>Timing</h2>
     <div class="row">
       ${num('delay', 'Zoom delay (ms)', s.delay, 'holds the buzzers to match your audio')}
       ${num('lockout', 'Early-buzz lockout (ms)', s.lockout, 'penalty for jumping the lights')}
@@ -799,6 +955,57 @@ async function save(quiet) {
 }
 
 function wire() {
+  // --- quick / expert -----------------------------------------------------
+  //
+  // Switching modes only changes a class: every control is in the page in both
+  // modes, so nothing is re-created and nothing in flight is lost.
+  document.getElementById('mquick').onclick = () => { setMode('quick'); render(true); };
+  document.getElementById('mexpert').onclick = () => { setMode('expert'); render(true); };
+
+  // A preset writes into the real controls and saves, so Expert always shows
+  // the truth about what is switched on.
+  //
+  // The order matters and is easy to get wrong. collect() reads the DOM, not
+  // S.settings, so saving before the repaint would collect the controls the
+  // preset was meant to replace and write the old values straight back. And the
+  // repaint has to be render(), never render(true): keepEdits captures every
+  // control first and restores it afterwards, which would undo the preset just
+  // as thoroughly. Paint, then save, then paint again so the estimate and the
+  // warnings are computed from what the server actually kept.
+  const applyPreset = async (table, key) => {
+    const p = table[key];
+    if (!p) return;                     // "Custom" is a readout, not a choice
+    Object.assign(S.settings, p.set);
+    render();
+    await save(true);
+    render();
+  };
+  const rs = document.getElementById('ruleset');
+  if (rs) rs.onchange = () => applyPreset(RULESETS, rs.value);
+  const sp = document.getElementById('speed');
+  if (sp) sp.onchange = () => applyPreset(SPEEDS, sp.value);
+
+  const qa = document.getElementById('qaddbots');
+  if (qa) qa.onclick = async () => {
+    qa.disabled = true; qa.textContent = 'Adding…';
+    try {
+      // The measured scale, not the model's own: measured is anchored on buzz
+      // times recorded here, and the observed scale makes robots very nearly
+      // unbeatable for a human. A quick setup should not hand the host that.
+      const r = await api(`/api/match/${code}/bots`, { method: 'POST',
+        body: JSON.stringify({ count: 6, profile: 'measured' }) });
+      S = r; lastBots = r.added || [];
+    } catch (e) { qa.textContent = e.message; return; }
+    render(true);
+  };
+  const qr = document.getElementById('qrmbots');
+  if (qr) qr.onclick = async () => {
+    S = await api(`/api/match/${code}/bots`, { method: 'DELETE' });
+    lastBots = []; render(true);
+  };
+  const qbl = document.getElementById('qbotlist');
+  if (qbl) qbl.innerHTML = lastBots.map((b) => `<span>${b.name} &mdash; ${b.describe}</span>`).join('');
+
   document.querySelectorAll('input[data-w]').forEach((sl) => {
     sl.oninput = () => setPct(sl.dataset.w, Number(sl.value));
     sl.onchange = () => save(true);

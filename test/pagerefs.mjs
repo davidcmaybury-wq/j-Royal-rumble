@@ -329,6 +329,25 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
   const unknown = rendered.filter((id) => !known.has(id));
   check('and every one is a setting the engine has a default for',
     unknown.length === 0, unknown.join(', ') || 'all known');
+
+  // --- the quick presets have to cover every mechanic ---------------------
+  //
+  // Quick mode picks a rule set; the rule set names every mechanic explicitly,
+  // on or off. A mechanic added to the page but left out of the lists would be
+  // whatever the last preset happened to leave it at — so choosing Tournament
+  // would silently keep somebody's half-finished experiment switched on.
+  const listed = new Set();
+  for (const name of ['STANDARD_RULES', 'ADVANCED_RULES']) {
+    const m = src.match(new RegExp(`const ${name} = \\[([^\\]]*)\\]`));
+    for (const q of (m ? m[1] : '').matchAll(/'(\w+)'/g)) listed.add(q[1]);
+  }
+  const uncovered = rendered.filter((id) => !listed.has(id));
+  check('setup.html: every mechanic is in a quick-setup rule set',
+    uncovered.length === 0, uncovered.join(', ') || `${listed.size} covered`);
+
+  const notASetting = [...listed].filter((id) => !known.has(id));
+  check('and every rule the presets name is a real engine setting',
+    notASetting.length === 0, notASetting.join(', ') || 'all known');
 }
 
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
