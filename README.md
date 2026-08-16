@@ -116,13 +116,14 @@ Each player's measured one-way latency shows beside their name in the ring, and
 the console warns when anyone is over 120 ms. Every sample is kept in the match
 record, per player, so a slow evening can be told apart from a slow field.
 
-The app runs in `ord` (Chicago) for a field spread across the US. Moving it,
-between matches — the machine holds all live state, so this ends anything in
-progress:
+The app runs on a Lightsail VM in **Ohio** (`us-east-2`) for a field spread
+across the US, behind CloudFront. The measurements above were taken on the old
+Fly box in `ord` (Chicago); the two are close enough that the delay setting has
+not needed to move, but they have not been retaken since the migration.
 
-    fly scale count 0
-    fly scale count 1 --region ord
-    fly status
+Moving it means rebuilding the instance in another region — see
+`infra/aws/HOSTING.md`. Do it between matches whatever the method: the process
+holds all live state, so anything in progress ends.
 
 `node test/perf.mjs` measures it with a field of 24: activation should reach
 every player with a spread well under 60 ms. It exists because an earlier
@@ -883,6 +884,49 @@ clues with nobody eliminated — even if people are still queued. The threshold
 has to be that high: at three windows it fired during the entry phase and cost
 eleven minutes of match length and twenty points of draw fairness.
 
+## One foot on the floor
+
+A player who would be eliminated having taken **fewer than three clues** is not
+eliminated at all. They stay in the ring on half a starting stake, and for the
+next 40 races their buzz is ranked at half the time they actually pressed. Once
+each, automatic — nothing to declare, nothing to press. On by default;
+`comeback: false` turns it off.
+
+This is the answer to the shark problem, and it is the buzz-timing lever from
+that list seen from the other end: instead of taxing the leader's milliseconds
+it hands them to whoever never got going.
+
+**The gate is the entire design.** Ungated, the same mechanic is a subsidy for
+the strong — they spend their free life too and finish further ahead, and the
+casual's chance only reaches 1.9%. Gated, in a six-player field with one elite
+and one champ:
+
+| | bottom four | the elite |
+|---|---|---|
+| without it | 1.5% | 93.8% |
+| with it | 41.9% | 38.6% |
+
+An even share for those four would be 66.7%, so it moves toward fair without
+overshooting. It is close to sandbag-proof, too: staying under the gate means
+not scoring.
+
+**It costs draw fairness.** The back half of the draw goes from 50% to 59% at
+sixteen players, because a late entrant is likelier to still be under the gate
+when trouble finds them. Fairness by skill and fairness by draw pull against
+each other here for the first time; the trade was made deliberately.
+
+**Nothing keyed to elimination fires**, because no elimination is recorded — a
+bounty on that player does not pay out and a revival life is not spent.
+
+The edge is counted in races rather than clues so a run of stumpers cannot burn
+it, and the **recorded** reaction time is always the real one. The discount is a
+ranking rule for who takes the clue, not a rewrite of the log.
+
+⚠️ **Every figure above was measured at a 70% discount and the mechanic ships
+at 50%.** It was tuned at 70% and turned down before release, so these are upper
+bounds: the direction holds, the magnitudes do not. `npm run comeback-study`
+carries a row for the shipped configuration — run it and correct this table.
+
 ## Advanced mechanics
 
 Four optional rules, off by default, toggled per match on the setup page. They
@@ -991,17 +1035,24 @@ match finishes. Needs no volume, no account and no remembering.
 
 **By hand.** `Download match data` on the champion screen, any time.
 
-### The disk is ephemeral
+### Logs live outside the app directory
 
-A fly machine's own filesystem survives a restart but is **wiped by the next
-deploy**, and this project deploys several times a day. Logs go to `/data`,
-which is where a volume mounts. Create it once:
+A deploy replaces the app directory, so anything written inside it is **gone by
+the next release** — and this project deploys several times a day. Logs go to
+`/data`, which a deploy never touches. Make it once on the box:
 
-    fly volumes create rumble_data --size 1 --region ord
+    sudo mkdir -p /data/logs && sudo chown -R ubuntu:ubuntu /data
 
-The `[mounts]` block is already in `fly.toml`. Until the volume exists, logs are
-still written — they just will not survive. `/api/health` and the `/logs` page
-both say which of the two is currently true, in those words.
+Until it exists, logs are still written — beside the app, where they will not
+survive. `/api/health` and the `/logs` page both say which of the two is
+currently true, in those words.
+
+On the old Fly box this was a sharper problem and had a different fix: the
+machine filesystem was wiped by every deploy and `/data` was where a volume
+mounted (`fly volumes create rumble_data --size 1 --region ord`, plus the
+`[mounts]` block in `fly.toml`). The spare still runs that way. The rule the
+code enforces is the same on both, which is why it checks the path rather than
+the host.
 
 `/logs` is open unless `RUMBLE_LOG_KEY` is set, in which case it wants
 `?key=…`. Fine for a test deployment; worth setting before anything public.
@@ -1016,11 +1067,14 @@ Off by default.
 
 ## Documentation
 
-    RULES-SHORT.md                     one paste for Discord, 1,507 characters
+    RULES-SHORT.md                     one paste for Discord, 1,993 of 2,000
     RULES.md                           the full rules in postable sections
     docs/handbook.html                 design and rules, with the numbers
 
-    python3 tools/make-handbook.py     rebuilds the PDF
+**`RULES-SHORT.md` is nearly full.** It is one Discord paste and Discord cuts
+off at 2,000 characters, silently. It was at 1,974 when "one foot on the floor"
+had to go in, so four sentences elsewhere were tightened to make room — check
+the count before adding anything, and expect to cut something to fit it.
 
 The handbook is generated, not hand-written, so the figures in it stay tied to
 the simulator and the recorded matches they came from.
@@ -1135,27 +1189,36 @@ under systemd, behind CloudFront for HTTPS, domain at Cloudflare. About $7 a
 month. `infra/aws/HOSTING.md` has the full picture — instance, DNS records,
 certificate, and the gotchas found while building it.
 
-Deploying is a pull on the box:
+`npm run ship "what changed"` pushes to GitHub. GitHub runs the full test suite
+and, if it is green, tells the box to pull — so a push deploys, and a broken
+commit does not. That needs the `AWS_HOST` and `AWS_SSH_KEY` repository secrets;
+**without them the workflow is plain CI and deploys nothing**, printing the
+manual command instead. If a change seems not to have landed, check those first.
+
+By hand on the box, when you need it:
 
 ```bash
-cd /home/ubuntu/app && git pull && npm install --omit=dev && sudo systemctl restart rumble
+bash /home/ubuntu/app/tools/deploy-remote.sh          # refuses mid-match
+bash /home/ubuntu/app/tools/deploy-remote.sh --wait   # deploys when clear
+bash /home/ubuntu/app/tools/deploy-remote.sh --force  # now, regardless
 ```
 
-Note that this does **not** run the test suite the way the old Fly deploy did,
-and that restarting ends any match in progress.
+Prefer the script over a bare `git pull && systemctl restart`. **A restart ends
+every match in progress** — they live in memory — so it asks `/api/health` for
+`matchesInPlay` and holds rather than pulling the rug out from under a live
+game.
 
-
-**This app must run exactly one machine.** Matches live in memory, so a second
-machine means a host can create a match on one and have players land on the
-other — which surfaces as "bad host key" and "no such game". After any
-`fly launch`, check and fix with:
-
-    fly status
-    fly scale count 1
+**This app must run exactly one server.** Matches live in memory, so a second
+one means a host can create a match on one and have players land on the other —
+which surfaces as "bad host key" and "no such game".
 
 `GET /api/health` reports the version, machine id, uptime and live match count.
-Hit it twice: if the machine id changes, you are running more than one.
+Hit it twice: if the machine id changes, you are running more than one. The id
+is the pid plus a boot nonce, so it also names the process to go and stop —
+deliberately not the hostname, since `/api/health` is public and the hostname
+here is an internal address.
 
-
-Pushes to `main` run the simulation harness, then deploy to fly.io. Requires a
-`FLY_API_TOKEN` repository secret.
+That check was broken for the whole of the Lightsail era and is worth knowing
+about: the id used to be `FLY_MACHINE_ID || 'local'`, and since Lightsail sets
+no such variable it was the constant `local` on every response — two instances
+would have answered identically and the tell would never have fired.

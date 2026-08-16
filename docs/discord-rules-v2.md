@@ -1,5 +1,10 @@
 <!-- Runs past Discord's 2,000-character limit; post as two messages,
-     breaking before The ceiling. -->
+     breaking before "Want to deal with a bully?".
+
+     The break used to be before The ceiling, which left the first message at
+     1,958 of 2,000 once One foot on the floor was added — 42 characters from
+     silently truncating in Discord. Breaking at the bully line splits it
+     1,382 / 1,707 and leaves room for the next rule. -->
 **J! ROYAL RUMBLE — the rules**
 
 Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
@@ -15,6 +20,8 @@ Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
 🤐 **Nobody answers?** The whole ring loses half the value. Passing is not free.
 
 ☠️ **Elimination.** Drop below zero and you're out. Exactly zero survives.
+
+🩹 **One foot on the floor.** Go under before you've taken three clues and you don't go out at all — you stay up on half a starting stake, with **half knocked off your buzz time for the next 40 races**. Once each. It's for people flattened before they got going: if you were in the match and lost it, you go out properly. Nothing to press, it just happens.
 
 🎯 **Want to deal with a bully?** Press **T** and pick them. Take the clue and the **whole pot comes out of that player alone** — everybody else pays nothing. Miss, and if *they* convert it you pay them the whole pot yourself while the ring watches for free. Press 0 to stand down. Everyone can see who you're hunting.
 

@@ -4,8 +4,8 @@
 // to make, no third-party form, nothing to sign up for. People are playing
 // outside David's own tests now and the only channel was telling him directly.
 //
-// The same /data rule as the logs — that is the mounted volume, and anything
-// written into the app directory is wiped by the next deploy.
+// The same /data rule as the logs — that is outside the app directory, and
+// anything written inside it is wiped by the next deploy.
 
 import { mkdirSync, writeFileSync, readdirSync, readFileSync, statSync, existsSync,
   unlinkSync } from 'fs';

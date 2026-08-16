@@ -89,7 +89,7 @@ node src/server.js &          # give it ~25s in a slow sandbox
 for t in wrestlers mechanics2 latecomer lag watch logdetail warmup timeout \
          tokens botcal otvalue mechanics-ui overtime logstore retoss \
          entry-countdown pagerefs bots setup-bots setup e2e delay record \
-         buzzer avatar mechanics-live perf escapes; do node test/$t.mjs; done
+         buzzer avatar mechanics-live perf escapes comeback; do node test/$t.mjs; done
 for t in mechanics estimate boxparse boxfetch; do node test/$t.mjs; done
 node test/harness.js          # preset sanity: length, back-half, skill
 ```
@@ -294,6 +294,26 @@ buzzes. Upsets happen — one win from 5th of 7, one from 3rd of 4 — so it is 
 deterministic, but a bottom-half buzzer is around 1-in-4 overall and close to
 zero when a Luigi-class buzzer is in the room.
 
+**Addressed in 0.84.0 — "one foot on the floor".** The original note follows,
+because the reasoning is what picked the lever.
+
+A player who would go out having taken fewer than three clues is not eliminated:
+they stay up at half stake with their buzz time halved for 40 races. On by
+default, `comeback: false` turns it off, and `tools/comeback-study.mjs` is the
+measurement. **The gate is the whole mechanism** — ungated it is a subsidy for
+the strong, who spend the free life too and finish further ahead.
+
+Two things to carry forward. It **costs draw fairness** (back half 50% → 59% at
+sixteen), which is the first time the two axes have pulled against each other
+here. And it was **tuned at a 70% buzz discount and shipped at 50%**, so every
+published figure for it is an upper bound — the direction holds, the magnitudes
+are unmeasured. `npm run comeback-study` has a row marked SHIPPED; run it and
+correct the README table, the changelog entry and the handbook from it. Until
+somebody does, this mechanic is the exception to the house rule below rather
+than an example of it.
+
+Old note follows.
+
 **This is a second axis and the harness does not measure it.** Fairness by draw
 — the back-half win rate — has been measured to death and is fine. Fairness by
 skill has never been measured at all. Proposed definition of done, so a harness
@@ -305,10 +325,10 @@ Candidate levers, from the analysis, in the order they look worth trying:
 1. ~~Scale entry and revival stakes with the overtime multiplier.~~ **Done in
    0.78** — this was the Randall case, and it moved death-within-three-clues
    from 58% to 9%.
-2. **A buzz-timing handicap priced in score.** The leader gives up milliseconds.
-   The lockout mechanic already prices time in exactly this way, so the plumbing
-   exists. The only lever that touches the skill gap directly rather than draw
-   position — and therefore the only one that can actually answer the question.
+2. ~~A buzz-timing handicap priced in score.~~ **Done in 0.84.0**, inverted: the
+   discount goes to whoever never got going rather than the leader giving up
+   milliseconds. Same trade seen from the other end, and far easier to explain
+   at the table.
 3. **A progressive pot.** Leaders pay more into pots they lose. Redistributive
    without touching the buzzer, which makes it easier to explain to a room.
 4. **Lean on the existing skill dial.** The harness already reports skill% per

@@ -51,11 +51,12 @@ try {
 
   // The thing worth knowing up front, not buried at the bottom.
   document.getElementById('notice').innerHTML = d.durable
-    ? `<div class="ok">On a mounted volume — these survive deploys.</div>`
+    ? `<div class="ok">Outside the app directory — these survive deploys.</div>`
     : `<div class="warn"><b>These will be wiped by the next deploy.</b>
-        They are on the machine's own disk, not a volume. To keep them:
-        <code>fly volumes create rumble_data --size 1 --region ord</code>
-        and redeploy with the <code>[mounts]</code> block already in fly.toml.</div>`;
+        They are inside the app directory, which a deploy replaces. To keep them,
+        make the directory once on the server:
+        <code>sudo mkdir -p /data/logs &amp;&amp; sudo chown -R ubuntu:ubuntu /data</code>
+        then restart.</div>`;
 
   const rows = d.matches.map((m) => `<tr>
     <td><a href="/api/logs/${m.file}${q}">${m.file.replace(/\.json$/, '')}</a>

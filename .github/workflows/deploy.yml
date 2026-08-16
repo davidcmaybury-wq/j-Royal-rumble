@@ -38,6 +38,8 @@ jobs:
         run: node test/mechanics.mjs
       - name: Overtime resolves a stalled endgame
         run: node test/overtime.mjs
+      - name: A player knocked out early gets one foot on the floor
+        run: node test/comeback.mjs
       - name: End-to-end match over sockets
         run: |
           node src/server.js & sleep 10

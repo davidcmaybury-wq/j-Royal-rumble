@@ -1,3 +1,5 @@
+// comeback:false throughout — these are about elimination, and the
+// standard comeback keeps anybody under its gate in the ring.
 import { RumbleGame, makeRng } from '../src/engine.js';
 const ROW=[100,200,300,400,500];
 let n=0; const pool=()=>{n++;return{id:'cat'+n,title:'CAT'+n,
@@ -5,7 +7,7 @@ let n=0; const pool=()=>{n++;return{id:'cat'+n,title:'CAT'+n,
 const mk=(st={},np=4)=>new RumbleGame({
   players:Array.from({length:np},(_,i)=>({id:'p'+i,name:'P'+i})),
   rng:makeRng(5),categoryPool:pool,
-  settings:{entryInterval:999,startScore:3000,ceiling:40000,ceilingDecayPerClue:0,...st}});
+  settings:{comeback:false,entryInterval:999,startScore:3000,ceiling:40000,ceilingDecayPerClue:0,...st}});
 const openIn=(g,slot)=>{const c=g.board[slot];const x=c.clues.find(y=>!y.revealed);return x?[slot,x.row]:null;};
 let fails=0; const ck=(l,ok,d='')=>{console.log(`  ${ok?'ok  ':'FAIL'} ${l}${d?'  — '+d:''}`);if(!ok)fails++;};
 

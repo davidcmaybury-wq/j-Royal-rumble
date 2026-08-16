@@ -3,6 +3,34 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.84.0 — one foot on the floor
+
+Somebody knocked out before they ever got going comes straight back on half a
+stake, with half off their buzz for the next 40 races. Once each, and only for
+players with fewer than three clues to their name.
+
+**The gate is the design.** Ungated, the same mechanic is a subsidy for the
+strong — they take their free life too and end up further ahead. Measured in a
+six-player field with one elite and one champ: the bottom four go from 1.5% of
+match wins to 41.9%, and the elite from 93.8% to 38.6%. A fair share for those
+four would be 66.7%, so it moves toward even without overshooting.
+
+**Those figures are for a 70% discount, which is not what shipped.** The
+mechanic was tuned at 70% and set to 50% before release, so every number above
+is an upper bound on what the shipped setting does — the direction holds, the
+magnitude is unmeasured. `npm run comeback-study` has a row for the shipped
+configuration; this entry should be corrected from it rather than left standing.
+The house rule is to measure before shipping, and this shipped ahead of the
+measurement on purpose.
+
+**It costs draw fairness**, which is worth knowing. The back half of the draw
+goes from 50% to 59% at sixteen players, because a late entrant is likelier to
+still be under the gate when they hit trouble. Fairness by skill and fairness by
+draw are pulling against each other here for the first time.
+
+It also quietly preempts bounties and revival for anyone under the gate: they are
+never eliminated, so nothing pays out and no second life is spent.
+
 ## 0.83.0 — the handbook, rewritten against nine matches
 
 Part IV replaced with an analysis of all nine recorded human matches rather than

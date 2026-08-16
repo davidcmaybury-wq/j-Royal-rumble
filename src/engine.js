@@ -84,6 +84,30 @@ export const DEFAULT_SETTINGS = {
   // nothing against a strong player, this one actually bites: it puts the whole
   // pot on one head.
   targeting: true,           // aim your damage at one player, and theirs at you
+
+  // One foot on the floor.
+  //
+  // Somebody knocked out before they ever got going comes straight back with
+  // half a stake and a temporary edge on the buzzer. Standard, because without
+  // it the bottom of a mixed field is scenery: measured against one strong
+  // player and two more, a casual's chance of winning the match is 0.1%. With
+  // this it is 7.3%, and the strongest player drops from 80.6% to 57.5%.
+  //
+  // The gate is the whole design. Ungated, the same mechanic is a subsidy for
+  // the sharks — they use their free life too, and the casual's chance only
+  // reaches 1.9%. "Fewer than three clues taken" is a workable definition of
+  // never having got going, and it is close to sandbag-proof: staying under it
+  // means not scoring.
+  comeback: true,
+  comebackGate: 3,           // clues taken, below which you qualify
+  comebackStake: 0.5,        // share of the starting stake you return with
+  // How much of your buzz time the edge takes off. Was 0.7 when the mechanic
+  // was first measured; David set it to 0.5 before it ever shipped, on the
+  // grounds that 70% was more help than the moment called for. Every figure
+  // quoted for this mechanic was measured at 0.7 and is therefore an upper
+  // bound on what 0.5 does — `npm run comeback-study` re-measures it.
+  comebackBoost: 0.5,
+  comebackRaces: 40,         // races the edge lasts
   bounties: false,           // queued players pay to put a price on a head
   revival: false,            // one more life, at a fraction of the stake
   revivalLimit: 1,
@@ -435,6 +459,8 @@ export class RumbleGame {
         pins: 0, correct: 0, missed: 0,
         topRope: false, topRopeAt: null, target: null,
         stable: null,              // stable id, or null for going stag
+        comebackUsed: false,       // one to a customer
+        comebackUntil: null,       // race number the edge lasts through
         bankedLastClue: false,
         revivals: 0, bountyPlaced: 0,
       });
@@ -448,6 +474,7 @@ export class RumbleGame {
     this.overtimeFrom = null;  // clue number the escalation began at
     this.stalledClues = 0;     // clues since anyone was eliminated
     this.overtimeSteps = 0;    // doublings reached; a ratchet, never falls
+    this.racesRun = 0;         // contested clues, for timing the comeback edge
 
     this.board = [];
     for (let i = 0; i < BOARD_CATEGORIES; i++) this.board.push(this.drawCategory());
@@ -473,6 +500,7 @@ export class RumbleGame {
       overtimeFrom: this.overtimeFrom,
       stalledClues: this.stalledClues,
       overtimeSteps: this.overtimeSteps,
+      racesRun: this.racesRun,
       stables: [...this.stables.values()].map((st) => ({ ...st })),
       cluesRevealed: this.cluesRevealed,
       fieldClears: this.fieldClears,
@@ -495,6 +523,7 @@ export class RumbleGame {
     this.overtimeFrom = d.overtimeFrom ?? null;
     this.stalledClues = d.stalledClues ?? 0;
     this.overtimeSteps = d.overtimeSteps ?? 0;
+    this.racesRun = d.racesRun ?? 0;
     if (d.stables) this.stables = new Map(d.stables.map((st) => [st.id, { ...st }]));
     this.cluesRevealed = d.cluesRevealed;
     this.fieldClears = d.fieldClears;
@@ -928,6 +957,10 @@ export class RumbleGame {
       this.stables.delete(won);
     }
 
+    // A contested clue is a race, and the comeback edge is measured in races
+    // rather than clues so a run of stumpers does not burn it.
+    if (winnerId || (entry.missed || []).length) this.racesRun += 1;
+
     this.applyEliminations(entry, winnerId);
     // --- saves declared during the previous clue --------------------------
     //
@@ -1036,6 +1069,21 @@ export class RumbleGame {
     const winner = winnerId ? this.players.get(winnerId) : null;
 
     for (const p of doomed) {
+      // One foot on the floor: back before they hit the floor at all.
+      //
+      // Checked before the elimination is recorded, so somebody who qualifies
+      // never leaves — no gap on the board, no re-entry queue, nothing to
+      // explain. They just stay up, at half a stake, with an edge for a while.
+      if (this.s.comeback && !p.comebackUsed
+          && p.correct < (this.s.comebackGate ?? 3)) {
+        p.comebackUsed = true;
+        p.score = Math.round(this.s.startScore * (this.s.comebackStake ?? 0.5));
+        p.comebackUntil = this.racesRun + (this.s.comebackRaces ?? 40);
+        entry.comebacks = (entry.comebacks || []).concat([{ playerId: p.id,
+          score: p.score, until: p.comebackUntil }]);
+        continue;
+      }
+
       p.state = 'eliminated';
       p.eliminatedAtClue = this.cluesRevealed;
       this.eliminationOrder.push(p.id);
@@ -1200,6 +1248,26 @@ export class RumbleGame {
 
   // Spectator feedback: an eliminated or queued player's buzz ranked against
   // the live field only, never against other spectators.
+  /**
+   * What somebody's buzz is worth against everybody else's, right now.
+   *
+   * A player on the way back from a near-elimination gets time taken off their
+   * press for a while. It is applied here rather than to the recorded number so
+   * the log keeps what they actually did — the edge is a ranking rule, not a
+   * rewriting of history, and the console shows both.
+   */
+  buzzEdge(playerId) {
+    if (!this.s.comeback) return 1;
+    const p = this.players.get(playerId);
+    if (!p || p.comebackUntil == null || this.racesRun > p.comebackUntil) return 1;
+    return 1 - (this.s.comebackBoost ?? 0.5);
+  }
+
+  /** Is this player currently on the way back? */
+  onTheFloor(playerId) {
+    return this.buzzEdge(playerId) < 1;
+  }
+
   /** What every clue is currently multiplied by: 1, 2, 4, up to overtimeMax. */
   overtimeMultiplier() {
     return Math.min(this.s.overtimeMax || 1, 2 ** (this.overtimeSteps || 0));

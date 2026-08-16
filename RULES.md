@@ -25,6 +25,8 @@ Thirty players. Three start. One survives.
 
 **Below zero and you're out.** Zero is still alive.
 
+**Flattened early?** Drop under with fewer than three clues taken and you stay up instead — half stake, buzz halved for 40 races. Once each.
+
 **Still standing?** +$500 every 10 clues you survive — being early in the draw is hard work, and this pays for it.
 
 **Take a whole column** and it washes brass: +$500.
@@ -33,13 +35,13 @@ Thirty players. Three start. One survives.
 
 **Overtime** — when nobody's left to enter and nobody's going out, clue values double every six clues, up to eight times face. It doesn't stop until somebody breaks.
 
-**Waiting your turn? Buzz anyway.** Your buzzer works from the moment you join. It doesn't score, but it reports your time and where you'd have placed — the people in the ring have been warming up for twenty minutes, so don't arrive cold. Turning up late is fine too: join any time and go to the back of the queue.
+**Waiting your turn? Buzz anyway.** Your buzzer works from the moment you join. It doesn't score, but it reports your time and where you'd have placed, so don't arrive cold. Turning up late is fine: join any time and go to the back of the queue.
 
 **Last one standing wins.** Clues survived, toss outs, points drained, buzzer speed — all tracked and posted, none of them the winner.
 
-⚠️ Don't jump the lights. Buzzing early costs you 250ms, and that's a lifetime here. Good players don't react to the lights anyway — they learn the rhythm of the read. A perfect buzz reads 0.0.
+⚠️ Don't jump the lights. Buzzing early costs you 250ms, a lifetime here. Good players don't react to the lights — they learn the rhythm of the read. A perfect buzz reads 0.0.
 
-**To play:** open the buzzer link, enter the room code, add your name, leave the page open. That page is your buzzer. There's a watch link too, if you'd rather have the board on your own screen than squint at a share.
+**To play:** open the buzzer link, enter the room code, add your name, leave it open — it's your buzzer. There's a watch link too, if you'd rather have the board on your own screen.
 
 ---
 
@@ -95,6 +97,26 @@ whose answer did it is credited with a **toss out** for each — the closest thi
 game has to putting somebody over the top rope.
 
 If a clue would somehow wipe the entire ring, the highest score survives.
+
+### One foot on the floor
+
+**If you'd go out with fewer than three clues to your name, you don't go out.**
+You stay in the ring on half a starting stake, and for the next 40 races your
+buzz counts at half the time you actually pressed. Once each, and it happens by
+itself — there's nothing to declare and nothing to press.
+
+The gate is the whole point. It's for somebody flattened before they ever got
+going, not for somebody who played the match and lost it: three clues taken and
+you're past it for good. Staying under the gate on purpose means not scoring,
+which is not a strategy.
+
+You are never eliminated when this fires, so nothing that keys off elimination
+happens either — a bounty on your head doesn't pay out, and a revival life
+isn't spent.
+
+The edge is counted in **races, not clues**, so a run of stumpers doesn't burn
+it. Your real reaction time is what gets recorded and posted; the discount is a
+ranking rule for who takes the clue, not a rewrite of what you did.
 
 ---
 

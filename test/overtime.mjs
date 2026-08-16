@@ -1,3 +1,5 @@
+// comeback:false throughout — these are about elimination, and the
+// standard comeback keeps anybody under its gate in the ring.
 // Overtime: the fix for two evenly matched players trading the same points
 // back and forth until one of them has to go home.
 import { RumbleGame, makeRng } from '../src/engine.js';
@@ -11,7 +13,7 @@ const pool = () => { n++; return { id: 'c' + n, title: 'C' + n,
 const mk = (over = {}, players = 2) => { n = 0; return new RumbleGame({
   players: Array.from({ length: players }, (_, i) => ({ id: 'p' + i, name: 'P' + i })),
   rng: makeRng(9), categoryPool: pool,
-  settings: { entryInterval: 999, startScore: 3000, ceiling: 90000,
+  settings: { comeback: false,  entryInterval: 999, startScore: 3000, ceiling: 90000,
     ceilingDecayPerClue: 0, overtimeEvery: 6, ...over } }); };
 const anyClue = (g) => {
   for (let i = 0; i < g.board.length; i++) {

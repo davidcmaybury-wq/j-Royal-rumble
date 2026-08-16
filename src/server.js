@@ -25,7 +25,28 @@ const PORT = process.env.PORT || 8080;
 const PKG = JSON.parse(readFileSync(join(__dir, '../package.json'), 'utf8'));
 export const VERSION = PKG.version;
 const BOOTED = Date.now();
-const MACHINE = process.env.FLY_MACHINE_ID || 'local';
+// Which process answered this request.
+//
+// Matches live in this process's memory, so two reachable servers is two
+// separate broken games — and the way you catch it is hitting /api/health twice
+// and seeing the id change.
+//
+// This used to be `FLY_MACHINE_ID || 'local'`. Fly sets that variable; Lightsail
+// does not, so after the migration it was the constant string 'local' on every
+// response and the check could not detect anything at all — two instances would
+// have answered identically. What the check needs is a value that differs per
+// process and holds still within one. FLY_MACHINE_ID is still preferred when it is
+// there, because the old Fly app is still up as a spare and its own id is the
+// more useful label on that box.
+//
+// Pid and a boot nonce rather than the hostname, for two reasons. /api/health is
+// public and unauthenticated, and the hostname here is `ip-172-26-x-y` — no
+// reason to publish an internal address to answer "is more than one of you
+// running". And pids are only unique per machine: two boxes can both be serving
+// from pid 1234, which is exactly the case this check exists to catch, so the
+// nonce is what actually guarantees they differ.
+const MACHINE = process.env.FLY_MACHINE_ID
+  || `${process.pid}-${randomBytes(3).toString('hex')}`;
 
 // Real buzz histograms, recorded from play of the original model.
 try {
@@ -392,6 +413,8 @@ class Match {
       token: p.id, draw: p.drawNumber, name: p.name, score: p.score,
       // Which stable, so every scoreboard can tint the row the same way.
       stable: p.stable || null,
+      // On the way back from a near-elimination, with time off their buzz.
+      onFloor: g.onTheFloor ? g.onTheFloor(p.id) : false,
       state: p.state, tenure: (p.eliminatedAtClue ?? g.cluesRevealed) - (p.enteredAtClue ?? 0),
       connected: r?.connected ?? false, hasAvatar: !!r?.avatar,
       tokenArt: r?.tokenArt || null, look: r?.look || null, isBot: !!r?.isBot,
@@ -480,6 +503,8 @@ class Match {
       token: p.id, draw: p.drawNumber, name: p.name, score: p.score,
       // Which stable, so every scoreboard can tint the row the same way.
       stable: p.stable || null,
+      // On the way back from a near-elimination, with time off their buzz.
+      onFloor: g.onTheFloor ? g.onTheFloor(p.id) : false,
       state: p.state, pins: p.pins, correct: p.correct, missed: p.missed,
       tenure, connected: this.roster.get(p.id)?.connected ?? false,
       hasAvatar: !!this.roster.get(p.id)?.avatar,
@@ -751,6 +776,8 @@ class Match {
         topRope: !!p.topRope,
         topRopeWait: g.topRopeWait(p.id),
         stable: p.stable || null,
+      // On the way back from a near-elimination, with time off their buzz.
+      onFloor: g.onTheFloor ? g.onTheFloor(p.id) : false,
         target: p.target || null,
         targetedBy: [...g.players.values()].filter((x) => x.target === token && x.state === 'live')
           .map((x) => x.name),
@@ -921,10 +948,11 @@ app.delete('/api/match/:id/material/:idx', (req, res) => {
   res.json(m.setupView());
 });
 
-// Matches live in this process's memory. If two machines are running, a host
-// can create a match on one and have players land on the other — which shows
-// up as "bad host key" and "no such game". Hitting this twice and seeing the
-// machine id change is the tell.
+// Matches live in this process's memory. If two servers are running, a host can
+// create a match on one and have players land on the other — which shows up as
+// "bad host key" and "no such game". Hitting this twice and seeing the machine
+// id change is the tell, which is why that id has to differ per process; see
+// MACHINE above for the version of this check that could not.
 app.get('/api/health', (_req, res) => {
   res.json({
     logs: logs.status(),
@@ -1190,6 +1218,21 @@ function announceLeader(match) {
         { said: [{ token: lead.token, name: lead.name, ...line }] });
     }
   }, (match.settings?.lockout || 250) + 450);
+}
+
+/**
+ * Order a race, giving somebody on the way back their edge.
+ *
+ * The recorded `ms` is left alone — that is what the player actually did and
+ * the log should keep it. The edge is applied only to the ordering, and the
+ * console shows both numbers so nobody is left wondering why third place is
+ * on the clock.
+ */
+function rankRace(match) {
+  if (!match?.race) return;
+  const g = match.game;
+  const edge = (b) => b.ms * (g ? g.buzzEdge(b.token) : 1);
+  match.race.buzzes.sort((a, b) => edge(a) - edge(b));
 }
 
 // Watch screens that have turned their sound on. A set of socket ids, so a
@@ -1496,8 +1539,10 @@ io.on('connection', (socket) => {
 
   socket.on('host-join', ({ gameId, hostKey }, ack) => {
     const m = matches.get((gameId || '').toUpperCase());
-    if (!m) return ack?.({ error: `no match ${gameId} on this server (machine ${MACHINE}). ` +
-      `If the app is running more than one machine, run: fly scale count 1` });
+    if (!m) return ack?.({ error: `no match ${gameId} on this server (${MACHINE}). ` +
+      `If more than one server is reachable, the room is split across them: ` +
+      `everybody has to be on the same address. Ask each for /api/health and ` +
+      `stop all but one.` });
     if (m.hostKey !== hostKey) return ack?.({ error: 'that host key does not match this game' });
     match = m; isHost = true;
     socket.join(`${m.id}:host`);
@@ -1752,7 +1797,7 @@ io.on('connection', (socket) => {
 
   socket.on('watch-setup', ({ gameId, hostKey }, ack) => {
     const m = matches.get((gameId || '').toUpperCase());
-    if (!m) return ack?.({ error: `no match ${gameId} on this server (machine ${MACHINE})` });
+    if (!m) return ack?.({ error: `no match ${gameId} on this server (${MACHINE})` });
     if (m.hostKey !== hostKey) return ack?.({ error: 'that host key does not match this game' });
     match = m; isHost = true;
     socket.join(`${m.id}:host`);
@@ -1871,7 +1916,7 @@ io.on('connection', (socket) => {
         st.att++; st.times.push(plan.ms);
         match.race.buzzes.push({ token: p.id, name: p.name, ms: plan.ms,
           early: false, spectator: false, bot: true, botCorrect: plan.correct });
-        match.race.buzzes.sort((a, b) => a.ms - b.ms);
+        rankRace(match);
         announceLeader(match);
         if (!match.fastest || plan.ms < match.fastest.ms) {
           match.fastest = { ms: plan.ms, name: p.name, clue: match.game.cluesRevealed + 1,
@@ -2254,7 +2299,7 @@ io.on('connection', (socket) => {
       match.humanBuzzes.get(token).push(rec.ms);
     }
     match.race.buzzes.push(rec);
-    match.race.buzzes.sort((a, b) => a.ms - b.ms);
+    rankRace(match);
 
     // The fastest buzz of the match has to have been a real one — otherwise it
     // can be won by somebody who was not in the ring.

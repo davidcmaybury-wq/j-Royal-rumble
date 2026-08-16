@@ -98,6 +98,15 @@ bad guess can cost you twice: once for the miss, once for their payday.</p>
 <p>Drop below zero and you're out. Exactly zero survives. If one answer knocks out several
 players at once, they all go together, and the answerer is credited a toss out for each. If a
 clue somehow eliminates the entire ring, the highest score survives.</p>
+<p><strong>One foot on the floor.</strong> With one exception: if you would go out having taken
+fewer than three clues, you don't go out at all. You stay up on half a starting stake, and for
+the next 40 races your buzz is ranked at half the time you actually pressed. Once each,
+automatic, nothing to declare. The gate is the design — it catches somebody flattened before
+they ever got going, and a player who was in the match and lost it goes out properly. Because
+no elimination is recorded, a bounty on that player doesn't pay and a revival life isn't spent.
+The edge is counted in races rather than clues so a run of stumpers doesn't burn it, and the
+recorded reaction time is always the real one; the discount decides who takes the clue, it does
+not rewrite what happened.</p>
 
 <h3>4 · The ceiling</h3>
 <p>There's a maximum score, sized to the field — bigger matches get more headroom. Anything you
@@ -426,7 +435,7 @@ eliminated at clue 10, revived, and was out again at 66 having won two races all
 the match's final latecomer (fed into ×2 overtime with a fixed stake, eliminated in six
 clues; revived at half stake into ×4, eliminated in one) shows the endgame compounding the
 problem: the deeper the match runs, the more it belongs to whoever is already on top.</p>
-<div class="callout"><p class="tag">Open — design goal</p>
+<div class="callout"><p class="tag">Answered in 0.84.0 — the argument that led there, kept</p>
 <p>David's requirement, verbatim: <em>"I want everyone to have SOME chance to win in this."</em>
 Not an equal chance — the sharks should still be favored — but a real one. The current
 mechanics don't obviously provide it: the only toggle that favors the early half is bounties
@@ -438,7 +447,28 @@ mechanic); making the pot progressive (leaders pay more into a pot they lose); a
 the existing skill dial — the harness already measures skill% per configuration, and shorter,
 swingier matches are measurably less skill-determined. The target metric should be explicit:
 the probability that a bottom-half buzzer wins, currently ~1-in-4 by the winner-rank data
-above, and effectively zero when a P1-class buzzer is in the room.</p></div>
+above, and effectively zero when a P1-class buzzer is in the room.</p>
+<p><strong>Answered in 0.84.0, by the second lever on that list.</strong> "One foot on the
+floor" gives a player who goes under before taking three clues an instant return at half stake
+and a discount on their buzz time for the next 40 races. It is the buzz-timing handicap,
+inverted: rather than taxing the leader's milliseconds it hands them to whoever never got
+going, which is the same trade seen from the other end and much easier to explain at the
+table.</p>
+<p><strong>The gate is the entire mechanism.</strong> Ungated, it is a subsidy for the sharks —
+they spend their free life too and finish further ahead, and the casual's chance only reaches
+1.9%. Gated at three clues taken, in a six-player field with one elite and one champ, the
+bottom four go from 1.5% of wins to 41.9% and the elite from 93.8% to 38.6%. An even share for
+those four would be 66.7%, so it moves toward fair without overshooting into a lottery. It is
+close to sandbag-proof: staying under the gate means not scoring.</p>
+<p><strong>Two things to hold against it.</strong> First, it costs draw fairness — the back
+half of the draw goes from 50% to 59% at sixteen players, because a late entrant is likelier to
+still be under the gate when trouble arrives. Fairness by skill and fairness by draw pull
+against each other here for the first time in this document, and the honest position is that
+the trade was made deliberately rather than avoided. Second, and more awkwardly: the figures
+above were all measured at a 70% buzz discount, and the mechanic shipped at 50%. The direction
+survives that change; the magnitudes do not, and no one has measured the shipped setting yet.
+Treat every number in this section as an upper bound until <code>comeback-study</code> is run
+against the configuration that is actually live.</p></div>
 <p class="mut">Method, in one paragraph: the rules engine is a plain module with no framework
 and no network, driven by a Monte Carlo harness that replays hundreds of matches per
 configuration before every deployment. The harness once caught a scoring regression that would

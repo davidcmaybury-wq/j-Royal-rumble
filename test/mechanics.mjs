@@ -108,9 +108,13 @@ console.log('\nTARGETING');
   check('you cannot aim at yourself', g3.setTarget(p, p) === false);
 }
 
+// Bounties and revival both fire on elimination, and the comeback stops a
+// player under its gate being eliminated at all. That interaction is real and
+// intended — see the note below — but these blocks are about the other
+// mechanics, so they turn it off to get somebody out of the ring.
 console.log('\nBOUNTIES');
 {
-  const g = game({ bounties: true }, 6);
+  const g = game({ comeback: false,  bounties: true }, 6);
   const inRing = live(g);
   const queued = g.queued().map((p) => p.id);
   const placer = queued[0], head = inRing[1], hunter = inRing[0];
@@ -131,7 +135,7 @@ console.log('\nBOUNTIES');
   check('the bounty is cleared once paid', g.bountyTotal(head) === 0);
 
   // the placer walks in lighter
-  const g2 = game({ bounties: true, entryInterval: 1 }, 5);
+  const g2 = game({ comeback: false,  bounties: true, entryInterval: 1 }, 5);
   const q2 = g2.queued()[0].id;
   g2.placeBounty(q2, live(g2)[0], 900);
   g2.resolveClue(...pick(g2, 1), { winnerId: live(g2)[0], missedIds: [] });
@@ -140,7 +144,7 @@ console.log('\nBOUNTIES');
     entered.state !== 'queued' && entered.score === 3000 - 900, `entered on ${entered.score}`);
 
   // turning it back on the placer
-  const g3 = game({ bounties: true, entryInterval: 1 }, 5);
+  const g3 = game({ comeback: false,  bounties: true, entryInterval: 1 }, 5);
   const q3 = g3.queued()[0].id;
   const head3 = live(g3)[0];
   g3.placeBounty(q3, head3, 700);
@@ -154,7 +158,7 @@ console.log('\nBOUNTIES');
 
 console.log('\nREVIVAL');
 {
-  const g = game({ revival: true, revivalLimit: 1, entryInterval: 999 }, 4);
+  const g = game({ comeback: false,  revival: true, revivalLimit: 1, entryInterval: 999 }, 4);
   const [a, b] = live(g);
   g.players.get(b).score = 10;
   g.resolveClue(...pick(g, 2), { winnerId: a, missedIds: [] });
@@ -164,7 +168,7 @@ console.log('\nREVIVAL');
   check('they are not in the elimination order', !g.eliminationOrder.includes(b));
 
   // and comes back on half
-  const g2 = game({ revival: true, revivalLimit: 1, entryInterval: 1 }, 4);
+  const g2 = game({ comeback: false,  revival: true, revivalLimit: 1, entryInterval: 1 }, 4);
   const victim = live(g2)[1];
   g2.players.get(victim).score = 10;
   g2.resolveClue(...pick(g2, 2), { winnerId: live(g2)[0], missedIds: [] });
@@ -175,7 +179,7 @@ console.log('\nREVIVAL');
     g2.players.get(victim).score === 1500, `${g2.players.get(victim).score}`);
 
   // the limit holds
-  const g3 = game({ revival: true, revivalLimit: 1, entryInterval: 999 }, 4);
+  const g3 = game({ comeback: false,  revival: true, revivalLimit: 1, entryInterval: 999 }, 4);
   const v3 = live(g3)[1];
   g3.players.get(v3).score = 10;
   g3.resolveClue(...pick(g3, 2), { winnerId: live(g3)[0], missedIds: [] });
@@ -201,6 +205,9 @@ console.log('\nOFF BY DEFAULT');
   check('bounties refuse when off', !!g.placeBounty(g.queued()[0]?.id || 'x', b, 100).error);
   const wasB = score(g, b);
   g.players.get(b).score = 10;
+  // The comeback would keep them in — it is standard, and this block is about
+  // revival being off. Spend their free life first so the elimination lands.
+  g.players.get(b).comebackUsed = true;
   g.resolveClue(...pick(g, 2), { winnerId: a, missedIds: [] });
   check('no revival when off', g.players.get(b).state === 'eliminated');
 }

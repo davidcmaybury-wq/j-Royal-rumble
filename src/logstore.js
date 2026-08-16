@@ -1,15 +1,20 @@
 // Saving match logs on the server.
 //
-// THE THING TO KNOW: a fly.io machine's own filesystem is ephemeral. Anything
-// written to it survives a restart but is wiped by the next deploy, and this
-// project deploys several times a day. So logs go to /data, which is where a
-// fly volume mounts — and if no volume is mounted, they still get written, but
-// the health endpoint says plainly that they will not survive a deploy.
+// THE THING TO KNOW: logs must live outside the app directory, because a deploy
+// replaces it. On Lightsail — where the site runs now — a deploy is a git pull
+// in /home/ubuntu/app, so /data is untouched by it and by reboots. On the old
+// Fly box the machine filesystem was wiped by every deploy and /data was where
+// a volume mounted. Either way the rule is the same, and it is why the path is
+// checked rather than assumed: logs written anywhere else are gone by the next
+// release.
 //
-//   fly volumes create rumble_data --size 1 --region ord
-//   then add the [mounts] block in fly.toml
+// If /data does not exist the logs still get written, next to the app, and the
+// health endpoint and the /logs page both say plainly that they will not
+// survive a deploy. Make it once on the box:
 //
-// Without that, treat these as a convenience for the current session only.
+//   sudo mkdir -p /data/logs && sudo chown -R ubuntu:ubuntu /data
+//
+// Until then, treat these as a convenience for the current session only.
 
 import { mkdirSync, writeFileSync, readdirSync, readFileSync, statSync, existsSync } from 'fs';
 import { join } from 'path';
@@ -51,8 +56,8 @@ export function status() {
     saved: count,
     error: lastError,
     note: durable()
-      ? 'on a mounted volume — survives deploys'
-      : 'on the machine filesystem — WIPED BY THE NEXT DEPLOY',
+      ? 'outside the app directory — survives deploys'
+      : 'inside the app directory — WIPED BY THE NEXT DEPLOY',
   };
 }
 

@@ -495,6 +495,13 @@ function render(keepEdits) {
     ${adv('longevity', 'Longevity bonus', s.longevity,
       '+500 every 10 clues survived. Pays the early draws for the grinding they do more of; '
       + 'measured to bring the draw to even without handing the match to anybody.')}
+    ${adv('comeback', 'One foot on the floor', s.comeback,
+      'Somebody knocked out before they ever got going comes straight back on half a stake, '
+      + 'with half the time off their buzz for the next 40 races. Once each, and only for '
+      + 'players with fewer than three clues to their name — a player who was in the match and '
+      + 'lost it goes out properly. Measured at a full 70% discount, it took the bottom of a '
+      + 'mixed field from 1.5% of wins against a strong player to 42%; it ships at 50%, which '
+      + 'moves it less by an amount nobody has measured yet.')}
     ${adv('targeting', 'Targeting', s.targeting,
       'Press T and pick somebody. Take the clue and the whole pot comes out of them alone, '
       + 'everyone else spared; miss, and if they take it you pay them the whole pot yourself. '
@@ -715,6 +722,7 @@ function collect() {
 
       topRope: g('topRope').checked, targeting: g('targeting').checked,
       savePlayer: g('savePlayer').checked,
+      comeback: g('comeback').checked,
       stables: g('stables').checked,
       bounties: g('bounties').checked, revival: g('revival').checked,
       longevity: g('longevity').checked,

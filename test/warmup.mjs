@@ -1,3 +1,5 @@
+// comeback:false throughout — these are about elimination, and the
+// standard comeback keeps anybody under its gate in the ring.
 // Warm-up presses are practice. They must not reach the live record.
 //
 // A player eliminated at clue 9 who kept buzzing for the remaining 75 finished
@@ -13,7 +15,7 @@ const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${
 
 const m = await (await fetch(`${U}/api/match`, { method: 'POST',
   headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ settings: { entryInterval: 999, delay: 0, recordMatch: true } }) })).json();
+  body: JSON.stringify({ settings: { comeback: false,  entryInterval: 999, delay: 0, recordMatch: true } }) })).json();
 const host = io(U, { transports: ['websocket'] });
 await once(host, 'connect');
 let st = null;
@@ -98,7 +100,7 @@ check('flagged so they can be told apart', warm.every((x) => x.spectator === tru
 {
   const m2 = await (await fetch(`${U}/api/match`, { method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ settings: { entryInterval: 999, delay: 0 } }) })).json();
+    body: JSON.stringify({ settings: { comeback: false,  entryInterval: 999, delay: 0 } }) })).json();
   const h2 = io(U, { transports: ['websocket'] });
   await once(h2, 'connect');
   let s2 = null;
@@ -160,7 +162,7 @@ check('flagged so they can be told apart', warm.every((x) => x.spectator === tru
     // A short interval so the warmer-up actually enters: somebody who never
     // reaches the ring is left out of the standings altogether, so there would
     // be no row to inspect.
-    body: JSON.stringify({ settings: { entryInterval: 1, delay: 0 } }) })).json();
+    body: JSON.stringify({ settings: { comeback: false,  entryInterval: 1, delay: 0 } }) })).json();
   const h3 = io(U, { transports: ['websocket'] });
   await once(h3, 'connect');
   let v3 = null;

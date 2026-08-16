@@ -93,6 +93,9 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     ['every advanced mechanic is listed', 'STABLES'],
     ['targeting, which is standard now', 'deal with a bully'],
     ['and that ganging up is the point of it', 'Gang up'],
+    ['one foot on the floor, which is on by default', 'One foot on the floor'],
+    ['that the comeback is gated to people who never got going', 'three clues'],
+    ['and that it stops bounties paying out', "doesn't get eliminated at all"],
   ]) {
     check(`the rules mention ${what}`, both.includes(needle), needle);
   }
@@ -113,6 +116,12 @@ for (const [what, needle] of [
   ['the small-field ceiling', '10,500'],
   ['the gemstone names', 'Diamond'],
   ['the stake riding the multiplier', 'rides the overtime'],
+  ['one foot on the floor', 'One foot on the floor'],
+  // The mechanic was tuned at 70% and shipped at 50%. Every figure quoted for
+  // it came from the 70% run, so the handbook has to say so until somebody
+  // re-measures — a number that quietly describes a setting nobody is running
+  // is worse than no number.
+  ['that its figures were measured at a setting that is not shipped', 'upper bound'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }
