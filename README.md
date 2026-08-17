@@ -1213,9 +1213,17 @@ never reaches the engine, exactly as `blend` does, and `test/setup.mjs` asserts
 it stays out of `settings`. Logs written before this shipped have no `host` and
 read as unknown rather than being backfilled to David.
 
-Grouping player results by host is not built yet — this change only starts
-collecting the field, and one host's matches cannot be compared with anybody's
-until somebody else runs one.
+**A second host is already in the data.** David has identified which matches
+somebody else ran, and the effect is measured in the handbook's Figure 13: the
+three players who played both Aug 16 matches all shifted slower together under
+the other host at an identical delay setting — +45ms, +90ms and +170ms. That is a
+calibration offset rather than a skill change, so absolute times compare within a
+match, or across matches with the same host, and not otherwise.
+
+The set is small, which is why the field is being captured going forward rather
+than a reason to discount it. Grouping results by host in the UI is not built,
+and neither is the real fix — pointing the same calibrate-and-freeze machinery
+the robots use at the host instead.
 
 ### Logs live outside the app directory
 

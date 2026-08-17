@@ -3,6 +3,41 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.91.0 — the analysis chat's graphs, in the handbook where the room reads them
+
+Nine figures merged from `~/Developer/j-royal-rumble-data/charts/`, per David's
+standing rule in that folder's README: **the analysis chat's graphs always go into
+the online handbook.** A chart left in that folder is half-delivered.
+
+- **Broadcast transfer** (3 figures), as a new Part III section: does a strong
+  televised record predict a strong Rumble? Real but loose, holds only where the
+  gap between two players is wide, and accuracy is the half that does not
+  transfer. It doubles as a caution about the robot model, which is calibrated on
+  broadcast attempt and accuracy rates and inherits exactly that.
+- **The configuration map** (2 panels) at the top of the shark problem, as the
+  index to that section — every configuration measured across the project on one
+  chart, with almost nothing moving the casual axis. Left deliberately unnumbered:
+  it is the contents page for the section, not another result in it.
+- **The trigger study** (4 figures) into "Where the trigger belongs", which until
+  now carried the prose and tables without the pictures.
+
+**Figures are renumbered 1–24 in document order, which fixes a duplicate.** There
+were two Figure 11s — the entry-interval chart and the length estimator — and
+nothing referenced either by number, so the collision had gone unnoticed. The one
+genuine prose cross-reference was remapped by caption rather than by number.
+
+Also fixed on the way in: the trigger figures carried a bare `<` in "wins < 3",
+which is invalid HTML in text content. Escaped.
+
+Corrected: a claim from 0.89.0 that there was nothing to compare until somebody
+else hosted a match. There is. David has identified which matches somebody else
+ran, and Figure 17 already quantified it — the three players who played both
+Aug 16 matches all shifted slower together under the other host at an identical
+delay setting, +45ms, +90ms and +170ms. That is a calibration offset, not a skill
+difference, so absolute times compare within a match or across matches with the
+same host, and not otherwise. The set is small, which is why the `host` field
+exists going forward rather than a reason to discount it.
+
 ## 0.90.0 — nobody is clipped to a roof they never touched
 
 Arrivals were clamped to the current ceiling. That clamp was written for flat

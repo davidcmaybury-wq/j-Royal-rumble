@@ -644,5 +644,16 @@ asks who is hosting and saves it to the record as `host`, shown as a column at
 — `test/setup.mjs` asserts it stays out of `settings`. Remembered per browser,
 because a field that has to be retyped ends up empty. Old logs have no `host`
 and read as unknown; **don't backfill them to David** — an assumed value that
-looks like a measured one is worse than a gap. Grouping results by host is not
-built: there is nothing to compare until somebody else runs a match.
+looks like a measured one is worse than a gap.
+
+**There is already a second host in the data, and the effect is measured.** An
+earlier note here claimed there was nothing to compare until somebody else ran a
+match; that was wrong. David has identified the specific matches somebody else
+hosted, and the handbook's Figure 13 quantifies it on the three players who
+played both Aug 16 matches: every one of them shifted slower together under the
+other host at an identical delay setting — **+45ms, +90ms and +170ms** — which is
+a calibration offset, not a skill change. So absolute times are comparable within
+a match, or across matches with the same host, and not otherwise. The set is
+small, which is the reason the `host` field exists going forward rather than a
+reason to discount it. The proposed fix is on the page: point the robots'
+calibrate-and-freeze machinery at the host. Not built.

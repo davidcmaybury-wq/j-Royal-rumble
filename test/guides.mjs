@@ -148,6 +148,13 @@ for (const [what, needle] of [
   // "helpfully" widened later to recover the missing point of casual win share.
   ['that arrivals are not clipped to a roof they never touched', 'never touched'],
   ['and that the flag covers the arrival, not what it wins', 'arrival-only flag'],
+  // The analysis chat's graphs always go into the online handbook — David's
+  // standing rule, in README-FOR-DEV-CHAT.md. A chart left in that folder is
+  // half-delivered, so these assert the merged ones are actually on the page.
+  ['the broadcast-transfer figures', 'Accuracy does not transfer'],
+  ['the configuration map that indexes the shark problem', 'every measured configuration'],
+  ['the trigger study figures', 'Race wins at the moment of first elimination'],
+  ['and the figures are numbered without a duplicate', 'Figure 24'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }
