@@ -481,9 +481,15 @@ somebody likes to set a game up rather than a property of the match.
 
 | | what it does |
 |---|---|
-| Tournament | every standard rule except targeting — the match is settled on the buzzer |
-| Standard | the normal game, targeting and one foot on the floor included |
-| Chaos | everything, advanced mechanics as well |
+| Tournament | no targeting and no comeback — fastest press wins, times public |
+| Arcade | the normal game, targeting and one foot on the floor included |
+| Chaos | Arcade plus every advanced mechanic |
+
+**The first two are named for the mode they produce**, and that has to stay
+true. A rule set called Tournament that left the comeback on would put ARCADE
+MODE on every screen in the room — which is how it was first written, and what
+the rename caught. Tournament drops targeting *and* the comeback; the comeback
+is what makes the difference a mode rather than a preference.
 
 **Game speed**
 

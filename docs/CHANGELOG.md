@@ -3,6 +3,20 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.86.2 — the rule sets are named for the mode they produce
+
+Quick setup offers **Tournament, Arcade, Chaos**. "Standard" is now Arcade,
+which is what it always was.
+
+**The rename caught a real contradiction.** All three rule sets left the comeback
+on, so all three produced a match whose screens read ARCADE MODE — including the
+one called Tournament. Tournament now drops the comeback along with targeting,
+which is what makes it a different mode rather than a different preference: no
+player is ranked with time off their press, so buzz order is buzz speed and the
+times are published.
+
+Chaos is Arcade plus the advanced mechanics, and says so.
+
 ## 0.86.1 — handbook v3, merged rather than swapped
 
 Part IV replaced with the version built from all eleven recorded matches:

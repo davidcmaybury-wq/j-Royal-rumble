@@ -276,28 +276,39 @@ const ADVANCED_RULES = ['topRope', 'stables', 'savePlayer', 'bounties', 'revival
 const rules = (on) => Object.fromEntries(
   [...STANDARD_RULES, ...ADVANCED_RULES].map((k) => [k, on.includes(k)]));
 
+// The rule sets are named for the shape of match they produce, and the first
+// two are named for the mode the room will see on screen. That has to stay
+// true: a set called Tournament that left the comeback on would put ARCADE MODE
+// on every screen in the room, which is how it was first written here.
 const RULESETS = {
   tournament: {
     label: 'Tournament',
-    // Everything standard except targeting. Targeting is the one standard rule
-    // the room aims deliberately, so taking it out leaves the result to the
-    // buzzer — which is what a tournament is for. It costs the room its only
+    // Two things out, and they go together.
+    //
+    // Targeting is the one standard rule the room aims deliberately, so taking
+    // it out leaves the result to the buzzer — at the cost of the room's only
     // reliable answer to somebody running away with the match.
-    what: 'Every standard rule except targeting. Nobody can be ganged up on, so the '
-        + 'match is settled on the buzzer — the fairest shape, and the least merciful '
-        + 'if one player is quicker than the rest.',
-    set: rules(STANDARD_RULES.filter((k) => k !== 'targeting')),
+    //
+    // The comeback goes with it, which is what makes this Tournament rather
+    // than a variant of Arcade: no player is ranked with time off their press,
+    // so buzz order is buzz speed and the times are published.
+    what: 'The fairest shape and the least merciful. No targeting, so nobody can be ganged '
+        + 'up on, and no comeback, so the fastest press wins every race and the times are '
+        + 'public. Screens read TOURNAMENT.',
+    set: rules(STANDARD_RULES.filter((k) => k !== 'targeting' && k !== 'comeback')),
   },
-  standard: {
-    label: 'Standard',
-    what: 'The normal game: targeting, longevity, category sweeps, gifts from the queue, '
-        + 'and one foot on the floor for anybody knocked out before they got going.',
+  arcade: {
+    label: 'Arcade',
+    what: 'The normal game: targeting, longevity, category sweeps, gifts from the queue, and '
+        + 'one foot on the floor for anybody knocked out before they got going. Because that '
+        + 'reorders the race, the room sees places rather than times — each player still sees '
+        + 'their own. Screens read ARCADE.',
     set: rules(STANDARD_RULES),
   },
   chaos: {
     label: 'Chaos',
-    what: 'Everything switched on — top rope, stables, saves, bounties and revival on top '
-        + 'of the standard rules. Expect a long match and a keyboard-heavy one.',
+    what: 'Arcade plus everything else — top rope, stables, saves, bounties and revival. '
+        + 'Expect a long match and a keyboard-heavy one. Screens read ARCADE.',
     set: rules([...STANDARD_RULES, ...ADVANCED_RULES]),
   },
 };
