@@ -84,6 +84,27 @@ export const DEFAULT_SETTINGS = {
   // nothing against a strong player, this one actually bites: it puts the whole
   // pot on one head.
   targeting: true,           // aim your damage at one player, and theirs at you
+  // What an aimed miss pays, as a share of the pot. 1 is the original whole-pot
+  // rule; 0 means an aimed miss costs no more than any other miss.
+  //
+  // This was a fixed 1 and it quietly decided who targeting was for. Measured
+  // over a twelve-player field at 6,000 matches a row, six ordinary players in a
+  // stable all aiming at the richest shark took 5.5% of the wins — against 17.3%
+  // for the same group not targeting at all — because every aimed miss paid the
+  // whole pot and the shark wins most races. Coordinating against the leader is
+  // the room's only real answer to somebody running away with it, and the price
+  // made it self-harm.
+  //
+  //   everyone targets the leader   x1: sharks 52.6 / normies 13.0
+  //                                x0.5: sharks 42.0 / normies 19.7
+  //                                   0: sharks 24.4 / normies 42.8
+  //
+  // Default 0 here because Arcade is the default shape; Tournament's preset sets
+  // 0.5, keeping a real price where there is no comeback to soften a bad match.
+  // Off entirely makes permanent leader-focus the dominant strategy and a lead a
+  // liability — an accepted consequence of the decision, and the reason
+  // Tournament does not follow.
+  targetBackfire: 0,
 
   // One foot on the floor.
   //
@@ -938,17 +959,40 @@ export class RumbleGame {
         ? everyone.length : opponents.length);
 
       // Who pays, and how much. Three cases, in order of precedence.
+      //
+      // An aimed miss pays `targetBackfire` of the pot. At 1 that is the
+      // original whole-pot rule; at 0 the branch never fires at all and an aimed
+      // miss costs no more than any other. It is a dial because the whole-pot
+      // price decided who targeting was *for*: measured over a twelve-player
+      // field, six ordinary players all aiming at the richest shark was the
+      // worst thing they could do — 5.5% of wins against 17.3% for the same
+      // group holding its fire — because every aimed miss paid the entire pot
+      // and the shark wins most races. The strategy was sound; the price was
+      // not. Tournament keeps a real price at 0.5; Arcade and Chaos set it to 0.
+      const f = this.s.targetBackfire ?? 1;
       const payers = new Map();
-      const aimedAtWinner = opponents.filter((p) => p.target === winnerId);
+      const focusTarget = (w.target && liveIds.has(w.target)) ? w.target : null;
+      const aimedAtWinner = f > 0 ? opponents.filter((p) => p.target === winnerId) : [];
       if (aimedAtWinner.length) {
-        // They went for the winner and missed. Each pays the whole pot; the
+        // They went for the winner and missed. Each pays their share; the
         // players who stayed out of it pay nothing.
-        for (const p of aimedAtWinner) payers.set(p.id, pot);
+        const share = Math.round(pot * f);
+        for (const p of aimedAtWinner) payers.set(p.id, share);
         entry.backfired = aimedAtWinner.map((p) => p.id);
-      } else if (w.target && liveIds.has(w.target)) {
-        // The winner aimed. All the damage lands on one head.
-        payers.set(w.target, pot);
-        entry.focused = w.target;
+        // Mutual targeting does not stack. If the winner's own target is one of
+        // the players who aimed back, they owe the focused pot — the larger
+        // obligation — once, not the focused pot plus a backfire on top. Aiming
+        // back at your attacker is neither a discount nor a surcharge.
+        if (focusTarget && payers.has(focusTarget)) {
+          payers.set(focusTarget, Math.max(pot, share));
+          entry.focused = focusTarget;
+        }
+      } else if (focusTarget) {
+        // The winner aimed. All the damage lands on one head. Turning backfire
+        // off does not turn this off — focused fire is the other half of the
+        // mechanic and keeps its full price.
+        payers.set(focusTarget, pot);
+        entry.focused = focusTarget;
       } else if (opponents.length) {
         // Split evenly across whoever is left outside the stable.
         const each = Math.round(pot / opponents.length);

@@ -3,6 +3,49 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.94.0 — the backfire dial, and the draw-slot findings
+
+**An aimed miss no longer always pays the whole pot.** `targetBackfire` is the
+share it pays: Arcade and Chaos default to 0, Tournament to 0.5, host-adjustable
+in every mode, and 1 reproduces the old rule exactly. David's decision.
+
+The whole-pot price quietly decided who targeting was for. Over a twelve-player
+field at 6,000 matches a row, six ordinary players in a stable all aiming at the
+richest shark took **5.4%** of the wins — against **17.6%** for the same group
+holding its fire. Ganging up on a runaway leader is the only answer a room has to
+somebody running away with the match, and the price made it self-harm.
+
+Mutual targeting does not stack: if the winner's own target aimed back, they pay
+the focused pot once, never that plus a backfire. Turning backfire off does not
+turn off focused fire. Nine engine tests cover the dial, including f=1 as a
+byte-for-byte regression anchor against the old rule.
+
+The accepted cost, recorded with the decision: cheap backfire makes permanent
+leader-focus the dominant strategy and a lead a liability, shortening matches under
+heavy targeting (117 clues to 105). The figures model naive always-on aiming, not
+players adapting — which is why Tournament keeps a real price.
+
+**Six figures merged**, including the draw-slot studies: where a strong player is
+drawn moves the field by tens of points where everything else in this document
+moves it by one or two. Two strong players drawn last take 89.8% of wins against
+34.3% opening together, on a random reference of 55.0%. The effect is generic —
+two average players last take 69.7% — and flow-sensitive. Not a lever anybody
+pulls, since the draw is random by design, but it sets the scale for every other
+balance argument.
+
+**A third tool was found measuring the wrong thing by relying on a default it did
+not set.** `voltron-study` and `backfire-study` both assumed the engine's
+whole-pot backfire; the moment this release made it a dial defaulting to 0, their
+"backfire ON" rows silently became "off" — in `backfire-study` two rows printed
+identical numbers, which is what gave it away. Both now set the value explicitly.
+`comeback-study` hit the same trap in 0.90.0. A study must set every setting it
+claims to vary.
+
+One delivered row did not reproduce: the backfire-off stag case came back
+28.0%/39.4% against 24.4%/42.8% as delivered. Every other row matched to a tenth,
+including the whole-pot anchor, so it is recorded rather than resolved; it does not
+move the decision.
+
 ## 0.93.0 — the bone pile
 
 A new Part IV section: every leveling idea that was measured and turned down, with

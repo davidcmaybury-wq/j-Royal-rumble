@@ -287,6 +287,32 @@ Numbers and both tables are in the handbook. **Re-measure before touching it** �
 and use `RUMBLE_RUNS`, because the 600-run default moved 2–3 points between
 settings that were identical at 6,000.
 
+**The whole-pot backfire decided who targeting was for, and is now a dial.**
+`targetBackfire` is the share of the pot an aimed miss pays. At the old fixed 1,
+six ordinary players in a stable aiming at the richest shark took **5.4%** of wins
+against **17.6%** for the same group holding its fire — coordinating against the
+leader, the room's only answer to a runaway, was the worst thing they could do.
+Arcade and Chaos default **0**, Tournament **0.5**, host-adjustable everywhere.
+Mutual targets never stack: the winner's own target pays the focused pot once.
+Turning backfire off does **not** turn off focused fire. David decided this
+2026-08-17; `tools/backfire-study.mjs`.
+
+**Three study tools have now silently measured the wrong thing because they relied
+on an engine default they did not set** — `comeback-study` (flat stake after 0.88),
+then `voltron-study` and `backfire-study` (whole-pot backfire after 0.94). In
+`backfire-study` the tell was two rows printing identical numbers. **A study must
+set every setting it claims to vary**, and the tools carry their own copies of
+mechanics, so grep `tools/` whenever a default moves.
+
+**The draw slot is the biggest lever measured, by an order of magnitude.** Twelve
+players, 6,000 runs: two strong players drawn last take **89.8%** of wins against
+**34.3%** opening together, on a random-draw reference of 55.0%. The effect is
+generic — two merely average players last take 69.7% — and flow-rate sensitive:
+opening together at interval 5 drops them to 20.9%. Not a lever anybody pulls (the
+draw is random by design) but it sets the scale: any balance argument is happening
+against a background that swings this far on the shuffle alone.
+`tools/entry-order-study.mjs`.
+
 **Race allocation is one budget, and the comeback already spends it.** Adding
 race-structure levers *on top of* the comeback makes casuals worse off, not
 better: comeback alone 14.5%, plus a 50ms photo finish 11.2%, plus a winner

@@ -76,6 +76,69 @@ console.log('TOP ROPE');
   })(), 'engine permits, server gates');
 }
 
+
+console.log('\nTHE BACKFIRE DIAL');
+{
+  // The whole-pot price decided who targeting was for: six ordinary players all
+  // aiming at the richest shark took 5.5% of wins against 17.3% for the same
+  // group holding its fire, because every aimed miss paid the entire pot. So the
+  // price is a dial. Arcade and Chaos set 0, Tournament 0.5, 1 is the old rule.
+  const half = game({ targeting: true, targetBackfire: 0.5 });
+  const [a, b, c] = live(half);
+  const was = { a: score(half, a), c: score(half, c) };
+  half.setTarget(a, b);
+  half.resolveClue(...pick(half, 3), { winnerId: b, missedIds: [] });  // pot 600
+  check('at 0.5 an aimed miss pays half the pot',
+    was.a - score(half, a) === 300, `paid ${was.a - score(half, a)}`);
+  check('and a bystander still pays nothing', was.c === score(half, c));
+
+  // 0 does not merely make the branch cheap — it must not fire at all, or an
+  // aimed miss would pay nothing while everybody else pays the even split.
+  const off = game({ targeting: true, targetBackfire: 0 });
+  const [d, e, f2] = live(off);
+  const wOff = { d: score(off, d), f2: score(off, f2) };
+  off.setTarget(d, e);
+  off.resolveClue(...pick(off, 3), { winnerId: e, missedIds: [] });
+  check('at 0 an aimed miss costs no more than any other miss',
+    wOff.d - score(off, d) === 300, `paid ${wOff.d - score(off, d)}`);
+  check('and the clue goes back to an even split',
+    wOff.f2 - score(off, f2) === 300, `bystander paid ${wOff.f2 - score(off, f2)}`);
+
+  // Turning backfire off must not turn off the winner's own focused fire.
+  const foc = game({ targeting: true, targetBackfire: 0 });
+  const [g1, h1, i1] = live(foc);
+  const wF = { h1: score(foc, h1), i1: score(foc, i1) };
+  foc.setTarget(g1, h1);
+  foc.resolveClue(...pick(foc, 3), { winnerId: g1, missedIds: [] });
+  check('with backfire off, focused fire still lands in full',
+    wF.h1 - score(foc, h1) === 600, `target paid ${wF.h1 - score(foc, h1)}`);
+  check('and the bystander is still spared', wF.i1 === score(foc, i1));
+
+  // Mutual targeting does not stack: the winner's own target owes the focused
+  // pot once, never focused pot plus a backfire on top. Aiming back is neither
+  // a discount nor a surcharge.
+  const mut = game({ targeting: true, targetBackfire: 0.5 });
+  const [m, n, o] = live(mut);
+  const wM = { n: score(mut, n), o: score(mut, o) };
+  mut.setTarget(m, n);      // winner aims at n
+  mut.setTarget(n, m);      // n aims back
+  mut.setTarget(o, m);      // o also aims at the winner
+  mut.resolveClue(...pick(mut, 3), { winnerId: m, missedIds: [] });
+  check('a mutual pair pays the focused pot, once',
+    wM.n - score(mut, n) === 600, `paid ${wM.n - score(mut, n)}`);
+  check('while another aggressor pays the backfire share',
+    wM.o - score(mut, o) === 300, `paid ${wM.o - score(mut, o)}`);
+
+  // Fractions round rather than producing pennies.
+  const odd = game({ targeting: true, targetBackfire: 0.5 });
+  const [q, r] = live(odd);
+  const wQ = score(odd, q);
+  odd.setTarget(q, r);
+  odd.resolveClue(...pick(odd, 1), { winnerId: r, missedIds: [] });   // pot 100*2 = 200
+  check('the share is rounded, not fractional',
+    Number.isInteger(wQ - score(odd, q)), `paid ${wQ - score(odd, q)}`);
+}
+
 console.log('\nTARGETING');
 {
   const g = game({ targeting: true });
@@ -89,12 +152,14 @@ console.log('\nTARGETING');
   check('the winner still collects the whole pot',
     score(g, a) - was.a === 600, `gained ${score(g, a) - was.a}`);
 
-  const g2 = game({ targeting: true });
+  // targetBackfire is a dial now and defaults to 0, so the whole-pot rule has to
+  // be asked for. f = 1 is the regression anchor: byte-for-byte the old rule.
+  const g2 = game({ targeting: true, targetBackfire: 1 });
   const [x, y, z] = live(g2);
   const w2 = { x: score(g2, x), y: score(g2, y), z: score(g2, z) };
   g2.setTarget(x, y);
   g2.resolveClue(...pick(g2, 3), { winnerId: y, missedIds: [] });  // the target answers
-  check('aiming at someone who answers backfires for the whole pot',
+  check('at 1, aiming at someone who answers backfires for the whole pot',
     w2.x - score(g2, x) === 600, `aggressor paid ${w2.x - score(g2, x)}`);
   check('the players who stayed out of it are untouched',
     w2.z === score(g2, z), `paid ${w2.z - score(g2, z)}`);

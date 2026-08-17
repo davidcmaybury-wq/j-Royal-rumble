@@ -324,7 +324,10 @@ const RULESETS = {
     what: 'The fairest shape and the least merciful. No targeting, so nobody can be ganged '
         + 'up on, and no comeback, so the fastest press wins every race and the times are '
         + 'public. Screens read TOURNAMENT.',
-    set: rules(STANDARD_RULES.filter((k) => k !== 'targeting' && k !== 'comeback')),
+    // Tournament keeps a real price on an aimed miss: there is no comeback here
+    // to soften a bad match, so a free-to-coordinate leader hunt would decide it.
+    set: { ...rules(STANDARD_RULES.filter((k) => k !== 'targeting' && k !== 'comeback')),
+      targetBackfire: 0.5 },
   },
   arcade: {
     label: 'Arcade',
@@ -332,13 +335,16 @@ const RULESETS = {
         + 'one foot on the floor for anybody knocked out before they got going. Because that '
         + 'reorders the race, the room sees places rather than times — each player still sees '
         + 'their own. Screens read ARCADE.',
-    set: rules(STANDARD_RULES),
+    // Off, so the room can gang up on a runaway leader without the attempt being
+    // self-harm — the whole-pot price measured as the worst thing a group of
+    // ordinary players could do to itself.
+    set: { ...rules(STANDARD_RULES), targetBackfire: 0 },
   },
   chaos: {
     label: 'Chaos',
     what: 'Arcade plus everything else — top rope, stables, saves, bounties and revival. '
         + 'Expect a long match and a keyboard-heavy one. Screens read ARCADE.',
-    set: rules([...STANDARD_RULES, ...ADVANCED_RULES]),
+    set: { ...rules([...STANDARD_RULES, ...ADVANCED_RULES]), targetBackfire: 0 },
   },
 };
 
@@ -713,6 +719,14 @@ function render(keepEdits) {
       + 'The room can see who is hunting whom. This is how a table deals with somebody running '
       + 'away with it — several people aiming at one leader is the only thing that reliably '
       + 'catches them.')}
+      <!-- Host-visible in every mode, because the price is what decides whether
+           the room can afford to gang up on a leader at all. -->
+      <div class="f" style="margin-top:6px"><label>An aimed miss pays</label>
+        <select id="targetBackfire">
+          ${[['0','nothing extra'],['0.25','a quarter of the pot'],['0.5','half the pot'],
+             ['0.75','three quarters'],['1','the whole pot']]
+            .map(([v,t]) => `<option value="${v}" ${Number(s.targetBackfire ?? 0) === Number(v) ? 'selected' : ''}>${t}</option>`).join('')}
+        </select><span class="hint">the whole pot makes ganging up on a leader self-harm</span></div>
     ${adv('categorySweep', 'Category sweep', s.categorySweep,
       'Take every clue in a column for +500, scaled by the overtime multiplier. Counted as the '
       + 'column is worked through, so a board refresh cannot rob a finished run.')}
@@ -926,6 +940,7 @@ function collect() {
       delay: +g('delay').value, lockout: +g('lockout').value, secondsPerClue: +g('secondsPerClue').value,
 
       topRope: g('topRope').checked, targeting: g('targeting').checked,
+      targetBackfire: +g('targetBackfire').value,
       savePlayer: g('savePlayer').checked,
       comeback: g('comeback').checked,
       stables: g('stables').checked,

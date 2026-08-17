@@ -289,7 +289,23 @@ there is never a clue on the board to look at when you make one.
 
 **Targeting** — aim at one player, visible to the room. Win the clue and the
 whole pot comes from them alone, everyone else spared. Lose it to them and you
-pay the whole pot yourself while the rest of the ring walks.
+pay a share of the pot on top — **and the host decides what that share is.**
+
+**What an aimed miss costs is a dial.** Arcade and Chaos set it to nothing extra,
+so several people aiming at a runaway leader is affordable; Tournament charges
+half the pot, because there is no comeback there to soften a bad match. The whole
+pot — the original rule — is still on the dial.
+
+It became a setting because the price decided who targeting was *for*. Six
+ordinary players all aiming at the richest player was measured as the **worst**
+thing they could do: 5.5% of wins, against 17.3% for the same group not targeting
+at all, because every aimed miss paid the entire pot and that player wins most
+races. Ganging up is the room's only real answer to somebody running away with the
+match, and the price made it self-harm.
+
+**Aiming back at somebody who is aiming at you is neither a discount nor a
+surcharge.** If you are the winner's target and you aimed at them too, you pay the
+focused pot once — never that plus a backfire on top.
 
 **Bounties** — waiting in the queue, put part of your entry on somebody's head.
 Whoever eliminates them collects. If they survive to the end they keep it — so

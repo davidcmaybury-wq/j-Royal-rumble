@@ -102,6 +102,7 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     ['the top rope cooldown, which was never in the Discord copy at all',
       'wait five clues'],
     ['and that taking the climb back before the clue is free', 'costs you nothing'],
+    ['that an aimed miss costs a host-set share', 'the host sets that share'],
   ]) {
     check(`the rules mention ${what}`, both.includes(needle), needle);
   }
@@ -159,6 +160,11 @@ for (const [what, needle] of [
   ['the bone pile of rejected ideas', 'The bone pile'],
   ['that lowering the shark is on it', 'lowering the shark is not raising the field'],
   ['and that repairs worse than their bug are on it', 'repairs worse than their bug'],
+  // The backfire dial and the draw-slot findings, 0.94.0.
+  ['the backfire dial', 'The price of aiming'],
+  ['that aiming back is not a surcharge', 'neither a discount nor a surcharge'],
+  ['the draw-slot finding', 'The draw slot is the biggest lever measured'],
+  ['and the renumbered figure run', 'Figure 28'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }

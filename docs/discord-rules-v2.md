@@ -37,7 +37,7 @@ It says which one at the top of your buzzer all match.
 
 🩹 **One foot on the floor.** Go under before you've taken three clues and you don't go out at all — you stay up on half a starting stake, with **70% knocked off your buzz time for the next 40 races**. Once each. It's for people flattened before they got going: if you were in the match and lost it, you go out properly. Nothing to press, it just happens. **If it fires during overtime your stake climbs with it** — come back at ×4 and you come back with four times the money, because half a stake against quadrupled clues is one pot payment from going straight back out.
 
-🎯 **Want to deal with a bully?** Press **T** and pick them. Take the clue and the **whole pot comes out of that player alone** — everybody else pays nothing. Miss, and if *they* convert it you pay them the whole pot yourself while the ring watches for free. Press 0 to stand down. Everyone can see who you're hunting.
+🎯 **Want to deal with a bully?** Press **T** and pick them. Take the clue and the **whole pot comes out of that player alone** — everybody else pays nothing. Miss, and if *they* convert it you pay a **share of the pot** on top — and **the host sets that share**. In Arcade it's nothing extra, so ganging up on a runaway leader is affordable; Tournament charges half. Press 0 to stand down. Everyone can see who you're hunting.
 
 **Gang up.** One person aiming at the runaway leader is a gamble; three people aiming at them is a collection. It is the only thing in the game that reliably catches somebody who is running away with it, and it costs nothing to agree out loud on the call.
 
