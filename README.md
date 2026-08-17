@@ -269,7 +269,7 @@ away much faster when the fraction is small:
 | 60% | 42% | 18 points |
 | 90% | 84% | 6 points |
 
-A weak player loses far more to a hard clue than a strong one, and no per-level
+A casual player loses far more to a hard clue than a strong one, and no per-level
 table is needed to make it happen. In play, a rookie goes for the cheapest row
 3.6x as often as the dearest; an elite 1.1x.
 

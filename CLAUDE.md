@@ -156,6 +156,16 @@ asked. The README is not enough: `discord-rules-v2.md` and
 rules appear by name; add to it whenever you add a rule, or the next one drifts
 the same way.
 
+**Call them casual players.** Never "low-skill", never "weak player". David asked
+for this explicitly and made it general: avoid any potentially insulting label for
+players who are not the sharks, in the handbook and everywhere else a person
+reads. "Casual" is the counterpart to elite/shark/strong, and it is what the study
+tools already call them (`CasualA/B/C`). "Strong player" is fine as the other half
+of a contrast. The robot standards — rookie, normie, champ, superchamp, elite —
+stay: they are broadcast tiers, not a verdict on somebody. The point is that these
+people read the handbook, and the whole balance programme exists because David did
+not want them treated as scenery.
+
 **American English.** David is American and the game is American. Use it in
 player-facing copy, comments, and commit messages alike — colour/color,
 favours/favors, recognise/recognize, behaviour/behavior. Existing text will
