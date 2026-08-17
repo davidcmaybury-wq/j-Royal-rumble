@@ -3,6 +3,29 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.85.4 — the entry banner was sitting on the adjudication buttons
+
+The console locking up on an entry, third and final piece. 0.85.2 stopped the
+banner eating the host's keystrokes; it went on eating their mouse clicks.
+
+The banner is anchored at `bottom:92px` against a dock whose height is
+`min-height:92px` — a minimum, not a fixed size — and the buzz chips wrap. So as
+soon as several people buzz the chip row runs to two lines, the dock grows past
+92px, and the banner lands on top of **Correct / Wrong / Nobody got it**. At
+`z-index:60` with its own click-to-dismiss, it swallowed the click and closed
+itself: the host clicked Correct, the banner vanished, nothing happened.
+
+That is why entries with robots were the worst of it. Every robot buzzes, so the
+chip row wraps every time and the overlap is guaranteed — which is exactly the
+"harder when it's a bot" report, and not a robot bug at all.
+
+`pointer-events:none` makes the overlap harmless at any dock height: clicks reach
+the control underneath. It still closes on any key and on its own timer. The
+overtime splash keeps click-to-dismiss deliberately — it covers the screen and is
+obviously in the way, where this one is a thin strip that looks harmless.
+
+`pagerefs` now fails if the banner takes input by any route.
+
 ## 0.85.3 — the board's category cards can hold a whole title
 
 Reported from the full buzzer: a player could not read his own board because

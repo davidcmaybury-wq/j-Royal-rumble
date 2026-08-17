@@ -350,5 +350,42 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
     notASetting.length === 0, notASetting.join(', ') || 'all known');
 }
 
+// --- nothing transient may sit on the host's controls ----------------------
+//
+// The entry banner blocked the host twice in one match. It is anchored at
+// bottom:92px against a dock whose height is min-height:92px, and .race wraps,
+// so as soon as several people buzz — every time, with robots in the field —
+// the chip row runs to two lines, the dock grows, and the banner lands on top
+// of Correct / Wrong / Nobody got it.
+//
+// First it ate the keyboard, through a `querySelector('.entry')` guard in the
+// keydown handler. That was removed, and it went on eating the mouse, because
+// it had z-index:60 and its own click-to-dismiss. Both times the console looked
+// stopped and nothing threw.
+//
+// It decorates; it must never take input.
+{
+  const src = readFileSync(new URL('../public/console.html', import.meta.url), 'utf8');
+
+  // Anchored to the start of a line: `.tosscap.entry{` contains `.entry{`, and
+  // matching that instead reads a one-property colour rule and passes for the
+  // wrong reason. (It did, while this check was being written.)
+  const rule = (src.match(/^\.entry\{[\s\S]*?\}/m) || [''])[0];
+  check('console.html: the entry banner cannot take a click',
+    /pointer-events\s*:\s*none/.test(rule),
+    rule ? rule.slice(0, 40) + '…' : 'no .entry rule at all');
+
+  const banner = src.slice(src.indexOf('function banner('),
+    src.indexOf('function banner(') + 1200);
+  check('and banner() binds no click handler',
+    !/\.onclick\s*=\s*kill/.test(banner), 'banner()');
+
+  // Comments stripped first, or the note explaining the removed guard matches
+  // the guard it is describing.
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  check('and the keyboard handler does not bail while it is up',
+    !/querySelector\(\s*'\.entry'\s*\)\s*\)\s*return/.test(code), 'keydown');
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);
