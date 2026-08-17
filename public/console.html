@@ -120,6 +120,11 @@ align-items:center;justify-content:center;gap:10px;animation:fade .2s ease-out;c
 .ot .s2{font-size:15px;color:var(--slate);max-width:34ch;text-align:center;line-height:1.6}
 .otbadge{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--alarm);
 border:1px solid var(--alarm);border-radius:20px;padding:3px 9px}
+/* Which shape the match is. Always on screen, both modes — a room that has to
+   ask whether the buzzer is being handicapped is a room that distrusts it. */
+.modebadge{font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+border-radius:20px;padding:3px 9px;border:1px solid var(--line);color:var(--slate)}
+.modebadge.arcade{color:var(--brass);border-color:var(--brass)}
 .delayctl{display:flex;align-items:center;gap:4px}
 .delayctl .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
 .dstep{width:22px;height:22px;border:1px solid var(--line);border-radius:var(--r);
@@ -376,6 +381,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
     <span class="st"><span class="k">In</span><span class="v num" id="s-field">0</span></span>
     <span class="st"><span class="k">Queue</span><span class="v num" id="s-q">0</span></span>
     <span class="st ceil"><span class="k">Ceiling</span><span class="v num" id="s-ceil">&mdash;</span></span>
+    <span class="modebadge" id="s-mode"></span>
     <span class="otbadge" id="s-ot" style="display:none"></span>
     <span class="sp">
       <span class="dot" id="conn" title="server connection"></span>
@@ -415,7 +421,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
-import { socket, gameId, hostKey, fmt, syncClock } from '/rumble.js';
+import { socket, gameId, hostKey, fmt, syncClock, ord } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, brainAvatar } from '/brand.js';
 import { gem } from '/gems.js';
@@ -744,6 +750,14 @@ function render() {
   $('s-field').textContent = live.length;
   $('s-q').textContent = q.length;
   $('s-ceil').textContent = S.ceiling ? fmt(S.ceiling) : '—';
+  const mb = $('s-mode');
+  mb.textContent = S.arcade ? 'Arcade mode' : 'Tournament mode';
+  mb.classList.toggle('arcade', !!S.arcade);
+  mb.title = S.arcade
+    ? 'One foot on the floor is on: a player on the way back is ranked with time off '
+      + 'their buzz, so the race shows places rather than times.'
+    : 'One foot on the floor is off: fastest press wins every race, and the times mean '
+      + 'exactly what they say.';
   const ot = $('s-ot');
   if (ot) {
     const o = S.overtime;
@@ -1176,19 +1190,17 @@ function renderDock() {
     $('arm').onclick = () => socket.emit('activate');
     return;
   }
+  // In Arcade the chip carries the place, not the clock. With the comeback on,
+  // the order is ms x buzzEdge, so a slower press can hold first — a number
+  // that contradicts the highlight is worse than no number. The server does not
+  // send times at all in that mode, so there is nothing here to leak.
   const chips = buzzes.map((b, i) => '<span class="bz' + (i === 0 ? ' on' : '')
     + (b.bot ? ' isbot' : '') + '"><span>' + b.name
     + (b.early ? ' <span class="e">EARLY</span>' : '')
     + (b.bot ? ' <span class="bhint ' + (b.botCorrect ? 'yes' : 'no') + '">'
         + (b.botCorrect ? 'will be right' : 'will be wrong') + '</span>' : '')
-    + '</span><span class="t num">' + b.ms.toFixed(1)
-    // Somebody on the way back is ranked at a fraction of what they pressed, so
-    // first place can show a slower number than second. Say so on the chip: a
-    // host who cannot see why is right to report it as a bug, and did.
-    + (b.edge != null && b.edge < 1
-        ? '<span class="edge" title="on the way back — ranked at '
-          + Math.round(b.edge * 100) + '% of the time pressed">&rarr;'
-          + (b.ms * b.edge).toFixed(1) + '</span>' : '')
+    + '</span><span class="t num">'
+    + (b.ms == null ? ord(b.place || i + 1) : b.ms.toFixed(1))
     + '</span></span>').join('');
   const acts = on
     ? '<button class="act good" id="ok">Correct<span class="kb">Y</span></button>'

@@ -926,6 +926,39 @@ clues with nobody eliminated — even if people are still queued. The threshold
 has to be that high: at three windows it fired during the entry phase and cost
 eleven minutes of match length and twenty points of draw fairness.
 
+## Arcade and Tournament
+
+A match is one shape or the other, named on every screen for the whole match:
+the host console, the watch screen and each player's buzzer.
+
+**Arcade** is the comeback switched on. Because a player on the way back is
+ranked at a fraction of the time they pressed, buzz order stops being buzz
+speed — so the public surfaces carry **places rather than times**. A player
+still sees their own reaction time on their own buzzer; nobody sees anybody
+else's.
+
+**Tournament** is the comeback off. `buzzEdge` is always 1, the fastest press
+wins every race, and the times are published because they mean exactly what they
+look like.
+
+**The times are absent from the payload, not merely unrendered.** `watchView`
+and `raceView` omit `ms` entirely in Arcade, the same discipline as the answer
+never reaching the watch screen — a page handed a number it is trusted not to
+draw is one refactor from drawing it. `test/arcade.mjs` asserts both directions.
+
+This replaces the fix in 0.85.1, which sent the ranked time beside the real one
+so the host could see why a slower press held the clock. Showing the order beats
+explaining the arithmetic, and the `edge` field is gone.
+
+**The console loses the times too**, not just the room. It is the surface most
+likely to be on a shared screen — the same reason the next entrant's name is
+hidden there — and a host adjudicates on who is on the clock, which is the
+place.
+
+The match record keeps every real time in both modes. Nothing about scoring,
+standings or the log changes; only what the screens publish while a race is
+open.
+
 ## One foot on the floor
 
 A player who would be eliminated having taken **fewer than three clues** is not

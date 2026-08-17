@@ -343,6 +343,25 @@ class Match {
 
   // --- public views ----------------------------------------------------
 
+  /**
+   * Which of the two shapes this match is, named for the room rather than for
+   * the setting behind it.
+   *
+   * ARCADE — the comeback is on, so somebody knocked out before they got going
+   * comes back with time off their buzz. Buzz order stops being buzz speed, so
+   * the screens show places and keep each player's own milliseconds to
+   * themselves.
+   *
+   * TOURNAMENT — the comeback is off. Fastest press wins, every time, and the
+   * times are public because they mean exactly what they look like.
+   *
+   * It is a property of the match, not of the moment: a label that switched on
+   * and off as players picked up and lost the edge would tell the room nothing
+   * it could act on.
+   */
+  arcade() { return !!this.settings.comeback; }
+  mode() { return this.arcade() ? 'arcade' : 'tournament'; }
+
   // For the watch screen. Built up field by field rather than by copying the
   // host view and deleting things — the host view carries the correct answer,
   // and a spectator page that leaks it ruins the game. Anything added to the
@@ -383,11 +402,21 @@ class Match {
         text: this.clue.text, value: this.clue.value, row: this.clue.row,
       } : null,
 
+      // Arcade mode shows the order, not the clock.
+      //
+      // With the comeback on, the ranking is ms x buzzEdge, so a slower press
+      // legitimately takes the clue — which read as a scoring bug the first
+      // time a room saw it. Sending places rather than times removes the
+      // contradiction at the source instead of explaining it afterwards. Each
+      // player still gets their own number, through myBuzz; nobody gets anybody
+      // else's. The match record keeps every real time either way.
+      arcade: this.arcade(),
       race: this.race ? {
         open: !!this.race.open,
         timedOut: !!this.race.timedOut,
         buzzes: this.race.buzzes.filter((b) => !b.spectator)
-          .map((b) => ({ name: b.name, ms: b.ms, early: !!b.early })),
+          .map((b, i) => ({ name: b.name, place: i + 1, early: !!b.early,
+            ...(this.arcade() ? {} : { ms: b.ms }) })),
         lockedOut: [...this.race.lockedOut]
           .map((t) => this.roster.get(t)?.name).filter(Boolean),
       } : null,
@@ -480,6 +509,8 @@ class Match {
           .map(this.playerRow, this),
         clue: this.clue,
         race: this.raceView(),
+        // Which shape the room is playing; see Match.arcade().
+        arcade: this.arcade(),
         fastest: this.fastest,
         // The history is only needed once, at the end. Pushing every point of
         // it on every state change was the bulk of the traffic.
@@ -544,17 +575,20 @@ class Match {
       lockedOut: [...this.race.lockedOut],
       buzzes: this.race.buzzes
         .filter((b) => !b.spectator)
-        .map((b) => ({ token: b.token, name: b.name, ms: b.ms, early: b.early,
-          // What the ordering actually used.
+        // The console loses the times in Arcade too. It is the surface most
+        // likely to be on a shared screen — the same reason the next entrant's
+        // name is hidden there — and the host adjudicates on who is on the
+        // clock, which is the place, not the number.
+        .map((b, i) => ({ token: b.token, name: b.name, place: i + 1, early: b.early,
+          ...(this.arcade() ? {} : { ms: b.ms }),
+          // No `edge` field any more. 0.85.1 sent the ranked time beside the
+          // real one so the host could see why a slower press held the clock —
+          // the answer to "Zach was fastest but Dalton was highlighted as first
+          // in". buzzEdge only ever differs from 1 when the comeback is on,
+          // which is exactly when this view stops carrying times at all, so it
+          // could never fire again. Showing the order beats explaining the
+          // arithmetic behind it.
           //
-          // A player on the way back from a near-elimination is ranked at a
-          // fraction of the time they pressed, so the console can legitimately
-          // show a slower number in first place. Without saying why, that reads
-          // as a scoring bug — and was reported as one from clue 24 of VWQW:
-          // "Zach actually was fastest but Dalton was highlighted as first in".
-          // The comment above rankRace claimed the console showed both numbers.
-          // It did not; this is what makes that true.
-          edge: this.game ? this.game.buzzEdge(b.token) : 1,
           // A robot knows whether it is about to be right; the host has no way
           // to adjudicate one, so the console is told.
           bot: !!b.bot, botCorrect: b.bot ? b.botCorrect : undefined })),
@@ -798,6 +832,10 @@ class Match {
       },
       buzzOpen: !!this.race?.open,
       clueUp: !!this.clue,
+      // The player's own number stays theirs — myBuzz below still carries it.
+      // What goes is everybody else's, which is what made buzz order look like
+      // a lie once the comeback could reorder it.
+      arcade: this.arcade(),
       mechanics: {
         topRope: !!this.settings.topRope, targeting: !!this.settings.targeting,
         bounties: !!this.settings.bounties, revival: !!this.settings.revival,
@@ -2282,11 +2320,22 @@ io.on('connection', (socket) => {
   // other: a room full of people warming up should not be told they came
   // fourth out of nine when only three of those were in the ring.
   const rerank = (race, game) => {
-    const liveTimes = race.buzzes.filter((b) => !b.spectator).map((b) => b.ms);
+    // Place by the time the ordering actually used, not the raw press.
+    //
+    // rankRace sorts on ms x buzzEdge, so in a match with the comeback on a
+    // player on the way back can be ahead of a faster raw time. This used to
+    // rank on the raw number, which agreed with the board only while every edge
+    // was 1 — that is, in every match without the comeback, which is why it went
+    // unnoticed. With Arcade mode showing places instead of times, a place that
+    // disagrees with who is on the clock is the whole feature broken.
+    const eff = (b) => b.ms * (game ? game.buzzEdge(b.token) : 1);
+    const liveEff = race.buzzes.filter((b) => !b.spectator).map(eff);
     for (const b of race.buzzes) {
       b.ranked = b.spectator
-        ? game.rankSpectatorBuzz(b.ms, liveTimes)
-        : { place: liveTimes.filter((t) => t < b.ms).length + 1, outOf: liveTimes.length };
+        // Warm-up presses are ranked on the raw time against the live field:
+        // somebody practising has no edge to apply and is not in the race.
+        ? game.rankSpectatorBuzz(b.ms, liveEff)
+        : { place: liveEff.filter((t) => t < eff(b)).length + 1, outOf: liveEff.length };
     }
   };
 

@@ -1,10 +1,12 @@
 <!-- Runs past Discord's 2,000-character limit; post as two messages,
      breaking before "Want to deal with a bully?".
 
-     The break used to be before The ceiling, which left the first message at
-     1,958 of 2,000 once One foot on the floor was added — 42 characters from
-     silently truncating in Discord. Breaking at the bully line splits it
-     1,382 / 1,707 and leaves room for the next rule. -->
+     That is now the ONLY two-message split that fits: 1,970 / 1,707 against a
+     2,000 cap. Breaking before the Arcade block gives 1,026 / 2,651 and before
+     One foot on the floor gives 1,614 / 2,063 — both over. Thirty characters of
+     headroom left, so the next rule added here needs a third message rather
+     than a cleverer break. Discord truncates silently; check with
+     `python3 -c` before posting, or somebody reads two thirds of a rule. -->
 **J! ROYAL RUMBLE — the rules**
 
 Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
@@ -20,6 +22,11 @@ Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
 🤐 **Nobody answers?** The whole ring loses half the value. Passing is not free.
 
 ☠️ **Elimination.** Drop below zero and you're out. Exactly zero survives.
+
+🕹️ **Two shapes of match, and the host says which before the bell.**
+**ARCADE** — one foot on the floor is on, so somebody knocked out early comes back with time off their buzz. Because that reorders the race, the room sees **1st, 2nd, 3rd** instead of times. **You still see your own milliseconds on your own buzzer** — you just don't see anybody else's, and they don't see yours.
+**TOURNAMENT** — one foot on the floor is off. Fastest press wins every race and the times are public, because they mean exactly what they look like.
+It says which one at the top of your buzzer all match.
 
 🩹 **One foot on the floor.** Go under before you've taken three clues and you don't go out at all — you stay up on half a starting stake, with **70% knocked off your buzz time for the next 40 races**. Once each. It's for people flattened before they got going: if you were in the match and lost it, you go out properly. Nothing to press, it just happens.
 

@@ -100,6 +100,10 @@ border-bottom:1px solid var(--line)}
 .st .v{font-size:19px;font-family:"IBM Plex Mono",monospace}
 .ot{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--alarm);
 border:1px solid var(--alarm);border-radius:20px;padding:3px 10px}
+/* Which shape the match is, on the screen the whole room is looking at. */
+.mode{font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:var(--slate)}
+.mode.arcade{color:var(--brass);border-color:var(--brass)}
 .aud{margin-left:auto;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
 color:var(--slate);border:1px solid var(--line);border-radius:20px;padding:5px 13px;
 cursor:pointer;white-space:nowrap}
@@ -241,6 +245,7 @@ margin-top:5px;color:var(--alarm)}
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { markFull, markSmall, brainAvatar } from '/brand.js';
+import { ord } from '/rumble.js';
 import { gem } from '/gems.js';
 import { mountReportButton } from '/report.js';
 import { weaponToken } from '/tokens.js';
@@ -372,8 +377,14 @@ function board() {
 function stage() {
   if (S.clue) {
     const b = (S.race && S.race.buzzes) || [];
+    // Arcade sends places instead of times: with the comeback on the order is
+    // ms x buzzEdge, so a slower press can hold first and a published number
+    // would contradict the highlight. Players still see their own time on their
+    // own buzzer; the room sees the order.
     const chips = b.map((x, i) => '<span class="bz' + (i === 0 ? ' on' : '') + '"><span>'
-      + x.name + '</span><span class="t">' + x.ms.toFixed(0) + 'ms</span></span>').join('');
+      + x.name + '</span><span class="t">'
+      + (x.ms == null ? ord(x.place || i + 1) : x.ms.toFixed(0) + 'ms')
+      + '</span></span>').join('');
     return '<div class="clue"><div class="card43">'
       + '<div class="meta">' + S.clue.category + ' &middot; <span class="v">$'
         + fmt(S.clue.value) + '</span>'
@@ -452,6 +463,7 @@ function render() {
       <span class="st"><span class="k">In</span><span class="v">${live.length}</span></span>
       <span class="st"><span class="k">Queue</span><span class="v">${q.length}</span></span>
       <span class="st"><span class="k">Ceiling</span><span class="v">${fmt(S.ceiling)}</span></span>
+      <span class="mode${S.arcade ? ' arcade' : ''}">${S.arcade ? 'Arcade mode' : 'Tournament mode'}</span>
       ${S.overtime ? `<span class="ot">Overtime &times;${S.overtime.multiplier}</span>` : ''}
       <button class="aud${audioOn ? ' on' : ''}" id="audio">${audioOn
         ? '&#9679; Sound on this screen' : 'Play sound here'}</button>

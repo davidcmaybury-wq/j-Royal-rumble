@@ -11,7 +11,7 @@ Thirty players. Three start. One survives.
 
 **Below zero and you're out.** Zero is still alive.
 
-**Flattened early?** Drop under with fewer than three clues taken and you stay up — half stake, 70% off your buzz for 40 races. Once each.
+**Arcade or Tournament?** Your buzzer says which. Arcade: go under with fewer than three clues taken and you stay up — half stake, 70% off your buzz for 40 races, once each — and the race shows places, not times.
 
 **Still standing?** +$500 every 10 clues you survive — being early in the draw is hard work, and this pays for it.
 
@@ -21,10 +21,10 @@ Thirty players. Three start. One survives.
 
 **Overtime** — when nobody's left to enter and nobody's going out, clue values double every six clues, up to eight times face. It doesn't stop until somebody breaks.
 
-**Waiting your turn? Buzz anyway.** Your buzzer works from the moment you join. It doesn't score, but it reports your time and where you'd have placed, so don't arrive cold. Turning up late is fine: join any time and go to the back of the queue.
+**Waiting your turn? Buzz anyway.** Your buzzer works from the moment you join. It doesn't score but it reports your time and place, so don't arrive cold. Turning up late is fine: join any time and go to the back of the queue.
 
-**Last one standing wins.** Clues survived, toss outs, points drained, buzzer speed — all tracked and posted, none of them the winner.
+**Last one standing wins.** Everything else is tracked and posted, and none of it is the winner.
 
-⚠️ Don't jump the lights. Buzzing early costs you 250ms, a lifetime here. Good players don't react to the lights — they learn the rhythm of the read. A perfect buzz reads 0.0.
+⚠️ Don't jump the lights. Buzzing early costs you 250ms. Good players learn the rhythm of the read rather than reacting to the lights. A perfect buzz reads 0.0.
 
 **To play:** open the buzzer link, enter the room code, add your name, leave it open — it's your buzzer. There's a watch link too, if you'd rather have the board on your own screen.

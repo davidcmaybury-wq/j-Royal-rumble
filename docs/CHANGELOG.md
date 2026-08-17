@@ -3,6 +3,39 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.86.0 — Arcade and Tournament
+
+A match is now one shape or the other, named on the host console, the watch
+screen and every player's buzzer for the whole match.
+
+**Arcade** is the comeback switched on. Because a player on the way back is
+ranked at a fraction of the time they pressed, buzz order stops being buzz speed
+— so the room sees **1st, 2nd, 3rd** rather than times. A player still sees their
+own reaction time on their own buzzer, to the tenth of a millisecond. Nobody
+sees anybody else's.
+
+**Tournament** is the comeback off. `buzzEdge` is always 1, the fastest press
+wins every race, and the times stay public because they mean exactly what they
+look like.
+
+**The times are absent from the payload, not merely unrendered** — `watchView`
+and `raceView` omit `ms` entirely in Arcade, the same discipline that keeps the
+answer off the watch screen. `test/arcade.mjs` asserts both directions and that
+a player's own number still reaches them.
+
+This replaces the 0.85.1 fix, which sent the ranked time beside the real one so
+the host could see why a slower press held the clock. Showing the order beats
+explaining the arithmetic behind it, and the `edge` field is gone.
+
+**A bug fixed with it:** `rerank` ranked on raw `ms` while `rankRace` ordered on
+`ms * buzzEdge`, so the place a player was told could disagree with who actually
+held the clock. It only ever showed up once the comeback existed, because every
+edge was 1 before that — and it would have made the new place display wrong from
+its first match.
+
+The Discord rules are now at capacity: 1,970 / 1,707 against a 2,000 cap, and no
+other two-message split fits. The next rule added there needs a third message.
+
 ## 0.85.4 — the entry banner was sitting on the adjudication buttons
 
 The console locking up on an entry, third and final piece. 0.85.2 stopped the

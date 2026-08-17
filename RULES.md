@@ -25,7 +25,7 @@ Thirty players. Three start. One survives.
 
 **Below zero and you're out.** Zero is still alive.
 
-**Flattened early?** Drop under with fewer than three clues taken and you stay up — half stake, 70% off your buzz for 40 races. Once each.
+**Arcade or Tournament?** Your buzzer says which. Arcade: go under with fewer than three clues taken and you stay up — half stake, 70% off your buzz for 40 races, once each — and the race shows places, not times.
 
 **Still standing?** +$500 every 10 clues you survive — being early in the draw is hard work, and this pays for it.
 
@@ -35,11 +35,11 @@ Thirty players. Three start. One survives.
 
 **Overtime** — when nobody's left to enter and nobody's going out, clue values double every six clues, up to eight times face. It doesn't stop until somebody breaks.
 
-**Waiting your turn? Buzz anyway.** Your buzzer works from the moment you join. It doesn't score, but it reports your time and where you'd have placed, so don't arrive cold. Turning up late is fine: join any time and go to the back of the queue.
+**Waiting your turn? Buzz anyway.** Your buzzer works from the moment you join. It doesn't score but it reports your time and place, so don't arrive cold. Turning up late is fine: join any time and go to the back of the queue.
 
-**Last one standing wins.** Clues survived, toss outs, points drained, buzzer speed — all tracked and posted, none of them the winner.
+**Last one standing wins.** Everything else is tracked and posted, and none of it is the winner.
 
-⚠️ Don't jump the lights. Buzzing early costs you 250ms, a lifetime here. Good players don't react to the lights — they learn the rhythm of the read. A perfect buzz reads 0.0.
+⚠️ Don't jump the lights. Buzzing early costs you 250ms. Good players learn the rhythm of the read rather than reacting to the lights. A perfect buzz reads 0.0.
 
 **To play:** open the buzzer link, enter the room code, add your name, leave it open — it's your buzzer. There's a watch link too, if you'd rather have the board on your own screen.
 
@@ -97,6 +97,23 @@ whose answer did it is credited with a **toss out** for each — the closest thi
 game has to putting somebody over the top rope.
 
 If a clue would somehow wipe the entire ring, the highest score survives.
+
+### Arcade and Tournament
+
+A match is one shape or the other, and your buzzer says which all the way
+through.
+
+**Arcade** has one foot on the floor switched on. Because a player on the way
+back is ranked with time taken off their buzz, buzz order stops being buzz
+speed — so the room sees **1st, 2nd, 3rd** rather than times. You still see your
+own reaction time on your own buzzer, to the tenth of a millisecond. You just
+don't see anybody else's, and nobody sees yours.
+
+**Tournament** has it switched off. The fastest press wins every race, and the
+times are public because they mean exactly what they look like.
+
+Nothing else changes between them. The match record keeps every real time either
+way, and the standings at the end are the same in both.
 
 ### One foot on the floor
 

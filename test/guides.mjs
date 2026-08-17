@@ -94,6 +94,9 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     ['targeting, which is standard now', 'deal with a bully'],
     ['and that ganging up is the point of it', 'Gang up'],
     ['one foot on the floor, which is on by default', 'One foot on the floor'],
+    ['both match shapes by name', 'ARCADE'],
+    ['and the other one', 'TOURNAMENT'],
+    ['that a player keeps their own time', 'your own'],
     ['that the comeback is gated to people who never got going', 'three clues'],
     ['and that it stops bounties paying out', "doesn't get eliminated at all"],
   ]) {

@@ -251,6 +251,25 @@ it, which is confusing to debug. Compute the flag in job-level `env` and test
 `env.X` in the step instead. A YAML parser will not catch this; `test/workflows.mjs`
 will, and also checks that every suite a workflow names actually exists.
 
+## Arcade and Tournament are one setting with two names
+
+`comeback: true` makes a match Arcade, `false` makes it Tournament, and
+`Match.arcade()` is the single place that decides. It is a property of the
+match, not of the moment — a label that flipped as players picked up and lost
+the edge would tell the room nothing it could act on.
+
+In Arcade the public payloads carry `place` and **no `ms` at all**: with the
+edge applied, order is not speed, and a published number that contradicts the
+highlight is what produced the "Zach was fastest but Dalton was highlighted"
+report. A player's own time still reaches them through `myBuzz`. Omit rather
+than hide — `test/arcade.mjs` checks the field is absent, the same discipline as
+the answer never reaching the watch screen.
+
+`rerank` had to be fixed with it: it ranked on raw `ms` while `rankRace` ordered
+on `ms * buzzEdge`, so the place a player was told disagreed with who held the
+clock. That only showed up once the comeback existed, because every edge was 1
+before it.
+
 ## Quick setup hides expert, it does not omit it
 
 `setup.html` has two modes, quick (default) and expert, remembered per browser
