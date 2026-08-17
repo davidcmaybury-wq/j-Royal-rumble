@@ -3,6 +3,28 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.92.0 — players' broadcast performance is internal study only
+
+The "Does being good on television carry over?" section is removed from the
+handbook, three figures with it. Several of the regulars are identifiable
+broadcast contestants, and a per-player read on their televised record sitting
+next to how they do here is not this project's to publish — the handbook already
+anonymizes to P-labels for exactly that reason.
+
+**Permanent rule**, not a one-off edit, and it **overrides the standing rule that
+the analysis chat's graphs always go into the handbook**. The chart page still
+exists in the analysis folder; `test/guides.mjs` now asserts the handbook contains
+none of its phrases, so a future session merging it back fails the suite instead
+of shipping it.
+
+The line is individual versus aggregate. Out: anything correlating a player's
+televised record with their Rumble results. In: the aggregate population data the
+robot model is calibrated on — 3,339 J!ometry player-games, 1,772 contestants —
+which is provenance for a model with no individual in it.
+
+Figures renumbered 1–21 in document order. The configuration map stays unnumbered
+as the shark section's index.
+
 ## 0.91.0 — the analysis chat's graphs, in the handbook where the room reads them
 
 Nine figures merged from `~/Developer/j-royal-rumble-data/charts/`, per David's

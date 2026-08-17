@@ -151,13 +151,22 @@ for (const [what, needle] of [
   // The analysis chat's graphs always go into the online handbook — David's
   // standing rule, in README-FOR-DEV-CHAT.md. A chart left in that folder is
   // half-delivered, so these assert the merged ones are actually on the page.
-  ['the broadcast-transfer figures', 'Accuracy does not transfer'],
   ['the configuration map that indexes the shark problem', 'every measured configuration'],
   ['the trigger study figures', 'Race wins at the moment of first elimination'],
-  ['and the figures are numbered without a duplicate', 'Figure 24'],
+  ['and the figures are numbered without a duplicate', 'Figure 21'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }
+// Players' broadcast performance is internal study only and must never be in an
+// outward-facing document — David's standing rule. The chart page still exists in
+// the analysis folder, and the rule there is that its graphs always go into the
+// handbook, so this is the guard against a future session merging it back.
+for (const needle of ['Accuracy does not transfer', 'does a strong televised record',
+  'real broadcast games', 'carry over?']) {
+  check(`the handbook has no broadcast-performance analysis: ${needle}`,
+    !hb.includes(needle));
+}
+
 check('and no longer claims the stake is identical for everybody',
   !/identical\s+starting\s+stake/.test(hb.replace(/\s+/g, ' ')));
 

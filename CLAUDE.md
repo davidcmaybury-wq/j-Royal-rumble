@@ -156,6 +156,24 @@ asked. The README is not enough: `discord-rules-v2.md` and
 rules appear by name; add to it whenever you add a rule, or the next one drifts
 the same way.
 
+**Players' broadcast performance is internal study only — never outward-facing.**
+No analysis of how our players did on television goes in `docs/handbook.html`,
+`RULES*.md`, the Discord files, or anything else a person reads. Several players
+are identifiable broadcast contestants; publishing a per-player read on their
+televised record, next to how they do here, is not ours to publish. David made
+this permanent on 2026-08-17, and a "Does being good on television carry over?"
+section was removed from the handbook the same day.
+
+**This overrides the standing rule that the analysis chat's graphs always go into
+the handbook.** `~/Developer/j-royal-rumble-data/charts/tv-vs-rumble.html` still
+exists and must stay out; `test/guides.mjs` asserts the handbook contains none of
+its phrases, so a future merge trips the suite rather than shipping it.
+
+What stays is aggregate reference data with no individual in it: the robot model
+is calibrated on 3,339 J!ometry player-games and 1,772 contestants in the
+population, and saying so is provenance for a model rather than a read on
+anybody. If that line ever needs redrawing, ask — do not widen it quietly.
+
 **Call them casual players.** Never "low-skill", never "weak player". David asked
 for this explicitly and made it general: avoid any potentially insulting label for
 players who are not the sharks, in the handbook and everywhere else a person
