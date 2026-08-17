@@ -3,3 +3,6 @@ node_modules/
 *.log
 .DS_Store
 logs/
+# Runtime, like logs/: the server writes bug reports here when /data is absent,
+# so a local test run leaves files that are not part of the project.
+reports/
