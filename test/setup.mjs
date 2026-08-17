@@ -18,6 +18,27 @@ const setup = await (await api(`/api/match/${m.gameId}`, {}, m.hostKey)).json();
 check('setup reports available material', setup.available.archive > 40000 && setup.available.original > 200,
   `${setup.available.archive} archive, ${setup.available.original} original`);
 
+// --- who is hosting ----------------------------------------------------
+//
+// Recorded with the match so saved logs can be grouped by host. It is metadata,
+// not a rule, so the one thing that must never happen is it reaching the engine
+// settings — hence the check that it stays out of them.
+check('a fresh match has no host recorded', setup.hostName === '',
+  JSON.stringify(setup.hostName));
+let h = await (await api(`/api/match/${m.gameId}`, { method: 'PATCH',
+  body: JSON.stringify({ hostName: '  David  ' }) }, m.hostKey)).json();
+check('the host name is saved, and trimmed', h.hostName === 'David',
+  JSON.stringify(h.hostName));
+check('and does not leak into the rules', h.settings.hostName === undefined);
+h = await (await api(`/api/match/${m.gameId}`, { method: 'PATCH',
+  body: JSON.stringify({ hostName: 'x'.repeat(80) }) }, m.hostKey)).json();
+check('a very long name is capped', h.hostName.length === 40, `${h.hostName.length} chars`);
+// Presence, not truthiness: an empty string has to be able to clear it, which
+// a `if (req.body.hostName)` guard would silently refuse to do.
+h = await (await api(`/api/match/${m.gameId}`, { method: 'PATCH',
+  body: JSON.stringify({ hostName: '' }) }, m.hostKey)).json();
+check('and clearing the box clears it', h.hostName === '', JSON.stringify(h.hostName));
+
 // --- uploads -----------------------------------------------------------
 const json = JSON.stringify({ title: 'Test board', author: 'Tester', rounds: [[{
   category: 'ROOM CODES', comments: 'four letters', clues: [200, 400, 600, 800, 1000]

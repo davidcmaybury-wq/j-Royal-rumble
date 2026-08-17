@@ -100,6 +100,9 @@ export function list() {
           const j = JSON.parse(readFileSync(join(DIR, f), 'utf8'));
           summary = {
             version: j.version,
+            // Logs written before hosts were recorded have none. They are all
+            // David's, but the analysis should say "unknown" rather than guess.
+            host: j.host ?? null,
             clues: j.actual?.clues ?? (j.clues || []).length,
             minutes: j.actual?.minutes ?? null,
             secondsPerClueMedian: j.actual?.secondsPerClueMedian ?? null,

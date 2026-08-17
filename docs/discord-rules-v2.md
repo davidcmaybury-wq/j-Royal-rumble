@@ -43,7 +43,7 @@ It says which one at the top of your buzzer all match.
 
 📈 **The ceiling.** There's a maximum score, sized to the field. Anything above it gets clipped — a big lead buys you room, not immunity.
 
-⚔️ **Overtime.** When the queue empties (or the match stalls long enough), the stakes start climbing: clue values double every six clues, up to 8×, and the ceiling starts falling. The climb never resets. Somebody's going in the water. **If you walk in once overtime has started, your stake climbs with it** — enter at 4× and you enter with four times the money, because a normal stake against quadrupled clues is a death sentence.
+⚔️ **Overtime.** When the queue empties (or the match stalls long enough), the stakes start climbing: clue values double every six clues, up to 8×, and the ceiling starts falling. The climb never resets. Somebody's going in the water. **If you walk in once overtime has started, your stake climbs with it** — enter at 4× and you enter with four times the money, because a normal stake against quadrupled clues is a death sentence. **The ceiling still applies to what you walk in with**, so once it has fallen far enough you arrive on the roof rather than the full multiple.
 
 ⏱️ **Buzz early, buzz often.** Your buzzer works while you're queued, and after you're out. Warm-up buzzes never touch your stats — but they clock you against the live field, so practise freely. Jumping the lights = quarter-second lockout. Sub-150ms times are normal here: don't react to the lights, learn the rhythm.
 

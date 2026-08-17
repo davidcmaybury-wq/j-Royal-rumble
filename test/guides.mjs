@@ -99,6 +99,9 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     ['that a player keeps their own time', 'your own'],
     ['that the comeback is gated to people who never got going', 'three clues'],
     ['and that it stops bounties paying out', "doesn't get eliminated at all"],
+    ['the top rope cooldown, which was never in the Discord copy at all',
+      'wait five clues'],
+    ['and that taking the climb back before the clue is free', 'costs you nothing'],
   ]) {
     check(`the rules mention ${what}`, both.includes(needle), needle);
   }
@@ -131,6 +134,10 @@ for (const [what, needle] of [
   // correction is recorded rather than deleted, per the house convention.
   ['that the VWQW attribution was corrected', 'attribution above is overturned'],
   ['and where the trigger belongs', 'Where the trigger belongs'],
+  ['that a withdrawn top-rope climb serves no cooldown', 'serves no cooldown'],
+  // Open, not settled. It is in the handbook so the next person to touch the
+  // ceiling finds the numbers before changing it, per the house rule.
+  ['the open finding that the ceiling eats the scaled stake', 'eats the scaled stake'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }

@@ -134,6 +134,12 @@ was measured at one to six clues of life — and half the eliminations in the
 recorded matches happen during overtime, so this is the common case rather than
 the corner one.
 
+**The ceiling still applies to what you come back with.** It is falling through
+overtime while the multiplier is climbing, so deep enough in, the two cross and
+you return on the roof rather than on the full multiple. At the defaults that is
+around ×8 for a comeback and from about ×4 for a fresh entrant. Whether that is
+right is an open question — see the handbook.
+
 You are never eliminated when this fires, so nothing that keys off elimination
 happens either — a bounty on your head doesn't pay out, and a revival life
 isn't spent.
@@ -269,6 +275,13 @@ near the cap: the downside is uncapped and the upside isn't.
 decides doubling is worth it simply declares every clue, and it stops being a
 decision — it becomes a permanent stake setting the rest of the ring has to
 play against.
+
+**Changing your mind before the clue is read costs nothing.** Climb up and climb
+back down in the same gap between clues and there's no cooldown to serve. The
+five clues are the price of *riding* a clue at double, not of declaring one —
+a withdrawn declaration rode nothing, so there's nothing to charge for. You
+can't use it to peek, either: declarations are only taken between clues, so
+there is never a clue on the board to look at when you make one.
 
 **Targeting** — aim at one player, visible to the room. Win the clue and the
 whole pot comes from them alone, everyone else spared. Lose it to them and you

@@ -129,6 +129,16 @@ font-family:"IBM Plex Mono",monospace;font-size:21px;text-align:center}
 .lenrow input:focus{outline:none;border-color:var(--brass)}
 .lenrow span{color:var(--slate);font-size:13px}
 .lenhint{color:var(--slate);font-size:12px;margin-top:6px;line-height:1.4;min-height:2.4em}
+/* Sits under the room code, above the links. Full width rather than beside the
+   code, because a name is long and the four-letter code is the thing the eye
+   should land on first. */
+.hostbox{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.hostbox label{display:block;color:var(--chalk);font-weight:500;font-size:14.5px;
+margin-bottom:7px}
+.hostbox input{width:100%;max-width:320px;padding:9px 11px;background:var(--ink);
+color:var(--chalk);border:1px solid var(--line);border-radius:var(--r);font-size:15px}
+.hostbox input:focus{outline:none;border-color:var(--brass)}
+.hostbox .hint{display:block;color:var(--slate);font-size:12px;margin-top:6px;line-height:1.4}
 .links b{color:var(--chalk);font-weight:500}
 .links .wrow{margin-top:8px}
 .wrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -210,6 +220,25 @@ const setMode = (m) => {
   try { localStorage.setItem(MODE_KEY, m); } catch (e) {}
   root.className = 'wrap mode-' + m;
 };
+// The same host runs nearly every match, so asking for the name once and
+// remembering it is the difference between a field that gets filled in and one
+// that sits empty and makes the whole record useless. Same reasoning as the
+// mode above: a property of the person, not of the game.
+const HOST_KEY = 'rumble:hostName';
+const savedHost = () => {
+  try { return (localStorage.getItem(HOST_KEY) || '').slice(0, 40); }
+  catch (e) { return ''; }
+};
+const rememberHost = (n) => {
+  try {
+    if (n) localStorage.setItem(HOST_KEY, n);
+    else localStorage.removeItem(HOST_KEY);
+  } catch (e) { /* private browsing; they can retype it */ }
+};
+// Host-supplied and rendered into an attribute, so a stray quote would break
+// the card rather than just look wrong.
+const attr = (s) => String(s ?? '').replace(/[&<>"']/g,
+  (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (n) => (n ?? 0).toLocaleString();
 
 const api = async (path, opts = {}) => {
@@ -511,6 +540,15 @@ function render(keepEdits) {
       <div class="side">
         Players go to <code>${location.origin}/join</code> and enter this code.
       </div>
+    </div>
+    <!-- Not expert-only on purpose: it is recorded with every match, so hiding
+         it behind a mode would leave most logs without one. -->
+    <div class="hostbox">
+      <label for="hostName">Who's hosting?</label>
+      <input type="text" id="hostName" maxlength="40" placeholder="your name"
+             value="${attr(S.hostName || savedHost())}">
+      <span class="hint">saved with the match record, so how players do can be
+        compared across hosts</span>
     </div>
     <ul class="links">
       <li class="playrow"><div>
@@ -901,6 +939,10 @@ function collect() {
       seasonRange: [+g('s-lo').value, +g('s-hi').value],
     },
     blend: Object.fromEntries(SRC.map(([k]) => [k, mix[k] || 0])),
+    // Beside the settings rather than inside them: it is not a rule and the
+    // engine never sees it. The server trims and caps it again — this trim is
+    // so the box is remembered the same way it is sent.
+    hostName: g('hostName').value.trim(),
   };
 }
 
@@ -952,7 +994,11 @@ function editBot(token) {
 async function save(quiet) {
   const m = document.getElementById('savemsg');
   try {
-    S = await api(`/api/match/${code}`, { method: 'PATCH', body: JSON.stringify(collect()) });
+    const body = collect();
+    // Remembered on the way out rather than on every keystroke, so a half-typed
+    // name never becomes the stored one.
+    rememberHost(body.hostName);
+    S = await api(`/api/match/${code}`, { method: 'PATCH', body: JSON.stringify(body) });
     if (!quiet && m) {
       m.textContent = '\u2713 Settings saved';
       m.style.color = 'var(--live)';
@@ -1052,6 +1098,10 @@ function wire() {
   if (bl) bl.innerHTML = lastBots.map((b) => `<span>${b.name} &mdash; ${b.describe}</span>`).join('');
 
   document.getElementById('save').onclick = () => save();
+  // On change rather than on input: saving per keystroke would PATCH the match
+  // once per letter, and `change` still fires when they tab away or hit start.
+  const hn = document.getElementById('hostName');
+  if (hn) hn.onchange = () => save(true);
   const rev = document.getElementById('revival');
   rev.onchange = () => {
     document.getElementById('revrow').style.display = rev.checked ? '' : 'none';

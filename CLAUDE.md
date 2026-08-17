@@ -197,6 +197,22 @@ nothing leaking never resolves — evenly matched robots ran 400 clues with no
 elimination. Escalating stakes does not help: doubling both sides of an even
 trade leaves it even. So the ceiling falls **only once overtime opens**.
 
+**The falling ceiling eats the scaled stake, and this is still open.** Every
+arrival — `admit()`, revival, the comeback — is clamped to `this.ceiling`. That
+clamp was written for flat stakes; the stake then learned to ride the overtime
+multiplier and the ceiling floor did not. The two move in opposite directions
+through overtime, so they cross. At the defaults a fresh entrant stops getting
+the full multiple from about ×4 (12,000 stake against a ~9,060 roof) and a
+comeback from about ×8. The 3,000 floor is not what binds — the decayed ceiling
+is. **So the Randall fix is partly undone in exactly the phase it was written
+for**, and `get ceiling`'s own comment now describes an intent it no longer
+meets. Not repaired, because every candidate moves the ceiling: scaling the
+floor by the multiplier puts it above the starting ceiling at ×8 and kills the
+drain, and letting arrivals land above the roof is cosmetic — the cap at the top
+of `resolveClue` clips them straight back. Found by David, 0.89.0. Numbers, the
+candidates, and why each fails are in the handbook. **Measure before touching
+it**; the harness sweep the trigger study asked for still has not been run.
+
 **Longer matches are less fair, shorter ones are less skilful.** No formula
 predicted the spread well (best r = 0.71), so `FAIRNESS` in `src/engine.js` is
 the measurement itself — 3,000 matches per field-size/interval pair. Prefer a
@@ -553,3 +569,14 @@ under 150ms.
 `data/box-scores.json` (2,784 player-games) and `data/jometry-box.csv` (3,339
 with per-round splits) back the bot model. j-ometry blocks bots, so David
 downloaded that one by hand — don't try to re-fetch it.
+
+**Every recorded match has the same host, and nothing measured can see that.**
+The read is a large part of how a match plays, so the pace figures above are
+David's delivery as much as they are the game's. Since 0.89.0 the setup page
+asks who is hosting and saves it to the record as `host`, shown as a column at
+`/history`. It rides beside the settings like `blend`, never reaching the engine
+— `test/setup.mjs` asserts it stays out of `settings`. Remembered per browser,
+because a field that has to be retyped ends up empty. Old logs have no `host`
+and read as unknown; **don't backfill them to David** — an assumed value that
+looks like a measured one is worse than a gap. Grouping results by host is not
+built: there is nothing to compare until somebody else runs a match.

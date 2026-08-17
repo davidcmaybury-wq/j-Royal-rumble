@@ -219,6 +219,13 @@ class Match {
     // one slider moves them back in; they are just not what most matches want
     // as a starting point.
     this.blend = settings.blend || { original: 0, archive: 1 };
+    // Who ran the match. Metadata, not a rule — it rides beside the settings
+    // rather than inside them so it never reaches the engine, the same way
+    // `blend` does. It is here so the saved logs can be grouped by host: the
+    // read is a big part of how a match plays, and nine recorded matches all
+    // have the same host, so nothing measured so far can separate the host's
+    // pace from the rules.
+    this.hostName = '';
     this.roster = new Map();     // token -> { token, name, socketId, connected }
     this.game = null;
     this.phase = 'lobby';        // lobby | live | over
@@ -316,6 +323,9 @@ class Match {
       this.record = {
         version: VERSION,
         startedAt: new Date().toISOString(),
+        // Null rather than '' so a log written before hosts were recorded and
+        // one where the box was left empty read the same in the analysis.
+        host: this.hostName || null,
         settings: { ...this.settings },
         blend: { ...this.blend },
         available: this.available(),
@@ -598,7 +608,7 @@ class Match {
   setupView() {
     return {
       gameId: this.id, phase: this.phase, version: VERSION,
-      settings: this.settings, blend: this.blend,
+      settings: this.settings, blend: this.blend, hostName: this.hostName,
       seasons: [SEASONS[0], SEASONS.at(-1)],
       available: this.available(),
       uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
@@ -887,6 +897,12 @@ app.patch('/api/match/:id', (req, res) => {
   if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
   Object.assign(m.settings, req.body.settings || {});
   if (req.body.blend) m.blend = req.body.blend;
+  // Trimmed and capped: it lands in the saved record and on a table, and an
+  // empty string has to mean "not recorded" rather than a host called "   ".
+  // Tested for presence rather than truthiness, so clearing the box works.
+  if (req.body.hostName != null) {
+    m.hostName = String(req.body.hostName).trim().slice(0, 40);
+  }
   res.json(m.setupView());
 });
 

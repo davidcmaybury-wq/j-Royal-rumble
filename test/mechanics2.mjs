@@ -91,6 +91,19 @@ console.log('\nTOP ROPE COOLDOWN');
   ck('but yes after five', g.setTopRope(me,true), `waited ${5}`);
   // Climbing down is never blocked.
   ck('and stepping down is always allowed', g.setTopRope(me,false));
+  // Changing your mind before the clue is read is free.
+  //
+  // The cooldown prices riding a clue at double, not the act of declaring. A
+  // withdrawn declaration rode nothing, so there is nothing to charge for —
+  // and five clues of lockout over a climb the player took back reads to them
+  // as a bug, because from where they sit nothing happened.
+  ck('a climb taken back before the clue is read costs no cooldown',
+    g.topRopeWait(me)===0, `${g.topRopeWait(me)} clues to wait`);
+  ck('so you can climb again straight away', g.setTopRope(me,true));
+  // But one that was actually read still costs the full five.
+  g.resolveClue(...openIn(g,1),{winnerId:me,missedIds:[]});
+  ck('while a climb that was read still pays the cooldown',
+    !g.setTopRope(me,true), `${g.topRopeWait(me)} clues to wait`);
 }
 
 console.log('\nSAVE A PLAYER');

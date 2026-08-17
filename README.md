@@ -1060,7 +1060,12 @@ change scoring rather than presentation, so each has arithmetic tests in
 
 **Top rope** — declared between clues, never on one. That clue is worth double
 to the declarer in both directions, and their winnings ignore the ceiling, so a
-leader has a reason to take the risk rather than sit on a capped score.
+leader has a reason to take the risk rather than sit on a capped score. Then
+five clues before climbing again, or it stops being a decision and becomes a
+permanent stake setting. A declaration withdrawn before the clue is read serves
+no cooldown: the wait prices riding a clue at double, not declaring, and
+`setTopRope` clears the stamp when `cluesRevealed` has not moved since it was
+set — which is exactly "no clue came and went while they were up there".
 
 **Targeting** — aim at one player, visible to the room, with an alert on their
 buzzer. Win and the whole pot comes from them alone; everyone else is spared.
@@ -1159,6 +1164,28 @@ mid-match, still leaves something behind. Browse them at `/logs`.
 match finishes. Needs no volume, no account and no remembering.
 
 **By hand.** `Download match data` on the champion screen, any time.
+
+### Who was hosting
+
+The setup page asks for the host's name, under the room code, and it is saved
+with the record as `host` and shown as a column at `/history`.
+
+It is there because **the read is a large part of how a match plays** and
+nothing measured so far can see it. Every recorded match has had the same host,
+so the pace figures in this README — 19.3s then 16.8s median per clue, a human
+buzz median around 150ms — are one person's delivery as much as they are the
+game's. A second host would separate the two for the first time.
+
+The box is remembered per browser, because the same person runs nearly every
+match and a field that has to be retyped is a field that ends up empty. It is
+metadata, not a rule: it travels beside the settings rather than inside them and
+never reaches the engine, exactly as `blend` does, and `test/setup.mjs` asserts
+it stays out of `settings`. Logs written before this shipped have no `host` and
+read as unknown rather than being backfilled to David.
+
+Grouping player results by host is not built yet — this change only starts
+collecting the field, and one host's matches cannot be compared with anybody's
+until somebody else runs one.
 
 ### Logs live outside the app directory
 

@@ -656,7 +656,24 @@ export class RumbleGame {
     // Climbing down is always allowed; climbing up has to wait its turn.
     if (on && this.topRopeWait(token) > 0) return false;
     p.topRope = !!on;
-    if (on) p.topRopeAt = this.cluesRevealed;
+    if (on) {
+      p.topRopeAt = this.cluesRevealed;
+    } else if (p.topRopeAt === this.cluesRevealed) {
+      // Changing your mind before the clue is read costs nothing.
+      //
+      // The cooldown prices *riding* a clue at double, not the act of
+      // declaring. Somebody who climbs up and straight back down in the same
+      // gap between clues has ridden nothing, so there is nothing to charge
+      // for — and five clues of lockout over a declaration they withdrew reads
+      // as a bug from where the player sits, because nothing happened.
+      //
+      // `cluesRevealed` is the right clock for "was it read": it only moves
+      // inside resolveClue, and the server refuses a declaration while a clue
+      // is on the board, so an unchanged count means no clue came and went
+      // while they were up there. It cannot be used to peek and back out —
+      // there is no clue to peek at when the declaration is taken.
+      p.topRopeAt = null;
+    }
     return true;
   }
 
@@ -717,6 +734,14 @@ export class RumbleGame {
     }
     // A ceiling below the entry stake would clip newcomers on arrival, which
     // would quietly undo the thing the stake is for.
+    //
+    // That intent is no longer met and this floor is why: the entry stake now
+    // rides the overtime multiplier and the floor does not, so from about x4
+    // the roof is under the stake and clips exactly the newcomers this was
+    // written to protect. Multiplying the floor by the multiplier is the
+    // obvious repair and is not made here — at x8 it would put the floor above
+    // the starting ceiling and kill the overtime drain, which is itself a
+    // recorded failure. Open, with numbers, in the handbook.
     const floor = Math.max(this.s.ceilingFloor, this.s.startScore);
     return Math.max(floor, Math.round(c));
   }
@@ -1120,6 +1145,11 @@ export class RumbleGame {
         // re-entry paths together. Clamped to the ceiling like admit() does —
         // the cap is applied earlier in resolveClue than this runs, so an
         // unclamped stake would sit above the roof for a whole clue.
+        //
+        // KNOWN, OPEN: the clamp below eats this scaling once the falling
+        // ceiling drops under the climbing stake — at the defaults, around x8
+        // for a comeback. Same bug as in `admit()`, where it bites from x4; the
+        // note there has the detail and the handbook has the numbers.
         const mult = this.s.scaleEntryStake ? this.overtimeMultiplier() : 1;
         p.score = Math.min(
           Math.round(this.s.startScore * (this.s.comebackStake ?? 0.5) * mult),
@@ -1286,6 +1316,15 @@ export class RumbleGame {
       ? Math.round(this.s.startScore * this.s.revivalFraction)
       : this.s.startScore;
     const stake = base * mult;
+    // KNOWN, OPEN: this clamp eats the scaling it sits next to. The ceiling is
+    // falling through overtime while `mult` is climbing, so they cross — at the
+    // defaults a fresh entrant stops getting the full multiple from about x4,
+    // and lands on the roof instead. The clamp predates stake scaling and its
+    // own rationale (see `get ceiling`) is that a roof below the entry stake
+    // "would quietly undo the thing the stake is for", which is now exactly
+    // what happens. Not fixed here because every fix moves the ceiling, which
+    // is the dominant fairness lever and wants a harness sweep first. Numbers,
+    // the candidates and why each fails are in the handbook.
     next.score = Math.min(stake - next.bountyPlaced - (next.gifted || 0), this.ceiling);
     next.enteredAtClue = this.cluesRevealed;
     this.log.push({ type: 'entry', playerId: next.id, draw: next.drawNumber, cause });

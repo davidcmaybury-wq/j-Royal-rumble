@@ -3,6 +3,45 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.89.0 — a withdrawn top rope is free, and matches record their host
+
+**Climb down before the clue is read and there is no cooldown.** The five-clue
+wait prices *riding* a clue at double, not declaring one, so a player who
+changes their mind in the same gap between clues now pays nothing. `setTopRope`
+clears the stamp when `cluesRevealed` has not moved since it was set — which is
+exactly "no clue came and went while they were up there". It cannot be used to
+peek: declarations are only accepted between clues, so there is never a clue on
+the board to look at. The buzzer needed no change; it already re-enables on
+`topRopeWait` reaching zero.
+
+The Discord copy never mentioned the cooldown at all. It does now.
+
+**The setup page asks who is hosting**, under the room code, in both quick and
+expert mode. It is saved with the match record as `host` and shown as a column
+at `/history`, and remembered per browser because the same person runs nearly
+every match. Metadata, not a rule: it travels beside the settings like `blend`
+and never reaches the engine.
+
+The point is that the read is a large part of how a match plays and nothing
+measured so far can see it — every recorded match has had the same host, so the
+pace figures are one person's delivery as much as the game's. Grouping results
+by host is not built yet; there is nothing to compare until somebody else hosts.
+
+**Recorded, not fixed: the falling ceiling eats the scaled stake.** David spotted
+the comeback landing on the ceiling rather than the configured stake. It does,
+and the same clamp has been capping *entrants* since `scaleEntryStake` shipped —
+the stake rides the overtime multiplier, the ceiling floor does not, and the two
+move in opposite directions, so they cross. At the defaults a fresh entrant
+stops getting the full multiple from about ×4 and a comeback from about ×8.
+
+Not repaired here because every candidate moves the ceiling, which is the
+dominant fairness lever: scaling the floor by the multiplier puts it above the
+starting ceiling at ×8 and kills the overtime drain, and letting arrivals land
+above the roof is cosmetic — the next `resolveClue` clips them straight back.
+The numbers and the failed candidates are in the handbook; the player-facing
+rules now say the ceiling applies to what you walk in with rather than promising
+a multiple the game does not always pay.
+
 ## 0.88.0 — the comeback stake rides the overtime multiplier
 
 From a study of the trigger against all 89 eliminations in the eleven recorded

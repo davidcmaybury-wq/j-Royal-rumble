@@ -184,7 +184,12 @@ announces which are live. They need a keyboard, so expect them disabled for a mo
 <div class="rulecard"><p>🪜 <strong>TOP ROPE</strong> — Press <kbd>R</kbd> between clues (never
 mid-clue, no peeking). The next clue is worth double <em>to you, in both directions</em>: twice
 the gain if you take it, twice the loss if you miss or somebody else takes it. Everyone else
-plays it at face value. Top-rope winnings ignore the ceiling — the one way to score past the cap.</p></div>
+plays it at face value. Top-rope winnings ignore the ceiling — the one way to score past the cap.
+Then <strong>five clues before you can climb again</strong>, or anyone who decides doubling is
+worth it declares every clue and it stops being a decision. <strong>A climb you take back before
+the clue is read serves no cooldown</strong> — the wait is the price of riding a clue at double,
+not of declaring one, and a withdrawn declaration rode nothing. It cannot be used to peek:
+declarations are only accepted between clues, so there is no clue on the board to look at.</p></div>
 <div class="rulecard"><p>🎯 <strong>TARGETING</strong> &mdash; <em>standard, on by default.</em> — Press <kbd>T</kbd> and pick a player.
 If you take the clue, the entire pot comes out of them alone and everyone else is spared. If
 <em>they</em> take it, you pay them the entire pot and the ring goes free. A finishing move and
@@ -500,6 +505,42 @@ broader shape.</p>
 gate the elites take 1.8 free lives each per match and casual benefit collapses to 2.9%. The gate
 is the mechanic, not a refinement of it. And the live logs show what a re-firing trigger would
 produce: repeated overtime deaths at nought wins, one to six clues per extra life.</p>
+<h3>The falling ceiling eats the scaled stake — open</h3>
+<p>Found by David reading the 0.88.0 comeback path, and larger than the comeback: <strong>the
+ceiling clamp silently undoes stake scaling at high multipliers, and it has been doing so to
+entrants since <code>scaleEntryStake</code> shipped.</strong></p>
+<p>Every arrival is clamped to the current ceiling — <code>admit()</code>, revival, and now the
+comeback. That clamp was written when stakes were flat, and its comment still states the intent:
+a ceiling below the entry stake &ldquo;would clip newcomers on arrival, which would quietly undo
+the thing the stake is for.&rdquo; The stake then learned to ride the multiplier and the ceiling
+did not. Worse, the two move in opposite directions — the multiplier climbs through overtime while
+the roof is falling — so they are guaranteed to cross if overtime runs long enough.</p>
+<p>At the defaults (start 3,000, ceiling 10,500, <code>overtimeCeilingDrop</code> 120 a clue,
+doubling every 6 up to ×8), taking the main-match decay as zero:</p>
+<table>
+<tr><th>Multiplier</th><th>OT clues in</th><th>Ceiling</th><th>Entry stake</th><th>Comeback stake</th></tr>
+<tr><td>×2</td><td>6</td><td>9,780</td><td>6,000</td><td>3,000</td></tr>
+<tr><td>×4</td><td>12</td><td>9,060</td><td>12,000 &rarr; <strong>9,060</strong></td><td>6,000</td></tr>
+<tr><td>×8</td><td>18</td><td>8,340</td><td>24,000 &rarr; <strong>8,340</strong></td><td>12,000 &rarr; <strong>8,340</strong></td></tr>
+</table>
+<p>So a fresh entrant stops getting the full multiple from about ×4, and a comeback from about ×8.
+The 3,000 floor is not what binds — the decayed ceiling itself is, and it would take roughly 62
+overtime clues to reach the floor.</p>
+<p><strong>Why this is recorded rather than fixed.</strong> Every candidate fix moves the ceiling,
+and the ceiling is the dominant fairness lever — the one measured finding this document is most
+insistent about not re-litigating without numbers. Scaling the floor by the multiplier is a
+one-line change that honours the stated invariant, but at ×8 it floors the roof at 24,000, above
+the starting ceiling entirely, which kills the drain that makes the endgame resolve; and removing
+the drain is itself a recorded failure — evenly matched robots ran 400 clues without an
+elimination. Letting arrivals land above the roof instead is cosmetic: the cap is applied at the
+top of the next <code>resolveClue</code> and clips them straight back down. There is no version of
+this that does not need a harness sweep, and the sweep the trigger study asked for has still not
+been run.</p>
+<p>The measurement that would settle it is the one already defined for the skill axis: P(a
+bottom-half-median buzzer wins) with an elite in the field, reported against multiplier-aware and
+flat ceiling floors, alongside match length. Until then the behaviour stands as described, and the
+player-facing rules now say the ceiling applies to what you walk in with rather than promising a
+multiple the game does not always pay.</p>
 <h3>The boost is a threshold, not a dial</h3>
 <p>The 70% figure is not a setting with a comfortable middle. It shipped at 50% for one release,
 on the reasonable-sounding grounds that 70% was more help than the moment called for, and 50%

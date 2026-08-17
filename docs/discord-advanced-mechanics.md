@@ -7,6 +7,8 @@
 ⚠️ All four are **off by default** — the host announces what's live before the match. You'll need a keyboard, so expect them off for phone-heavy fields.
 
 🪜 **TOP ROPE — press R between clues.** The next clue is worth double *to you, in both directions*: twice the gain if you take it, twice the loss if you miss or somebody else takes it. Everyone else plays it at face value. Top-rope winnings ignore the ceiling — it's the only way to score past the cap. Declare before the clue goes up. No peeking.
+**Then wait five clues before you can climb again** — without that, anyone who reckons doubling is worth it just declares every clue and it stops being a decision.
+**Changed your mind? Climbing back down before the clue is read costs you nothing.** Step down in the same gap you stepped up and there's no wait to serve — the five clues are the price of *riding* one, not of declaring.
 
 💀 **BOUNTIES — press B while you're still in the queue.** Stake up to half your starting score on someone's head. Whoever eliminates them collects it — and you enter the match that much lighter. If they survive to the end, they keep it. If they eliminate *you*, they keep it anyway. Choose your enemies carefully. (No bounty has ever been collected in a live match. Be the first.)
 

@@ -61,6 +61,7 @@ try {
   const rows = d.matches.map((m) => `<tr>
     <td><a href="/api/logs/${m.file}${q}">${m.file.replace(/\.json$/, '')}</a>
       ${m.partial ? '<span class="tag">unfinished</span>' : ''}</td>
+    <td>${m.host || '<span style="color:var(--slate)">—</span>'}</td>
     <td>${m.winner || '<span style="color:var(--slate)">—</span>'}</td>
     <td class="num">${fmt(m.players)}</td>
     <td class="num">${fmt(m.clues)}</td>
@@ -70,7 +71,7 @@ try {
   </tr>`).join('');
 
   document.getElementById('list').innerHTML = d.matches.length
-    ? `<table><tr><th>Match</th><th>Winner</th><th class="num">Players</th>
+    ? `<table><tr><th>Match</th><th>Host</th><th>Winner</th><th class="num">Players</th>
         <th class="num">Clues</th><th class="num">Length</th>
         <th class="num">Pace</th><th class="num">Size</th></tr>${rows}</table>`
     : '<div class="none">No matches recorded yet.</div>';
