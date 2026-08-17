@@ -3,6 +3,23 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.85.3 — the board's category cards can hold a whole title
+
+Reported from the full buzzer: a player could not read his own board because
+the title cards would not show a second row.
+
+The board was six separate grids, one per column, so row one was sized per
+column and a long category made its own card taller than the rest. The fix for
+that had been a hard `max-height` with the title clamped to three lines — which
+is what cut a title off. Beside a 420px buzzer on a narrow window each column is
+about 93px, where the text wraps every 13 characters or so, so anything past
+roughly 28 characters lost its tail with nothing on screen to say it had one.
+
+It is one grid now: `display:contents` on the column lifts the cards and cells
+into it, so row one is shared across all six and sized to the tallest card. The
+cap is gone, the clamp goes from three lines to five, and the cells stay aligned
+because they are literally in the same grid rows.
+
 ## 0.85.2 — the entry banner was eating the host's keystrokes
 
 **This is the hang.** The entry banner stays up for 4.2 seconds after somebody

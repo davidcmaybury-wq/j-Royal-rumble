@@ -203,31 +203,48 @@ transition:opacity .18s ease,transform .18s ease;pointer-events:none;text-align:
 .bcap.entry{color:var(--live)}
 .bcap.toss{color:var(--alarm)}
 @media (prefers-reduced-motion:reduce){.bcorner{transition:none}}
-.bgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;
+/* One grid for the whole board, not six.
+
+   Each column used to be its own grid, so row 1 was sized per column and a long
+   category made its own card taller than the rest — which is why the card had a
+   hard max-height and the title was clamped to three lines. That cap is what
+   cut a category off mid-title on a narrow window: at ~93px per column the text
+   wraps every 13 characters, so anything past about 28 characters lost its tail
+   with no sign it had one.
+
+   `display:contents` on the column lifts the cards and cells into this grid, so
+   row 1 is shared by all six and sized to the tallest card. Every title now gets
+   the room it needs, the cells stay aligned across columns because they are
+   literally in the same grid rows, and the cap can go. */
+.bgrid{display:grid;grid-template-columns:repeat(6,1fr);
+grid-template-rows:auto repeat(5,1fr);grid-auto-flow:column;gap:6px;
 background:linear-gradient(160deg,#8E8578,#6E675C 55%,#57514A);padding:8px;border-radius:6px;
 box-shadow:inset 0 1px 0 #B5AC9C,inset 0 -2px 4px #00000066}
-/* Fixed height, and the text shrinks rather than the card growing. A long
-   category made one column taller than the rest and pushed its whole stack
-   down; in a narrow window the titles simply overflowed the card. */
-.bcat{min-height:46px;max-height:74px;display:grid;place-items:center;overflow:hidden;
+.bcat{min-height:46px;min-width:0;display:grid;place-items:center;overflow:hidden;
 font-size:clamp(7px,0.85vw,10.5px);line-height:1.15;text-transform:uppercase;letter-spacing:.03em;
 text-align:center;color:#1C2242;font-weight:700;
 background:linear-gradient(175deg,#EFE9DC,#CFC7B6);border:2px solid #3A352C;border-radius:3px;
-padding:4px 3px;margin-bottom:6px;
+padding:4px 3px;
 box-shadow:inset 0 1px 0 #FFFFFFAA,inset 0 -2px 3px #00000033}
-.bcat span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* Five lines rather than three. The row grows to the tallest card now, so a long
+   category costs a little height on every column instead of losing its tail. */
+.bcat span{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .bcat .note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 text-transform:none;letter-spacing:0;font-style:italic;font-weight:400;font-size:8.5px;
 line-height:1.25;color:#6A4A12;margin-top:2px}
 .bcell{position:relative;border-radius:5px;border:2px solid #26221C;text-align:center;
-padding:11px 2px;margin-bottom:6px;overflow:hidden;
+padding:11px 2px;overflow:hidden;min-width:0;
 background:radial-gradient(ellipse 90% 75% at 50% 40%,#2B2BE0 0%,#1717C2 52%,#0B0B93 100%);
 box-shadow:inset 0 0 10px #000A4ACC;
 font-family:"Anton",Impact,sans-serif;font-size:14px;letter-spacing:.05em;
 color:#FFF;text-shadow:0 0 5px #9A9AFF,0 1px 1px #000060}
 .bcell.played{background:radial-gradient(ellipse 90% 75% at 50% 40%,#2222C8 0%,#1212A8 55%,#0A0A85 100%);
 color:transparent;text-shadow:none}
-.bcol{min-width:0;display:grid;grid-template-rows:auto repeat(5,1fr)}
+/* The wrapper stays in the markup for readability but lays out nothing: its
+   children become items of .bgrid, which is what shares row 1 across columns.
+   min-width:0 moves onto the items, or a long unbroken word would push a
+   1fr column wider than its share. */
+.bcol{display:contents}
 .brow .bn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The clue on the board's own blue, in the 4:3 the monitors were. */
 .bclue{aspect-ratio:4/3;width:100%;display:grid;place-items:center;align-content:center;
