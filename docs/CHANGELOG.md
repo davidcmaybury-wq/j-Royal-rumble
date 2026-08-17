@@ -3,6 +3,31 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.86.1 — handbook v3, merged rather than swapped
+
+Part IV replaced with the version built from all eleven recorded matches:
+sixteen figures, the estimator diagnosed rather than just humbled, the
+host-relative clock finding, and the balance-lever simulation with the shipped
+gated comeback's first night in it.
+
+**Merged, not swapped.** The incoming file was built from an older Parts I–III
+and would have dropped the gemstone stables section, the 10,500 small-field
+ceiling, One foot on the floor, Arcade/Tournament and the comeback correction —
+seven of the needles `guides.mjs` asserts, which is that guard doing exactly
+what it exists for. Parts I–III are the current ones; Part IV is the new one.
+
+**Two measurements of the comeback now sit in one document, so it says which is
+which.** Figure 16 gives a single casual's match-win probability (1.9% ungated,
+7.3% gated); `comeback-study` reports the three casuals' combined share (2.9%
+against 11.0%). One is a player's own chance, the other the group's share of the
+table. The threshold finding is restored alongside them.
+
+**`docs/analysis/README.md` carries the analysis without the identities.** The
+delivered note named eight identifiable broadcast contestants alongside a
+per-player critique of how well each did. This repository is public and git
+history is permanent, so the reasoning is kept and the real-name mapping is not;
+the P-labels map to in-game handles, which were already committed in the CSVs.
+
 ## 0.86.0 — Arcade and Tournament
 
 A match is now one shape or the other, named on the host console, the watch
