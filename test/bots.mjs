@@ -147,7 +147,9 @@ console.log('THE MODEL');
 console.log('\nIN A MATCH');
 const m = await (await fetch(`${U}/api/match`, { method: 'POST',
   headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ settings: { entryInterval: 99, delay: 0 } }) })).json();
+  // Tournament: the robot buzz times are read straight off the published race
+  // below, and Arcade omits them on purpose (see test/arcade.mjs).
+  body: JSON.stringify({ settings: { entryInterval: 99, delay: 0, comeback: false } }) })).json();
 const key = { 'content-type': 'application/json', 'x-host-key': m.hostKey };
 
 let r = await (await fetch(`${U}/api/match/${m.gameId}/bots`,

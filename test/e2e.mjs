@@ -81,7 +81,17 @@ byToken(liveTokens()[0]).s.emit('buzz', { ms: 412.3, status: 'good' });
 byToken(liveTokens()[1]).s.emit('buzz', { ms: 501.8, status: 'good' });
 await wait(150);
 check('two buzzes ranked', state.race.buzzes.length === 2);
-check('fastest is on the clock', state.race.buzzes[0].ms === 412.3);
+// By who pressed, not by the number they pressed.
+//
+// The comeback is on by default, which makes a default match Arcade — and the
+// host view carries places rather than times there, because with the buzz edge
+// applied the order is not the raw speed. Asserting on ms tied this check to
+// one of the two modes for no reason: the thing under test is which player the
+// server put on the clock, and that reads the same in both.
+check('fastest is on the clock', state.race.buzzes[0].token === a.token,
+  `${state.race.buzzes[0].name} first`);
+check('and the places are 1..n', state.race.buzzes.every((x, i) => x.place === i + 1),
+  state.race.buzzes.map((x) => x.place).join(','));
 
 const before = Object.fromEntries(state.live.map((p) => [p.token, p.score]));
 const winner = state.race.buzzes[0].token;

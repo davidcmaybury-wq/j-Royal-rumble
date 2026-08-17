@@ -8,7 +8,11 @@ const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${
 
 const m = await (await fetch(`${U}/api/match`, { method: 'POST',
   headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ settings: { entryInterval: 99, delay: 0 } }) })).json();
+  // Tournament, so the published race carries times. This suite is about raw
+  // arbitration — who got in first, who jumped the lights — and it asserts on
+  // the numbers. In Arcade the comeback can reorder the race and the server
+  // omits ms from the view entirely, which is test/arcade.mjs's job.
+  body: JSON.stringify({ settings: { entryInterval: 99, delay: 0, comeback: false } }) })).json();
 
 const host = io(U, { transports: ['websocket'] });
 await once(host, 'connect');

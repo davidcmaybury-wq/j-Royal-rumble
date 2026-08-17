@@ -8,7 +8,11 @@ const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${
 
 const m = await (await fetch(`${U}/api/match`, { method: 'POST',
   headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ settings: { entryInterval: 99, delay: 0 } }) })).json();
+  // Tournament: this checks the watch payload carries names and times but no
+  // tokens. Arcade drops the times deliberately and test/arcade.mjs asserts
+  // that separately, so pinning the mode keeps this suite about the leak it
+  // exists to catch.
+  body: JSON.stringify({ settings: { entryInterval: 99, delay: 0, comeback: false } }) })).json();
 const host = io(U, { transports: ['websocket'] });
 await once(host, 'connect');
 let hs = null;
@@ -83,6 +87,9 @@ check('buzzes are visible', (ws.race?.buzzes || []).length === 1,
   (ws.race?.buzzes || []).map((b) => `${b.name} ${b.ms}`).join());
 check('with names and times but no tokens',
   ws.race.buzzes[0].name && ws.race.buzzes[0].ms > 0 && !ws.race.buzzes[0].token);
+// The token is the identifier a spectator page has no business holding, in
+// either mode. Arcade changes what is published about a buzz, never who it is.
+check('and never a token, whatever the mode', !ws.race.buzzes[0].token);
 
 // Overtime: every screen must show what the clue is worth now, not its face
 // value. A $400 clue in a x4 overtime is $1,600 and saying otherwise tells the
