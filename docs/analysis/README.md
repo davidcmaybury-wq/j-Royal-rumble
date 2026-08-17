@@ -7,6 +7,17 @@ from the logs by hand. This should replace `docs/handbook.html` (and the figures
 `tools/make-handbook.py` if the PDF is regenerated — noting the standing item that its figures
 are hand-typed).
 
+## `elims.json` — the 89 eliminations, pre-parsed
+
+Added 2026-08-17 with the v4 notes. Every elimination across the eleven recorded
+matches, one record each: `match` (room code), `player` (in-game handle), `clue`,
+`wins` (race wins since entry), `tenure` (clues in the ring), `ot` (was overtime
+open), `life` (first or second). It is what `tools/trigger-study.mjs` reads, and
+it exists so the wins-vs-tenure question never has to be re-derived from raw logs.
+
+Same rule as the CSVs: **in-game handles only**, and the same 34 handles already
+appearing in `player-stats.csv` and this key. See the anonymization note below.
+
 ## What the nine matches say
 
 **Estimator.** 7 of 9 within a handful of clues. Two real misses, both structural: FTGL

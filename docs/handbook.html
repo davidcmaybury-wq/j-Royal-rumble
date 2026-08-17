@@ -501,6 +501,23 @@ Three cuts at the gap. Casual benefit saturates there too — 11.0% at wins&lt;3
 wins&lt;5 — while the looser gate mostly feeds the middle of the field (10.0% to 15.2%) and hands
 the strongest player 50.6%. <code>comebackGate</code> is a setting for a host who wants the
 broader shape.</p>
+<p>The whole sweep, re-run against the shipping engine with
+<code>tools/trigger-study.mjs</code> at 1,500 matches a row, boost fixed at 70% for 40 races:</p>
+<table>
+<tr><th>Gate</th><th>Top shark</th><th>Mid</th><th>Casuals</th><th>Fires per match (casual)</th></tr>
+<tr><td>no comeback</td><td>77.8%</td><td>1.5%</td><td>0.5%</td><td>—</td></tr>
+<tr><td>wins &lt; 1</td><td>72.1%</td><td>3.3%</td><td>5.5%</td><td>0.8</td></tr>
+<tr><td>wins &lt; 2</td><td>67.8%</td><td>6.2%</td><td>9.1%</td><td>1.5</td></tr>
+<tr><td><strong>wins &lt; 3 — shipped</strong></td><td><strong>62.9%</strong></td><td>9.9%</td><td><strong>10.8%</strong></td><td>2.0</td></tr>
+<tr><td>wins &lt; 5</td><td>51.1%</td><td>14.8%</td><td>11.3%</td><td>2.6</td></tr>
+<tr><td>no gate at all</td><td>48.2%</td><td>11.8%</td><td>3.0%</td><td>3.0</td></tr>
+<tr><td>tenure &lt; 12 clues</td><td>76.4%</td><td>2.3%</td><td>1.3%</td><td>0.1</td></tr>
+<tr><td>wins&lt;3 <em>or</em> tenure&lt;12</td><td>62.8%</td><td>9.9%</td><td>10.8%</td><td>2.0</td></tr>
+</table>
+<p>The hybrid row is the tell: identical to the wins gate to a tenth of a point, because tenure
+adds nobody the wins gate had not already caught. And the no-gate row is the shape of the whole
+argument — the shark falls furthest there, but the casuals collapse to 3.0%, because the free
+lives go to the people already winning. Lowering the shark is not the same as raising the field.</p>
 <p><strong>Ungated is a subsidy for the strong, and once-per-player has to stay.</strong> With no
 gate the elites take 1.8 free lives each per match and casual benefit collapses to 2.9%. The gate
 is the mechanic, not a refinement of it. And the live logs show what a re-firing trigger would
@@ -591,6 +608,71 @@ table; quote whichever the question asks for, and say which.</p>
 "bottom four 1.5% to 41.9%, elite 93.8% to 38.6%" — match no row the study produces and have
 been withdrawn. A measurement nobody can reproduce is worse than no measurement, because it
 survives review.</p>
+<h3>The leveling budget</h3>
+<p>With the comeback shipped, the obvious next question is what <em>else</em> could narrow the
+gap between an ordinary player and a shark. The remaining candidates were measured with
+<code>tools/level-study.mjs</code>, 1,500 matches a row, and the answer is mostly a warning.</p>
+<p>Each lever on its own, nothing else changed:</p>
+<table>
+<tr><th>Lever</th><th>Top shark</th><th>Mid</th><th>Casuals</th></tr>
+<tr><td>baseline, nothing</td><td>77.8%</td><td>1.5%</td><td>0.5%</td></tr>
+<tr><td>photo finish, 25ms window</td><td>75.8%</td><td>2.4%</td><td>0.1%</td></tr>
+<tr><td>photo finish, 50ms</td><td>71.8%</td><td>2.3%</td><td>0.3%</td></tr>
+<tr><td>photo finish, 100ms</td><td>63.9%</td><td>4.6%</td><td>0.5%</td></tr>
+<tr><td>winner cooldown, sit one race</td><td><strong>47.7%</strong></td><td>10.1%</td><td>2.5%</td></tr>
+<tr><td>trailing player picks the category</td><td>75.7%</td><td>3.1%</td><td>0.7%</td></tr>
+<tr><td><strong>the shipped comeback</strong></td><td>55.9%</td><td>12.9%</td><td><strong>14.5%</strong></td></tr>
+</table>
+<p><strong>The photo finish has a geometry problem.</strong> Sending every buzz within W
+milliseconds of the fastest to a random draw only randomizes players quick enough to
+<em>reach</em> the window. It flattens shark against shark and leaves the field untouched:
+casuals sit at or below their baseline at every width, while the top shark drops fourteen points.
+It is a fairness lever that redistributes strictly among the fast.</p>
+<p><strong>Letting the trailing player pick the category does almost nothing</strong>, for the
+same underlying reason the comeback works and this does not: a trailing player's problem is
+winning the race, not choosing which clue to lose.</p>
+<p><strong>The winner cooldown is the one real find, and it is not what it looks like.</strong>
+Sitting out the race after taking one mechanically caps anybody's share near half, and it cuts
+the top shark to 47.7% — the largest single effect of any non-comeback lever here. But look
+where the winnings go: mid 10.1%, casuals 2.5%. It does not lift the field, it promotes the
+second shark. Lowering the leader is not the same as raising anybody.</p>
+<h3>Levers interfere; they do not stack</h3>
+<p>This is the finding worth keeping. Adding race-structure levers on top of the comeback makes
+the casuals <em>worse</em> off, not better:</p>
+<table>
+<tr><th>Configuration</th><th>Top shark</th><th>Mid</th><th>Casuals</th></tr>
+<tr><td>comeback alone</td><td>55.9%</td><td>12.9%</td><td><strong>14.5%</strong></td></tr>
+<tr><td>comeback + 50ms photo finish</td><td>59.7%</td><td>8.3%</td><td>11.2%</td></tr>
+<tr><td>comeback + winner cooldown</td><td>47.1%</td><td>9.4%</td><td>12.1%</td></tr>
+<tr><td>comeback + both</td><td>46.3%</td><td>8.5%</td><td>11.3%</td></tr>
+</table>
+<p>The interference is mechanical rather than statistical. The photo-finish window dilutes the
+returner's discount — a boosted press now shares a coin flip with whoever it just beat, so the
+thing that was bought with the boost is given away again. The cooldown benches the returner after
+every win, throttling the exact engine the comeback runs on. <strong>Race allocation is one
+budget, and the comeback already spends it</strong>; adding a second spender makes the first
+one poorer.</p>
+<p>Note also that the two "improvements" that most reduce the top shark — the cooldown rows, at
+46–47% — are among the worst for the casuals. If the goal is stated as "beat the shark" the
+answer looks like progress; stated as "give everyone a chance", it is a regression. The choice of
+metric decides the design.</p>
+<p><strong>Where this lands.</strong> Do not stack race-structure levers on the comeback. What
+headroom remains is in channels orthogonal to the buzzer — the stables even-pot split, which is
+the largest economic dent in elite dominance measured here and does compose with the comeback;
+the gate exposed as a host dial; and format answers such as drafted teams. The winner cooldown
+earns one line in the notebook for one context: Tournament runs without the comeback, so the
+cooldown would be the only leveler on the floor, and it gets the shark to 47.7% with times still
+meaning exactly what they look like. Whether that suits Tournament's pure-speed identity is a
+design call, not a measurement.</p>
+<p class="mut">These sections arrived as a written study rather than as raw numbers, and the
+figures here are the ones reproduced by re-running the shipped scripts against the current
+engine, not the ones delivered — they differ by a few tenths in places, and by two points for
+"comeback + both", which the delivery put at 9.2%. The delivery also stated that scaling the
+overtime stake "formalizes the fix" for the return-at-the-ceiling bug and pointed at a delta
+handed to <code>adjustScore</code>. It does not, and there is no such call on that path: the
+clamp is a direct assignment and survives the scaling entirely. See the open section above,
+where it is measured.</p>
+
 <p class="mut">Method, in one paragraph: the rules engine is a plain module with no framework
 and no network, driven by a Monte Carlo harness that replays hundreds of matches per
 configuration before every deployment. The harness once caught a scoring regression that would

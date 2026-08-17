@@ -138,6 +138,12 @@ for (const [what, needle] of [
   // Open, not settled. It is in the handbook so the next person to touch the
   // ceiling finds the numbers before changing it, per the house rule.
   ['the open finding that the ceiling eats the scaled stake', 'eats the scaled stake'],
+  // The leveling budget, merged from the v4 notes. The interference result is
+  // the one a future change is most likely to undo by "helpfully" stacking a
+  // second race-structure lever on top of the comeback.
+  ['the leveling budget', 'The leveling budget'],
+  ['that levers interfere rather than stack', 'do not stack'],
+  ['and that the winner cooldown feeds the second shark', 'second shark'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }

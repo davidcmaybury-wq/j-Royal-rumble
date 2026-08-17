@@ -231,6 +231,26 @@ Numbers and both tables are in the handbook. **Re-measure before touching it** �
 and use `RUMBLE_RUNS`, because the 600-run default moved 2–3 points between
 settings that were identical at 6,000.
 
+**Race allocation is one budget, and the comeback already spends it.** Adding
+race-structure levers *on top of* the comeback makes casuals worse off, not
+better: comeback alone 14.5%, plus a 50ms photo finish 11.2%, plus a winner
+cooldown 12.1%, plus both 11.3%. The interference is mechanical — the photo
+finish dilutes the returner's discount by making a boosted press share a coin
+flip with whoever it beat, and the cooldown benches the returner after every win,
+throttling the engine the comeback runs on. **Do not stack them.** Remaining
+headroom is in channels orthogonal to the buzzer: the stables even-pot split, the
+gate as a host dial, drafted teams. `tools/level-study.mjs`.
+
+**Lowering the shark is not the same as raising the field**, and the metric
+decides the design. The winner cooldown is the largest solo non-comeback lever —
+top shark 77.8% → 47.7% — but it hands the winnings to the *second* shark: mid
+10.1%, casuals 2.5%. Same shape as the ungated comeback (shark falls to 48.2%,
+casuals collapse to 3.0%). Judge a leveller by the casual row, never by the shark
+row. The photo-finish window has a geometry problem on top of this: it only
+randomizes players fast enough to reach the window, so it redistributes strictly
+among the fast. The cooldown is worth one line for Tournament only, where there
+is no comeback and it would be the only leveller on the floor.
+
 **Longer matches are less fair, shorter ones are less skilful.** No formula
 predicted the spread well (best r = 0.71), so `FAIRNESS` in `src/engine.js` is
 the measurement itself — 3,000 matches per field-size/interval pair. Prefer a

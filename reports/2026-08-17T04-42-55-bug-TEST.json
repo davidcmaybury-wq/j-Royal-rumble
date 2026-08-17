@@ -1,0 +1,13 @@
+{
+  "kind": "bug",
+  "text": "The board went blue between clues",
+  "at": "2026-08-17T04:42:55.741Z",
+  "gameId": "TEST",
+  "version": "9.9.9",
+  "screen": "buzzer",
+  "name": "Dave",
+  "token": "",
+  "clue": 12,
+  "phase": "",
+  "userAgent": ""
+}
