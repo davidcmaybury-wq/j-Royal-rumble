@@ -1197,7 +1197,21 @@ function renderDock() {
 }
 
 addEventListener('keydown', (e) => {
-  if (document.querySelector('.entry')) return;
+  // The entry banner used to swallow this key.
+  //
+  // `if (document.querySelector('.entry')) return;` sat here, and the banner
+  // stays up for 4.2 seconds after somebody walks in. The host picks the next
+  // clue with the mouse, presses space to arm — and nothing happens, because
+  // the banner is still on screen and this handler bailed. Press again and it
+  // works, which is precisely the "it hung when it was the clue when someone
+  // was coming in" report, and precisely how a host ends up sending two
+  // adjudications for one clue.
+  //
+  // The banner dismisses itself on any keydown; its listener is registered
+  // after this one, so the key does its job here first and clears the banner on
+  // the way out. Eating the host's input to close a decoration was the wrong
+  // trade — a banner in the way is a nuisance, a dead keyboard is a stopped
+  // game.
   const t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
   if (!S || !S.clue) return;

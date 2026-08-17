@@ -81,6 +81,43 @@ console.log('\nTHE EDGE RUNS OUT');
   check('and it expires', !g.onTheFloor(b), String(g.buzzEdge(b)));
 }
 
+console.log('\nWHAT COUNTS AS A RACE');
+{
+  // The edge lasts a number of *races*, so a run of stumpers does not burn it.
+  // But a clue people buzzed for and nobody converted is still a race, and it
+  // used to not count: the increment read `entry.missed` where the field is
+  // `entry.missedIds`, so it reduced to "clues somebody won". The expiry test
+  // above only plays clues with a winner, which is why it passed for several
+  // releases while the edge quietly outlived its duration in real play — a
+  // player who seemed to keep an unexplained advantage on the buzzer.
+  const g = game({ comebackRaces: 2, stumperFraction: 0 });
+  const [a, b] = g.live().map((p) => p.id);
+  g.players.get(b).score = 50;
+  const [s, r] = open(g);
+  g.resolveClue(s, r, { winnerId: a, missedIds: [] });
+  check('the edge is on', g.onTheFloor(b), String(g.buzzEdge(b)));
+  for (let i = 0; i < 4 && !g.finished; i++) {
+    const [s2, r2] = open(g);
+    // Contested and missed: a real race, with nobody converting it.
+    g.resolveClue(s2, r2, { winnerId: null, missedIds: [a] });
+  }
+  check('a contested clue nobody converted still burns the edge',
+    !g.onTheFloor(b), String(g.buzzEdge(b)));
+}
+{
+  const g = game({ comebackRaces: 2, stumperFraction: 0 });
+  const [a, b] = g.live().map((p) => p.id);
+  g.players.get(b).score = 50;
+  const [s, r] = open(g);
+  g.resolveClue(s, r, { winnerId: a, missedIds: [] });
+  for (let i = 0; i < 4 && !g.finished; i++) {
+    const [s2, r2] = open(g);
+    // Nobody even buzzed. Not a race, so it must not spend the edge.
+    g.resolveClue(s2, r2, { winnerId: null, missedIds: [] });
+  }
+  check('but a clue nobody buzzed does not', g.onTheFloor(b), String(g.buzzEdge(b)));
+}
+
 console.log('\nTURNED OFF');
 {
   const g = game({ comeback: false });

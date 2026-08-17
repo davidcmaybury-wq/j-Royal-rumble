@@ -974,7 +974,13 @@ export class RumbleGame {
 
     // A contested clue is a race, and the comeback edge is measured in races
     // rather than clues so a run of stumpers does not burn it.
-    if (winnerId || (entry.missed || []).length) this.racesRun += 1;
+    // The field is missedIds. `entry.missed` was undefined, so this read as
+    // `if (winnerId)` and counted only clues somebody won — a clue everybody
+    // buzzed and nobody converted was not a race. The comeback edge is measured
+    // in races, so it outlived its 40 by however many clues the field missed,
+    // and with nothing on the console saying who had it, the effect from the
+    // outside was a player who seemed to keep an unexplained buzzer advantage.
+    if (winnerId || entry.missedIds.length) this.racesRun += 1;
 
     this.applyEliminations(entry, winnerId);
     // --- saves declared during the previous clue --------------------------

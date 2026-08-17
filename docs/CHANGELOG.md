@@ -3,6 +3,33 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.85.2 — the entry banner was eating the host's keystrokes
+
+**This is the hang.** The entry banner stays up for 4.2 seconds after somebody
+walks in, and the console's keyboard handler opened with
+`if (document.querySelector('.entry')) return;`. So for four seconds after every
+entry the host's keys did nothing: pick the next clue with the mouse, press
+space to arm, and the game sits there. Press again and it works — which is both
+the "it hung when it was the clue when someone was coming in" report and the
+reason a host ends up sending two adjudications for one clue, which is what
+threw the destructure error in 0.85.1.
+
+The banner still dismisses on any key; it just no longer swallows it. Eating the
+host's input to close a decoration was the wrong trade — a banner in the way is
+a nuisance, a dead keyboard is a stopped game.
+
+**And the comeback edge outlived its 40 races.** `racesRun` was incremented on
+`entry.missed`, where the field is `entry.missedIds`, so it read as "clues
+somebody won" and a clue everybody buzzed and nobody converted did not count.
+The edge is measured in races, so it lasted longer than it should have — with
+nothing on the console saying who held it, the effect from the outside was a
+player who seemed to keep an unexplained advantage on the buzzer. Reported as
+exactly that.
+
+The expiry test only played clues with a winner, which is why it passed for
+several releases. It now plays contested clues nobody converted as well, and
+checks that a clue nobody buzzed still does *not* burn the edge.
+
 ## 0.85.1 — the hang, from a live match
 
 **Adjudicating a clue twice took the game down.** The host pressed Y twice and
