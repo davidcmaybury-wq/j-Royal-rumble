@@ -126,6 +126,11 @@ for (const [what, needle] of [
   // will move it back and rediscover the cliff in a live match.
   ['why the comeback boost is not a dial', 'threshold, not a dial'],
   ['and quotes a reproducible figure for it', '11.0%'],
+  // The handbook credited P11's VWQW arc to the comeback; the logs give him
+  // eight race wins at elimination, so it was revival's queue re-entry. The
+  // correction is recorded rather than deleted, per the house convention.
+  ['that the VWQW attribution was corrected', 'attribution above is overturned'],
+  ['and where the trigger belongs', 'Where the trigger belongs'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }

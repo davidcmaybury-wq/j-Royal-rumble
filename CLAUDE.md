@@ -352,6 +352,21 @@ At 50% none of them get there. Below ~55% it is decorative; the useful range
 starts near 65%. The table is in `engine.js` above the setting — retune against
 it, never by feel.
 
+**The trigger is settled, measured against 89 real eliminations.** Do not
+re-litigate without new data. Wins-since-entry is the axis and **tenure is not**
+— the players who never got going mostly lasted 9–17 clues, so tenure separates
+nobody (a tenure<12 gate scores casuals 1.9% against 11.0%, and a hybrid fires
+for the identical 24 of 63 first eliminations as wins<3 alone). Three sits at an
+empirical valley: first-elimination wins are bimodal at 0 and 1, then a gap at
+2–3. Loosening to wins<5 adds almost nothing for casuals (11.0% → 11.7%) and
+mostly feeds the mid tier. Ungated, elites take 1.8 free lives a match and casual
+benefit collapses to 2.9% — the gate is the mechanic. Once per player stays.
+
+**The return stake rides the overtime multiplier**, on the same
+`scaleEntryStake` switch as entries and revivals: 41 of those 89 eliminations
+happened during overtime, where a flat stake bought 1–6 clues of life. Measured
+at the same fire rate — casuals 11.0% → 14.1%, top shark 61.9% → 56.1%.
+
 It also **costs draw fairness** (back half 50% → 59% at sixteen), the first time
 the two axes have pulled against each other here.
 

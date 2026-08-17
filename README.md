@@ -1034,6 +1034,14 @@ sixteen players, because a late entrant is likelier to still be under the gate
 when trouble finds them. Fairness by skill and fairness by draw pull against
 each other here for the first time; the trade was made deliberately.
 
+**The return stake rides the overtime multiplier**, like an entry or a revival,
+and on the same `scaleEntryStake` switch. Flat, it did not: 41 of the 89
+recorded eliminations happen during overtime, and a flat 1,500 walking into ×4
+values bought one to six clues of life. Measured at the shipped gate and boost,
+scaling the stake takes the three casuals from 11.0% of wins to 14.1% and the
+strongest player from 61.9% to 56.1%, at the same fire rate — strictly better,
+so there is no trade to weigh. Clamped to the ceiling, like `admit()`.
+
 **Nothing keyed to elimination fires**, because no elimination is recorded — a
 bounty on that player does not pay out and a revival life is not spent.
 

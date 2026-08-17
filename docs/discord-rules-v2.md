@@ -1,12 +1,19 @@
-<!-- Runs past Discord's 2,000-character limit; post as two messages,
-     breaking before "Want to deal with a bully?".
+<!-- Runs past Discord's 2,000-character limit. Post as THREE messages now,
+     breaking before "Two shapes of match" and before "Gang up."
 
-     That is now the ONLY two-message split that fits: 1,970 / 1,707 against a
-     2,000 cap. Breaking before the Arcade block gives 1,026 / 2,651 and before
-     One foot on the floor gives 1,614 / 2,063 — both over. Thirty characters of
-     headroom left, so the next rule added here needs a third message rather
-     than a cleverer break. Discord truncates silently; check with
-     `python3 -c` before posting, or somebody reads two thirds of a rule. -->
+     It outgrew two messages when the comeback's overtime stake was added: the
+     old split went to 2,186 / 1,707 against a 2,000 cap. The previous note here
+     had already called that — thirty characters of headroom left, next rule
+     needs a third message. It did.
+
+     Three-way: 1,026 / 1,477 / 1,388, leaving 523 characters of headroom in the
+     tightest part. Discord truncates silently, so count before posting rather
+     than trusting the eye.
+
+     Do not paste a comment-stripping regex into this note. The first draft did,
+     the pattern contained the comment's own closing delimiter, and the comment
+     therefore ended in the middle of itself — which would have posted the
+     leftover half of these instructions to the channel as if it were a rule. -->
 **J! ROYAL RUMBLE — the rules**
 
 Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
@@ -28,7 +35,7 @@ Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
 **TOURNAMENT** — one foot on the floor is off. Fastest press wins every race and the times are public, because they mean exactly what they look like.
 It says which one at the top of your buzzer all match.
 
-🩹 **One foot on the floor.** Go under before you've taken three clues and you don't go out at all — you stay up on half a starting stake, with **70% knocked off your buzz time for the next 40 races**. Once each. It's for people flattened before they got going: if you were in the match and lost it, you go out properly. Nothing to press, it just happens.
+🩹 **One foot on the floor.** Go under before you've taken three clues and you don't go out at all — you stay up on half a starting stake, with **70% knocked off your buzz time for the next 40 races**. Once each. It's for people flattened before they got going: if you were in the match and lost it, you go out properly. Nothing to press, it just happens. **If it fires during overtime your stake climbs with it** — come back at ×4 and you come back with four times the money, because half a stake against quadrupled clues is one pot payment from going straight back out.
 
 🎯 **Want to deal with a bully?** Press **T** and pick them. Take the clue and the **whole pot comes out of that player alone** — everybody else pays nothing. Miss, and if *they* convert it you pay them the whole pot yourself while the ring watches for free. Press 0 to stand down. Everyone can see who you're hunting.
 

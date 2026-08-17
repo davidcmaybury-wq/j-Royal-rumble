@@ -52,6 +52,65 @@ console.log('\nONCE ONLY');
     g.players.get(b).state);
 }
 
+console.log('\nCOMING BACK INTO OVERTIME');
+{
+  // Half the recorded eliminations happen during overtime, and a flat stake
+  // walking into raised values is one pot payment from going straight back out
+  // — measured at 1 to 6 clues of life. The stake has to buy the same number of
+  // clues whenever the comeback fires, which is what scaleEntryStake already
+  // does for entrants and revivals.
+  const g = game({ overtime: true, overtimeMax: 8 });
+  const [a, b] = g.live().map((p) => p.id);
+  // Force x4 directly rather than stalling into it: this is about the stake, and
+  // a test that has to grind out six clues first is testing the escalation clock.
+  g.overtimeFrom = 1; g.overtimeSteps = 2;
+  check('overtime is running at x4', g.overtimeMultiplier() === 4,
+    String(g.overtimeMultiplier()));
+
+  g.players.get(b).score = 50;
+  const [s, r] = open(g);
+  g.resolveClue(s, r, { winnerId: a, missedIds: [] });
+  const p = g.players.get(b);
+  check('a comeback during overtime returns at the multiplied stake',
+    p.score === 6000, String(p.score));
+  check('and the player is still in the ring', p.state === 'live', p.state);
+}
+{
+  const g = game();
+  const [a, b] = g.live().map((p) => p.id);
+  check('no overtime means no multiplier', g.overtimeMultiplier() === 1,
+    String(g.overtimeMultiplier()));
+  g.players.get(b).score = 50;
+  const [s, r] = open(g);
+  g.resolveClue(s, r, { winnerId: a, missedIds: [] });
+  check('a comeback in regulation still returns at half stake',
+    g.players.get(b).score === 1500, String(g.players.get(b).score));
+}
+{
+  // The ceiling is applied earlier in resolveClue than the comeback runs, so an
+  // unclamped stake would sit above the roof for a whole clue.
+  const g = game({ overtime: true, overtimeMax: 8, ceiling: 4000, ceilingFloor: 0 });
+  const [a, b] = g.live().map((p) => p.id);
+  g.overtimeFrom = 1; g.overtimeSteps = 3;   // x8 -> 12,000 before clamping
+  g.players.get(b).score = 50;
+  const [s, r] = open(g);
+  g.resolveClue(s, r, { winnerId: a, missedIds: [] });
+  check('and never above the ceiling', g.players.get(b).score === 4000,
+    String(g.players.get(b).score));
+}
+{
+  // One switch for one idea: turning off entry scaling turns off all three
+  // re-entry paths together, so a host who wants flat stakes gets flat stakes.
+  const g = game({ overtime: true, overtimeMax: 8, scaleEntryStake: false });
+  const [a, b] = g.live().map((p) => p.id);
+  g.overtimeFrom = 1; g.overtimeSteps = 2;
+  g.players.get(b).score = 50;
+  const [s, r] = open(g);
+  g.resolveClue(s, r, { winnerId: a, missedIds: [] });
+  check('scaleEntryStake: false restores the flat stake',
+    g.players.get(b).score === 1500, String(g.players.get(b).score));
+}
+
 console.log('\nTHE GATE');
 {
   const g = game();

@@ -3,6 +3,45 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.88.0 — the comeback stake rides the overtime multiplier
+
+From a study of the trigger against all 89 eliminations in the eleven recorded
+matches.
+
+**41 of those 89 happened during overtime**, and a flat return stake there bought
+one to six clues of life — half a stake against quadrupled values is one pot
+payment from going straight back out. This is the Randall pattern that
+`scaleEntryStake` already fixed for entrants and revivals; the comeback was the
+one re-entry path left flat. It now rides the same switch, and is clamped to the
+ceiling like `admit()` — the cap is applied earlier in `resolveClue` than the
+comeback runs, so an unclamped stake would have sat above the roof for a clue.
+
+Measured at the shipped gate and boost, same fire rate:
+
+| | casuals | mid | top shark |
+|---|---|---|---|
+| fire flat (was) | 11.0% | 10.0% | 61.9% |
+| don't fire in overtime | 6.3% | — | — |
+| **stake × multiplier** | **14.1%** | **13.7%** | **56.1%** |
+
+Strictly better, so there was no trade to weigh. Not firing in overtime guts the
+rule, since half the eliminations live there.
+
+**The handbook's VWQW attribution is corrected.** Part IV credited P11's arc —
+out at clue 36, back, $10,700 peak — to the comeback. The logs give him eight
+race wins at elimination, so he would not have passed the wins<3 gate; both rules
+were on and that was revival's queue re-entry. Marked overturned rather than
+rewritten. The comeback's real first-night clients were the nought- and one-win
+players, which is exactly who it was built for.
+
+**Three findings recorded so they are not re-argued:** tenure is the wrong gate
+axis (the invisible dead mostly last 9–17 clues, so it separates nobody), three
+sits at an empirical valley in a bimodal distribution, and ungated the rule is a
+subsidy for the strong. Full working in the handbook.
+
+The Discord rules now need **three** messages rather than two — the previous
+posting note predicted the next rule would force it, and this was that rule.
+
 ## 0.87.0 — robot wrong answers come from Haiku, and stop failing silently
 
 The robots were reading other answers off the board instead of inventing one,

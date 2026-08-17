@@ -472,10 +472,34 @@ delivered the intended second act: in VWQW, P11 was eliminated at clue 36, came 
 stake, and climbed to a $10,700 peak by clue 119 — reaching the final three of a match that
 went to the full ×8 overtime. The books stay honest, though: all ten decided matches to date
 have been won by shark-tier buzzers, and one comeback return during deep overtime came back
-with the wrong stake (a bug now with the developers). Whether the rule moves the win column —
+with the wrong stake (a bug now with the developers). <strong>The attribution above is overturned:</strong> the logs give P11 <em>eight</em>
+race wins at elimination, so he would not have passed the wins&lt;3 gate at all. Both revival
+and the comeback were switched on in VWQW, and that return was revival's queue re-entry. The
+comeback's real first-night clients were the nought- and one-win players — exactly who it was
+built for. The story stands; only the credit moves. Whether the rule moves the win column —
 the probability that a bottom-half buzzer takes a match, ~zero with a P1-class player in the
 room — is a question the next dozen match logs get to answer.</p></div>
 
+<h3>Where the trigger belongs</h3>
+<p>Eighty-nine eliminations across the eleven recorded matches, parsed to wins-since-entry,
+tenure, overtime flag and life number, settle three questions previously argued from intuition.
+Recorded here so they are not re-litigated without new data.</p>
+<p><strong>Wins-since-entry is the axis; tenure is not.</strong> The obvious alternative — gate on
+how long somebody lasted — fails, and fails for an interesting reason: the players who never got
+going mostly lasted 9 to 17 clues in the ring. They die slowly while invisible, so tenure does not
+separate them from anybody. A tenure&lt;12 gate scores the casuals 1.9% against 11.0% for wins&lt;3,
+and a hybrid (wins&lt;3 <em>or</em> tenure&lt;12) fires for the identical 24 of 63 live first
+eliminations as wins&lt;3 by itself. Tenure adds nothing.</p>
+<p><strong>Three is an empirical valley, not a round number.</strong> First-elimination win counts
+are bimodal: fourteen players at zero, eight at one, a gap at two and three, then a long tail.
+Three cuts at the gap. Casual benefit saturates there too — 11.0% at wins&lt;3 against 11.7% at
+wins&lt;5 — while the looser gate mostly feeds the middle of the field (10.0% to 15.2%) and hands
+the strongest player 50.6%. <code>comebackGate</code> is a setting for a host who wants the
+broader shape.</p>
+<p><strong>Ungated is a subsidy for the strong, and once-per-player has to stay.</strong> With no
+gate the elites take 1.8 free lives each per match and casual benefit collapses to 2.9%. The gate
+is the mechanic, not a refinement of it. And the live logs show what a re-firing trigger would
+produce: repeated overtime deaths at nought wins, one to six clues per extra life.</p>
 <h3>The boost is a threshold, not a dial</h3>
 <p>The 70% figure is not a setting with a comfortable middle. It shipped at 50% for one release,
 on the reasonable-sounding grounds that 70% was more help than the moment called for, and 50%

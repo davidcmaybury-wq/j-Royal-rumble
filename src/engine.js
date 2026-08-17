@@ -1098,7 +1098,32 @@ export class RumbleGame {
       if (this.s.comeback && !p.comebackUsed
           && p.correct < (this.s.comebackGate ?? 3)) {
         p.comebackUsed = true;
-        p.score = Math.round(this.s.startScore * (this.s.comebackStake ?? 0.5));
+        // The stake buys the same number of clues whenever you come back.
+        //
+        // Flat, it did not. 41 of the 89 recorded eliminations happened during
+        // overtime, and a flat 1,500 walking into x4 values is one pot payment
+        // from going straight back out — measured at 1 to 6 clues of life. This
+        // is the Randall pattern that `scaleEntryStake` already fixed for
+        // entrants and revivals; the comeback was the one re-entry left flat.
+        //
+        // Measured over the trigger sweep, gate at wins<3 and boost 70%/40:
+        //
+        //   fire flat (was)              casuals 11.0%  mid 10.0%  shark 61.9%
+        //   do not fire in overtime      casuals  6.3%  — guts it, half the
+        //                                eliminations live there
+        //   stake x multiplier (this)    casuals 14.1%  mid 13.7%  shark 56.1%
+        //
+        // Strictly better at the same fire rate, so there is no trade to weigh.
+        //
+        // It rides `scaleEntryStake` rather than a switch of its own: one idea,
+        // one setting, and turning that off restores flat stakes for all three
+        // re-entry paths together. Clamped to the ceiling like admit() does —
+        // the cap is applied earlier in resolveClue than this runs, so an
+        // unclamped stake would sit above the roof for a whole clue.
+        const mult = this.s.scaleEntryStake ? this.overtimeMultiplier() : 1;
+        p.score = Math.min(
+          Math.round(this.s.startScore * (this.s.comebackStake ?? 0.5) * mult),
+          this.ceiling);
         p.comebackUntil = this.racesRun + (this.s.comebackRaces ?? 40);
         entry.comebacks = (entry.comebacks || []).concat([{ playerId: p.id,
           score: p.score, until: p.comebackUntil }]);

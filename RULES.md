@@ -127,6 +127,13 @@ going, not for somebody who played the match and lost it: three clues taken and
 you're past it for good. Staying under the gate on purpose means not scoring,
 which is not a strategy.
 
+**If it fires during overtime, your stake climbs with it.** Come back at ×4 and
+you come back with four times the money. Half a starting stake against
+quadrupled clue values is one pot payment from going straight back out — that
+was measured at one to six clues of life — and half the eliminations in the
+recorded matches happen during overtime, so this is the common case rather than
+the corner one.
+
 You are never eliminated when this fires, so nothing that keys off elimination
 happens either — a bounty on your head doesn't pay out, and a revival life
 isn't spent.
