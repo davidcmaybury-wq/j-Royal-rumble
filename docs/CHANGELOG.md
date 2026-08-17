@@ -3,6 +3,33 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.87.0 — robot wrong answers come from Haiku, and stop failing silently
+
+The robots were reading other answers off the board instead of inventing one,
+which on a loose category is nonsense. The Claude path existed; it was not
+running.
+
+**The bug was that nobody could tell.** Every failure went through a bare
+`catch {}` to the local fallback with nothing logged, so a missing key, a
+rejected key, a wrong model name and a timeout were indistinguishable from
+outside — all four look like robots talking nonsense. It ran that way in live
+matches.
+
+`GET /api/health` now reports `wrongAnswers`: the model, whether a key is
+configured, how many answers were asked for, written and fallen back, and the
+reason for the last fallback. `mode` is what the room is actually hearing —
+`claude`, `local` or `mixed` — not what was configured. The server logs the
+reason once per distinct cause rather than once per clue.
+
+**Haiku, and the official SDK.** `claude-haiku-4-5` because this is a throwaway
+sentence per clue rather than a reasoning task. The hand-rolled `fetch` is
+replaced by `@anthropic-ai/sdk`, which brings typed errors — so the health
+readout can say *which* failure it was — and a retry on the 429s and 503s that
+used to fall straight through to the board. The latency ceiling is unchanged at
+4s: one retry at 2s each, sized to finish inside the host's read.
+
+`test/wrongs.mjs` pins the fallback path, which is what CI runs with no key.
+
 ## 0.86.2 — the rule sets are named for the mode they produce
 
 Quick setup offers **Tournament, Arcade, Chaos**. "Standard" is now Arcade,

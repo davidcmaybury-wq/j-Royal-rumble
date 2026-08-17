@@ -78,6 +78,7 @@ jobs:
           node test/retoss.mjs
           node test/doubleresolve.mjs
           node test/arcade.mjs
+          node test/wrongs.mjs
           node test/entry-countdown.mjs
           node test/tokens.mjs
           node test/bots.mjs

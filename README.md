@@ -640,16 +640,36 @@ Control passes on a correct answer and stays put on a stumper, the way it does
 on the show — so a robot that is leading the board keeps calling clues until
 somebody takes it off them.
 
-**Wrong answers are written by Claude** when `ANTHROPIC_API_KEY` is set on the
-server, because a wrong answer has to be wrong the way a person is wrong: the
-right kind of thing, a near miss rather than nonsense. It is generated while the
-host is still reading, so no network call sits inside the race, and it is
+**Wrong answers are written by Claude Haiku** when `ANTHROPIC_API_KEY` is set on
+the server, because a wrong answer has to be wrong the way a person is wrong:
+the right kind of thing, a near miss rather than nonsense. It is generated while
+the host is still reading, so no network call sits inside the race, and it is
 checked against the real answer before use — a "wrong" answer that happens to be
 right is worse than none.
+
+Haiku because it is a throwaway sentence per clue, not a reasoning task, and the
+latency budget is tight: one retry at 2s each, a 4s ceiling, chosen so the whole
+exchange finishes inside the read.
 
 Without a key there is a local fallback that borrows another answer from the
 same board. Cruder, but the categories are themed so it is usually the right
 sort of thing and reliably the wrong one. Nothing fails and no match waits.
+
+**The fallback used to be silent, and that was the bug.** Every failure went
+through a bare `catch {}` to the local answer with nothing logged, so a missing
+key, a rejected key, a wrong model name and a timeout were indistinguishable
+from outside — all four looked like robots talking nonsense, which is how it ran
+in live matches. `GET /api/health` now reports which source is actually in use:
+
+```json
+"wrongAnswers": {"model": "claude-haiku-4-5", "mode": "local", "configured": false,
+                 "asked": 12, "written": 0, "fellBack": 12,
+                 "lastError": "no ANTHROPIC_API_KEY set"}
+```
+
+`mode` is what the room is hearing — `claude`, `local`, or `mixed` — not what was
+configured, and `lastError` says which fix it needs. The server also logs the
+reason once per distinct cause rather than per clue.
 
 ## Robots in the draw
 

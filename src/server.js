@@ -10,7 +10,7 @@ import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS
 import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson } from './sources.js';
 import { assignToken, resolveChoice } from './tokens-server.js';
 import { distinctLook, looksAlike } from '../public/wrestlers.js';
-import { wrongAnswer } from './wrongs.js';
+import { wrongAnswer, status as wrongsStatus } from './wrongs.js';
 import * as reports from './reports.js';
 import * as logs from './logstore.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS,
@@ -1014,6 +1014,10 @@ app.get('/api/health', (_req, res) => {
     playersInPlay: [...matches.values()].filter((m) => m.phase === 'live')
       .reduce((n, m) => n + m.roster.size, 0),
     library: LIBRARY.length,
+    // Where the robots' wrong answers are coming from. Reported because the
+    // fallback used to be silent: nonsense answers were the only symptom of a
+    // missing key, a rejected key, or a bad model name, and they look the same.
+    wrongAnswers: wrongsStatus(),
   });
 });
 

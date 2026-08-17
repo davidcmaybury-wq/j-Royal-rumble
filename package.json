@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.86.2",
+  "version": "0.87.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -73,9 +73,11 @@
     "entry-pace": "node tools/entry-pace.mjs && python3 tools/plot-entry-pace.py",
     "comeback-study": "node tools/comeback-study.mjs",
     "doubleresolve-test": "node test/doubleresolve.mjs",
-    "arcade-test": "node test/arcade.mjs"
+    "arcade-test": "node test/arcade.mjs",
+    "wrongs-test": "node test/wrongs.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
     "express": "^4.21.2",
     "socket.io": "^4.8.1"
   },
