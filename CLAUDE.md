@@ -304,10 +304,20 @@ Mutual targets never stack: the winner's own target pays the focused pot once.
 Turning backfire off does **not** turn off focused fire. David decided this
 2026-08-17; `tools/backfire-study.mjs`.
 
-**Three study tools have now silently measured the wrong thing because they relied
+**Four study tools have now silently measured the wrong thing because they relied
 on an engine default they did not set** — `comeback-study` (flat stake after 0.88),
 then `voltron-study` and `backfire-study` (whole-pot backfire after 0.94). In
-`backfire-study` the tell was two rows printing identical numbers. **A study must
+`backfire-study` the tell was two rows printing identical numbers. The fourth was
+`arrivalGrace`, which shipped on by default in 0.90.0 and made one backfire row
+irreproducible across the two chats until the analysis chat isolated it — both
+sets of numbers were right, on different engines. **All nine study tools now pin
+`arrivalGrace` and `targetBackfire` explicitly.**
+
+**A free aimed miss plus universal leader-targeting is the one corner where the
+arrival grace helps the sharks** — about 3.4 points, stretching matches 97 → 105
+clues, because a graced return lands above the decayed roof as instantly the
+richest player and the focused pot then lands on exactly whom the grace protected.
+Plausible mechanism, exact attribution. Nothing to act on at shipped defaults. **A study must
 set every setting it claims to vary**, and the tools carry their own copies of
 mechanics, so grep `tools/` whenever a default moves.
 

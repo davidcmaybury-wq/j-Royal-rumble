@@ -45,6 +45,12 @@ function simulate(cfg, seed) {
     clues: ROW_VALUES.map((v, i) => ({ id: `c${n}-${i + 1}`, row: i + 1, text: '', answer: '' })),
   });
   const settings = {
+    // Pinned, not inherited. arrivalGrace shipped on-by-default mid-stream in
+    // 0.90.0, so any study spanning that boundary silently compares two engines:
+    // it is exactly what made one backfire row irreproducible across the two
+    // chats. Same rule as targetBackfire — set every setting you claim to vary,
+    // and pin the ones you do not.
+    arrivalGrace: true,
     startScore: 3000, targetMinutes: 45,           // 12-player room assumption
     // Explicit, and set to the whole-pot rule on purpose. These rows were
     // measured when that was the engine default; 0.94.0 made it a dial that

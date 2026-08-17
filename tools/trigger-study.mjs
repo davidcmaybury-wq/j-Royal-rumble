@@ -24,7 +24,11 @@ function simulate(cfg, seed) {
     id: `cat${++n}`, title: `C${n}`,
     clues: ROW_VALUES.map((v, i) => ({ id: `c${n}-${i + 1}`, row: i + 1, text: '', answer: '' })),
   });
-  const settings = { startScore: 3000, ceiling: 7500, entryInterval: autoEntryInterval(6, 30, 17.5) };
+  // arrivalGrace pinned rather than inherited: it shipped on-by-default in 0.90.0,
+  // so a study spanning that boundary silently compares two engines — which is
+  // exactly what made one backfire row irreproducible across the two chats.
+  const settings = { startScore: 3000, ceiling: 7500, arrivalGrace: true,
+    entryInterval: autoEntryInterval(6, 30, 17.5) };
   const g = new RumbleGame({ players, settings, categoryPool: pool, rng });
 
   const raceWins = new Map(FIELD.map((p) => [p.name, 0]));

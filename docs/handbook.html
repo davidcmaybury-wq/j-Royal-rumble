@@ -805,11 +805,22 @@ still lands the whole pot on one head.</p>
 and a score lead a liability, which shortens matches under heavy targeting — 117 clues to 105 in
 the stag rows. The figures model naive always-on aiming rather than players adapting, which is
 the honest caveat and the reason Tournament does not follow Arcade here.</p>
-<p class="mut">One row of the delivered study did not reproduce: the backfire-off stag case came
-back at 28.0% / 39.4% here against 24.4% / 42.8% as delivered. Every other row matched to a tenth
-of a point, including the whole-pot regression anchor, so the difference is recorded rather than
-resolved. It does not move the decision — both readings say the same thing about who the price was
-costing.</p>
+<p class="mut">One row of the delivered study did not reproduce at first, and the cause turned
+out to be worth more than the row. The backfire-off stag case came back at 28.0% / 39.4% here
+against 24.4% / 42.8% as delivered — and the two runs were on different engines.
+<code>arrivalGrace</code> shipped on by default midway between them, and no study pinned it, so
+each run inherited whatever its engine defaulted to. Both sets of numbers reproduce to the tenth
+once the setting is fixed. Every other row matched all along because under a real backfire price
+the grace barely moves this study; the whole divergence lives in the single configuration that
+combines a free aimed miss with universal leader-targeting.</p>
+<p class="mut">That corner has a finding in it. With backfire off and everybody hunting the
+leader, <strong>the arrival grace hands about 3.4 points back to the strongest players</strong>
+and stretches matches from 97 clues to 105. The likely mechanism is that a graced return lands on
+its overtime-scaled stake above the decayed roof, which makes it instantly the richest player on
+the board — and in a kill-the-leader equilibrium the protection is a bullseye, so the focused pot
+lands on exactly the player it just protected. That reading is plausible rather than proven; the
+attribution to the setting is exact. Nothing to act on at the shipped defaults, but worth
+remembering if a preset ever pairs cheap targeting with heavy overtime re-entry.</p>
 
 <h3>The draw slot is the biggest lever measured</h3>
 <p>Everything else in this document moves the casual row by a point or two. Where a strong player

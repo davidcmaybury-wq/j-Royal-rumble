@@ -3,6 +3,31 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.94.2 — the irreproducible row was `arrivalGrace`
+
+The one backfire row that would not reproduce across the two chats is solved, and
+the answer was a fourth instance of the same trap: **neither run pinned
+`arrivalGrace`.** It shipped on by default in 0.90.0, between their measurement and
+ours, so each run inherited its own engine's default. Both sets of numbers were
+right — 28.0%/39.4% with the grace on, 24.4%/42.8% with it off, each reproducing to
+the tenth once the setting is fixed. The analysis chat isolated it and their probe
+reproduces here exactly.
+
+**All nine study tools now pin `arrivalGrace` and `targetBackfire` explicitly.**
+Every anchor still holds after pinning: the voltron ×1 row at 66.9/27.7/5.4, the
+shipped comeback at 15.2% casuals, sharks-last at 89.8%.
+
+A small finding falls out of the corner that caused it. With backfire off and
+everybody hunting the leader, **the arrival grace hands about 3.4 points back to
+the strongest players** and stretches matches from 97 clues to 105 — a graced
+return lands on its overtime-scaled stake above the decayed roof, making it
+instantly the richest player, and in a kill-the-leader equilibrium the protection
+is a bullseye. The mechanism is plausible rather than proven; the attribution to
+the setting is exact. Nothing to act on at shipped defaults, but it matters if a
+preset ever pairs cheap targeting with heavy overtime re-entry.
+
+The handbook now records this as resolved rather than open.
+
 ## 0.94.1 — kickout on 2
 
 The rejected buzz-boost-after-losses mechanic is called **kickout on 2**, not "pity
