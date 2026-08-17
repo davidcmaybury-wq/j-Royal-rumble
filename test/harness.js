@@ -58,7 +58,11 @@ function simulate(playerCount, settings, seed) {
   };
 }
 
-function run(label, playerCount, settings, runs = 600) {
+// 600 is enough for the preset check this runs on every deploy, and is not
+// enough to compare two configurations: at 600 the back-half figure moved 2-3
+// points between neighbouring settings that turned out to be identical at 6,000.
+// Raise it with RUMBLE_RUNS when measuring rather than verifying.
+function run(label, playerCount, settings, runs = Number(process.env.RUMBLE_RUNS || 600)) {
   const rows = [];
   for (let s = 1; s <= runs; s++) rows.push(simulate(playerCount, settings, s));
   const clues = rows.map((r) => r.clues).sort((a, b) => a - b);

@@ -206,12 +206,30 @@ the full multiple from about ×4 (12,000 stake against a ~9,060 roof) and a
 comeback from about ×8. The 3,000 floor is not what binds — the decayed ceiling
 is. **So the Randall fix is partly undone in exactly the phase it was written
 for**, and `get ceiling`'s own comment now describes an intent it no longer
-meets. Not repaired, because every candidate moves the ceiling: scaling the
-floor by the multiplier puts it above the starting ceiling at ×8 and kills the
-drain, and letting arrivals land above the roof is cosmetic — the cap at the top
-of `resolveClue` clips them straight back. Found by David, 0.89.0. Numbers, the
-candidates, and why each fails are in the handbook. **Measure before touching
-it**; the harness sweep the trigger study asked for still has not been run.
+meets. Found by David, 0.89.0.
+
+**Measured 2026-08-17, and the first reason given for not fixing it was wrong.**
+That reason — scaling the floor by the multiplier "kills the drain" — does not
+survive the sweep: at 6,000 matches a row it costs about four minutes at the
+median and six at p90 for thirty players, against the 53 minutes that removing
+ceiling decay altogether produces in the same harness. Half-scaling is inside
+the noise on every column, the same non-result shape as the 50% comeback boost.
+
+**The real reason is that the repair is elite-friendly, badly.** The harness
+scores skill as knowledge, so this went to `tools/comeback-study.mjs`, which
+models reaction times. In the shipped configuration, scaling the floor by the
+full multiplier moves casuals **10.8% → 7.5%** and the top shark **62.9% →
+68.5%**; with the comeback off, the shark goes 77.8% → 83.8%. **The ceiling
+clamp is an accidental leveller** — it clips whoever accumulated most, which
+deep in overtime is the elite. So the defect is real and this repair is worse
+than it, on the axis David cares about most.
+
+A real fix cannot go through the roof. It has to exempt arrivals from the clamp
+without raising the ceiling for accumulated scores, which means the cap at the
+top of `resolveClue`, not `get ceiling`. Untested; that is the open end.
+Numbers and both tables are in the handbook. **Re-measure before touching it** —
+and use `RUMBLE_RUNS`, because the 600-run default moved 2–3 points between
+settings that were identical at 6,000.
 
 **Longer matches are less fair, shorter ones are less skilful.** No formula
 predicted the spread well (best r = 0.71), so `FAIRNESS` in `src/engine.js` is

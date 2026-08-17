@@ -526,21 +526,45 @@ doubling every 6 up to ×8), taking the main-match decay as zero:</p>
 <p>So a fresh entrant stops getting the full multiple from about ×4, and a comeback from about ×8.
 The 3,000 floor is not what binds — the decayed ceiling itself is, and it would take roughly 62
 overtime clues to reach the floor.</p>
-<p><strong>Why this is recorded rather than fixed.</strong> Every candidate fix moves the ceiling,
-and the ceiling is the dominant fairness lever — the one measured finding this document is most
-insistent about not re-litigating without numbers. Scaling the floor by the multiplier is a
-one-line change that honours the stated invariant, but at ×8 it floors the roof at 24,000, above
-the starting ceiling entirely, which kills the drain that makes the endgame resolve; and removing
-the drain is itself a recorded failure — evenly matched robots ran 400 clues without an
-elimination. Letting arrivals land above the roof instead is cosmetic: the cap is applied at the
-top of the next <code>resolveClue</code> and clips them straight back down. There is no version of
-this that does not need a harness sweep, and the sweep the trigger study asked for has still not
-been run.</p>
-<p>The measurement that would settle it is the one already defined for the skill axis: P(a
-bottom-half-median buzzer wins) with an elite in the field, reported against multiplier-aware and
-flat ceiling floors, alongside match length. Until then the behaviour stands as described, and the
-player-facing rules now say the ceiling applies to what you walk in with rather than promising a
-multiple the game does not always pay.</p>
+<p><strong>The argument above for not fixing it was wrong, and the sweep says so.</strong> It
+claimed that scaling the ceiling floor by the multiplier &ldquo;kills the drain that makes the
+endgame resolve&rdquo;. It does not. Kept here because the correction is the useful part.</p>
+<p>Measured 2026-08-17, once node existed on the machine doing the shipping. The floor was scaled
+by the overtime multiplier raised to a power — 0 is the shipping behaviour, 1 the obvious repair —
+and run through <code>test/harness.js</code> at 6,000 matches a row, ten times the default:</p>
+<table>
+<tr><th>Floor exponent</th><th>30p length</th><th>30p p90</th><th>back-half</th><th>skill (3 strongest)</th></tr>
+<tr><td>0 — shipping</td><td>31m</td><td>35m</td><td>57%</td><td>32%</td></tr>
+<tr><td>0.5</td><td>32m</td><td>36m</td><td>57%</td><td>32%</td></tr>
+<tr><td>1 — the repair</td><td>35m</td><td>41m</td><td>56%</td><td><strong>36%</strong></td></tr>
+</table>
+<p>The drain survives: the repair costs about four minutes at the median and six at the ninetieth
+percentile, against the 53 minutes that removing ceiling decay altogether produces in the same
+harness. That was the stated objection and it does not hold. Half-scaling is decorative — it is
+inside the noise on every column, the same shape of non-result as the 50% comeback boost.</p>
+<p><strong>The real objection is the one that matters more.</strong> The harness scores skill as
+knowledge, not as buzzer speed, so the question was put to <code>tools/comeback-study.mjs</code>,
+which models real reaction times — a 95ms elite down to a 270ms casual — at 1,500 matches a row,
+in the shipped configuration:</p>
+<table>
+<tr><th>Floor exponent</th><th>Top shark</th><th>Second elite</th><th>Mid</th><th>Casuals</th></tr>
+<tr><td>0 — shipping</td><td>62.9%</td><td>16.4%</td><td>9.9%</td><td><strong>10.8%</strong></td></tr>
+<tr><td>0.5</td><td>63.9%</td><td>15.7%</td><td>10.4%</td><td>10.0%</td></tr>
+<tr><td>1 — the repair</td><td><strong>68.5%</strong></td><td>13.9%</td><td>10.1%</td><td><strong>7.5%</strong></td></tr>
+</table>
+<p>The repair takes roughly a third of the casuals' share of wins — 10.8% to 7.5%, about four
+standard errors — and hands the strongest buzzer 5.6 points. With the comeback switched off
+entirely the same move takes the top shark from 77.8% to 83.8%.</p>
+<p><strong>So the ceiling clamp is an accidental leveller.</strong> It clips whoever has
+accumulated most, and deep in overtime that is almost always the elite; raising the floor stops
+the clipping and lets them keep the pile. The defect is real — entrants genuinely stop getting
+their full multiple from about ×4 — but this repair for it runs directly against the one axis this
+project cares most about, and by a wide margin. That is a much stronger reason to leave it than
+the one first given here, which was simply not true.</p>
+<p><strong>Where a real fix would have to go.</strong> Not through the roof. It would have to
+exempt an arrival from the clamp without raising the ceiling for accumulated scores — which means
+the cap at the top of <code>resolveClue</code>, not <code>get ceiling</code>. That is untested and
+is the open end of this.</p>
 <h3>The boost is a threshold, not a dial</h3>
 <p>The 70% figure is not a setting with a comfortable middle. It shipped at 50% for one release,
 on the reasonable-sounding grounds that 70% was more help than the moment called for, and 50%
