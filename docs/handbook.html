@@ -588,17 +588,33 @@ the one first given here, which was simply not true.</p>
 <p><strong>Where a real fix would have to go.</strong> Not through the roof. It would have to
 exempt an arrival from the clamp without raising the ceiling for accumulated scores — which means
 the cap at the top of <code>resolveClue</code>, not <code>get ceiling</code>.</p>
-<p><strong>That was then measured, and one shape of it works.</strong> Four candidates, all
-reproduced here against the corrected study:</p>
+<p><strong>That was then measured, one shape of it works, and it shipped in 0.90.0: nobody is
+clipped to a roof they never touched.</strong> An arrival lands capped by the ceiling as it stood
+when overtime opened, and is exempt from the per-clue cap until its score first falls to the
+current roof. Four candidates were measured, all reproduced here against the corrected study:</p>
 <table>
 <tr><th>Arrival handling</th><th>Top shark</th><th>Mid</th><th>Casuals</th><th>30p back-half</th></tr>
 <tr><td>shipping clamp</td><td>56.9%</td><td>12.3%</td><td><strong>14.3%</strong></td><td>57%</td></tr>
 <tr><td>grace of 1 clue</td><td>55.6%</td><td>13.1%</td><td>14.6% <span class="mut">(noise)</span></td><td>—</td></tr>
 <tr><td>grace of 4 clues</td><td>55.7%</td><td>13.3%</td><td>14.5% <span class="mut">(noise)</span></td><td>—</td></tr>
 <tr><td>floor rises to the arrival</td><td>55.4%</td><td>13.1%</td><td>14.9% <span class="mut">(noise)</span></td><td>57%</td></tr>
-<tr><td><strong>grace until first dip to the roof</strong></td><td>54.3%</td><td>13.4%</td><td><strong>16.2%</strong></td><td><strong>60%</strong></td></tr>
-<tr><td><strong>capped at the overtime-open roof, same grace</strong></td><td>54.5%</td><td>13.4%</td><td><strong>16.0%</strong></td><td><strong>60%</strong></td></tr>
+<tr><td>grace until first dip, flagging every arrival</td><td>54.3%</td><td>13.4%</td><td>16.2%</td><td>60%</td></tr>
+<tr><td>same, capped at the overtime-open roof</td><td>54.5%</td><td>13.4%</td><td>16.0%</td><td>60%</td></tr>
+<tr><td><strong>SHIPPED — as above, arrival-only flag</strong></td><td>55.6%</td><td>12.9%</td><td><strong>15.2%</strong></td><td><strong>57%</strong></td></tr>
 </table>
+<p><strong>The last row is the one that shipped, and it is not the one that was proposed.</strong>
+The two middle rows flag <em>every</em> arrival and clear the flag on the first dip to the roof.
+That also exempts a player who landed comfortably <em>under</em> the roof and then climbed above it
+by winning pots — an open-ended ceiling exemption on accumulated score, which is precisely the
+property this whole design exists to avoid. It is a materially larger rule than its own one-line
+description: same number of arrivals landing above the roof, 299 against 298 in an identical
+harness, but 7,777 skipped clips against 1,882.</p>
+<p>Shipping the strict reading — flag only an arrival whose <em>landing</em> is above the roof —
+takes 15.2% rather than 16.2%. Half the headline benefit came from the loose part. It is also a
+better trade: about a point of casual win share for about a point of back-half at twenty players
+and nothing at thirty, against two points bought with three or four. The point left on the table
+is deliberate, and widening the flag to recover it would be re-introducing the thing the
+ceiling-floor repair was rejected for.</p>
 <p><strong>Fixed-length graces are no-ops, and the reason is worth keeping.</strong> An arrival
 sitting above the roof loses score to every pot it does not win, so roughly half of them are back
 under the roof within one clue by <em>payment</em> rather than by clipping. Protecting that state
@@ -610,12 +626,12 @@ overtime opened costs nothing: stakes above that reference burn down through it 
 matches and 3,317 arrivals, the shipping clamp puts <strong>zero</strong> arrivals above the roof;
 each candidate puts 115 above it, and 52 of those are still above the roof after the next
 <code>resolveClue</code>. The drain is untouched — length 31 to 32 minutes, p90 flat at 35.</p>
-<p><strong>The cost is on the other axis.</strong> Back-half win rate goes 57% to 60% at thirty
-players and 62% to 66% at twenty. That is mechanically inevitable: protecting arrivals is
-protecting late arrivals, and this is the second time the two fairness axes have pulled against
-each other here, after the overtime return stake. The trade on offer is about two points of
-casual win share for about three of late-draw advantage, from a baseline that already leans
-late.</p>
+<p><strong>The cost is on the other axis, and the strict version is cheap.</strong> The loose
+variants take back-half from 57% to 60% at thirty players and 62% to 66% at twenty. The shipped
+strict version costs a point at twenty and nothing measurable at thirty. Either way the direction
+is mechanically inevitable — protecting arrivals is protecting late arrivals — and this is the
+second time the two fairness axes have pulled against each other here, after the overtime return
+stake. Shipped on by default; the setting is <code>arrivalGrace</code>.</p>
 <h3>The boost is a threshold, not a dial</h3>
 <p>The 70% figure is not a setting with a comfortable middle. It shipped at 50% for one release,
 on the reasonable-sounding grounds that 70% was more help than the moment called for, and 50%

@@ -188,5 +188,87 @@ console.log('\nTURNED OFF');
   check('and nobody has an edge', g.buzzEdge(b) === 1);
 }
 
+
+console.log('\nARRIVALS ARE NOT CLIPPED TO A ROOF THEY NEVER TOUCHED');
+{
+  // The bare clamp ate the scaled stake: the roof falls through overtime while
+  // the multiplier climbs, so they cross and the arrival lands on the roof
+  // instead of on its stake. The carve-out is arrival-only and lives at the cap
+  // in resolveClue, because raising the roof measured worse than the defect.
+  // stumperFraction 0 so an unanswered clue moves nobody's score: the only
+  // thing resolveClue then does to a score is apply the cap, which is the
+  // subject. Without it the deduction eliminated the player mid-assertion.
+  const g = game({ ceiling: 10000, ceilingFloor: 3000, ceilingDecayPerClue: 0,
+    overtimeCeilingDrop: 500, comeback: false, stumperFraction: 0 });
+  // Force a decayed overtime roof: opened 8 clues ago at 10,000, now 6,000.
+  g.overtimeFrom = 0;
+  g.cluesRevealed = 8;
+  g.overtimeSteps = 2;                       // x4
+  check('the roof has fallen below what an arrival is owed',
+    g.ceiling === 6000, `${g.ceiling}`);
+  check('but the arrival cap is the roof as it was when overtime opened',
+    g.arrivalCap() === 10000, `${g.arrivalCap()}`);
+
+  const p = g.live()[0];   // must be in the ring: the cap loop walks live() only
+  g.arrivalLand(p, 12000);                   // x4 entry stake
+  check('so a x4 arrival lands on that reference, not the decayed roof',
+    p.score === 10000, `${p.score}`);
+  check('and is flagged exempt, having landed above the roof', p.capExempt === true);
+
+  // The exemption has to survive a clue, or it is cosmetic.
+  const [slot, row] = open(g);
+  g.resolveClue(slot, row, { winnerId: null, missedIds: [] });
+  check('it is still above the roof after a clue resolves',
+    p.score > g.ceiling, `${p.score} vs roof ${g.ceiling}`);
+
+  // ...and end the first time they touch the roof, not on a clue count.
+  p.score = 100;
+  const [s2, r2] = open(g);
+  g.resolveClue(s2, r2, { winnerId: null, missedIds: [] });
+  check('once they have dipped to the roof the exemption is spent',
+    p.capExempt === false);
+  p.score = 99999;
+  const [s3, r3] = open(g);
+  g.resolveClue(s3, r3, { winnerId: null, missedIds: [] });
+  check('and they are clipped like anybody else afterwards',
+    p.score === g.ceiling, `${p.score} vs roof ${g.ceiling}`);
+}
+
+console.log('\nTHE EXEMPTION COVERS THE ARRIVAL, NOT WHAT IT THEN WINS');
+{
+  // The version this was measured from flagged every arrival, which also exempts
+  // somebody who landed under the roof and climbed above it by winning pots.
+  // That is an open-ended ceiling exemption on accumulated score — the property
+  // the whole design exists to avoid — and it is worth a point of casual win
+  // share that we are deliberately not taking.
+  // stumperFraction 0 so an unanswered clue moves nobody's score: the only
+  // thing resolveClue then does to a score is apply the cap, which is the
+  // subject. Without it the deduction eliminated the player mid-assertion.
+  const g = game({ ceiling: 10000, ceilingFloor: 3000, ceilingDecayPerClue: 0,
+    overtimeCeilingDrop: 500, comeback: false, stumperFraction: 0 });
+  g.overtimeFrom = 0; g.cluesRevealed = 8; g.overtimeSteps = 2;
+  const p = g.live()[0];   // must be in the ring: the cap loop walks live() only
+  g.arrivalLand(p, 1500);                    // lands well under the roof
+  check('an arrival landing under the roof is not flagged', p.capExempt === false);
+  p.score = 20000;                           // then wins its way above it
+  const [slot, row] = open(g);
+  g.resolveClue(slot, row, { winnerId: null, missedIds: [] });
+  check('and gets clipped once it climbs past the roof',
+    p.score === g.ceiling, `${p.score} vs roof ${g.ceiling}`);
+}
+
+console.log('\nTURNING IT OFF RESTORES THE BARE CLAMP');
+{
+  const g = game({ ceiling: 10000, ceilingFloor: 3000, ceilingDecayPerClue: 0,
+    overtimeCeilingDrop: 500, comeback: false, arrivalGrace: false, stumperFraction: 0 });
+  g.overtimeFrom = 0; g.cluesRevealed = 8; g.overtimeSteps = 2;
+  const p = g.live()[0];   // must be in the ring: the cap loop walks live() only
+  g.arrivalLand(p, 12000);
+  check('the arrival is clamped to the decayed roof', p.score === 6000, `${p.score}`);
+  check('and nothing is exempt', p.capExempt === false);
+  check('arrivalCap is just the ceiling', g.arrivalCap() === g.ceiling);
+}
+
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

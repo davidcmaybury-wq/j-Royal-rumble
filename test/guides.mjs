@@ -144,6 +144,10 @@ for (const [what, needle] of [
   ['the leveling budget', 'The leveling budget'],
   ['that levers interfere rather than stack', 'do not stack'],
   ['and that the winner cooldown feeds the second shark', 'second shark'],
+  // Shipped 0.90.0. The strict/loose distinction is the thing most likely to be
+  // "helpfully" widened later to recover the missing point of casual win share.
+  ['that arrivals are not clipped to a roof they never touched', 'never touched'],
+  ['and that the flag covers the arrival, not what it wins', 'arrival-only flag'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }

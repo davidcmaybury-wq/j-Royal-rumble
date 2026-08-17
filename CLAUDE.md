@@ -228,15 +228,20 @@ A real fix cannot go through the roof. It has to exempt arrivals from the clamp
 without raising the ceiling for accumulated scores, which means the cap at the
 top of `resolveClue`, not `get ceiling`.
 
-**That was measured and one shape works — the decision is a trade, not a bug
-fix.** Exempting an arrival from the per-clue cap **until it first dips to the
-roof** takes casuals 14.3% → **16.2%** and the shark 56.9% → 54.3%; bounding the
-landing at the roof as it stood when overtime opened scores the same (16.0%) and
-is the one to prefer, being bounded and explainable in a sentence. The drain is
-untouched (31→32m, p90 flat). **The cost is back-half 57% → 60% at thirty and
-62% → 66% at twenty** — protecting arrivals is protecting late arrivals, the
-second time these two axes have pulled against each other. Not shipped; David's
-call.
+**Shipped in 0.90.0 as `arrivalGrace`, on by default: nobody is clipped to a
+roof they never touched.** An arrival lands capped by the ceiling as it stood
+when overtime opened, and is exempt from the per-clue cap until its score first
+falls to the current roof. Casuals 14.3% → **15.2%**, shark 56.9% → 55.6%, drain
+untouched, back-half +1 at twenty and flat at thirty.
+
+**The flag covers the arrival, not what the arrival then wins — do not widen
+it.** The version this was measured from flagged *every* arrival and cleared on
+first dip, which also exempts somebody who landed under the roof and climbed
+above it by winning pots: an open-ended ceiling exemption on accumulated score,
+i.e. the exact property the ceiling-floor repair was rejected for. It scores
+better (casuals 16.2%) because it is a bigger rule — 7,777 clip-skips against
+1,882 off an identical count of above-roof arrivals — and costs 3–4 points of
+back-half instead of 1. The missing point is deliberate.
 
 **Fixed-length graces and a rising floor are measured no-ops — do not retry
 them.** An above-roof arrival pays itself back under the roof within about a

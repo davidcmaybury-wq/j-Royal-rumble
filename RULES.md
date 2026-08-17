@@ -134,11 +134,15 @@ was measured at one to six clues of life — and half the eliminations in the
 recorded matches happen during overtime, so this is the common case rather than
 the corner one.
 
-**The ceiling still applies to what you come back with.** It is falling through
-overtime while the multiplier is climbing, so deep enough in, the two cross and
-you return on the roof rather than on the full multiple. At the defaults that is
-around ×8 for a comeback and from about ×4 for a fresh entrant. Whether that is
-right is an open question — see the handbook.
+**You are not clipped to a ceiling you never touched.** The roof falls through
+overtime while the multiplier climbs, so deep enough in they cross — and a
+returning player used to land on the roof instead of on their stake. Now you are
+capped by the roof **as it stood when overtime opened**, and you are not clipped
+down to the falling roof until your score first touches it. The moment it does,
+you are on the same footing as everybody else.
+
+This applies to everyone arriving, not just a comeback: walking in for the first
+time, coming back from revival, or staying up on one foot on the floor.
 
 You are never eliminated when this fires, so nothing that keys off elimination
 happens either — a bounty on your head doesn't pay out, and a revival life

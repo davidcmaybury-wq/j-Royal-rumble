@@ -941,6 +941,35 @@ So the ceiling now falls 120 a clue **once overtime opens, and only then**. That
 gives the endgame teeth without touching the entry phase, which is where the
 bias came from.
 
+**Nobody is clipped to a roof they never touched.** Arrivals were clamped to the
+*current* ceiling, which was written when stakes were flat. Once the stake began
+riding the overtime multiplier the two moved in opposite directions and crossed,
+so a fresh entrant stopped getting the full multiple from about ×4 and a comeback
+from about ×8 — the Randall fix, undone in the phase it was written for. An
+arrival now lands capped by the roof **as it stood when overtime opened**, and is
+not clipped down to the falling roof until its score first touches it.
+`arrivalGrace`, on by default; `admit()`, revival and the comeback all land
+through `arrivalLand`.
+
+The repair deliberately does **not** go through the roof. Scaling the ceiling
+floor by the multiplier was measured and is worse than the defect it fixes:
+lifting the roof hands the elite the clipping they currently absorb, and casuals
+go 14.3% to 10.0% while the top shark goes 56.9% to 63.1%. The ceiling clamp is
+an accidental leveller, because whoever has accumulated most deep in overtime is
+nearly always the strongest player. The arrival-only carve-out takes casuals to
+15.2% instead, costs about a point of back-half at twenty players and nothing at
+thirty, and leaves the drain alone.
+
+**The flag covers the arrival, not what the arrival then wins.** `capExempt` is
+set only when the landing is itself above the roof. The variant this was measured
+from flagged every arrival and cleared on the first dip, which also exempts
+somebody who landed under the roof and climbed above it by winning pots — an
+open-ended ceiling exemption on accumulated score, which is precisely what the
+floor repair was rejected for. It scores better on paper (casuals 16.2%) because
+it is a bigger rule: 7,777 skipped clips against 1,882 off an identical count of
+above-roof arrivals, and three to four points of back-half instead of one. The
+point left on the table is deliberate.
+
 **The winner of a raised clue banks the whole amount.** Clipping it on the spot
 was the thing that made escalation look broken in a live match: a clue worth
 2,000 paid the winner 500 while charging the loser the full 2,000, so the stakes
@@ -1040,7 +1069,8 @@ recorded eliminations happen during overtime, and a flat 1,500 walking into ×4
 values bought one to six clues of life. Measured at the shipped gate and boost,
 scaling the stake takes the three casuals from 11.0% of wins to 14.1% and the
 strongest player from 61.9% to 56.1%, at the same fire rate — strictly better,
-so there is no trade to weigh. Clamped to the ceiling, like `admit()`.
+so there is no trade to weigh. It lands through `arrivalLand` like every other
+arrival, so it is capped by the overtime-open roof rather than the decayed one.
 
 **Nothing keyed to elimination fires**, because no elimination is recorded — a
 bounty on that player does not pay out and a revival life is not spent.

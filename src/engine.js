@@ -101,6 +101,47 @@ export const DEFAULT_SETTINGS = {
   comeback: true,
   comebackGate: 3,           // clues taken, below which you qualify
   comebackStake: 0.5,        // share of the starting stake you return with
+  // Nobody is clipped down to the falling roof until they have first touched it.
+  //
+  // Every arrival is clamped to the current ceiling. That clamp was written for
+  // flat stakes; the stake then learned to ride the overtime multiplier and the
+  // ceiling did not, and the two move in opposite directions through overtime,
+  // so they cross. At the defaults a fresh entrant stopped getting the full
+  // multiple from about x4 and a comeback from about x8 — the Randall fix,
+  // undone in exactly the phase it was written for.
+  //
+  // The repair does NOT go through the roof. Raising the ceiling floor by the
+  // multiplier was measured and is worse than the defect: it hands the elite the
+  // clipping they currently suffer, taking casuals 14.3% -> 10.0% and the top
+  // shark 56.9% -> 63.1%. The ceiling clamp is an accidental leveller, because
+  // whoever has accumulated most deep in overtime is almost always the elite.
+  //
+  // So the carve-out is arrival-only, and lives at the cap in resolveClue rather
+  // than in `get ceiling`. An arrival lands capped by the roof as it stood when
+  // overtime OPENED, and is exempt from the per-clue cap until its score first
+  // touches the current roof. Measured at 6,000 matches: casuals 14.3% -> 15.2%,
+  // top shark 56.9% -> 55.6%, drain untouched (31 min, p90 35). It costs about a
+  // point of draw fairness at twenty players (62% -> 63%) and nothing at thirty.
+  // David weighed that against the skill axis and shipped it on, 2026-08-17.
+  //
+  // **The flag covers the arrival, not what the arrival then wins.** `capExempt`
+  // is set only when the landing is itself above the roof. The version this was
+  // measured from flagged *every* arrival and cleared it on the first dip, which
+  // also exempts a player who landed under the roof and climbed above it by
+  // winning pots — an open-ended ceiling exemption for accumulated score, which
+  // is the exact property this design exists to avoid. That version scores
+  // better on paper (casuals 16.2%) and costs three to four points of back-half
+  // instead of one, because it is a materially bigger rule: 7,777 clip-skips
+  // against 1,882 in the same harness, off an identical number of above-roof
+  // arrivals. Do not "restore" the missing point by widening the flag.
+  //
+  // Two shapes that measure as NO-OPS, recorded so they are not retried: a
+  // fixed-length grace of 1 or 4 clues, and letting the cap rise to the highest
+  // arrival. An above-roof arrival pays itself back under the roof within about
+  // a clue, so protecting that state briefly protects something that liquidates
+  // itself; the value is in never being step-function-clipped while still
+  // fighting.
+  arrivalGrace: true,
   // How much of your buzz time the edge takes off.
   //
   // THIS IS A THRESHOLD, NOT A DIAL. It shipped at 0.5 for one release on the
@@ -472,7 +513,7 @@ export class RumbleGame {
         state: 'queued', score: 0, enteredAtClue: null,
         eliminatedAtClue: null, placement: null,
         pins: 0, correct: 0, missed: 0,
-        topRope: false, topRopeAt: null, target: null,
+        topRope: false, topRopeAt: null, target: null, capExempt: false,
         stable: null,              // stable id, or null for going stag
         comebackUsed: false,       // one to a customer
         comebackUntil: null,       // race number the edge lasts through
@@ -677,6 +718,40 @@ export class RumbleGame {
     return true;
   }
 
+  /**
+   * The roof as it stood when overtime opened, which is what an arrival is
+   * capped by rather than the decayed current value.
+   *
+   * Bounded on purpose. Letting an arrival land on its full scaled stake with no
+   * bound measured the same to within noise (casuals 16.2% against 16.0%), and
+   * this version can be stated in one sentence to a room: you are capped by the
+   * roof as it was when overtime started. Stakes above that reference burn down
+   * through it almost immediately, which is why the extra headroom never
+   * converted into anything.
+   *
+   * Before overtime opens this is just the current ceiling, so the clamp is
+   * unchanged for the whole main match.
+   */
+  arrivalCap() {
+    if (!this.s.arrivalGrace || this.overtimeFrom == null) return this.ceiling;
+    const at = this.s.ceiling + this.s.ceilingDecayPerClue * this.overtimeFrom;
+    const floor = Math.max(this.s.ceilingFloor, this.s.startScore);
+    return Math.max(floor, Math.round(at));
+  }
+
+  /**
+   * Put an arrival on the board: entries, revivals and the comeback all land here.
+   *
+   * The exemption is cleared the first time the player is at or below the roof,
+   * by `resolveClue`'s cap loop — not on a timer. See `arrivalGrace`.
+   */
+  arrivalLand(p, landing) {
+    if (!this.s.arrivalGrace) { p.score = Math.min(landing, this.ceiling); return; }
+    p.score = Math.min(landing, this.arrivalCap());
+    // Only worth exempting if they actually landed above the current roof.
+    p.capExempt = p.score > this.ceiling;
+  }
+
   /** Clues left before this player may climb again. Zero means now. */
   topRopeWait(token) {
     const p = this.players.get(token);
@@ -735,13 +810,11 @@ export class RumbleGame {
     // A ceiling below the entry stake would clip newcomers on arrival, which
     // would quietly undo the thing the stake is for.
     //
-    // That intent is no longer met and this floor is why: the entry stake now
-    // rides the overtime multiplier and the floor does not, so from about x4
-    // the roof is under the stake and clips exactly the newcomers this was
-    // written to protect. Multiplying the floor by the multiplier is the
-    // obvious repair and is not made here — at x8 it would put the floor above
-    // the starting ceiling and kill the overtime drain, which is itself a
-    // recorded failure. Open, with numbers, in the handbook.
+    // This floor is deliberately NOT scaled by the overtime multiplier, even
+    // though the entry stake is. That repair was measured and is worse than the
+    // defect it fixes: lifting the roof hands the elite the clipping they
+    // currently suffer, and casuals go 14.3% -> 10.0%. The carve-out for
+    // arrivals lives at the cap in `resolveClue` instead — see `arrivalGrace`.
     const floor = Math.max(this.s.ceilingFloor, this.s.startScore);
     return Math.max(floor, Math.round(c));
   }
@@ -983,6 +1056,14 @@ export class RumbleGame {
       // Remember who banked above the cap, so the exemption cannot repeat.
       p.bankedLastClue = p.id === ceilingFreeFor && p.score > cap;
       if (p.id === ceilingFreeFor) continue;
+      // An arrival is not clipped down to the falling roof until it has first
+      // touched it. Cleared here rather than on a clue count: a fixed-length
+      // grace measures as nothing, because an above-roof arrival pays itself
+      // back under the roof within about a clue anyway. See `arrivalGrace`.
+      if (p.capExempt) {
+        if (p.score > cap) continue;
+        p.capExempt = false;
+      }
       if (p.score > cap) p.score = cap;
     }
 
@@ -1146,14 +1227,12 @@ export class RumbleGame {
         // the cap is applied earlier in resolveClue than this runs, so an
         // unclamped stake would sit above the roof for a whole clue.
         //
-        // KNOWN, OPEN: the clamp below eats this scaling once the falling
-        // ceiling drops under the climbing stake — at the defaults, around x8
-        // for a comeback. Same bug as in `admit()`, where it bites from x4; the
-        // note there has the detail and the handbook has the numbers.
+        // Landed through `arrivalLand`, which is what stops the falling ceiling
+        // eating this scaling deep in overtime — at the defaults it bit from
+        // about x8 on this path. See `arrivalGrace`.
         const mult = this.s.scaleEntryStake ? this.overtimeMultiplier() : 1;
-        p.score = Math.min(
-          Math.round(this.s.startScore * (this.s.comebackStake ?? 0.5) * mult),
-          this.ceiling);
+        this.arrivalLand(p,
+          Math.round(this.s.startScore * (this.s.comebackStake ?? 0.5) * mult));
         p.comebackUntil = this.racesRun + (this.s.comebackRaces ?? 40);
         entry.comebacks = (entry.comebacks || []).concat([{ playerId: p.id,
           score: p.score, until: p.comebackUntil }]);
@@ -1279,7 +1358,7 @@ export class RumbleGame {
       state: 'queued', score: 0, enteredAtClue: null,
       eliminatedAtClue: null, placement: null,
       pins: 0, correct: 0, missed: 0,
-      topRope: false, topRopeAt: null, target: null,
+      topRope: false, topRopeAt: null, target: null, capExempt: false,
       revivals: 0, bountyPlaced: 0,
     };
     this.players.set(id, p);
@@ -1316,16 +1395,13 @@ export class RumbleGame {
       ? Math.round(this.s.startScore * this.s.revivalFraction)
       : this.s.startScore;
     const stake = base * mult;
-    // KNOWN, OPEN: this clamp eats the scaling it sits next to. The ceiling is
-    // falling through overtime while `mult` is climbing, so they cross — at the
-    // defaults a fresh entrant stops getting the full multiple from about x4,
-    // and lands on the roof instead. The clamp predates stake scaling and its
-    // own rationale (see `get ceiling`) is that a roof below the entry stake
-    // "would quietly undo the thing the stake is for", which is now exactly
-    // what happens. Not fixed here because every fix moves the ceiling, which
-    // is the dominant fairness lever and wants a harness sweep first. Numbers,
-    // the candidates and why each fails are in the handbook.
-    next.score = Math.min(stake - next.bountyPlaced - (next.gifted || 0), this.ceiling);
+    // Through `arrivalLand`, not a bare clamp to `this.ceiling`.
+    //
+    // The bare clamp ate the scaling it sat next to: the roof falls through
+    // overtime while `mult` climbs, so they crossed, and a fresh entrant stopped
+    // getting the full multiple from about x4. See `arrivalGrace` for what was
+    // measured, including the repair that was rejected for being elite-friendly.
+    this.arrivalLand(next, stake - next.bountyPlaced - (next.gifted || 0));
     next.enteredAtClue = this.cluesRevealed;
     this.log.push({ type: 'entry', playerId: next.id, draw: next.drawNumber, cause });
     return next;

@@ -3,6 +3,48 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.90.0 — nobody is clipped to a roof they never touched
+
+Arrivals were clamped to the current ceiling. That clamp was written for flat
+stakes; the stake then learned to ride the overtime multiplier and the ceiling
+did not, and the two move in opposite directions through overtime, so they
+crossed — a fresh entrant stopped getting the full multiple from about x4, a
+comeback from about x8. The Randall fix, undone in the phase it was written for.
+
+The repair does **not** go through the roof. Scaling the ceiling floor by the
+multiplier was measured and is worse than the defect: lifting the roof hands the
+elite the clipping they currently suffer, taking casuals 14.3% -> 10.0%. The
+ceiling clamp is an accidental leveller, because whoever has accumulated most
+deep in overtime is almost always the elite.
+
+So the carve-out is arrival-only and lives at the cap in `resolveClue`. An arrival
+lands capped by the roof **as it stood when overtime opened**, and is not clipped
+down to the falling roof until its score first touches it. On by default,
+`arrivalGrace: false` restores the old clamp.
+
+Casuals 14.3% -> 15.2%, top shark 56.9% -> 55.6%, drain untouched. It costs about
+a point of back-half at twenty players and nothing measurable at thirty — the
+second time the skill and draw axes have pulled against each other here.
+
+**The flag covers the arrival, not what the arrival then wins.** The variant this
+was measured from flagged every arrival, which also exempts a player who landed
+under the roof and climbed above it by winning pots — an open-ended ceiling
+exemption on accumulated score, which is the property the floor repair was
+rejected for. It scores 16.2% because it is a bigger rule: 7,777 skipped clips
+against 1,882 off an identical count of above-roof arrivals, and 3-4 points of
+back-half instead of 1. The point left on the table is deliberate.
+
+Two shapes measured as no-ops and are recorded so they are not retried: a
+fixed-length grace of 1 or 4 clues, and letting the cap rise to the highest
+arrival. An above-roof arrival pays itself back under the roof within about a
+clue, so a brief grace protects something that liquidates itself.
+
+Also: `tools/comeback-study.mjs` drove its own comeback and had fallen a release
+behind, returning a flat half stake while labelling the row SHIPPED. Every figure
+it produced described the pre-0.88 rule, and some had reached the handbook. Fixed,
+and it now routes arrivals through the engine hook so it cannot silently diverge
+again. All three study tools agree.
+
 ## 0.89.0 — a withdrawn top rope is free, and matches record their host
 
 **Deploys no longer trip over their own lockfile.** `npm install` on the box

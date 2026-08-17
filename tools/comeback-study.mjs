@@ -122,7 +122,18 @@ function simulate(cfg, seed) {
           const cbMult = settings.scaleEntryStake === false ? 1 : multiplier;
           const stake = Math.round(
             settings.startScore * (settings.comebackStake ?? 0.5) * cbMult);
-          g.adjustScore(p.id, stake - p.score);
+          // Routed through the engine's arrival hook, so whatever the engine does
+          // about the ceiling on arrival applies here too. Without this the tool
+          // silently measured a comeback with the old bare clamp, which is how it
+          // came to be a release behind in the first place.
+          //
+          // `arrivalLand` sets the score only, so un-eliminate the way
+          // `adjustScore` does on its way through. The engine's own comeback never
+          // needs this — it `continue`s before the elimination is recorded.
+          p.state = 'live';
+          p.eliminatedAtClue = null;
+          g.eliminationOrder = g.eliminationOrder.filter((id) => id !== p.id);
+          g.arrivalLand(p, stake);
           boostUntil.set(p.id, raceIdx + cfg.duration);
           comebacks++;
         }
@@ -135,7 +146,9 @@ function simulate(cfg, seed) {
   return { winner, winnerStable, clues: g.cluesRevealed, comebacks };
 }
 
-function run(label, cfg, runs = 1500) {
+// 1,500 is the default; raise it with RUMBLE_RUNS_STUDY when comparing two
+// configurations rather than reading absolute levels.
+function run(label, cfg, runs = Number(process.env.RUMBLE_RUNS_STUDY || 1500)) {
   const wins = {}; const stableWins = {}; let clues = 0, cb = 0, unfinished = 0;
   for (let s = 1; s <= runs; s++) {
     const r = simulate(cfg, s);
