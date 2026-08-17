@@ -545,6 +545,16 @@ class Match {
       buzzes: this.race.buzzes
         .filter((b) => !b.spectator)
         .map((b) => ({ token: b.token, name: b.name, ms: b.ms, early: b.early,
+          // What the ordering actually used.
+          //
+          // A player on the way back from a near-elimination is ranked at a
+          // fraction of the time they pressed, so the console can legitimately
+          // show a slower number in first place. Without saying why, that reads
+          // as a scoring bug — and was reported as one from clue 24 of VWQW:
+          // "Zach actually was fastest but Dalton was highlighted as first in".
+          // The comment above rankRace claimed the console showed both numbers.
+          // It did not; this is what makes that true.
+          edge: this.game ? this.game.buzzEdge(b.token) : 1,
           // A robot knows whether it is about to be right; the host has no way
           // to adjudicate one, so the console is told.
           bot: !!b.bot, botCorrect: b.bot ? b.botCorrect : undefined })),
@@ -1932,7 +1942,25 @@ io.on('connection', (socket) => {
     match.botTimers = [];
   }
 
-  socket.on('resolve', hostOnly(({ winnerToken }) => {
+  socket.on('resolve', hostOnly(({ winnerToken }, ack) => {
+    // Adjudicating a clue that has already been settled.
+    //
+    // The console sends this twice more easily than it looks: Y fires on
+    // keydown and the guard in front of it reads the console's own copy of the
+    // state, which is still the old clue until the server's push lands. A
+    // second press — or a second click on Correct — arrives after match.clue is
+    // already null.
+    //
+    // Every sibling handler checks; this one did not, so it destructured null
+    // and threw "cannot destructure property 'slot' of 'match.clue' as it is
+    // null". hostOnly caught that and handed it to the host verbatim: a
+    // developer's sentence, on a screen where the game had apparently stopped,
+    // in the middle of a live match. Reported from clue 16 of VWQW.
+    if (!match.clue || !match.race) {
+      const m = 'That clue is already settled — pick the next one.';
+      if (ack) ack({ error: m }); else socket.emit('error-msg', m);
+      return;
+    }
     const { slot, row } = match.clue;
     const missed = [...match.race.lockedOut];
     const snap = match.game.snapshot();

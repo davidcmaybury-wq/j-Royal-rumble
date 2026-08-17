@@ -264,6 +264,8 @@ text-align:center;margin-top:4px}
 .bz.on{box-shadow:inset 0 0 0 1px var(--brass);background:#243259}
 .bz .t{font-size:12px;color:var(--slate)}
 .bz .e{font-size:10px;color:var(--alarm)}
+/* The ranked time for somebody on the way back, beside what they pressed. */
+.bz .edge{font-size:12px;color:var(--brass);margin-left:4px}
 .bz.isbot{border:1px dashed var(--line)}
 .rt{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--alarm);
 align-self:center;margin-left:6px}
@@ -453,8 +455,28 @@ socket.on('disconnect', () => $('conn').classList.remove('on'));
 const AVATARS = new Map();
 socket.on('avatar', ({ token, dataUrl }) => { AVATARS.set(token, dataUrl); render && render(); });
 const avatarOf = (p) => (p && p.hasAvatar ? AVATARS.get(p.token) : null) || null;
-socket.on('state', apply);
-socket.on('error-msg', (m) => say(m));
+// One adjudication at a time.
+//
+// Y fires on keydown and the guard in front of it reads this page's copy of the
+// state, which still shows the old clue until the server's push arrives. Press
+// it twice quickly — the natural thing to do when the first press seems not to
+// have registered — and the second lands on a clue the server has already
+// settled. That used to come back as a raw TypeError with the game apparently
+// stuck. The server refuses it politely now; this stops it being sent.
+//
+// Cleared by the next state push, or by the error that says it was refused, or
+// after a second and a half if neither arrives — a host who cannot adjudicate
+// is worse off than one who sends a duplicate.
+let settling = false;
+function settle(winnerToken) {
+  if (settling) return;
+  settling = true;
+  setTimeout(() => { settling = false; }, 1500);
+  socket.emit('resolve', { winnerToken });
+}
+
+socket.on('state', (s) => { settling = false; apply(s); });
+socket.on('error-msg', (m) => { settling = false; say(m); });
 
 // What the robots said about the clue just gone.
 //
@@ -1137,7 +1159,15 @@ function renderDock() {
     + (b.early ? ' <span class="e">EARLY</span>' : '')
     + (b.bot ? ' <span class="bhint ' + (b.botCorrect ? 'yes' : 'no') + '">'
         + (b.botCorrect ? 'will be right' : 'will be wrong') + '</span>' : '')
-    + '</span><span class="t num">' + b.ms.toFixed(1) + '</span></span>').join('');
+    + '</span><span class="t num">' + b.ms.toFixed(1)
+    // Somebody on the way back is ranked at a fraction of what they pressed, so
+    // first place can show a slower number than second. Say so on the chip: a
+    // host who cannot see why is right to report it as a bug, and did.
+    + (b.edge != null && b.edge < 1
+        ? '<span class="edge" title="on the way back — ranked at '
+          + Math.round(b.edge * 100) + '% of the time pressed">&rarr;'
+          + (b.ms * b.edge).toFixed(1) + '</span>' : '')
+    + '</span></span>').join('');
   const acts = on
     ? '<button class="act good" id="ok">Correct<span class="kb">Y</span></button>'
       + '<button class="act bad" id="no">Wrong &middot; re-toss<span class="kb">N</span></button>'
@@ -1160,10 +1190,10 @@ function renderDock() {
     + (retoss ? '<span class="rt">back out ' + retoss + '&times;</span>' : '')
     + '</div><div class="acts">' + acts + '</div>';
   if (on) {
-    $('ok').onclick = () => socket.emit('resolve', { winnerToken: on.token });
+    $('ok').onclick = () => settle(on.token);
     $('no').onclick = () => socket.emit('mark-wrong', { token: on.token });
   }
-  $('stump').onclick = () => socket.emit('resolve', { winnerToken: null });
+  $('stump').onclick = () => settle(null);
 }
 
 addEventListener('keydown', (e) => {
@@ -1174,9 +1204,9 @@ addEventListener('keydown', (e) => {
   const race = S.race || {}, buzzes = race.buzzes || [], on = buzzes[0];
   const k = (e.key || '').toLowerCase();
   if (e.code === 'Space' && !race.open && !buzzes.length) { e.preventDefault(); socket.emit('activate'); }
-  else if (k === 'y' && on) { e.preventDefault(); socket.emit('resolve', { winnerToken: on.token }); }
+  else if (k === 'y' && on) { e.preventDefault(); settle(on.token); }
   else if (k === 'n' && on) { e.preventDefault(); socket.emit('mark-wrong', { token: on.token }); }
-  else if (k === 'x') { e.preventDefault(); socket.emit('resolve', { winnerToken: null }); }
+  else if (k === 'x') { e.preventDefault(); settle(null); }
 });
 
 // Answers live in a separate window so the shared screen never shows them.

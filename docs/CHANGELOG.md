@@ -3,6 +3,28 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.85.1 — the hang, from a live match
+
+**Adjudicating a clue twice took the game down.** The host pressed Y twice and
+got "cannot destructure property 'slot' of 'match.clue' as it is null", with the
+console apparently stuck. Y fires on keydown and the guard in front of it reads
+the console's own copy of the state, which still shows the old clue until the
+server's push lands — so a second press arrives after the clue is settled and
+`match.clue` is null. `resolve` was the only handler of its kind with no null
+check, so it destructured null and threw, and hostOnly handed the TypeError to
+the host verbatim.
+
+It is refused in words now ("that clue is already settled — pick the next one"),
+the console will not send the second one, and `test/doubleresolve.mjs` plays the
+sequence and checks the match is still playable afterwards.
+
+**And the console now shows why a slower time is winning the race.** A player on
+the way back from a near-elimination is ranked at a fraction of the time they
+pressed, so first place can legitimately show a bigger number — reported from
+the same match as "Zach actually was fastest but Dalton was highlighted as the
+first person in". The chip shows both numbers, which the comment above
+`rankRace` had claimed for a while without it being true.
+
 ## 0.85.0 — quick setup
 
 The setup page opens on two dropdowns instead of forty controls: a rule set
