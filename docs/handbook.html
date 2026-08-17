@@ -565,13 +565,20 @@ which models real reaction times — a 95ms elite down to a 270ms casual — at 
 in the shipped configuration:</p>
 <table>
 <tr><th>Floor exponent</th><th>Top shark</th><th>Second elite</th><th>Mid</th><th>Casuals</th></tr>
-<tr><td>0 — shipping</td><td>62.9%</td><td>16.4%</td><td>9.9%</td><td><strong>10.8%</strong></td></tr>
-<tr><td>0.5</td><td>63.9%</td><td>15.7%</td><td>10.4%</td><td>10.0%</td></tr>
-<tr><td>1 — the repair</td><td><strong>68.5%</strong></td><td>13.9%</td><td>10.1%</td><td><strong>7.5%</strong></td></tr>
+<tr><td>0 — shipping</td><td>56.9%</td><td>16.5%</td><td>12.3%</td><td><strong>14.3%</strong></td></tr>
+<tr><td>0.5</td><td>57.5%</td><td>16.3%</td><td>12.5%</td><td>13.7%</td></tr>
+<tr><td>1 — the repair</td><td><strong>63.1%</strong></td><td>15.0%</td><td>11.8%</td><td><strong>10.0%</strong></td></tr>
 </table>
-<p>The repair takes roughly a third of the casuals' share of wins — 10.8% to 7.5%, about four
-standard errors — and hands the strongest buzzer 5.6 points. With the comeback switched off
-entirely the same move takes the top shark from 77.8% to 83.8%.</p>
+<p>The repair takes roughly a third of the casuals' share of wins — 14.3% to 10.0% — and hands
+the strongest buzzer 6.2 points.</p>
+<p class="mut">Those figures are the second set. The first, published here as 10.8% falling to
+7.5%, were produced by <code>comeback-study.mjs</code> before anyone noticed the tool was
+returning a <em>flat</em> half stake — the pre-0.88 rule — while labelling the row SHIPPED. The
+engine's comeback had learned to ride the overtime multiplier and the study had not, so every
+row it printed understated the mechanic. The conclusion is unchanged and the direction and
+relative size both held on re-measurement, which is the only reason it is not a retraction. The
+tool is fixed; <code>level-study</code> and <code>trigger-study</code> now agree with it at
+14.5%. Caught by the modeling chat, 2026-08-17.</p>
 <p><strong>So the ceiling clamp is an accidental leveller.</strong> It clips whoever has
 accumulated most, and deep in overtime that is almost always the elite; raising the floor stops
 the clipping and lets them keep the pile. The defect is real — entrants genuinely stop getting
@@ -580,8 +587,35 @@ project cares most about, and by a wide margin. That is a much stronger reason t
 the one first given here, which was simply not true.</p>
 <p><strong>Where a real fix would have to go.</strong> Not through the roof. It would have to
 exempt an arrival from the clamp without raising the ceiling for accumulated scores — which means
-the cap at the top of <code>resolveClue</code>, not <code>get ceiling</code>. That is untested and
-is the open end of this.</p>
+the cap at the top of <code>resolveClue</code>, not <code>get ceiling</code>.</p>
+<p><strong>That was then measured, and one shape of it works.</strong> Four candidates, all
+reproduced here against the corrected study:</p>
+<table>
+<tr><th>Arrival handling</th><th>Top shark</th><th>Mid</th><th>Casuals</th><th>30p back-half</th></tr>
+<tr><td>shipping clamp</td><td>56.9%</td><td>12.3%</td><td><strong>14.3%</strong></td><td>57%</td></tr>
+<tr><td>grace of 1 clue</td><td>55.6%</td><td>13.1%</td><td>14.6% <span class="mut">(noise)</span></td><td>—</td></tr>
+<tr><td>grace of 4 clues</td><td>55.7%</td><td>13.3%</td><td>14.5% <span class="mut">(noise)</span></td><td>—</td></tr>
+<tr><td>floor rises to the arrival</td><td>55.4%</td><td>13.1%</td><td>14.9% <span class="mut">(noise)</span></td><td>57%</td></tr>
+<tr><td><strong>grace until first dip to the roof</strong></td><td>54.3%</td><td>13.4%</td><td><strong>16.2%</strong></td><td><strong>60%</strong></td></tr>
+<tr><td><strong>capped at the overtime-open roof, same grace</strong></td><td>54.5%</td><td>13.4%</td><td><strong>16.0%</strong></td><td><strong>60%</strong></td></tr>
+</table>
+<p><strong>Fixed-length graces are no-ops, and the reason is worth keeping.</strong> An arrival
+sitting above the roof loses score to every pot it does not win, so roughly half of them are back
+under the roof within one clue by <em>payment</em> rather than by clipping. Protecting that state
+for one clue, or four, protects something that mostly liquidates itself. The value is in never
+being step-function-clipped while still fighting — which is why the exemption has to run until
+the player first touches the roof, and why bounding the landing at the roof as it stood when
+overtime opened costs nothing: stakes above that reference burn down through it almost at once.</p>
+<p>The change is real rather than cosmetic, which was the trap this had to clear. Over 400
+matches and 3,317 arrivals, the shipping clamp puts <strong>zero</strong> arrivals above the roof;
+each candidate puts 115 above it, and 52 of those are still above the roof after the next
+<code>resolveClue</code>. The drain is untouched — length 31 to 32 minutes, p90 flat at 35.</p>
+<p><strong>The cost is on the other axis.</strong> Back-half win rate goes 57% to 60% at thirty
+players and 62% to 66% at twenty. That is mechanically inevitable: protecting arrivals is
+protecting late arrivals, and this is the second time the two fairness axes have pulled against
+each other here, after the overtime return stake. The trade on offer is about two points of
+casual win share for about three of late-draw advantage, from a baseline that already leans
+late.</p>
 <h3>The boost is a threshold, not a dial</h3>
 <p>The 70% figure is not a setting with a comfortable middle. It shipped at 50% for one release,
 on the reasonable-sounding grounds that 70% was more help than the moment called for, and 50%
@@ -667,11 +701,18 @@ design call, not a measurement.</p>
 <p class="mut">These sections arrived as a written study rather than as raw numbers, and the
 figures here are the ones reproduced by re-running the shipped scripts against the current
 engine, not the ones delivered — they differ by a few tenths in places, and by two points for
-"comeback + both", which the delivery put at 9.2%. The delivery also stated that scaling the
-overtime stake "formalizes the fix" for the return-at-the-ceiling bug and pointed at a delta
-handed to <code>adjustScore</code>. It does not, and there is no such call on that path: the
-clamp is a direct assignment and survives the scaling entirely. See the open section above,
-where it is measured.</p>
+"comeback + both", which the delivery put at 9.2%.</p>
+<p class="mut">A correction to a correction, recorded because the first one was written with more
+confidence than it had earned. This document said the v4 delivery was wrong to point at "a delta
+handed to <code>adjustScore</code>" on the comeback path, on the grounds that no such call
+exists there. In <code>src/engine.js</code> that is true — the comeback is a direct assignment.
+But the delivery was reading <code>tools/comeback-study.mjs</code>, where the comeback
+<em>is</em> applied through <code>adjustScore</code>, and where that call does clamp to the
+ceiling exactly as described. They had found a real divergence between the study and the engine;
+the reply checked only the engine and declared it imaginary. The claim it was attached to —
+that scaling the overtime stake "formalizes the fix" — still does not hold, because the engine's
+clamp survives the scaling. But the pointer was good, and following it would have caught the
+mislabelled figures above months of measurements earlier.</p>
 
 <p class="mut">Method, in one paragraph: the rules engine is a plain module with no framework
 and no network, driven by a Monte Carlo harness that replays hundreds of matches per

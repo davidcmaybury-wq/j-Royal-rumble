@@ -106,7 +106,23 @@ function simulate(cfg, seed) {
           const eligible = !cfg.gated || raceWins.get(p.id) < 3;   // "didn't really get to play"
           if (!eligible) { usedComeback.add(p.id); continue; }     // one check only
           usedComeback.add(p.id);
-          g.adjustScore(p.id, Math.round(settings.startScore * 0.5) - p.score);
+          // The return stake rides the overtime multiplier, as the engine has
+          // done since 0.88.0.
+          //
+          // This tool drives its own comeback rather than the engine's so the
+          // gate and duration can be swept, and it was left behind when the
+          // engine's learned to scale: it kept returning a flat half stake, so
+          // every row it printed described the pre-0.88 rule while being
+          // labelled SHIPPED. That understates the mechanic badly — casuals
+          // read 10.8% flat against 14.3% scaled — and the mislabelled figures
+          // reached the handbook. Found by the modeling chat, 2026-08-17.
+          //
+          // `adjustScore` is kept: it applies the same ceiling clamp the engine
+          // applies on this path and un-eliminates on the way through.
+          const cbMult = settings.scaleEntryStake === false ? 1 : multiplier;
+          const stake = Math.round(
+            settings.startScore * (settings.comebackStake ?? 0.5) * cbMult);
+          g.adjustScore(p.id, stake - p.score);
           boostUntil.set(p.id, raceIdx + cfg.duration);
           comebacks++;
         }

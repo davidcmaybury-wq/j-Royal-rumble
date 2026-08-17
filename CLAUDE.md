@@ -226,7 +226,30 @@ than it, on the axis David cares about most.
 
 A real fix cannot go through the roof. It has to exempt arrivals from the clamp
 without raising the ceiling for accumulated scores, which means the cap at the
-top of `resolveClue`, not `get ceiling`. Untested; that is the open end.
+top of `resolveClue`, not `get ceiling`.
+
+**That was measured and one shape works — the decision is a trade, not a bug
+fix.** Exempting an arrival from the per-clue cap **until it first dips to the
+roof** takes casuals 14.3% → **16.2%** and the shark 56.9% → 54.3%; bounding the
+landing at the roof as it stood when overtime opened scores the same (16.0%) and
+is the one to prefer, being bounded and explainable in a sentence. The drain is
+untouched (31→32m, p90 flat). **The cost is back-half 57% → 60% at thirty and
+62% → 66% at twenty** — protecting arrivals is protecting late arrivals, the
+second time these two axes have pulled against each other. Not shipped; David's
+call.
+
+**Fixed-length graces and a rising floor are measured no-ops — do not retry
+them.** An above-roof arrival pays itself back under the roof within about a
+clue, so a 1- or 4-clue grace protects a state that self-liquidates; the value
+is only in never being step-function-clipped while still fighting.
+
+**`tools/comeback-study.mjs` drove its own comeback and fell a release behind.**
+It returned a flat half stake while the engine's rode the multiplier from
+0.88.0, so every row it printed described the old rule while labelled SHIPPED —
+casuals 10.8% against a true 14.5%, and those figures reached the handbook.
+Fixed 2026-08-17; all three study tools now agree at 14.5%. **The tools carry
+their own copies of mechanics for sweepability — when a rule changes in the
+engine, grep `tools/` for it.**
 Numbers and both tables are in the handbook. **Re-measure before touching it** —
 and use `RUMBLE_RUNS`, because the 600-run default moved 2–3 points between
 settings that were identical at 6,000.
