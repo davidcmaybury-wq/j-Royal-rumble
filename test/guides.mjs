@@ -153,7 +153,12 @@ for (const [what, needle] of [
   // half-delivered, so these assert the merged ones are actually on the page.
   ['the configuration map that indexes the shark problem', 'every measured configuration'],
   ['the trigger study figures', 'Race wins at the moment of first elimination'],
-  ['and the figures are numbered without a duplicate', 'Figure 21'],
+  ['and the figures are numbered without a duplicate', 'Figure 22'],
+  // The bone pile. Its whole point is that these ideas get proposed again, so
+  // the section existing is the guard against re-litigating them.
+  ['the bone pile of rejected ideas', 'The bone pile'],
+  ['that lowering the shark is on it', 'lowering the shark is not raising the field'],
+  ['and that repairs worse than their bug are on it', 'repairs worse than their bug'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }

@@ -3,6 +3,43 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.93.0 — the bone pile
+
+A new Part IV section: every leveling idea that was measured and turned down, with
+the number that killed it. Merged from the analysis chat's rejected-ideas page,
+which David asked for. The point is not history — most of these sound good, several
+were proposed more than once, and each re-litigation costs a study.
+
+Six entries: triggers that measure the wrong thing (pity powerup, tenure gates, the
+warm-up start boost), lowering the shark instead of raising the field, spending the
+race budget twice, repairs worse than their bug, the whole-pot backfire against
+coordination, and one near-miss — dials that are actually thresholds.
+
+**Every figure in it was re-measured before merging, and most had moved.** The page
+was written against 0.89.0, before `comeback-study.mjs` was found to be a release
+behind and before `arrivalGrace` shipped. Corrected: the reference bar 14.3% ->
+15.2%, the ceiling-floor repair 10.8%->7.5% becomes 14.3%->10.0%, the 0.5 boost
+11.0%->2.1% becomes 15.2%->4.9%, the winner cooldown's casual row 1.7% -> 2.5%,
+ungated 2.9% -> 3.0%, tenure 1.9% -> 1.3%, photo finish 0.1% -> 0.5%, trailing pick
+0.1% -> 0.7%, pity 0.3% -> 0.5%->0.3%. The story is unchanged everywhere; the
+numbers now match what this repo's own tools produce.
+
+Two entries needed more than a number. The arrival exemption is no longer "awaiting
+a decision" — it shipped in 0.90.0, and at the strict reading, so the section says
++0.9 rather than the +1.9 the looser variant measured. And the backfire paragraph
+cross-referenced a section that does not exist here, since that rule is decided but
+not built; it now says so.
+
+`tools/pity-study.mjs` and `tools/level-study2-start-boost.mjs` adopted from the
+analysis folder, because two of the claims could not be reproduced without them.
+They both do: start boost for everyone 4.6%, oracle start stacked on the comeback
+12.7%, below the comeback alone.
+
+Figure 22 is the bone pile chart. Its bars are the original run and carry a note
+saying so, since re-measuring moved several rows and the reference line; the
+ordering it shows is unaffected. The handbook gained an `h4` level for the six
+entries.
+
 ## 0.92.0 — players' broadcast performance is internal study only
 
 The "Does being good on television carry over?" section is removed from the
