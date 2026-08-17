@@ -165,6 +165,10 @@ for (const [what, needle] of [
   ['that aiming back is not a surcharge', 'neither a discount nor a surcharge'],
   ['the draw-slot finding', 'The draw slot is the biggest lever measured'],
   ['and the renumbered figure run', 'Figure 28'],
+  // "Pity powerup" names the player as pitiable; David renamed it to the
+  // wrestling term. The negative check is the one that matters — the analysis
+  // folder still ships the old name, so it can arrive again in a merge.
+  ['the rejected buzz boost under its proper name', 'Kickout on 2'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }
@@ -176,6 +180,10 @@ for (const needle of ['Accuracy does not transfer', 'does a strong televised rec
   'real broadcast games', 'carry over?']) {
   check(`the handbook has no broadcast-performance analysis: ${needle}`,
     !hb.includes(needle));
+}
+
+for (const needle of ['pity powerup', 'Pity powerup', 'pity-study']) {
+  check(`the handbook does not say "${needle}"`, !hb.includes(needle));
 }
 
 check('and no longer claims the stake is identical for everybody',

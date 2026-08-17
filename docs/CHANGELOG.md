@@ -3,6 +3,23 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.94.1 — kickout on 2
+
+The rejected buzz-boost-after-losses mechanic is called **kickout on 2**, not "pity
+powerup". David's rename. Same instinct as calling the field casual players rather
+than low-skill: "pity" names the player as pitiable. The wrestling term also fits
+the format better — you kick out at two rather than being counted out.
+
+Renamed in the handbook prose, in three chart figures including their tooltips and
+legends, and in the version history. `tools/pity-study.mjs` is now
+`tools/kickout-study.mjs`, since the handbook cites it as a source and a document
+saying "kickout on 2" while pointing at `pity-study` is the kind of drift this
+project keeps getting bitten by.
+
+`test/guides.mjs` asserts the new name is present and the old one is absent. The
+analysis folder still ships its copy as `pity-study.mjs`, so the old name can
+arrive again in a delivery — that guard is what catches it.
+
 ## 0.94.0 — the backfire dial, and the draw-slot findings
 
 **An aimed miss no longer always pays the whole pot.** `targetBackfire` is the
@@ -53,7 +70,7 @@ the number that killed it. Merged from the analysis chat's rejected-ideas page,
 which David asked for. The point is not history — most of these sound good, several
 were proposed more than once, and each re-litigation costs a study.
 
-Six entries: triggers that measure the wrong thing (pity powerup, tenure gates, the
+Six entries: triggers that measure the wrong thing (kickout on 2, tenure gates, the
 warm-up start boost), lowering the shark instead of raising the field, spending the
 race budget twice, repairs worse than their bug, the whole-pot backfire against
 coordination, and one near-miss — dials that are actually thresholds.
@@ -64,7 +81,7 @@ behind and before `arrivalGrace` shipped. Corrected: the reference bar 14.3% ->
 15.2%, the ceiling-floor repair 10.8%->7.5% becomes 14.3%->10.0%, the 0.5 boost
 11.0%->2.1% becomes 15.2%->4.9%, the winner cooldown's casual row 1.7% -> 2.5%,
 ungated 2.9% -> 3.0%, tenure 1.9% -> 1.3%, photo finish 0.1% -> 0.5%, trailing pick
-0.1% -> 0.7%, pity 0.3% -> 0.5%->0.3%. The story is unchanged everywhere; the
+0.1% -> 0.7%, kickout on 2 0.3% -> 0.5%->0.3%. The story is unchanged everywhere; the
 numbers now match what this repo's own tools produce.
 
 Two entries needed more than a number. The arrival exemption is no longer "awaiting
@@ -73,7 +90,7 @@ a decision" — it shipped in 0.90.0, and at the strict reading, so the section 
 cross-referenced a section that does not exist here, since that rule is decided but
 not built; it now says so.
 
-`tools/pity-study.mjs` and `tools/level-study2-start-boost.mjs` adopted from the
+`tools/kickout-study.mjs` and `tools/level-study2-start-boost.mjs` adopted from the
 analysis folder, because two of the claims could not be reproduced without them.
 They both do: start boost for everyone 4.6%, oracle start stacked on the comeback
 12.7%, below the comeback alone.

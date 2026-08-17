@@ -1,4 +1,4 @@
-// Pity-timer ("hot tag") study: does a buzz boost earned by losing races give
+// "Kickout on 2" study: does a buzz boost earned by losing races give
 // weaker players a real chance to WIN THE MATCH, without breaking the game?
 // Drives the shipping engine with a reaction-time race model calibrated to the
 // nine recorded live matches (elite medians ~95-130ms, casuals 210-270ms).
@@ -108,12 +108,12 @@ function run(label, cfg, runs = 1500) {
 }
 
 console.log('P(match win) by archetype, 1500 sims each. Field: 95/130/160/210/240/270ms medians.\n');
-run('baseline (no pity)', { pity: false });
-run('pity 70% after 10', { pity: true, boost: 0.70, after: 10 });
-run('pity 50% after 10', { pity: true, boost: 0.50, after: 10 });
-run('pity 70% after 6',  { pity: true, boost: 0.70, after: 6 });
-run('pity 50% after 6',  { pity: true, boost: 0.50, after: 6 });
-run('pity 30% after 6',  { pity: true, boost: 0.30, after: 6 });
+run('baseline (no kickout)', { pity: false });
+run('kickout 70% after 10', { pity: true, boost: 0.70, after: 10 });
+run('kickout 50% after 10', { pity: true, boost: 0.50, after: 10 });
+run('kickout 70% after 6',  { pity: true, boost: 0.70, after: 6 });
+run('kickout 50% after 6',  { pity: true, boost: 0.50, after: 6 });
+run('kickout 30% after 6',  { pity: true, boost: 0.30, after: 6 });
 console.log('');
 run('heat +7%/loss, cap 50%',  { heat: true, heatStep: 0.07, heatCap: 0.50 });
 run('heat +10%/loss, cap 70%', { heat: true, heatStep: 0.10, heatCap: 0.70 });

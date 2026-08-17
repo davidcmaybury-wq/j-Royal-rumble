@@ -1,7 +1,7 @@
 // Study 2: can anything give the casuals a real chance at the MATCH?
 // Tests David's "one foot on the floor" comeback (instant return from elimination
 // with a temporary buzz boost — duration swept), a progressive pot, the skill
-// dial, and stables. Same calibrated race model as pity-study.mjs.
+// dial, and stables. Same calibrated race model as kickout-study.mjs.
 import { RumbleGame, makeRng, ROW_VALUES, autoEntryInterval } from '../src/engine.js';
 
 const ROW_EXP = [0.48, 0.67, 0.85, 1.10, 1.40];

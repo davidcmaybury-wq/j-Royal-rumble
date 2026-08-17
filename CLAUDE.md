@@ -174,6 +174,13 @@ is calibrated on 3,339 J!ometry player-games and 1,772 contestants in the
 population, and saying so is provenance for a model rather than a read on
 anybody. If that line ever needs redrawing, ask — do not widen it quietly.
 
+**The rejected buzz-boost-after-losses mechanic is "kickout on 2", never "pity
+powerup".** David renamed it 2026-08-17. It is the same instinct as the casual-
+players rule — "pity" names the player as pitiable — and the wrestling term is a
+better fit for the format besides: you kick out at two rather than being counted
+out. `tools/kickout-study.mjs` measures it; the analysis folder still calls its
+copy `pity-study.mjs`, so expect the old name in anything they hand over.
+
 **Call them casual players.** Never "low-skill", never "weak player". David asked
 for this explicitly and made it general: avoid any potentially insulting label for
 players who are not the sharks, in the handbook and everywhere else a person
