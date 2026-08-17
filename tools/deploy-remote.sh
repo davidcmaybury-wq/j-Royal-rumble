@@ -51,6 +51,17 @@ if [ "$N" != "0" ] && [ "$FORCE" = "0" ]; then
 fi
 
 BEFORE=$(git rev-parse --short HEAD)
+
+# `npm install` below rewrites package-lock.json in place, so this box's working
+# tree is dirty by the time the next deploy runs. That stayed invisible for
+# months because the lockfile never changed upstream — the moment it did, in
+# 0.89.0, `git pull` refused with "local changes would be overwritten" and the
+# deploy failed with nothing whatsoever wrong with the code.
+#
+# The box is never the source of truth for the lockfile. Throw its copy away
+# rather than letting an artifact of installing block a release.
+git checkout -- package-lock.json 2>/dev/null || true
+
 git pull --ff-only
 AFTER=$(git rev-parse --short HEAD)
 if [ "$BEFORE" = "$AFTER" ]; then

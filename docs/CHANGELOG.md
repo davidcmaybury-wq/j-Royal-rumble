@@ -5,6 +5,13 @@ without anybody remembering to update it.
 
 ## 0.89.0 — a withdrawn top rope is free, and matches record their host
 
+**Deploys no longer trip over their own lockfile.** `npm install` on the box
+rewrites `package-lock.json` in place, so the working tree there is dirty by the
+time the next deploy pulls. That was invisible for months because the lockfile
+never changed upstream; the moment it did, `git pull --ff-only` refused and the
+deploy failed with nothing wrong with the code. `deploy-remote.sh` now discards
+the box's copy before pulling — it was never the source of truth for it.
+
 **Climb down before the clue is read and there is no cooldown.** The five-clue
 wait prices *riding* a clue at double, not declaring one, so a player who
 changes their mind in the same gap between clues now pays nothing. `setTopRope`
