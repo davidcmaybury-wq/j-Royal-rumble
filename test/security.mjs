@@ -8,7 +8,7 @@
 //
 // This suite runs against a server started WITHOUT keys, so it asserts the
 // refusing behaviour directly rather than trusting the configuration.
-const U = process.env.SEC_URL || 'http://127.0.0.1:8099';
+const U = process.env.SEC_URL || 'http://127.0.0.1:8097';
 let fails = 0;
 const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${d ? '  — ' + d : ''}`); if (!ok) fails++; };
 const code = async (p, h = {}) => (await fetch(U + p, { headers: h })).status;

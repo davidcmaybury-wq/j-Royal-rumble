@@ -45,8 +45,14 @@ jobs:
           # Deliberately started WITHOUT keys, on its own port: this suite asserts
           # what an unconfigured deployment refuses. The main server below runs
           # with test keys, which is the opposite configuration.
-          PORT=8099 node src/server.js & sleep 8
-          SEC_URL=http://127.0.0.1:8099 node test/security.mjs
+          # Port 8097, not 8099: moved.mjs spawns its own server on 8099, and a
+          # leftover here answered its health check, so it believed a retired box
+          # had booted and then failed every redirect assertion. Killed at the end
+          # of the step for the same reason.
+          PORT=8097 node src/server.js & SEC_PID=$!
+          sleep 8
+          SEC_URL=http://127.0.0.1:8097 node test/security.mjs
+          kill $SEC_PID 2>/dev/null || true
 
       - name: End-to-end match over sockets
         run: |
