@@ -5,7 +5,7 @@
 // the page rather than asked for, because a report written five minutes later
 // has lost the room code and what actually happened.
 const U = process.env.URL || 'http://127.0.0.1:8080';
-const KEY = process.env.RUMBLE_ADMIN_KEY || 'daymay';
+const KEY = process.env.RUMBLE_ADMIN_KEY || 'ci-admin-key';
 const auth = { 'x-admin-key': KEY };
 let fails = 0;
 const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${d ? '  — ' + d : ''}`); if (!ok) fails++; };

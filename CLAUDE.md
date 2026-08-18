@@ -371,6 +371,48 @@ a real 1.
 the first six gave 302ms and 242ms where the settled figures were 85ms and 60ms.
 People start slowly.
 
+## The guards fail closed, and the box needs two keys
+
+`RUMBLE_ADMIN_KEY` and `RUMBLE_LOG_KEY` must be set in the service environment.
+**Without them `/control` and `/api/logs` refuse everyone, including David** — the
+server shouts about it at boot rather than failing quietly.
+
+That is a deliberate reversal. Both guards used to default to open:
+
+- `logGuard` returned true when `RUMBLE_LOG_KEY` was unset, "fine for a test
+  deployment". The live site ran that way for months, so **`/api/logs` listed all
+  52 saved matches and `/api/logs/<file>` handed anybody a complete log** —
+  in-game handles, every buzz time, every answer. The handbook anonymizes to
+  P-labels and the repo keeps legal names out precisely to avoid that; one route
+  undid it.
+- `ADMIN_KEY` fell back to the literal string `'daymay'`, **in a public repo**, so
+  `/api/control?key=daymay` was live: list every match, download every log and
+  report, and end a game in progress. It looked protected because an
+  unauthenticated request correctly returned 403.
+
+Found 2026-08-17 in an external review by Colin Davy. The review caught the logs
+and health leaks and **missed the published admin key**, having tested without a
+key and stopped at the 403 — worth remembering as the shape of a near miss.
+
+The admin key also satisfies `logGuard`: the control room downloads individual
+logs and authenticates with the admin key, so without that the host is locked out
+of their own records. One key is a superset of the other, not two namespaces.
+
+`/api/health` is thin in public — `status` and `version` only. **The full body is
+still served to 127.0.0.1**, which is what `deploy-remote.sh` reads to check
+`matchesInPlay` before restarting; never break that path. `version` stays public
+because `/history` prints it on a keyless page anyway.
+
+`test/security.mjs` runs against a deliberately keyless server on port 8099 and
+asserts the refusals, including that `key=daymay` is dead. It is its own CI step
+because the main server runs *with* keys.
+
+**CSP is off in helmet, on purpose.** Every page is one self-contained file with
+inline `<script>`, which a default CSP blocks outright — the buzzer would stop
+working. Turning it on means `unsafe-inline`, which gives most of it away, or
+extracting and hashing every page's script. That is a real piece of work and its
+own change.
+
 ## Routes
 
 ```

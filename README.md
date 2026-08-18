@@ -1372,6 +1372,28 @@ setting that defaulted off, which meant the interesting matches — the ones
 nobody expected to be interesting — were the ones without a record. The host
 console can still download a copy, but no longer does so unasked.
 
+## Two keys, and both guards fail closed
+
+`RUMBLE_ADMIN_KEY` and `RUMBLE_LOG_KEY` must exist in the service environment.
+Without them `/control` and `/api/logs` refuse everybody, and the server says so
+loudly at boot.
+
+Both used to default to open. `/api/logs` served every saved match log — handles,
+buzz times, answers — to anyone who asked, and the admin key fell back to a
+literal string committed to this public repo, so the host console was reachable by
+anyone who read the source. Neither looked broken: unauthenticated requests to
+`/api/control` returned a correct 403, which is exactly why it went unnoticed.
+
+The admin key opens the log routes too, because the control room downloads logs
+with it. `/api/health` answers `status` and `version` to the public and the full
+body only to 127.0.0.1 — `deploy-remote.sh` reads `matchesInPlay` there before it
+restarts and ends anybody's game.
+
+    RUMBLE_ADMIN_KEY=...   host console, /control and /api/control
+    RUMBLE_LOG_KEY=...     /api/logs and /api/logs/<file>
+
+`node test/security.mjs` against a keyless server asserts the refusals.
+
 ## Deploying
 
 Live at <https://j-royal-rumble.net>: a Lightsail VM in Ohio running the server

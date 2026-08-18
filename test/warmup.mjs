@@ -8,6 +8,9 @@
 // standings was wrong.
 import { io } from 'socket.io-client';
 const U = process.env.URL || 'http://127.0.0.1:8080';
+// /api/logs fails closed since the hardening pass; the suite has to identify
+// itself like anything else.
+const LOGKEY = process.env.RUMBLE_LOG_KEY || 'ci-log-key';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const once = (s, ev) => new Promise((r) => s.once(ev, r));
 let fails = 0;
@@ -209,10 +212,10 @@ check('flagged so they can be told apart', warm.every((x) => x.spectator === tru
     for (let i = 0; i < 60 && !row; i++) {
       await wait(200);
       try {
-        const list = await (await fetch(`${U}/api/logs`)).json();
+        const list = await (await fetch(`${U}/api/logs?key=${LOGKEY}`)).json();
         const mine = (list.matches || []).find((x) => (x.file || '').includes(m3.gameId));
         if (!mine) continue;
-        const log = await (await fetch(`${U}/api/logs/${encodeURIComponent(mine.file)}`)).json();
+        const log = await (await fetch(`${U}/api/logs/${encodeURIComponent(mine.file)}?key=${LOGKEY}`)).json();
         row = (log.standings || []).find((p) => p.name === bench.name) || null;
       } catch { /* not written yet */ }
     }

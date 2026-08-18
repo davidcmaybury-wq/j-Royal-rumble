@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { randomUUID, randomBytes } from 'crypto';
@@ -93,6 +94,20 @@ const SEASONS = [...new Set(LIBRARY.map((c) => c.provenance?.season).filter(Bool
 console.log(`v${VERSION} · machine ${MACHINE} · library ${LIBRARY.length} categories, seasons ${SEASONS[0]}-${SEASONS.at(-1)}`);
 
 const app = express();
+// Responses stop announcing the framework. Free, and one less thing to fingerprint.
+app.disable('x-powered-by');
+
+// The site was sending no security headers at all — no HSTS, no nosniff, no
+// frame protection, no referrer policy. helmet's defaults cover those.
+//
+// Content-Security-Policy is off on purpose, not by oversight. Every page here
+// is a single self-contained file with its inline <script> and <style>, which a
+// default CSP blocks outright — the buzzer would simply stop working. Turning it
+// on means either `unsafe-inline`, which gives most of the protection away, or
+// moving every page's script to its own file and hashing it. That is a real
+// piece of work and a separate change; doing it badly would break the one page
+// players cannot do without.
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: '12mb' }));
 
 // A retired host, kept running as a fallback, is a hazard: matches live in
@@ -1017,7 +1032,32 @@ app.delete('/api/match/:id/material/:idx', (req, res) => {
 // "bad host key" and "no such game". Hitting this twice and seeing the machine
 // id change is the tell, which is why that id has to differ per process; see
 // MACHINE above for the version of this check that could not.
-app.get('/api/health', (_req, res) => {
+// Public health is deliberately thin.
+//
+// It used to hand anybody the machine id, the on-disk log path, the library
+// size, how many matches were live and how many people were in them. None of
+// that helps a player and all of it helps somebody mapping the box.
+//
+// `version` stays public because it already is — /history prints "Running X
+// right now" on a page with no key — and hiding it here while showing it there
+// would be theatre that breaks deploy verification for nothing.
+//
+// The full body is still available two ways, which is what keeps the deploy
+// guard working: from the box itself (deploy-remote.sh curls 127.0.0.1 to ask
+// matchesInPlay before it restarts and ends people's games), and with the admin
+// key from anywhere.
+const localReq = (req) => {
+  // socket.remoteAddress only — never req.ip. If `trust proxy` is ever switched
+  // on, req.ip becomes the X-Forwarded-For value, which the client controls, and
+  // this check would hand the full body to anyone who sent the right header.
+  const ip = (req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
+  return ip === '127.0.0.1' || ip === '::1';
+};
+
+app.get('/api/health', (req, res) => {
+  if (!localReq(req) && !adminOk(req)) {
+    return res.json({ status: 'ok', version: VERSION });
+  }
   res.json({
     logs: logs.status(),
     version: VERSION, machine: MACHINE,
@@ -1109,8 +1149,19 @@ app.get('/api/match/:id/record', (req, res) => {
 // A password, not a secret. It keeps a stranger who finds the address from
 // ending a live match; it is not protecting anything valuable, and it travels
 // in a request header rather than the URL so it stays out of logs.
-const ADMIN_KEY = process.env.RUMBLE_ADMIN_KEY || 'daymay';
+// No default. There used to be one — the literal string 'daymay' — sitting in a
+// public repo, which meant /api/control was open to anyone who read the source:
+// list every live match, download every log and report, and end a game in
+// progress. It read as protected because an unauthenticated request correctly
+// returned 403. Found 2026-08-17; the external review that prompted the fix
+// missed it for exactly that reason, testing without a key and stopping there.
+//
+// Unset now means refuse, not allow. A guard whose default is open is not a
+// guard — the second fail-open default found in the same sitting.
+const ADMIN_KEY = process.env.RUMBLE_ADMIN_KEY || '';
 function adminOk(req) {
+  // An empty configured key must never match an empty supplied one.
+  if (!ADMIN_KEY) return false;
   const given = req.get('x-admin-key') || req.query.key || '';
   return given === ADMIN_KEY;
 }
@@ -1355,11 +1406,24 @@ function reapIdle() {
 }
 setInterval(reapIdle, 60 * 1000).unref?.();
 
-// The saved logs. Guarded by RUMBLE_LOG_KEY when it is set; open when it is
-// not, which is fine for a test deployment and stated plainly in /api/health.
+// The saved logs, guarded by RUMBLE_LOG_KEY. Fails closed.
+//
+// This returned true when the key was unset, on the reasoning that an unkeyed
+// deployment is a test deployment. The live site then ran for months with it
+// unset: /api/logs listed all 52 saved matches and /api/logs/<file> handed
+// anybody a complete log — in-game handles, every buzz time, every answer. This
+// project anonymizes players to P-labels in the handbook and keeps legal names
+// out of the repo on purpose, and serving the raw logs unauthenticated undid all
+// of that in one route.
 const logGuard = (req) => {
+  // The admin key opens these too. The control room downloads individual logs,
+  // and it authenticates with the admin key — it only ever worked because this
+  // guard was fail-open, so closing it without this line locks the host out of
+  // their own match records. One key is a superset of the other rather than two
+  // unrelated namespaces.
+  if (adminOk(req)) return true;
   const want = process.env.RUMBLE_LOG_KEY;
-  if (!want) return true;
+  if (!want) return false;
   return (req.get('x-log-key') || req.query.key) === want;
 };
 
@@ -2462,4 +2526,17 @@ io.on('connection', (socket) => {
   });
 });
 
-http.listen(PORT, () => console.log(`J! Royal Rumble on :${PORT}`));
+http.listen(PORT, () => {
+  console.log(`J! Royal Rumble on :${PORT}`);
+  // Say it loudly rather than failing quietly. Both of these used to default to
+  // open, and the only symptom was that nothing ever went wrong — which is how
+  // the live site served 52 match logs to the public for months.
+  if (!ADMIN_KEY) {
+    console.warn('WARNING: RUMBLE_ADMIN_KEY is not set — /control and /api/control '
+      + 'are refusing everyone, including you. Set it in the service environment.');
+  }
+  if (!process.env.RUMBLE_LOG_KEY) {
+    console.warn('WARNING: RUMBLE_LOG_KEY is not set — /api/logs is refusing '
+      + 'everyone. The saved match logs are unreachable until it is set.');
+  }
+});

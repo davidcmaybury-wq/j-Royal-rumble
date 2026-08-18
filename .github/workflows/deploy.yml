@@ -40,9 +40,21 @@ jobs:
         run: node test/overtime.mjs
       - name: A player knocked out early gets one foot on the floor
         run: node test/comeback.mjs
+      - name: Guards fail closed, and health says little
+        run: |
+          # Deliberately started WITHOUT keys, on its own port: this suite asserts
+          # what an unconfigured deployment refuses. The main server below runs
+          # with test keys, which is the opposite configuration.
+          PORT=8099 node src/server.js & sleep 8
+          SEC_URL=http://127.0.0.1:8099 node test/security.mjs
+
       - name: End-to-end match over sockets
         run: |
-          node src/server.js & sleep 10
+          # The admin and log guards fail closed since the hardening pass, so the
+          # suites that exercise /api/control and /api/logs need a key to exist.
+          # Test-only values; the box gets real ones from its service environment.
+          RUMBLE_ADMIN_KEY=ci-admin-key RUMBLE_LOG_KEY=ci-log-key \
+            node src/server.js & sleep 10
           node test/e2e.mjs
           node test/setup.mjs
           node test/buzzer.mjs

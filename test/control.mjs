@@ -5,7 +5,7 @@
 // There was no way to end it short of restarting the server by hand.
 import { io } from 'socket.io-client';
 const U = process.env.URL || 'http://127.0.0.1:8080';
-const KEY = process.env.RUMBLE_ADMIN_KEY || 'daymay';
+const KEY = process.env.RUMBLE_ADMIN_KEY || 'ci-admin-key';
 const auth = { 'x-admin-key': KEY };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const once = (s, e) => new Promise((r) => s.once(e, r));
