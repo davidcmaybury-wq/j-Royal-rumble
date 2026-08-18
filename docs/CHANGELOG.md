@@ -3,6 +3,53 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.0 — the guards fail closed
+
+Two public data leaks, both from a guard that defaulted to open. Found in an
+external review by Colin Davy against 0.94.2; verifying his findings turned up a
+third and worse one the review missed.
+
+**`/api/logs` was public.** It listed all 52 saved matches, and
+`/api/logs/<file>` served a complete log to anybody who asked — in-game handles,
+every buzz time, every answer. The guard existed and returned `true` when
+`RUMBLE_LOG_KEY` was unset, on the reasoning that an unkeyed deployment is a test
+deployment. The live site ran that way for months. This project anonymizes players
+to P-labels in the handbook and keeps legal names out of the repo precisely to
+avoid that, and one route undid all of it.
+
+**The admin key had a published default.** `ADMIN_KEY` fell back to the literal
+string `'daymay'`, committed to a public repo, so `/api/control?key=daymay`
+returned 200 on the live site: list every match, download every log and report,
+and end a game in progress. It read as protected because an unauthenticated
+request correctly returned 403 — which is where the review stopped, and why this
+one is worth remembering as the shape of a near miss.
+
+Both now fail closed with no default, and the server warns loudly at boot when
+either key is missing rather than failing silently. **`RUMBLE_ADMIN_KEY` and
+`RUMBLE_LOG_KEY` are now required** in the service environment.
+
+The admin key also satisfies the log guard. The control room downloads individual
+logs and authenticates with the admin key — a dependency that was invisible while
+the guard was open, and would otherwise have locked the host out of their own
+match records.
+
+**`/api/health` is thin in public**: `status` and `version` only. The full body
+still goes to 127.0.0.1, because `deploy-remote.sh` reads `matchesInPlay` there
+before restarting and ending people's games. The local check reads
+`socket.remoteAddress`, never `req.ip`, so it cannot be spoofed with
+`X-Forwarded-For` if `trust proxy` is ever switched on. Version stays public
+because `/history` prints it on a keyless page anyway.
+
+Also: `helmet` for the headers the site was sending none of — HSTS, nosniff,
+frameguard, referrer policy — and `x-powered-by` disabled. **CSP is off on
+purpose**: every page is one self-contained file with inline script, and a default
+CSP stops the buzzer working. Enabling it properly means extracting and hashing
+every page's script, which is its own change.
+
+`test/security.mjs` runs against a deliberately keyless server on its own port and
+asserts the refusals, including that `key=daymay` is dead. It is a separate CI step
+because the main test server runs *with* keys.
+
 ## 0.94.2 — the irreproducible row was `arrivalGrace`
 
 The one backfire row that would not reproduce across the two chats is solved, and
