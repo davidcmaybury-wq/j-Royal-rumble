@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.1 — 0.95.1 — the quick-setup ruleset dropdown could only read Custom
+
 ## 0.95.0 — the guards fail closed
 
 Two public data leaks, both from a guard that defaulted to open. Found in an

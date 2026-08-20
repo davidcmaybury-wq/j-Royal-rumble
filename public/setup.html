@@ -378,7 +378,15 @@ function presetOf(kind) {
   const s = S.settings || {};
   if (kind === 'rules') {
     for (const [k, p] of Object.entries(RULESETS)) {
-      if (Object.entries(p.set).every(([id, on]) => !!s[id] === on)) return k;
+      // Compare by the type the preset declares, not by truthiness. The rule
+      // flags are booleans, but `targetBackfire` is a share of the pot, and
+      // `!!s[id] === 0.5` is false for every possible setting — so once 0.94.0
+      // put backfire in these tables, no ruleset could ever match and the
+      // dropdown read Custom forever. It still applied the preset; it just
+      // could not say so, which looked like a dropdown that refused to change.
+      if (Object.entries(p.set).every(([id, v]) => (typeof v === 'boolean'
+        ? !!s[id] === v
+        : (s[id] ?? null) === v))) return k;
     }
     return '';
   }

@@ -348,6 +348,39 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
   const notASetting = [...listed].filter((id) => !known.has(id));
   check('and every rule the presets name is a real engine setting',
     notASetting.length === 0, notASetting.join(', ') || 'all known');
+
+  // --- a preset must be able to recognise its own settings ----------------
+  //
+  // presetOf() is what the dropdown reads back, and it is derived rather than
+  // remembered, so applying a preset and then asking which preset is active has
+  // to give the same answer. It stopped doing that the moment 0.94.0 put
+  // `targetBackfire` in these tables: the rules branch compared every value
+  // with `!!s[id] === on`, which is false for 0 and 0.5 whatever the setting,
+  // so no rule set could ever match. The preset still applied — the dropdown
+  // just snapped back to Custom and looked like it refused to change.
+  //
+  // Run the page's own tables and comparison rather than a copy, so a value of
+  // a new type added to a preset trips this instead of shipping.
+  const presetSrc = src.slice(src.indexOf('const STANDARD_RULES'),
+    src.indexOf('\n}', src.indexOf('function presetOf')) + 2);
+  const S = { settings: {} };
+  const { RULESETS, SPEEDS, presetOf } =
+    new Function('S', presetSrc + '\nreturn { RULESETS, SPEEDS, presetOf };')(S);
+
+  for (const [kind, table] of [['rules', RULESETS], ['speed', SPEEDS]]) {
+    for (const [key, p] of Object.entries(table)) {
+      S.settings = { ...p.set };
+      const got = presetOf(kind);
+      check(`setup.html: applying ${p.label} reads back as ${p.label}, not Custom`,
+        got === key, got === '' ? 'Custom' : got);
+    }
+  }
+
+  // And the readout stays honest in the other direction: change one value the
+  // preset pins and it must stop claiming to be that preset.
+  S.settings = { ...RULESETS.arcade.set, targetBackfire: 1 };
+  check('setup.html: a changed setting reads back as Custom',
+    presetOf('rules') === '', presetOf('rules'));
 }
 
 // --- nothing transient may sit on the host's controls ----------------------
