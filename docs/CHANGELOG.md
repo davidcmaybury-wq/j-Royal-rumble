@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.2 — 0.95.2 — the estimator had two implementations, and the P-labels were not anonymous
+
 ## 0.95.1 — 0.95.1 — the quick-setup ruleset dropdown could only read Custom
 
 ## 0.95.0 — the guards fail closed
@@ -237,7 +239,7 @@ Arrivals were clamped to the current ceiling. That clamp was written for flat
 stakes; the stake then learned to ride the overtime multiplier and the ceiling
 did not, and the two move in opposite directions through overtime, so they
 crossed — a fresh entrant stopped getting the full multiple from about x4, a
-comeback from about x8. The Randall fix, undone in the phase it was written for.
+comeback from about x8. The P26 fix, undone in the phase it was written for.
 
 The repair does **not** go through the roof. Scaling the ceiling floor by the
 multiplier was measured and is worse than the defect: lifting the roof hands the
@@ -326,7 +328,7 @@ matches.
 
 **41 of those 89 happened during overtime**, and a flat return stake there bought
 one to six clues of life — half a stake against quadrupled values is one pot
-payment from going straight back out. This is the Randall pattern that
+payment from going straight back out. This is the P26 pattern that
 `scaleEntryStake` already fixed for entrants and revivals; the comeback was the
 one re-entry path left flat. It now rides the same switch, and is clamped to the
 ceiling like `admit()` — the cap is applied earlier in `resolveClue` than the
@@ -542,7 +544,7 @@ sequence and checks the match is still playable afterwards.
 **And the console now shows why a slower time is winning the race.** A player on
 the way back from a near-elimination is ranked at a fraction of the time they
 pressed, so first place can legitimately show a bigger number — reported from
-the same match as "Zach actually was fastest but Dalton was highlighted as the
+the same match as "P11 actually was fastest but P12 was highlighted as the
 first person in". The chip shows both numbers, which the comment above
 `rankRace` had claimed for a while without it being true.
 
@@ -672,7 +674,7 @@ music stops when the buzzers arm.
 
 A new entrant's stake now rides the overtime multiplier, and so does a revival.
 A fixed 3,000 walked into a ring where single clues paid 2,000: in a real match
-Randall entered at clue 150 into x2, lasted six clues without winning a race,
+P26 entered at clue 150 into x2, lasted six clues without winning a race,
 was revived at 1,500 into x4 where the top row paid 2,000, and was gone after
 one. Measured over 3,000 matches, entrants at x2 or above who died within three
 clues fell from 58% to 9%.

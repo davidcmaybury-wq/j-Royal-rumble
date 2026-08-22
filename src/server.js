@@ -352,14 +352,19 @@ class Match {
         draw: [...this.game.players.values()]
           .sort((a, b) => a.drawNumber - b.drawNumber)
           .map((p) => ({ draw: p.drawNumber, token: p.id, name: p.name })),
-        estimate: {
-          entryInterval: this.settings.entryInterval,
-          secondsPerClue: this.settings.secondsPerClue,
-          expectedClues: expectedClues(this.roster.size, this.settings.entryInterval),
-          expectedMinutes: Math.round(
-            expectedClues(this.roster.size, this.settings.entryInterval)
-            * this.settings.secondsPerClue / 60),
-        },
+        // Settings are passed so the recorded prediction is the same one the
+        // setup page showed the host. Without them the revival multiplier is
+        // skipped, and `estimateError` grades a number nobody ever saw.
+        estimate: (() => {
+          const clues = expectedClues(
+            this.roster.size, this.settings.entryInterval, this.settings);
+          return {
+            entryInterval: this.settings.entryInterval,
+            secondsPerClue: this.settings.secondsPerClue,
+            expectedClues: clues,
+            expectedMinutes: Math.round(clues * this.settings.secondsPerClue / 60),
+          };
+        })(),
         clues: [],
         events: [],
       };
@@ -608,7 +613,7 @@ class Match {
           ...(this.arcade() ? {} : { ms: b.ms }),
           // No `edge` field any more. 0.85.1 sent the ranked time beside the
           // real one so the host could see why a slower press held the clock —
-          // the answer to "Zach was fastest but Dalton was highlighted as first
+          // the answer to "P11 was fastest but P12 was highlighted as first
           // in". buzzEdge only ever differs from 1 when the comeback is on,
           // which is exactly when this view stops carrying times at all, so it
           // could never fire again. Showing the order beats explaining the
@@ -794,6 +799,14 @@ class Match {
         isBot: !!this.roster.get(p.id)?.isBot,
         level: this.bots.get(p.id)?.level || null,
         revivals: p.revivals || 0,
+        // Recorded alongside revivals because otherwise the comeback leaves no
+        // trace in a saved match at all. The engine tracks it per player, but it
+        // never reached the record, so the mechanic the whole fairness programme
+        // rests on could not be measured from live play — and a lives count
+        // derived from `revivals` alone silently undercounts whenever it fired.
+        // Found while checking the Aug 22 logs, where the arithmetic happened to
+        // balance without it and so looked complete.
+        comebackUsed: !!p.comebackUsed,
         avatar: this.roster.get(p.id)?.avatar || null,
         // Only the genuine last-one-standing is crowned. A match ended early
         // by the host has no winner, however many are still in the ring.

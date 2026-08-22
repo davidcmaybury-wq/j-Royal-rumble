@@ -4,7 +4,9 @@
 import { io } from 'socket.io-client';
 
 const U = process.env.URL || 'http://127.0.0.1:8080';
-const NAMES = ['Dave', 'Nam', 'Wayne', 'Zach', 'Ward', 'Weiss'];
+// Deliberately invented names. Two of the originals collided with real
+// players' handles, which is how a fixture becomes a privacy question.
+const NAMES = ['Ada', 'Nam', 'Wayne', 'Bo', 'Ward', 'Weiss'];
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const once = (s, ev) => new Promise((r) => s.once(ev, r));
 

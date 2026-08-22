@@ -239,7 +239,7 @@ multiplier and the ceiling floor did not. The two move in opposite directions
 through overtime, so they cross. At the defaults a fresh entrant stops getting
 the full multiple from about ×4 (12,000 stake against a ~9,060 roof) and a
 comeback from about ×8. The 3,000 floor is not what binds — the decayed ceiling
-is. **So the Randall fix is partly undone in exactly the phase it was written
+is. **So the P26 fix is partly undone in exactly the phase it was written
 for**, and `get ceiling`'s own comment now describes an intent it no longer
 meets. Found by David, 0.89.0.
 
@@ -455,7 +455,7 @@ the edge would tell the room nothing it could act on.
 
 In Arcade the public payloads carry `place` and **no `ms` at all**: with the
 edge applied, order is not speed, and a published number that contradicts the
-highlight is what produced the "Zach was fastest but Dalton was highlighted"
+highlight is what produced the "P11 was fastest but P12 was highlighted"
 report. A player's own time still reaches them through `myBuzz`. Omit rather
 than hide — `test/arcade.mjs` checks the field is absent, the same discipline as
 the answer never reaching the watch screen.
@@ -524,7 +524,7 @@ races; the other five entrants split 23 over 48 minutes. Race-win percentage is
 monotone against median reaction time across all 18 players with 20+ contested
 buzzes. Upsets happen — one win from 5th of 7, one from 3rd of 4 — so it is not
 deterministic, but a bottom-half buzzer is around 1-in-4 overall and close to
-zero when a Luigi-class buzzer is in the room.
+zero when a P1-class buzzer is in the room.
 
 **Addressed in 0.84.0 — "one foot on the floor".** The original note follows,
 because the reasoning is what picked the lever.
@@ -581,7 +581,7 @@ field.** Report it alongside back-half and skill%.
 Candidate levers, from the analysis, in the order they look worth trying:
 
 1. ~~Scale entry and revival stakes with the overtime multiplier.~~ **Done in
-   0.78** — this was the Randall case, and it moved death-within-three-clues
+   0.78** — this was the P26 case, and it moved death-within-three-clues
    from 58% to 9%.
 2. ~~A buzz-timing handicap priced in score.~~ **Done in 0.84.0**, inverted: the
    discount goes to whoever never got going rather than the leader giving up
@@ -738,12 +738,44 @@ real match. Worth checking whether the `B` key is discoverable.
 open: at ×8 a missed clue costs the value twice, which can eliminate a player
 from 8,000 points in one press.
 
+## The analysis chat's folder is a required read
+
+`~/Developer/j-royal-rumble-data/` is the analysis chat's output, kept beside
+this clone. **Read `README-FOR-DEV-CHAT.md` there before starting a build or
+planning a release** — David made this standing on 2026-08-17. It carries open
+questions, charts owed to the handbook, and deployment instructions he has
+already decided, none of which are discoverable from this repo.
+
+Two of its rules are easy to get wrong in opposite directions: the analysis
+chat's graphs go into `docs/handbook.html` **by default, not on request**, and
+`charts/tv-vs-rumble.html` is permanently excluded from every outward-facing
+document (see the broadcast rule above).
+
+Note the two naming systems, which must not be mixed. `docs/handbook.html`
+anonymizes to P-labels; `docs/analysis/` and the analysis folder use in-game
+handles. **There is no mapping between them on disk and there should not be** —
+the key lives in David's Claude project. A figure carrying handles cannot be
+merged into the handbook as-is: per-player figures appearing under both schemes
+let the two be cross-referenced, which is the thing the P-labels prevent.
+
 ## Live data
 
-Two human matches recorded. Pace 19.3s → 16.8s median per clue (the model
-assumes 17.5). The length estimator is 2-for-2: predicted 100 clues/29 min
-against 84/31, and 75/22 against 69/21. Human buzz median ~150ms, with 49%
-under 150ms.
+Thirteen human matches recorded, the last two (GMRF and SLDV, Aug 22) the first
+on 0.95.x. Pace has settled well under the model's 17.5s per clue — 19.3s on the
+first night, 12.9–16.6 once rooms learned the game, 18.7–18.9 in the Aug 22 pair.
+Human buzz median ~150ms, with 49% under it.
+
+**The estimator is no longer 2-for-2** — that line stood here for eleven matches
+after it stopped being true. It is 7 of 11 on the older set, and both Aug 22
+matches ran roughly double: 52 predicted against 101 actual, 32 against 56. The
+cause is known and structural: **the estimator budgets entries for the roster,
+not for lives.** With `revival` on, `revivalLimit` is 1, so the ceiling is
+`roster × (1 + revivalLimit)` — and in both Aug 22 matches every one of the five
+players used their revival, hitting that ceiling exactly at ten lives each. Read
+it from the settings rather than fitting a multiplier; an earlier draft proposed
+`roster × 1.7`, which was an average of a miscount. The queue then empties early
+in a small room, overtime opens (clue 33 of 101, clue 13 of 56), and the
+slow-drain phase the tail does not model runs for the rest of the match.
 
 `data/box-scores.json` (2,784 player-games) and `data/jometry-box.csv` (3,339
 with per-round splits) back the bot model. j-ometry blocks bots, so David

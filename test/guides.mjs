@@ -189,5 +189,44 @@ for (const needle of ['pity powerup', 'Pity powerup', 'pity-study']) {
 check('and no longer claims the stake is identical for everybody',
   !/identical\s+starting\s+stake/.test(hb.replace(/\s+/g, ' ')));
 
+// --- docs/analysis carries P-labels, never in-game handles -----------------
+//
+// The handbook anonymizes to P-labels, and until 2026-08-22 docs/analysis used
+// in-game handles for the same players. That defeats the anonymization from
+// inside the same public repository: `P3: 123 ms, 47.7% back-half wins` in the
+// handbook and one CSV row with 122.7 and 47.7 identify each other exactly, and
+// eight of the thirteen labels fell out that way. The README went further and
+// simply printed the key.
+//
+// Asserted as a shape rather than a list of forbidden names, because a test
+// naming the handles would put them straight back into the repo.
+{
+  const bots = new Set(['Bront', 'Dell', 'Juno', 'Kip', 'Marlo', 'Tibbs']);
+  const ok = (v) => /^P\d+$/.test(v) || bots.has(v) || v === 'ended early';
+  const read = (f) => readFileSync(new URL('../docs/analysis/' + f, import.meta.url), 'utf8');
+
+  const stats = read('player-stats.csv').trim().split('\n').slice(1)
+    .map((l) => l.split(',')[0]).filter(Boolean);
+  const bad1 = stats.filter((v) => !ok(v));
+  check('player-stats.csv names only P-labels and robots',
+    bad1.length === 0, bad1.join(', ') || `${stats.length} rows`);
+
+  const winners = read('match-summary.csv').trim().split('\n').slice(1)
+    .map((l) => l.split(',')[8]).filter(Boolean);
+  const bad2 = winners.filter((v) => !ok(v));
+  check('match-summary.csv names only P-labels and robots',
+    bad2.length === 0, bad2.join(', ') || `${winners.length} matches`);
+
+  const elims = JSON.parse(read('elims.json'));
+  const bad3 = [...new Set(elims.map((e) => e.player))].filter((v) => !ok(v));
+  check('elims.json names only P-labels and robots',
+    bad3.length === 0, bad3.join(', ') || `${elims.length} eliminations`);
+
+  // And the key itself must never come back.
+  const rm = read('README.md');
+  check('the analysis README does not print the anonymization key',
+    !/P\d+\s*=\s*[A-Za-z]/.test(rm));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

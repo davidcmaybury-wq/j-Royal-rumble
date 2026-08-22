@@ -3,7 +3,7 @@
 // With the comeback on, buzz order is ms x buzzEdge, so a player on the way back
 // from a near-elimination can hold first place with a slower press. Publishing
 // the times then contradicts the highlight, which is exactly how it was reported
-// from a live match: "Zach actually was fastest but Dalton was highlighted as
+// from a live match: "P11 actually was fastest but P12 was highlighted as
 // the first person in."
 //
 // So in Arcade the public surfaces carry places and no times at all. A player

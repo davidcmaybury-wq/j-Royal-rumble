@@ -1,6 +1,6 @@
 // Entering during overtime.
 //
-// A real match: Randall came in at clue 150 with the standard 3,000 into x2
+// A real match: P26 came in at clue 150 with the standard 3,000 into x2
 // overtime, lasted six clues without winning a race, was revived at 1,500 into
 // x4 where the top row paid 2,000, and was gone after one. He never had a hand
 // to play. Does scaling the stake to the multiplier give one back?

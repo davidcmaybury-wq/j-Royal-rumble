@@ -1,3 +1,9 @@
+> **Naming:** every player in this folder is a handbook P-label (P1, P2, …).
+> In-game handles were used here until 2026-08-22 and were removed: this repository
+> is public, and the handbook's own anonymization is defeated the moment the same
+> per-player numbers appear under both schemes. The handle ↔ P-label key lives with
+> David and is deliberately not in this repository. Robots keep their names.
+
 # For the dev chat — handbook update + competitive-balance analysis (Aug 16)
 
 `handbook.html` in this package has a rewritten Part IV ("Reality check") built from all nine
@@ -10,13 +16,14 @@ are hand-typed).
 ## `elims.json` — the 89 eliminations, pre-parsed
 
 Added 2026-08-17 with the v4 notes. Every elimination across the eleven recorded
-matches, one record each: `match` (room code), `player` (in-game handle), `clue`,
+matches, one record each: `match` (room code), `player` (handbook P-label), `clue`,
 `wins` (race wins since entry), `tenure` (clues in the ring), `ot` (was overtime
 open), `life` (first or second). It is what `tools/trigger-study.mjs` reads, and
 it exists so the wins-vs-tenure question never has to be re-derived from raw logs.
 
-Same rule as the CSVs: **in-game handles only**, and the same 34 handles already
-appearing in `player-stats.csv` and this key. See the anonymization note below.
+Same rule as the CSVs: **handbook P-labels only, never in-game handles.** Robots
+keep their own names (Bront, Dell, Juno, Kip, Marlo, Tibbs) because they are
+software, not people.
 
 ## What the nine matches say
 
@@ -34,19 +41,19 @@ The data backs the concern:
 
 - Winner's within-field speed rank across the 8 decided matches: fastest won 4, second-fastest
   won 2, everyone slower won 2.
-- Luigi / rowan / matt entered 6 of the 8 decided matches and won 5 (rowan 3-for-4 overall).
-- QPAL: rowan+Luigi took 125 of 165 races; +Jeop = 86%. The other five entrants split 23 races
-  over 48 minutes. Nick: eliminated at clue 10, revived, out at 66, two races won all night.
+- P1 / P2 / P3 entered 6 of the 8 decided matches and won 5 (P2 3-for-4 overall).
+- QPAL: P2+P1 took 125 of 165 races; +P4 = 86%. The other five entrants split 23 races
+  over 48 minutes. P9: eliminated at clue 10, revived, out at 66, two races won all night.
 - Race win % vs median reaction is monotone across all 18 players with 20+ contested buzzes
   (see `analysis/player-stats.csv` and handbook Figure 13).
 
-Upsets exist (Colin won TQUV from 5th of 7; CASCADIA won FTGL from 3rd of 4), so the format
+Upsets exist (P8 won TQUV from 5th of 7; P7 won FTGL from 3rd of 4), so the format
 isn't deterministic — but a bottom-half buzzer's chance is ~1-in-4 overall and ~zero when a
-Luigi-class buzzer is present.
+P1-class buzzer is present.
 
 ## Candidate levers — measure in the harness first, per house rules
 
-1. **Scale entry and revival stakes with the overtime multiplier.** Also fixes the Randall
+1. **Scale entry and revival stakes with the overtime multiplier.** Also fixes the P26
    case from FEEDBACK.md (fed into ×2 OT with a flat stake, dead in 6 clues; revived at half
    stake into ×4, dead in 1). Cheapest win; do this one regardless.
 2. **Buzz-timing handicap priced in score** — the leader gives up milliseconds (the lockout
@@ -63,57 +70,30 @@ an elite in the field. Fairness-by-draw (back-half win rate) is already measured
 second, orthogonal axis, fairness-by-skill.
 
 
-## Anonymization key (handbook P-labels -> in-game handles)
+## On the J!ometry population (aggregate only)
 
-The handbook anonymizes players; the CSVs in `analysis/` keep the in-game handles. Mapping:
-P1 = Luigi · P2 = rowan · P3 = matt · P4 = Jeop · P5 = BriggySmalls · P6 = Taotao ·
-P7 = CASCADIA · P8 = Colin · P9 = Nick · P10 = rae · P11 = Zach · P12 = Dalton · P13 = Vee.
-The "final latecomer" in the QPAL paragraph is Randall.
+The robot model is calibrated on the J!ometry dataset — 3,339 player-games across
+1,772 contestants. That is provenance for a model, and nobody in it is identifiable
+as one of our players.
 
-**In-game handles only, deliberately.** Several of these players are identifiable broadcast
-contestants, and their legal names, together with a per-player analysis of how well they did,
-are not something this repository should publish — it is public, and git history is permanent.
-The identities live with David. Keep this key out of anything player-facing regardless.
-
-
-## Further study: some of these players are in our own J!ometry data
-
-Several of the strongest players here are broadcast contestants whose televised box stats sit in
-`data/jometry-box.csv`. Their identities are deliberately not recorded in this repository — see
-the note on anonymization below — but the comparison is worth keeping, because it is an external
-check nothing else in this project provides:
-
-1. **Bot-model validation against known individuals.** The two fastest players profile as
-   Superchamp/Elite on the robot standards (attempt 72–96%, accuracy 83–95%), and their rumble
-   race-win rates (~50%) sit right at the top of the real cross-contestant range (46.3–56.3%).
-   The buzzer dynamics are reproducing broadcast-grade numbers for broadcast-grade players.
-2. **The shark analysis has a calibrated ceiling.** QPAL contained two broadcast-verified elites
-   racing each other; that they still took only ~50% of races each — mostly trading with one
-   another — while the rest of the field took 14% is the clearest picture yet of what a
-   P1-class player in the room does to everyone else's chances.
-3. **Handicap experiments can be seeded with real profiles.** When the harness runs the balance
-   levers, robots can be set to these measured profiles rather than generic standards, so "does
-   a handicap give a normie a chance against a P1" can be answered literally.
-
-One cautionary sample worth carrying: a broadcast superchamp in this set has a fast median
-(139ms) and the lowest race-win rate in the dataset (23.8% on 21 contested buzzes). In a stacked
-field, small timing gaps at the top compound brutally — the same dynamic the casual players face
-everywhere. The Aug 12 matches were a broadcast-caliber field nearly top to bottom, which makes
-the two upsets weaker evidence than they looked: both were sharks beating sharks, or a uniformly
-slow field. Within-field speed rank still ruled every mixed field.
+**Anything correlating an individual player's broadcast record with their Rumble
+results is out**, here and everywhere else, by David's permanent rule of
+2026-08-17. A section doing exactly that used to sit here and has been removed;
+`charts/tv-vs-rumble.html` is excluded from the handbook for the same reason, and
+`test/guides.mjs` asserts the handbook carries none of its phrases.
 
 ## Handbook v3 (in this package)
 
 `handbook.html` now covers all eleven matches: estimator diagnosis (accurate except when
 returns/latecomers fire), the host-relative clock finding (Fig 13), the balance-lever
 simulation results (Fig 16), and the shipped gated comeback with its first-night returns —
-including the wrong-stake-in-overtime bug. New anonymization entries: P11 = Zach,
-P12 = Dalton, P13 = Vee.
+including the wrong-stake-in-overtime bug. Labels P11, P12 and P13 were added at
+this point; the mapping behind them is not recorded here.
 
 ## Also in this package
 
 - `analysis/match-summary.csv` — per-match: predicted vs actual, pace, winner + speed rank.
 - `analysis/player-stats.csv` — per-player aggregates across all nine matches.
 - The raw logs are in the previously delivered `rumble-feedback-2026-08-16.tar.gz` (with
-  FEEDBACK.md covering the UI notes, the Randall write-up, the entrance-music report, and the
+  FEEDBACK.md covering the UI notes, the P26 write-up, the entrance-music report, and the
   CI #92 e2e-guard flake).

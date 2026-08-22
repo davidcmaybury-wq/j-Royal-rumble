@@ -5,7 +5,7 @@
 // Imported from the engine itself so the setup page uses the same measured
 // grid the server does. The path is relative, which resolves both in the
 // browser (public/ and src/ are siblings) and under node in the tests.
-import { fairnessWarning, predictMatch } from '../src/engine.js';
+import { fairnessWarning, predictMatch, expectedClues } from '../src/engine.js';
 
 export const IV_MIN = 2;
 // Nobody sits out more than eight clues waiting to play.
@@ -33,17 +33,16 @@ export const IV_MAX = 10;
 // A match is the queue emptying plus an endgame. Small rosters are almost all
 // endgame — three players have no queue at all, so entry pacing tells you
 // nothing and length comes down to how fast they bleed each other out.
+// Kept as documentation of the floor the engine applies; `cluesFor` delegates
+// to `expectedClues`, which carries the value itself.
 export const ENDGAME_FLOOR = 22;
 
+// Delegates to the engine so the page and the record cannot disagree about how
+// long a match will run. They did for several releases: this function had the
+// revival multiplier and the engine's did not, so the host saw one number and
+// the log stored another. `test/estimate.mjs` asserts they still agree.
 export function cluesFor(playerCount, interval, settings = {}) {
-  const entry = Math.max(0, playerCount - 3) * interval;
-  const base = entry + Math.max(ENDGAME_FLOOR, entry * 0.67);
-  // Revival refills a queue the rest of the model assumes drains once. The
-  // multiplier is fitted to the simulator, not derived — see tools/sim-mechanics.
-  const rev = settings.revival
-    ? 1 + (settings.revivalLimit ?? 1) * (settings.revivalFraction ?? 0.5) * 0.96
-    : 1;
-  return Math.round(base * rev);
+  return expectedClues(playerCount, interval, settings);
 }
 
 export function estimate(playerCount, settings) {

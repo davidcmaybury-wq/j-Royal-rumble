@@ -62,7 +62,7 @@ check('a raised clue can still be banked in full', banked,
 
 // --- walking into overtime ------------------------------------------------
 //
-// A real match: Randall entered at clue 150 with the standard 3,000 into x2,
+// A real match: P26 entered at clue 150 with the standard 3,000 into x2,
 // lasted six clues without winning a race, was revived at 1,500 into x4 where
 // the top row paid 2,000, and was gone after one. He never had a hand to play.
 //
@@ -88,7 +88,7 @@ check('a raised clue can still be banked in full', banked,
   }
 
   // A revival is half of the scaled stake, not half of the flat one: that was
-  // the second half of what happened to Randall.
+  // the second half of what happened to P26.
   const g4 = mkq({ revivalFraction: 0.5 });
   g4.overtimeSteps = 2;
   const r = g4.queued()[0];

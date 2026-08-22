@@ -4,9 +4,9 @@ import { avatar, lookFor, distinctLook, looksAlike, wrestler,
 let fails = 0;
 const check = (l, ok, d = '') => { console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}${d ? '  — ' + d : ''}`); if (!ok) fails++; };
 
-const a = lookFor('Marko'), b = lookFor('Marko');
+const a = lookFor('Wrenley'), b = lookFor('Wrenley');
 check('a look is stable for the same player', JSON.stringify(a) === JSON.stringify(b));
-check('and different players differ', JSON.stringify(lookFor('Colin')) !== JSON.stringify(a));
+check('and different players differ', JSON.stringify(lookFor('Fitch')) !== JSON.stringify(a));
 
 // Thirty players in a room must all be tellable apart.
 const taken = [];
@@ -22,7 +22,7 @@ check('across a real spread of styles',
   && new Set(taken.map((t) => t.colour)).size >= 6,
   `${new Set(taken.map((t) => t.hair)).size} hairstyles, ${new Set(taken.map((t) => t.colour)).size} colours`);
 
-const svg = avatar(lookFor('Marko'), 24);
+const svg = avatar(lookFor('Wrenley'), 24);
 check('the avatar is an svg at the size asked for',
   svg.startsWith('<svg') && svg.includes('width="24"'));
 check('and every style draws something',

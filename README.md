@@ -867,7 +867,7 @@ also matters less with stables on — at twenty players the three strongest win
 
 A new entrant's stake is multiplied by the overtime level they arrive into, and
 so is a revival. A fixed 3,000 walked into a ring where single clues were worth
-2,000: in a real match Randall entered at clue 150 into x2, lasted six clues
+2,000: in a real match P26 entered at clue 150 into x2, lasted six clues
 without winning a race, was revived at 1,500 into x4 where the top row paid
 2,000, and was gone after one. He never had a hand to play.
 
@@ -945,7 +945,7 @@ bias came from.
 *current* ceiling, which was written when stakes were flat. Once the stake began
 riding the overtime multiplier the two moved in opposite directions and crossed,
 so a fresh entrant stopped getting the full multiple from about ×4 and a comeback
-from about ×8 — the Randall fix, undone in the phase it was written for. An
+from about ×8 — the P26 fix, undone in the phase it was written for. An
 arrival now lands capped by the roof **as it stood when overtime opened**, and is
 not clipped down to the falling roof until its score first touches it.
 `arrivalGrace`, on by default; `admit()`, revival and the comeback all land

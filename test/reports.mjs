@@ -14,7 +14,7 @@ const post = (body) => fetch(`${U}/api/report`, { method: 'POST',
   .then((r) => r.json());
 
 const r = await post({ kind: 'bug', text: 'The board went blue between clues',
-  context: { gameId: 'TEST', screen: 'buzzer', name: 'Dave', clue: 12, version: '9.9.9' } });
+  context: { gameId: 'TEST', screen: 'buzzer', name: 'Ada', clue: 12, version: '9.9.9' } });
 check('anybody can file one, with no key', r.ok === true, r.file);
 
 const empty = await post({ kind: 'bug', text: '   ' });
@@ -31,7 +31,7 @@ const ctl = await (await fetch(`${U}/api/control`, { headers: auth })).json();
 const mine = (ctl.reports || []).find((x) => x.gameId === 'TEST');
 check('it reaches the control room', !!mine, mine && mine.kind);
 check('carrying the context nobody had to type',
-  mine && mine.screen === 'buzzer' && mine.clue === 12 && mine.name === 'Dave',
+  mine && mine.screen === 'buzzer' && mine.clue === 12 && mine.name === 'Ada',
   mine && `${mine.screen} clue ${mine.clue} ${mine.name}`);
 const long = (ctl.reports || []).find((x) => x.text.startsWith('xxx'));
 check('and the long one was trimmed', long && long.text.length <= 2000,

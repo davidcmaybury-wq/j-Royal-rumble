@@ -159,10 +159,15 @@ console.log('the human it is measured against is equally superhuman.');
 // straight out of the career lines, and they point the same way as the
 // original model's own data:
 //
+// Named champions are deliberately not listed. Some of the people in this
+// dataset also play here, and a per-player read of a player's televised record
+// is internal-only by David's permanent rule of 2026-08-17. The aggregate is
+// the part that matters and the part that is safe to publish.
+//
 //   wins   BUZ%   correct%
-//     12    67%      91%     Caleb Groen
-//      5    57%      89%     Luigi de Guzman
-//      2    56%      90%     Matthew Riggle
+//     12    67%      91%
+//      5    57%      89%
+//      2    56%      90%
 //      1    47-55%   86-92%  three one-day champions
 //
 // Accuracy is flat. Everything that separates a twelve-day champion from a

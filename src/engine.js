@@ -128,7 +128,7 @@ export const DEFAULT_SETTINGS = {
   // flat stakes; the stake then learned to ride the overtime multiplier and the
   // ceiling did not, and the two move in opposite directions through overtime,
   // so they cross. At the defaults a fresh entrant stopped getting the full
-  // multiple from about x4 and a comeback from about x8 — the Randall fix,
+  // multiple from about x4 and a comeback from about x8 — the P26 fix,
   // undone in exactly the phase it was written for.
   //
   // The repair does NOT go through the roof. Raising the ceiling floor by the
@@ -436,9 +436,29 @@ export function fairnessWarning(playerCount, interval) {
 }
 
 
-export function expectedClues(playerCount, interval) {
+// Settings are optional so every existing caller keeps its behavior: with none
+// passed, `revival` is undefined and the multiplier is 1.
+//
+// The revival term used to live only in public/estimate.js, and the two
+// estimators drifted apart. The setup page ran the revival-aware one, so that is
+// the number the host was shown; server.js recorded this one, which had no
+// revival term at all. Every match record's `estimateError` was therefore
+// grading a function nobody ever saw — and on the Aug 22 pair the recorded
+// prediction was 52 and 32 against a host-facing 89 and 55, for actuals of 101
+// and 56. Judged against what the host was shown, one of those two was off by a
+// single clue.
+//
+// One function now, in the engine, because a prediction about how a match plays
+// is a rule, not a page. estimate.js delegates here.
+export function expectedClues(playerCount, interval, settings = {}) {
   const entry = Math.max(0, playerCount - 3) * interval;
-  return Math.round(entry + Math.max(22, entry * 0.67));
+  const base = entry + Math.max(22, entry * 0.67);
+  // Revival refills a queue the rest of the model assumes drains once. The
+  // multiplier is fitted to the simulator, not derived — see tools/sim-mechanics.
+  const rev = settings.revival
+    ? 1 + (settings.revivalLimit ?? 1) * (settings.revivalFraction ?? 0.5) * 0.96
+    : 1;
+  return Math.round(base * rev);
 }
 
 // A ceiling that decays from its opening value down to the floor across the
@@ -464,7 +484,7 @@ export function expectedClues(playerCount, interval) {
 // only thing left that ends the match.
 export function autoCeilingDecay(ceiling, floor, playerCount, interval, settings = {}) {
   if (settings.overtime !== false) return 0;
-  const clues = expectedClues(playerCount, interval);
+  const clues = expectedClues(playerCount, interval, settings);
   if (clues <= 0 || ceiling <= floor) return 0;
   return -Math.max(5, Math.round((ceiling - floor) / clues / 5) * 5);
 }
@@ -1253,7 +1273,7 @@ export class RumbleGame {
         // Flat, it did not. 41 of the 89 recorded eliminations happened during
         // overtime, and a flat 1,500 walking into x4 values is one pot payment
         // from going straight back out — measured at 1 to 6 clues of life. This
-        // is the Randall pattern that `scaleEntryStake` already fixed for
+        // is the P26 pattern that `scaleEntryStake` already fixed for
         // entrants and revivals; the comeback was the one re-entry left flat.
         //
         // Measured over the trigger sweep, gate at wins<3 and boost 70%/40:
@@ -1403,6 +1423,12 @@ export class RumbleGame {
       eliminatedAtClue: null, placement: null,
       pins: 0, correct: 0, missed: 0,
       topRope: false, topRopeAt: null, target: null, capExempt: false,
+      // Kept in step with the drawn-player shape above. These four had drifted:
+      // a late joiner got an object missing them entirely. Nothing broke, because
+      // undefined is falsy everywhere they are read — but the two shapes being
+      // different is how `p.comebackUsed === false` starts meaning one thing for
+      // a drawn player and another for somebody who joined late.
+      stable: null, comebackUsed: false, comebackUntil: null, bankedLastClue: false,
       revivals: 0, bountyPlaced: 0,
     };
     this.players.set(id, p);
@@ -1430,7 +1456,7 @@ export class RumbleGame {
     // The stake rides the overtime multiplier.
     //
     // A fixed 3,000 walked into a ring where clues were worth 2,000 a piece.
-    // A real match: Randall entered at clue 150 into x2, lasted six clues
+    // A real match: P26 entered at clue 150 into x2, lasted six clues
     // without winning a race, was revived at 1,500 into x4 where the top row
     // paid 2,000, and was gone after one. He never had a hand to play. The
     // stake now buys the same number of clues whenever you arrive.
