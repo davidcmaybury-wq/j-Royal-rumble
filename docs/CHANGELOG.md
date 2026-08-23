@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.3 — 0.95.3 — the host setup modes read Quick start and Advanced
+
 ## 0.95.2 — 0.95.2 — the estimator had two implementations, and the P-labels were not anonymous
 
 ## 0.95.1 — 0.95.1 — the quick-setup ruleset dropdown could only read Custom

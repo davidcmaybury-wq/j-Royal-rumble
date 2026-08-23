@@ -293,7 +293,7 @@ socket.on('avatar', ({ token, dataUrl }) => {
 // setting up a game with people already waiting.
 //
 // The presets write into the real controls rather than living beside them, so
-// switching to Expert shows exactly what the preset did and nothing is hidden
+// switching to Advanced shows exactly what the preset did and nothing is hidden
 // from the host. There is no separate quick-mode code path in collect().
 
 // The six that are on unless a host turns them off.
@@ -371,7 +371,7 @@ const SPEEDS = {
 // Which preset the current settings correspond to, or '' for none.
 //
 // Derived rather than remembered: a host who picks Tournament, switches to
-// Expert and turns targeting back on must not still be looking at a dropdown
+// Advanced and turns targeting back on must not still be looking at a dropdown
 // that says Tournament. It reads "Custom" the moment the settings stop
 // matching, which is the honest answer.
 function presetOf(kind) {
@@ -520,11 +520,15 @@ function render(keepEdits) {
   <div class="tag">Read the room code aloud. Only people who have it can join.
     <a class="manual" href="/handbook" target="_blank" rel="noopener">Handbook &mdash; rules, mechanics and the design behind them &#8599;</a></div>
 
+  <!-- Labels only. The mode values, the `mode-quick` / `expert-only` classes and
+       the localStorage key all still say quick/expert, because a host who has
+       already chosen a mode has that word saved on their machine — renaming the
+       stored value would silently reset every one of them to the default. -->
   <div class="modes" role="group" aria-label="How much setup to show">
     <button class="modebtn ${MODE === 'quick' ? 'sel' : ''}" id="mquick"
-      aria-pressed="${MODE === 'quick'}">Quick</button>
+      aria-pressed="${MODE === 'quick'}">Quick start</button>
     <button class="modebtn ${MODE === 'expert' ? 'sel' : ''}" id="mexpert"
-      aria-pressed="${MODE === 'expert'}">Expert</button>
+      aria-pressed="${MODE === 'expert'}">Advanced</button>
   </div>
 
   <div class="card quick-only"><h2>Game</h2>
@@ -532,18 +536,18 @@ function render(keepEdits) {
       <div class="qsf"><label for="ruleset">Rule set</label>
         <select id="ruleset">${opts(RULESETS, rsNow)}</select>
         <p class="qwhat" id="rswhat">${rsNow ? RULESETS[rsNow].what
-          : 'Set by hand in Expert. Pick one here to overwrite it.'}</p></div>
+          : 'Set by hand in Advanced. Pick one here to overwrite it.'}</p></div>
       <div class="qsf"><label for="speed">Game speed</label>
         <select id="speed">${opts(SPEEDS, spNow)}</select>
         <p class="qwhat" id="spwhat">${spNow ? SPEEDS[spNow].what
-          : 'Set by hand in Expert. Pick one here to overwrite it.'}</p></div>
+          : 'Set by hand in Advanced. Pick one here to overwrite it.'}</p></div>
     </div>
     <div class="qbots">
       <button class="alt" id="qaddbots">Add robots</button>
       ${(S.roster || []).some((p) => p.isBot)
         ? '<button class="alt" id="qrmbots">Remove all robots</button>' : ''}
       <span class="note">Six mixed robots on this game's own buzzer scale.
-        Expert has the count and the standards.</span>
+        Advanced has the count and the standards.</span>
     </div>
     <div class="botlist" id="qbotlist"></div>
   </div>
@@ -1042,7 +1046,7 @@ function wire() {
   document.getElementById('mquick').onclick = () => { setMode('quick'); render(true); };
   document.getElementById('mexpert').onclick = () => { setMode('expert'); render(true); };
 
-  // A preset writes into the real controls and saves, so Expert always shows
+  // A preset writes into the real controls and saves, so Advanced always shows
   // the truth about what is switched on.
   //
   // The order matters and is easy to get wrong. collect() reads the DOM, not

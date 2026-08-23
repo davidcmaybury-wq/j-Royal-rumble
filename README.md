@@ -469,13 +469,17 @@ read as a magnifying glass, the boot as a chess pawn, the morningstar as a
 blob, and the bone as a dumbbell. `tools/` has no generator for these; they are
 hand-drawn paths in `public/tokens.js`.
 
-## Quick and expert setup
+## Quick start and advanced setup
 
-The setup page opens in **quick** mode: the room code, who has signed up, two
-dropdowns and a button that adds robots. **Expert** is the full card — every
+The setup page opens in **Quick start**: the room code, who has signed up, two
+dropdowns and a button that adds robots. **Advanced** is the full card — every
 mechanic, the clue mix, uploads, timing. The choice is remembered per browser in
 `localStorage` under `rumble:setupMode`, because it is a preference about how
 somebody likes to set a game up rather than a property of the match.
+
+The two buttons read Quick start and Advanced; the mode values, CSS classes and
+stored preference still say `quick` and `expert`. That split is deliberate —
+renaming the saved value would reset every host who had already chosen.
 
 **Rule set**
 
@@ -500,13 +504,13 @@ is what makes the difference a mode rather than a preference.
 | Extended | paced to about 40 minutes |
 
 **A preset writes into the real controls rather than living beside them.** Pick
-Tournament and switch to Expert and you see targeting switched off, because that
+Tournament and switch to Advanced and you see targeting switched off, because that
 is literally what happened — there is no second set of quick-mode settings and
 no separate path through `collect()`. It also means the dropdown reads **Custom**
 the moment the settings stop matching, so a host who turns targeting back on by
 hand is never left looking at a box that still claims Tournament.
 
-**Expert renders in both modes and is hidden with CSS**, never left out of the
+**Every advanced control renders in both modes and is hidden with CSS**, never left out of the
 markup. `collect()` reads every control by id when it saves, so a card that is
 genuinely absent takes the Save button down with it — and the host sees a dead
 button, which is the failure this project keeps rediscovering. Hiding rather
