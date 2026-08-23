@@ -151,6 +151,17 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
     return '';
   }).replace(/import\s+[\w$]+\s+from\s*'[^']+';?/g, '');
 
+  // Namespace imports (`import * as sfx from '/sound.js'`) were not stripped,
+  // so new Function() threw "Cannot use import statement outside a module" on
+  // setup, console and buzzer — and the catch below discarded it. The renderer
+  // probe has therefore never run on the three pages that matter most. Captured
+  // rather than deleted so the name can be stubbed.
+  const namespaces = [];
+  js = js.replace(/import\s*\*\s*as\s+([\w$]+)\s+from\s*'[^']+';?/g, (_, n) => {
+    namespaces.push(n);
+    return '';
+  });
+
   // Every module-level function declaration whose name suggests it paints.
   // Renderers with parameters count too.
   //
@@ -186,7 +197,11 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
   // in a template, and it also survives .map/.join/.length, which a string does
   // not. A stub that throws stops the probe before it reaches the code we care
   // about — which is exactly what happened on the first attempt at this.
-  const stubs = imported.map((n) => `var ${n} = function(){ return []; };`).join('\n');
+  const stubs = imported.map((n) => `var ${n} = function(){ return []; };`)
+    // Anything reached through a namespace import answers with a no-op.
+    .concat(namespaces.map((n) =>
+      `var ${n} = new Proxy({}, { get: () => function(){ return []; } });`))
+    .join('\n');
   const header = `
     var document = arguments[0], window = arguments[1], location = arguments[2];
     var localStorage = { getItem(){ return null; }, setItem(){}, removeItem(){} };
@@ -207,6 +222,12 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
     cluesToEntry: null, queuePlace: null, bounty: 0, entryStake: 3000 };
   globalThis.__refErrors = [];
   let loadError = null;
+  // A page that does not parse cannot be reference-checked, and used to be
+  // reported as clean: the catch below filters on "is not defined", which a
+  // SyntaxError message never matches. 0.95.3 shipped a backtick inside an HTML
+  // comment inside a template literal — the string closed early, the whole
+  // setup page died on "Loading...", and this suite passed.
+  let syntaxError = null;
   try {
     const doc = {
       getElementById: () => stubEl(), querySelector: () => stubEl(),
@@ -219,8 +240,10 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
       { addEventListener(){}, removeEventListener(){}, open(){}, matchMedia: () => ({ matches: false, addEventListener(){} }) },
       { origin: '', hash: '#k', pathname: '/setup/AAAA', href: '' });
   } catch (e) {
-    if (/is not defined|before initialization/.test(e.message)) loadError = e.message;
+    if (e instanceof SyntaxError) syntaxError = e.message;
+    else if (/is not defined|before initialization/.test(e.message)) loadError = e.message;
   }
+  check(`${page}: the inline script parses`, !syntaxError, syntaxError || 'parses');
   const errs = [loadError, ...(globalThis.__refErrors || [])].filter(Boolean);
   check(`${page}: every reference resolves when its renderers run`,
     errs.length === 0,
