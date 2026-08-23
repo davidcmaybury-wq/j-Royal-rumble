@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.4 — 0.95.4 — the Aug 22 matches reach the handbook, anonymized
+
 ## 0.95.3 — 0.95.3 — the host setup modes read Quick start and Advanced
 
 ## 0.95.2 — 0.95.2 — the estimator had two implementations, and the P-labels were not anonymous

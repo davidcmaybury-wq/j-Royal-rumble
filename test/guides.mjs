@@ -164,7 +164,15 @@ for (const [what, needle] of [
   ['the backfire dial', 'The price of aiming'],
   ['that aiming back is not a surcharge', 'neither a discount nor a surcharge'],
   ['the draw-slot finding', 'The draw slot is the biggest lever measured'],
-  ['and the renumbered figure run', 'Figure 28'],
+  ['and the renumbered figure run', 'Figure 31'],
+  // The Aug 22 pair, merged 0.95.4. Each needle is the finding, not the figure
+  // number, so a later renumber does not silently drop the check.
+  ['the third host measured', 'A third host, and this time no shift'],
+  ['that the host offset did not repeat', 'a host offset that moves one player is not'],
+  ['the two-implementation estimator bug', 'The length estimator existed twice'],
+  ['that lives are bounded by the settings', 'roster &times; (1 + revivalLimit)'],
+  ['the Aug 22 race counts', 'Races won in the first two matches'],
+  ['that most races is not the match', 'most races is not the match'],
   // "Pity powerup" names the player as pitiable; David renamed it to the
   // wrestling term. The negative check is the one that matters — the analysis
   // folder still ships the old name, so it can arrive again in a merge.
