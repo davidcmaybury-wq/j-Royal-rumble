@@ -520,10 +520,12 @@ function render(keepEdits) {
   <div class="tag">Read the room code aloud. Only people who have it can join.
     <a class="manual" href="/handbook" target="_blank" rel="noopener">Handbook &mdash; rules, mechanics and the design behind them &#8599;</a></div>
 
-  <!-- Labels only. The mode values, the `mode-quick` / `expert-only` classes and
-       the localStorage key all still say quick/expert, because a host who has
-       already chosen a mode has that word saved on their machine — renaming the
-       stored value would silently reset every one of them to the default. -->
+  <!-- Labels only. The mode values, the CSS class names and the localStorage key
+       all still say quick/expert, because a host who has already chosen a mode has
+       that word saved on their machine, and renaming the stored value would
+       silently reset every one of them to the default.
+       No backticks in here: this comment sits inside a template literal, and one
+       closed the string early and took the whole page down in 0.95.3. -->
   <div class="modes" role="group" aria-label="How much setup to show">
     <button class="modebtn ${MODE === 'quick' ? 'sel' : ''}" id="mquick"
       aria-pressed="${MODE === 'quick'}">Quick start</button>

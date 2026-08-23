@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.5 — 0.95.5 — a backtick in a comment inside a template literal took the setup page down
+
 ## 0.95.4 — 0.95.4 — the Aug 22 matches reach the handbook, anonymized
 
 ## 0.95.3 — 0.95.3 — the host setup modes read Quick start and Advanced
