@@ -507,6 +507,20 @@ Now: `/control` lists and ends matches, and anything silent for ten minutes
 (`RUMBLE_IDLE_MINUTES`) ends itself. A live match ended either way is recorded
 first; an abandoned lobby is just dropped.
 
+**A finished match is dropped too, but only after an hour** — the reaper used to
+end idle matches and never delete them, because `phase !== 'over'` excluded
+exactly the case that accumulates. Every match played since boot stayed in
+memory with its full clue record, score history and base64 avatars; a server up
+five days was holding all of them. Found by David in the control room, 0.95.7.
+
+The hour (`RUMBLE_OVER_GRACE_MINUTES`) is deliberately much longer than the idle
+window and must stay that way: ten minutes is right for "nobody is playing" and
+wrong for "nobody has clicked while reading the box score", and pulling the final
+standings out from under a host reading them is worse than the leak was. The log
+is on disk the moment the match ends, so only the live view expires.
+`RUMBLE_REAP_INTERVAL_MS` exists so `test/reap.mjs` can watch a tick without
+waiting a minute — the reaper had no test at all, which is how this survived.
+
 `broadcast(m)` at module level exists because the push helpers live inside the
 socket connection closure and close over one socket's match, so the reaper
 cannot use them.

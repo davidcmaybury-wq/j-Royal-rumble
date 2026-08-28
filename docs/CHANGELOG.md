@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.7 — 0.95.7 — finished matches were never dropped from memory
+
 ## 0.95.6 — 0.95.6 — pagerefs swallowed syntax errors and never ran on three pages
 
 ## 0.95.5 — 0.95.5 — a backtick in a comment inside a template literal took the setup page down

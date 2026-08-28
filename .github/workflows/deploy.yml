@@ -54,6 +54,18 @@ jobs:
           SEC_URL=http://127.0.0.1:8097 node test/security.mjs
           kill $SEC_PID 2>/dev/null || true
 
+      - name: The reaper drops finished matches
+        run: |
+          # Its own server: the idle window, the finished-match grace and the
+          # tick are all set absurdly low so one pass can actually be watched.
+          # At the shipped sixty-second tick this would take minutes.
+          RUMBLE_ADMIN_KEY=ci-admin-key RUMBLE_LOG_KEY=ci-log-key \
+          RUMBLE_IDLE_MINUTES=0.02 RUMBLE_OVER_GRACE_MINUTES=0.1 \
+          RUMBLE_REAP_INTERVAL_MS=500 PORT=8096 node src/server.js & REAP_PID=$!
+          sleep 8
+          REAP_URL=http://127.0.0.1:8096 node test/reap.mjs
+          kill $REAP_PID 2>/dev/null || true
+
       - name: End-to-end match over sockets
         run: |
           # The admin and log guards fail closed since the hardening pass, so the

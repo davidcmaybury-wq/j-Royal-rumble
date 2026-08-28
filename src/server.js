@@ -1398,11 +1398,30 @@ function broadcast(m) {
 // abandoned lobby is simply dropped, since there is nothing to record.
 const IDLE_MS = Number(process.env.RUMBLE_IDLE_MINUTES || 10) * 60 * 1000;
 
+// How long a finished match stays in memory before it is dropped.
+//
+// It used to be forever: the reaper deleted idle lobbies and ended idle live
+// matches, but nothing ever removed a match once its phase was 'over' — the
+// `phase !== 'over'` guard below excluded exactly the case that accumulates.
+// A server up five days was still holding every match played on it, each with
+// its full clue record, per-clue score history and base64 avatars. Harmless at
+// seven matches, unbounded over months, and the eventual symptom is an OOM
+// nowhere near the cause.
+//
+// Deliberately much longer than IDLE_MS rather than sharing it. Ten minutes is
+// the right answer for "nobody is playing"; it is the wrong answer for "nobody
+// has clicked anything while reading the box score", and having the final
+// standings vanish mid-read would be a worse bug than the leak. The log is on
+// disk the moment the match ends, so after this window the match is still
+// readable at /history — it is only the live view that goes.
+const OVER_GRACE_MS = Number(process.env.RUMBLE_OVER_GRACE_MINUTES || 60) * 60 * 1000;
+
 function reapIdle() {
   const now = Date.now();
   for (const [id, m] of matches) {
     const quiet = now - (m.lastActivity || now);
-    if (quiet < IDLE_MS) continue;
+    // A finished match gets the longer grace; everything else the idle window.
+    if (quiet < (m.phase === 'over' ? OVER_GRACE_MS : IDLE_MS)) continue;
     if (m.phase === 'live') {
       m.phase = 'over';
       m.endedReason = 'idle';
@@ -1411,13 +1430,20 @@ function reapIdle() {
         'This match was ended after ten minutes with nobody doing anything.');
       broadcast(m);
       console.log(`[reap] ended ${id} after ${Math.round(quiet / 60000)} min idle`);
-    } else if (m.phase !== 'over') {
+    } else {
+      // Lobbies and finished matches alike. A finished match has already
+      // written its log, so dropping it loses nothing that is not on disk.
       matches.delete(id);
-      console.log(`[reap] dropped idle lobby ${id}`);
+      console.log(`[reap] dropped ${m.phase === 'over' ? 'finished match' : 'idle lobby'} ${id}`
+        + ` after ${Math.round(quiet / 60000)} min`);
     }
   }
 }
-setInterval(reapIdle, 60 * 1000).unref?.();
+// The interval is configurable so the reaper can actually be tested. At the
+// default sixty seconds a test would have to sit for over a minute to watch one
+// tick, which is how this went untested long enough to grow a leak.
+const REAP_INTERVAL_MS = Number(process.env.RUMBLE_REAP_INTERVAL_MS || 60 * 1000);
+setInterval(reapIdle, REAP_INTERVAL_MS).unref?.();
 
 // The saved logs, guarded by RUMBLE_LOG_KEY. Fails closed.
 //
