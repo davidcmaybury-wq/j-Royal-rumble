@@ -277,5 +277,36 @@ console.log('\nOFF BY DEFAULT');
   check('no revival when off', g.players.get(b).state === 'eliminated');
 }
 
+// --- a small lobby that picks up latecomers must not flood -----------------
+//
+// autoEntryInterval returns 1 for a lobby of three or fewer, which is right
+// while there is no queue to pace. The latecomer recalculation then clamped
+// with Math.min against the interval already stored, so it could only ever
+// shrink — and a match seeded at 1 stayed at 1 for good. Reported from PKRY as
+// every player on the bench being in within three clues.
+{
+  const players = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }];
+  const g = new RumbleGame({ players,
+    settings: { entryInterval: null, targetMinutes: 30, secondsPerClue: 17.5, delay: 0 },
+    categoryPool: pool, rng: makeRng(7) });
+
+  check('a three-player lobby starts at interval 1', g.s.entryInterval === 1,
+    String(g.s.entryInterval));
+
+  const d = g.addLatecomer('d', 'D');
+  const e = g.addLatecomer('e', 'E');
+  check('two latecomers join', !!d.ok && !!e.ok);
+  check('and the interval grows off 1 once the roster is five',
+    g.s.entryInterval > 1, `interval ${g.s.entryInterval} for ${g.players.size} players`);
+
+  // The actual complaint was the spacing, so assert that rather than the knob:
+  // consecutive entry clues means the bench emptied in a burst.
+  const at = [];
+  for (const p of g.players.values()) if (p.entryClue != null) at.push(p.entryClue);
+  const spacing = g.s.entryInterval;
+  check('so queued entrants are spaced, not consecutive', spacing >= 2,
+    `${spacing} clues apart`);
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

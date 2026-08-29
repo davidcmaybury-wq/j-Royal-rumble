@@ -107,7 +107,11 @@ function stubEl() {
     children: [], tagName: 'DIV',
     set innerHTML(v) { this._h = v; }, get innerHTML() { return this._h || ''; },
     set textContent(v) { this._t = v; }, get textContent() { return this._t || ''; },
-    appendChild(){}, removeChild(){}, remove(){}, insertBefore(){},
+    // Records rather than discards, so a renderer that is supposed to emit one
+    // row per player can actually be counted. It used to be a no-op, which made
+    // "did every live player get a row?" unaskable.
+    appendChild(c){ this.children.push(c); return c; },
+    removeChild(){}, remove(){}, insertBefore(){},
     setAttribute(){}, getAttribute(){ return null; }, hasAttribute(){ return false; },
     addEventListener(){}, removeEventListener(){}, focus(){}, blur(){}, click(){},
     querySelector: () => stubEl(), querySelectorAll: () => [],
@@ -132,7 +136,16 @@ const SEED = {
   blend: { archive: 50, original: 50, upload: 0 },
   available: { archive: 100, original: 100, upload: 0 },
   seasons: [22, 42], version: '0.0.0', roomCode: 'AAAA', phase: 'lobby',
-  live: [], queue: [], out: [], board: [], clues: 0, uploads: [],
+  // Eight live players, because eight is the largest roster recorded and the
+  // size the ring bug was reported at. The console returns early on a lobby
+  // phase, so the ring check below re-runs render() with phase 'live'.
+  live: Array.from({ length: 8 }, (_, i) => ({
+    token: 'L' + i, name: 'Live' + i, draw: i + 1, score: 3000 - i * 100,
+    connected: true, isBot: false, hasAvatar: false, state: 'live',
+    topRope: false, target: null, stable: null, capped: false,
+    tokenArt: { art: 'crowbar', colour: 'brass' },
+  })),
+  queue: [], out: [], board: [], clues: 0, uploads: [],
   you: { token: 'p1', name: 'A', state: 'live', score: 3000, tokenArt: { art: 'crowbar', colour: 'brass' } },
   mechanics: {}, ring: [], history: [], standings: [],
 };
@@ -178,6 +191,7 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
 
   const probe = `
     ;globalThis.__refErrors = [];
+    try { globalThis.__rerender = render; } catch (e) {}
     ${stateVar ? `try { ${stateVar} = globalThis.__seed; } catch (e) {}` : ''}
     ${painters.map((fn) => {
       // Plausible arguments: most take (state-ish, player-ish). Anything the
@@ -197,7 +211,14 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
   // in a template, and it also survives .map/.join/.length, which a string does
   // not. A stub that throws stops the probe before it reaches the code we care
   // about — which is exactly what happened on the first attempt at this.
-  const stubs = imported.map((n) => `var ${n} = function(){ return []; };`)
+  // Callable *and* property-accessible. A plain function stub broke every page
+  // that does `socket.on(...)` on an imported binding: the script threw at the
+  // first line, the painter calls appended after it never ran, and the check
+  // still reported "N renderers exercised" — a count of what it meant to call.
+  // console, buzzer and admin had never actually been exercised.
+  const stubs = imported.map((n) =>
+    `var ${n} = new Proxy(function(){ return []; }, {`
+    + ` get: (t, k) => (k in t ? t[k] : function(){ return []; }) });`)
     // Anything reached through a namespace import answers with a no-op.
     .concat(namespaces.map((n) =>
       `var ${n} = new Proxy({}, { get: () => function(){ return []; } });`))
@@ -212,6 +233,11 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
     var Audio = function(){ return { play(){ return Promise.resolve(); }, pause(){} }; };
     var Image = function(){ return {}; };
     var alert = function(){}, confirm = function(){ return true; };
+    var addEventListener = function(){}, removeEventListener = function(){};
+    var requestAnimationFrame = function(){ return 0; }, cancelAnimationFrame = function(){};
+    var setTimeout = function(){ return 0; }, setInterval = function(){ return 0; };
+    var clearTimeout = function(){}, clearInterval = function(){};
+    var matchMedia = function(){ return { matches: false, addEventListener(){} }; };
     ${stubs}
   `;
 
@@ -221,6 +247,7 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
     state: 'live', topRope: false, topRopeWait: 0, target: null, revivals: 0,
     cluesToEntry: null, queuePlace: null, bounty: 0, entryStake: 3000 };
   globalThis.__refErrors = [];
+  globalThis.__byId = null;
   let loadError = null;
   // A page that does not parse cannot be reference-checked, and used to be
   // reported as clean: the catch below filters on "is not defined", which a
@@ -229,8 +256,15 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
   // setup page died on "Loading...", and this suite passed.
   let syntaxError = null;
   try {
+    // Memoized by id. getElementById used to mint a fresh stub per call, so
+    // nothing a renderer wrote could be read back afterwards.
+    const byId = new Map();
     const doc = {
-      getElementById: () => stubEl(), querySelector: () => stubEl(),
+      getElementById: (id) => {
+        if (!byId.has(id)) byId.set(id, stubEl());
+        return byId.get(id);
+      },
+      querySelector: () => stubEl(),
       querySelectorAll: () => [], createElement: () => stubEl(),
       body: stubEl(), head: stubEl(), addEventListener(){}, removeEventListener(){},
     };
@@ -239,11 +273,39 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
       doc,
       { addEventListener(){}, removeEventListener(){}, open(){}, matchMedia: () => ({ matches: false, addEventListener(){} }) },
       { origin: '', hash: '#k', pathname: '/setup/AAAA', href: '' });
+    globalThis.__byId = byId;
   } catch (e) {
     if (e instanceof SyntaxError) syntaxError = e.message;
     else if (/is not defined|before initialization/.test(e.message)) loadError = e.message;
   }
   check(`${page}: the inline script parses`, !syntaxError, syntaxError || 'parses');
+  // --- every live player must get a row ------------------------------------
+  //
+  // Reported from JZAW: a player was live in the engine from clue 0, won clues
+  // 12-16, and was never shown in the host console's ring. The engine record was
+  // coherent throughout, so the defect is on the render side — the same family
+  // as the vanished mechanics panel and the dock overlap: state right, screen
+  // wrong, nothing thrown.
+  //
+  // The console builds the ring by iterating S.live and appending one node per
+  // player, so the honest check is a count: give it eight and expect eight. A
+  // filter or an early return that drops one is exactly what this catches.
+  if (page === 'console.html' && globalThis.__byId) {
+    // Re-render out of the lobby: the ring is only built once a match is live.
+    try {
+      globalThis.__seed.phase = 'live';
+      globalThis.__rerender && globalThis.__rerender();
+    } catch { /* the assertion below reports it */ }
+    // Never silently skip: a check that quietly does not run is how the last
+    // three of these got through.
+    const ring = globalThis.__byId.get('ring');
+    const wanted = (SEED.live || []).length;
+    const got = ring ? ring.children.length : -1;
+    check(`${page}: the ring renders a row for every live player`,
+      wanted > 0 && got === wanted,
+      ring ? `${got} rows for ${wanted} live` : 'the probe never touched #ring');
+  }
+
   const errs = [loadError, ...(globalThis.__refErrors || [])].filter(Boolean);
   check(`${page}: every reference resolves when its renderers run`,
     errs.length === 0,

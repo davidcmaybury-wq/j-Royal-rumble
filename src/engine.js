@@ -1441,8 +1441,18 @@ export class RumbleGame {
       const budget = Math.max(1, Math.round(
         (this.s.targetMinutes * 60) / this.s.secondsPerClue) - this.cluesRevealed);
       const waiting = this.queued().length;
-      interval = Math.max(1, Math.min(this.s.entryInterval,
-        Math.floor(budget / Math.max(1, waiting))));
+      // Clamped against a fresh calculation for the roster as it now stands,
+      // not against the interval already stored.
+      //
+      // It used to be `Math.min(this.s.entryInterval, ...)`, which can only ever
+      // shrink the interval. A lobby of three or fewer gets interval 1 from
+      // autoEntryInterval — correct there, since with no queue there is nothing
+      // to pace — and once latecomers arrived the value was stuck at 1 for the
+      // rest of the match. Reported from PKRY as everyone on the bench being in
+      // within three clues; two latecomers entered at clues 1 and 2.
+      const base = autoEntryInterval(
+        this.players.size, this.s.targetMinutes, this.s.secondsPerClue);
+      interval = Math.max(1, Math.min(base, Math.floor(budget / Math.max(1, waiting))));
       this.s.entryInterval = interval;
     }
     this.log.push({ type: 'latecomer', playerId: id, draw, interval });

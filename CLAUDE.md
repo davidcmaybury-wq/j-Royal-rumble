@@ -483,6 +483,30 @@ Both mistakes silently undo the preset and neither throws.
 `pagerefs.mjs` checks every mechanic on the page is named by a rule set, so a
 new mechanic cannot quietly inherit whatever the last preset left it at.
 
+## The probe that never ran
+
+`pagerefs.mjs` executes each page's script in a stub DOM and reports unresolved
+references. For three of the four pages it was never running at all.
+
+Two swallows, found 0.95.8 while chasing a console render bug. Imported bindings
+were stubbed as bare functions, so any page doing `socket.on(...)` on an import
+threw `socket.on is not a function` on its first line — and the catch filtered on
+`/is not defined/`, which that message does not match, so it was discarded. The
+painter calls appended after the page script never ran, and the check still
+printed "N renderers exercised", because that number is a count of the painters
+it *found by regex*, not of the ones it called. console, buzzer and admin had
+never been exercised; admin only limped through because it throws later.
+
+Imports are now stubbed as a callable Proxy (`socket.on`, `socket.emit` and a
+bare call all work), the bare globals pages actually use are stubbed, and
+`getElementById` is memoized so what a renderer wrote can be read back.
+`appendChild` records instead of discarding, which is what makes a row count
+possible at all.
+
+**The lesson is the message, not the stub.** "5 renderers exercised" was true of
+the search and false of the run. A count that comes from a different step than
+the thing it describes will read as evidence for years.
+
 ## A whole panel can vanish silently
 
 `lagHint()` was called from `renderMech` and defined nowhere, for several

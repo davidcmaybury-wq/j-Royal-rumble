@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.8 — 0.95.8 — the quick-start entry flood, and pagerefs was never running on three pages
+
 ## 0.95.7 — 0.95.7 — finished matches were never dropped from memory
 
 ## 0.95.6 — 0.95.6 — pagerefs swallowed syntax errors and never ran on three pages
