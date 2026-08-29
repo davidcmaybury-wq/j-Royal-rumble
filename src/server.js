@@ -1156,9 +1156,7 @@ app.get('/api/match/:id/record', (req, res) => {
 // The handbook, so the setup page can link to it.
 // The control room: every match on this server, and every log it has kept.
 //
-// Guarded by RUMBLE_ADMIN_KEY when it is set. When it is not, it still works —
-// locking the host out of his own server is worse than the risk at this scale —
-// but the page says so plainly rather than pretending to be secure.
+// Guarded by RUMBLE_ADMIN_KEY, which must be set in the service environment.
 // A password, not a secret. It keeps a stranger who finds the address from
 // ending a live match; it is not protecting anything valuable, and it travels
 // in a request header rather than the URL so it stays out of logs.

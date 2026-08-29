@@ -399,13 +399,15 @@ logs and authenticates with the admin key, so without that the host is locked ou
 of their own records. One key is a superset of the other, not two namespaces.
 
 `/api/health` is thin in public — `status` and `version` only. **The full body is
-still served to 127.0.0.1**, which is what `deploy-remote.sh` reads to check
-`matchesInPlay` before restarting; never break that path. `version` stays public
-because `/history` prints it on a keyless page anyway.
+still served to 127.0.0.1** — and to the admin key — which is what
+`deploy-remote.sh` reads to check `matchesInPlay` before restarting; never break
+that path. `version` stays public because `/history` prints it on a keyless page
+anyway.
 
-`test/security.mjs` runs against a deliberately keyless server on port 8099 and
+`test/security.mjs` runs against a deliberately keyless server on port 8097 and
 asserts the refusals, including that `key=daymay` is dead. It is its own CI step
-because the main server runs *with* keys.
+because the main server runs *with* keys. Port 8097 and not 8099 because
+`moved.mjs` spawns its own server on 8099.
 
 **CSP is off in helmet, on purpose.** Every page is one self-contained file with
 inline `<script>`, which a default CSP blocks outright — the buzzer would stop

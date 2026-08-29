@@ -1390,8 +1390,8 @@ anyone who read the source. Neither looked broken: unauthenticated requests to
 
 The admin key opens the log routes too, because the control room downloads logs
 with it. `/api/health` answers `status` and `version` to the public and the full
-body only to 127.0.0.1 — `deploy-remote.sh` reads `matchesInPlay` there before it
-restarts and ends anybody's game.
+body only to 127.0.0.1 and the admin key — `deploy-remote.sh` reads
+`matchesInPlay` there before it restarts and ends anybody's game.
 
     RUMBLE_ADMIN_KEY=...   host console, /control and /api/control
     RUMBLE_LOG_KEY=...     /api/logs and /api/logs/<file>
@@ -1428,11 +1428,11 @@ game.
 one means a host can create a match on one and have players land on the other —
 which surfaces as "bad host key" and "no such game".
 
-`GET /api/health` reports the version, machine id, uptime and live match count.
-Hit it twice: if the machine id changes, you are running more than one. The id
-is the pid plus a boot nonce, so it also names the process to go and stop —
-deliberately not the hostname, since `/api/health` is public and the hostname
-here is an internal address.
+`GET /api/health` answers `status` and `version` to the public. The full body —
+machine id, uptime, live match count — goes to 127.0.0.1 and to the admin key.
+Ask it twice from the box: if the machine id changes, you are running more than
+one. The id is the pid plus a boot nonce, so it also names the process to go and
+stop — deliberately not the hostname, which is an internal address.
 
 That check was broken for the whole of the Lightsail era and is worth knowing
 about: the id used to be `FLY_MACHINE_ID || 'local'`, and since Lightsail sets
