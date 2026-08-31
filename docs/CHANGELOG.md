@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.9 — 0.95.9 — the entrance-music box was sitting on the host's scoring buttons
+
 ## 0.95.8 — 0.95.8 — the quick-start entry flood, and pagerefs was never running on three pages
 
 ## 0.95.7 — 0.95.7 — finished matches were never dropped from memory

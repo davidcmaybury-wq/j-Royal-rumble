@@ -11,7 +11,20 @@
 // browser can still refuse — that two versions would drift.
 
 const CSS = `
-.ytbox{position:fixed;right:14px;bottom:14px;width:200px;height:113px;z-index:70;
+/* Top right, and click-through.
+
+   It used to sit at bottom:14px, which put a 200x113 box straight over the
+   right-hand end of the host's dock — exactly where Correct / Wrong / Nobody
+   are — for up to ten seconds, with nothing to let a click through. The host
+   pressed Correct, nothing happened, and the console read as frozen until a
+   reload. Reported after two matches on 0.95.8; measured at 1440x900 the box
+   spanned y 773-886 against a dock starting at 808.
+
+   This is the third time an overlay has taken the host's controls (the entry
+   banner twice before). pointer-events:none is the guarantee; moving it clear
+   of the dock is so it does not hide the buttons either. */
+.ytbox{position:fixed;right:14px;top:58px;width:200px;height:113px;z-index:70;
+pointer-events:none;
 border:2px solid var(--line,#2A3556);border-radius:6px;overflow:hidden;background:#000}
 .ytbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .ytcover{position:absolute;inset:0;background:var(--panel,#131A30);display:flex;
@@ -77,7 +90,15 @@ export function playTheme(entrance, enabled = true) {
   const a = new Audio(src);
   a.volume = 0.85;
   audioEl = a;
-  a.play().catch(() => { /* refused; the entrance still happens */ });
+  // A refusal used to be swallowed here, so an entrance with no music looked
+  // identical to one with music the host could not hear — nothing in the room
+  // could tell which. The entrance still happens either way; the difference is
+  // that somebody is now told why it was silent.
+  a.play().catch((err) => {
+    window.dispatchEvent(new CustomEvent('theme-refused', {
+      detail: { name: entrance.name || null, reason: (err && err.name) || 'refused' },
+    }));
+  });
   a.onended = () => { if (audioEl === a) audioEl = null; };
   setTimeout(() => { if (audioEl === a) stopTheme(); }, secs * 1000);
 }

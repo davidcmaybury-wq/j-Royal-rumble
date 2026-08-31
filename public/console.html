@@ -523,6 +523,17 @@ socket.on('bot-said', (d) => {
   sayTimer = setTimeout(() => box.classList.remove('on'), 4200);
 });
 
+// The browser refuses audio until the page has been clicked, and a muted
+// console plays nothing by design. Either way the host used to get silence with
+// no explanation. Said once per match, not once per entrance.
+let themeWarned = false;
+window.addEventListener('theme-refused', (ev) => {
+  if (themeWarned) return;
+  themeWarned = true;
+  const who = ev.detail && ev.detail.name ? ev.detail.name + "'s" : 'The';
+  say(`${who} entrance music was blocked by the browser. Click Sound to allow it.`, 'enter');
+});
+
 socket.on('resolved', (e) => {
   if (e.overtimeStarted) overtimeSplash('OVERTIME', 'Stakes start climbing',
     'Nobody else is coming. From here the clue values double every few clues until somebody breaks.');

@@ -493,6 +493,32 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
     /pointer-events\s*:\s*none/.test(rule),
     rule ? rule.slice(0, 40) + '…' : 'no .entry rule at all');
 
+  // --- and neither can anything else anchored near the dock ----------------
+  //
+  // The check above named one class, so the next overlay reintroduced the bug
+  // in a different element: the YouTube entrance box sat at bottom:14px, 200 by
+  // 113, straight over Correct / Wrong / Nobody, with no pointer-events:none.
+  // The host pressed Correct for up to ten seconds and the console read as
+  // frozen. That is three times an overlay has taken the host's controls.
+  //
+  // So the rule is now general: on the host's screens, a fixed overlay anchored
+  // to the bottom must be click-through. Full-screen modals (inset:0) are
+  // exempt — those are things the host is meant to click.
+  {
+    const themeCss = readFileSync(new URL('../public/theme-player.js', import.meta.url), 'utf8');
+    const offenders = [];
+    for (const [file, text] of [['console.html', src], ['theme-player.js', themeCss]]) {
+      for (const m of text.matchAll(/(^|\n)\s*(\.[A-Za-z0-9_-]+)\{([^}]*position\s*:\s*fixed[^}]*)\}/g)) {
+        const body = m[3].replace(/\s+/g, ' ');
+        if (!/(^|;|\s)bottom\s*:/.test(body)) continue;   // not near the dock
+        if (/inset\s*:\s*0/.test(body)) continue;          // a full-screen modal
+        if (!/pointer-events\s*:\s*none/.test(body)) offenders.push(`${file} ${m[2]}`);
+      }
+    }
+    check('and no bottom-anchored overlay on the console can take a click',
+      offenders.length === 0, offenders.join(', ') || 'all click-through');
+  }
+
   const banner = src.slice(src.indexOf('function banner('),
     src.indexOf('function banner(') + 1200);
   check('and banner() binds no click handler',

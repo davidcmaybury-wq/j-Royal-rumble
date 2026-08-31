@@ -509,6 +509,40 @@ possible at all.
 the search and false of the run. A count that comes from a different step than
 the thing it describes will read as evidence for years.
 
+## An overlay over the dock is now three for three
+
+The host's Correct / Wrong / Nobody buttons live at the bottom right. Three
+different fixed-position overlays have now covered them:
+
+- the entry banner, twice, anchored at `bottom:92px` against a dock whose height
+  grows when the chip row wraps;
+- the YouTube entrance box (`.ytbox` in `theme-player.js`), at `bottom:14px`,
+  200x113, with no `pointer-events:none` — measured at 1440x900 it spanned
+  y 773-886 against a dock starting at 808. The host pressed Correct, nothing
+  happened for up to ten seconds, and the console read as frozen until a reload.
+  Found from two matches on 0.95.8; only fires when a player picks a YouTube
+  theme, which is why it looked intermittent.
+
+The guard was written naming `.entry`, so the next overlay reintroduced the bug
+in a different element. It is now general: in `console.html` and
+`theme-player.js`, any `position:fixed` rule with a `bottom:` must be
+`pointer-events:none` unless it is a full-screen modal (`inset:0`). The box also
+moved to `top:58px` so it does not hide the buttons it can no longer block.
+
+**Note `watch.html` defines its own `.ytbox`** at `bottom:14px`, which is the
+drift `theme-player.js`'s own header comment warns about. Harmless there — the
+watch screen has no controls — but it is a second copy of a shared widget.
+
+## Entrance music failed silently by design
+
+`a.play()` is refused until the page has had a gesture, and a muted console plays
+nothing on purpose. Both were swallowed by `catch(() => {})`, so an entrance with
+no music was indistinguishable from one whose music the room could not hear —
+and no amount of log reading can separate them, because nothing was recorded.
+The refusal now raises a `theme-refused` event and the console says so once per
+match, naming the fix (click Sound). The files, the keys and the server emit were
+all verified fine; the silence was the only symptom and it had no signal.
+
 ## A whole panel can vanish silently
 
 `lagHint()` was called from `renderMech` and defined nowhere, for several
