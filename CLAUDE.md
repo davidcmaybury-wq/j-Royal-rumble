@@ -304,6 +304,15 @@ Mutual targets never stack: the winner's own target pays the focused pot once.
 Turning backfire off does **not** turn off focused fire. David decided this
 2026-08-17; `tools/backfire-study.mjs`.
 
+**The backfire default is a property of the mode, and only ever lived in the
+preset table.** Arcade/Chaos 0, Tournament 0.5 was decided in 0.94.0, but the 0.5
+was written only into the quick-start ruleset — and Tournament is *derived* from
+`comeback: false`. A host who turned the comeback off any other way got a
+Tournament match where an aimed miss cost nothing. It recorded that way in the
+Tradiac lobbies and then in David's own M20 on 0.95.8, with targeting on. The
+default is now applied at match creation when the host has not named a value, so
+the dial still wins; `test/setup.mjs` covers both modes and both overrides.
+
 **Four study tools have now silently measured the wrong thing because they relied
 on an engine default they did not set** — `comeback-study` (flat stake after 0.88),
 then `voltron-study` and `backfire-study` (whole-pot backfire after 0.94). In
@@ -824,6 +833,13 @@ Two of its rules are easy to get wrong in opposite directions: the analysis
 chat's graphs go into `docs/handbook.html` **by default, not on request**, and
 `charts/tv-vs-rumble.html` is permanently excluded from every outward-facing
 document (see the broadcast rule above).
+
+**Label allocation belongs to the analysis chat: they own P1–P99.** Two label sets
+have now collided twice — they minted P15–P33 while this side held P15–P31, then
+P34–P37 while this side held P34–P49 — because both sides assign labels and neither
+can see the other's range. Anything this side needs a label for goes at **P101+**,
+a band they will not reach. `P26` is the one shared exception, agreed both ways and
+referenced in code comments as "the P26 case". Never mint a label under 100 here.
 
 Note the two naming systems, which must not be mixed. `docs/handbook.html`
 anonymizes to P-labels; `docs/analysis/` and the analysis folder use in-game

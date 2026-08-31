@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.95.10 — 0.95.10 — Tournament was recording a free aimed miss, and the P-labels collided again
+
 ## 0.95.9 — 0.95.9 — the entrance-music box was sitting on the host's scoring buttons
 
 ## 0.95.8 — 0.95.8 — the quick-start entry flood, and pagerefs was never running on three pages

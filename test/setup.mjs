@@ -212,6 +212,37 @@ check('settings lock once the match starts', locked.status === 409);
   h.close(); ps.forEach((s) => s.close());
 }
 
+// --- the backfire default belongs to the mode ------------------------------
+//
+// Decided: Arcade and Chaos 0, Tournament 0.5, host-adjustable everywhere. That
+// only lived in the quick-start ruleset table, and Tournament is derived from
+// `comeback: false` — so turning the comeback off any other way produced a
+// Tournament match where an aimed miss cost nothing. Recorded that way in real
+// matches, including one where targeting was on.
+{
+  const mk = async (settings) => {
+    const made = await (await api('/api/match', { method: 'POST',
+      body: JSON.stringify({ settings }) })).json();
+    return await (await api(`/api/match/${made.gameId}`, {}, made.hostKey)).json();
+  };
+
+  const tourn = await mk({ comeback: false });
+  check('a Tournament match defaults backfire to 0.5',
+    tourn.settings.targetBackfire === 0.5, String(tourn.settings.targetBackfire));
+
+  const arcade = await mk({ comeback: true });
+  check('an Arcade match defaults it to 0',
+    arcade.settings.targetBackfire === 0, String(arcade.settings.targetBackfire));
+
+  // The dial still wins: a host who names a value gets it, in either mode.
+  const named = await mk({ comeback: false, targetBackfire: 0 });
+  check('and a host who names 0 in Tournament keeps 0',
+    named.settings.targetBackfire === 0, String(named.settings.targetBackfire));
+  const named2 = await mk({ comeback: true, targetBackfire: 1 });
+  check('and a host who names 1 in Arcade keeps 1',
+    named2.settings.targetBackfire === 1, String(named2.settings.targetBackfire));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); ps.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);

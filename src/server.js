@@ -230,6 +230,21 @@ class Match {
     this.id = Match.newCode();
     this.hostKey = randomUUID();
     this.settings = { ...DEFAULT_SETTINGS, ...settings };
+    // The backfire default is a property of the mode, not of the engine.
+    //
+    // The decision was Arcade/Chaos 0 and Tournament 0.5, host-adjustable in
+    // every mode. That only ever got implemented in the quick-start ruleset
+    // table, and Tournament is *derived* from `comeback: false` — so a host who
+    // turned the comeback off any other way got Tournament with the engine
+    // default of 0, an aimed miss costing nothing. Recorded that way in the
+    // Tradiac lobbies and then in David's own M20 on 0.95.8, where targeting
+    // was on and it mattered live.
+    //
+    // Applied only when the host did not name it, so the dial still wins.
+    if (!Object.prototype.hasOwnProperty.call(settings || {}, 'targetBackfire')
+        && this.settings.comeback === false) {
+      this.settings.targetBackfire = 0.5;
+    }
     // All Jeopardy! archive by default. The custom boards are still there and
     // one slider moves them back in; they are just not what most matches want
     // as a starting point.
