@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.96.1 — 0.96.1 — Part IV in David's voice, every figure byte-identical
+
 ## 0.96.0 — 0.96.0 — matches 14 to 20 reach the handbook, in the analysis chat's voice
 
 ## 0.95.10 — 0.95.10 — Tournament was recording a free aimed miss, and the P-labels collided again
