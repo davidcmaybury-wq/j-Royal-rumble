@@ -159,12 +159,20 @@ for (const [what, needle] of [
   // the section existing is the guard against re-litigating them.
   ['the bone pile of rejected ideas', 'The bone pile'],
   ['that lowering the shark is on it', 'lowering the shark is not raising the field'],
-  ['and that repairs worse than their bug are on it', 'repairs worse than their bug'],
+  ['and that repairs worse than their bug are on it', 'the repair was worse than the bug'],
   // The backfire dial and the draw-slot findings, 0.94.0.
   ['the backfire dial', 'The price of aiming'],
   ['that aiming back is not a surcharge', 'neither a discount nor a surcharge'],
   ['the draw-slot finding', 'The draw slot is the biggest lever measured'],
-  ['and the renumbered figure run', 'Figure 31'],
+  ['and the renumbered figure run', 'Figure 37'],
+  // Matches 14-20, merged 0.96.0 from the analysis chat's pre-voiced pages.
+  // Keyed on the finding, never the figure number.
+  ['the new rooms broke the fastest-buzzer streak', 'The fastest buzzer won once in five matches'],
+  ['that accuracy won instead', 'So what won instead? Accuracy.'],
+  ['the new-room pace effect', "remaining miss is pace"],
+  ['the estimator flipping sign', 'runs about 20% long in experienced rooms'],
+  ['the one-room mode experiment', 'One room, two modes, two different games'],
+  ['that the mode picks the winner', 'the mode picks the winner, not the room'],
   // The Aug 22 pair, merged 0.95.4. Each needle is the finding, not the figure
   // number, so a later renumber does not silently drop the check.
   ['the third host measured', 'A third host, and this time no shift'],

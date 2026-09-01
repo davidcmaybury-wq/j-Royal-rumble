@@ -245,7 +245,7 @@ His population's mean attempt rate is 56% against a real median of 57%.
 
 **The biggest thing the reconstruction had wrong was the population.** I drew
 standards uniformly, so one robot in five was elite. Matt weights them, and the
-real data agrees: elite is one in a hundred. A test field of 20% elites is not a
+real data agree: elite is one in a hundred. A test field of 20% elites is not a
 test of anything.
 
 I had also thought his accuracy bands too narrow — his population spans 9 points

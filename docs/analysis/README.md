@@ -37,7 +37,7 @@ now run 14.1 and 12.9 medians. A per-room pace prior would fix most of the remai
 game is too friendly to elite players, and everyone is just cannon fodder. I want everyone to
 have SOME chance to win in this."*
 
-The data backs the concern:
+The data back the concern:
 
 - Winner's within-field speed rank across the 8 decided matches: fastest won 4, second-fastest
   won 2, everyone slower won 2.
