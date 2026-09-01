@@ -1,7 +1,8 @@
 # J! Royal Rumble — rules to paste
 
-Every block below sits inside Discord's 2,000-character limit and can be posted
-on its own. Pin the short version. Post sections 1–8 when people want the
+Every block below is postable on its own. Most sit inside Discord's
+2,000-character limit; the two that don't carry a note saying where to break
+them. Count before you post — Discord truncates silently and says nothing. Pin the short version. Post sections 1–8 when people want the
 detail, and section 9 only for matches where the advanced mechanics are
 switched on — they're off unless the host turns them on, so most nights that
 section is noise.
@@ -27,7 +28,7 @@ Thirty players. Three start. One survives.
 
 **Arcade or Tournament?** Your buzzer says which. Arcade: go under with fewer than three clues taken and you stay up — half stake, 70% off your buzz for 40 races, once each — and the race shows places, not times.
 
-**Still standing?** +$500 every 10 clues you survive — being early in the draw is hard work, and this pays for it.
+**Still standing?** +$500 every 10 clues you survive. Being early in the draw is hard work; this pays for it.
 
 **Take a whole column** and it washes brass: +$500.
 
@@ -35,11 +36,11 @@ Thirty players. Three start. One survives.
 
 **Overtime** — when nobody's left to enter and nobody's going out, clue values double every six clues, up to eight times face. It doesn't stop until somebody breaks.
 
-**Waiting your turn? Buzz anyway.** Your buzzer works from the moment you join. It doesn't score but it reports your time and place, so don't arrive cold. Turning up late is fine: join any time and go to the back of the queue.
+**Waiting your turn? Buzz anyway.** Your buzzer works the moment you join. It doesn't score, but it reports your time and place — so don't arrive cold. Turning up late is fine: join any time, go to the back of the queue.
 
 **Last one standing wins.** Everything else is tracked and posted, and none of it is the winner.
 
-⚠️ Don't jump the lights. Buzzing early costs you 250ms. Good players learn the rhythm of the read rather than reacting to the lights. A perfect buzz reads 0.0.
+⚠️ Don't jump the lights — buzzing early costs you 250ms. Good players learn the rhythm of the read instead of reacting to it. A perfect buzz reads 0.0.
 
 **To play:** open the buzzer link, enter the room code, add your name, leave it open — it's your buzzer. There's a watch link too, if you'd rather have the board on your own screen.
 
@@ -89,6 +90,11 @@ not free.
 ---
 
 ## 3. ELIMINATION
+
+<!-- Runs past Discord's 2,000-character limit. Post as TWO messages, breaking
+     before "If you'd go out with fewer than three clues to your name".
+     That splits 1,143 / 1,956 against a 2,000 cap. Discord truncates silently,
+     so count before posting rather than trusting the eye. -->
 
 Drop **below** zero and you're out. Exactly zero survives.
 
@@ -268,6 +274,12 @@ The winner is the winner. The rest is an argument for the group chat.
 ---
 
 ## 11. ADVANCED MECHANICS (only if the host says so)
+
+<!-- Runs well past Discord's 2,000-character limit. Post as THREE messages,
+     breaking before "**Targeting**" and before "**Bounties**". That splits
+     1,022 / 1,179 / 882 against a 2,000 cap, and keeps each rule whole in one
+     message. Two messages does not fit: breaking only at Bounties leaves the
+     first at 2,145. Discord truncates silently; count before posting. -->
 
 Off by default, each switched on separately.
 

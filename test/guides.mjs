@@ -84,6 +84,41 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
 {
   const { readFileSync } = await import('fs');
   const read = (f) => readFileSync(new URL('../docs/' + f, import.meta.url), 'utf8');
+  // --- every postable block has to fit Discord's cap ----------------------
+  //
+  // RULES.md opened by claiming every block sits inside the 2,000-character
+  // limit. Two did not: ELIMINATION at 3,079 and ADVANCED MECHANICS at 3,029.
+  // Discord truncates silently, so an over-long block loses its tail with no
+  // error — the same failure the discord-*.md posting notes exist to prevent.
+  // Blocks that need splitting now carry a note saying where; this checks that
+  // every block either fits or documents its break points.
+  {
+    const rules = readFileSync(new URL('../RULES.md', import.meta.url), 'utf8');
+    const over = [];
+    for (const b of rules.split(/\n---+\n/)) {
+      const t = b.trim();
+      if (!t.startsWith('##')) continue;
+      const head = t.split('\n')[0].replace(/^#+\s*/, '');
+      const note = /<!--([\s\S]*?)-->/.exec(t);
+      let body = t.split('\n').slice(1).join('\n')
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/^The Discord-ready copy[^\n]*\n/m, '').trim();
+      if (body.length <= 2000) continue;
+      // Over the cap: it must document where to break, and each piece must fit.
+      const marks = note ? [...note[1].matchAll(/before "([^"]+)"/g)].map((m) => m[1]) : [];
+      if (!marks.length) { over.push(`${head} (${body.length}, no split note)`); continue; }
+      const cuts = marks.map((m) => body.indexOf(m)).filter((i) => i >= 0).sort((a, b) => a - b);
+      const parts = [];
+      let prev = 0;
+      for (const c of cuts) { parts.push(body.slice(prev, c)); prev = c; }
+      parts.push(body.slice(prev));
+      const big = parts.filter((x) => x.trim().length > 2000);
+      if (big.length) over.push(`${head} (a piece is ${big[0].trim().length})`);
+    }
+    check('every RULES.md block fits Discord, or says where to break it',
+      over.length === 0, over.join('; ') || 'all within the cap');
+  }
+
   const both = read('discord-rules-v2.md') + read('discord-advanced-mechanics.md');
   for (const [what, needle] of [
     ['the entry stake scales in overtime', 'stake climbs with it'],
