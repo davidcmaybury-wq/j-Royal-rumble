@@ -319,8 +319,13 @@ then `voltron-study` and `backfire-study` (whole-pot backfire after 0.94). In
 `backfire-study` the tell was two rows printing identical numbers. The fourth was
 `arrivalGrace`, which shipped on by default in 0.90.0 and made one backfire row
 irreproducible across the two chats until the analysis chat isolated it — both
-sets of numbers were right, on different engines. **All nine study tools now pin
-`arrivalGrace` and `targetBackfire` explicitly.**
+sets of numbers were right, on different engines. **Every study tool now pins `arrivalGrace`, and both tools that can be
+affected by `targetBackfire` — `backfire-study` and `voltron-study`, the only
+two that turn targeting on — pin that too.** The claim here used to be "all nine
+tools pin both", which was false in both halves: there are eleven, three of them
+(`betrayal`, `shrink`, `stable`) were still inheriting `arrivalGrace` as of
+0.96.1, and pinning a backfire share in a study that never aims is noise rather
+than rigour. Audit it with a loop over `tools/*study*.mjs`, not from memory.
 
 **A free aimed miss plus universal leader-targeting is the one corner where the
 arrival grace helps the sharks** — about 3.4 points, stretching matches 97 → 105

@@ -29,6 +29,9 @@ function build(seed, keepFrac) {
   }
   const g = new RumbleGame({ players, rng, categoryPool: pool(),
     settings: { entryInterval: 999, startScore: 3000, ceiling: autoCeiling(15),
+      // Pinned, not inherited. It shipped on-by-default in 0.90.0, so a row
+      // measured either side of that reads differently for no stated reason.
+      arrivalGrace: true,
       ceilingFloor: 3000, ceilingDecayPerClue: null, stables: true,
       stableFocus: FOCUS, stableShare: SHARE,
       betrayalKeepFraction: keepFrac, stableMaxFraction: 1,

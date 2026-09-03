@@ -27,6 +27,9 @@ function build(seed, outsiders) {
   }
   const g = new RumbleGame({ players, rng, categoryPool: pool(),
     settings: { entryInterval: 999, startScore: 3000, ceiling: autoCeiling(total),
+      // Pinned, not inherited. It shipped on-by-default in 0.90.0, so a row
+      // measured either side of that reads differently for no stated reason.
+      arrivalGrace: true,
       ceilingFloor: 3000, ceilingDecayPerClue: null, stables: true,
       stableFocus: true, stableShare: SHARE, betrayalKeepFraction: 0.5,
       stableMaxFraction: 1, longevity: false, categorySweep: false } });
