@@ -570,6 +570,50 @@ parses. And `pagerefs.mjs` now reads the source for functions that are called
 but never defined, because executing renderers in a stub DOM did not catch it —
 `renderMech` returns early there.
 
+## The freeze was one undefined name, live for three weeks
+
+`detectEvents()` read `e.entrances` to decide whether to play the entry horn.
+`e` is the parameter of the `resolved` handler — a **different function** — so
+in `detectEvents` it is simply not bound, and in a `type="module"` script there
+is no implicit global to fall back on. Every entry threw
+`ReferenceError: e is not defined`.
+
+What made it a freeze rather than a missing horn is the call site:
+
+```js
+detectEvents(); render();
+```
+
+One line, no `try`. The throw took `render()` with it, so the console stopped
+repainting the moment somebody walked in and stayed stale until a reload. The
+entry banner never drew either. Shipped 2026-08-16 in a commit whose intent was
+right — don't play the horn over a player's own theme — and reported twice from
+live matches before it was found, because the surviving symptom looked like the
+`.ytbox` overlay bug that was fixed in the same area.
+
+**The information genuinely was not there yet.** `pushAll()` runs *before*
+`entry.entrances` is built, so at the moment the console notices an entry, the
+`resolved` event carrying the themes has not been sent. Reading it from a
+remembered `resolved` would have been a tick stale. The flag rides the state
+instead: `hasTheme` on each roster row in `hostView()`, a boolean rather than
+the theme, because the console only needs to know that music is coming.
+
+**Why nothing caught it.** `pagerefs.mjs` executes renderers against a *single*
+state. Entry and elimination are derived from the difference between two, so
+`detectEvents` returns on its first line and its body had never once run under
+test. It now applies a state, then applies one with an extra live player, and
+asserts the transition survives — reverting the fix fails that check with the
+exact live message. **A transition is not reachable by re-rendering; it needs
+two states.**
+
+`test/entrance.mjs` covers the music path end to end over real sockets — library
+serves, player saves a theme, `hasTheme` reaches the host in the state, and the
+entrance arrives with the theme attached. The server side is proven; a silent
+entrance from here is the browser refusing playback, which raises
+`theme-refused` and now leaves a message that **stays in the feed**. It used to
+expire after five seconds, which is the window in which a host is busiest — the
+one signal explaining the silence timed out before anybody could read it.
+
 ## Abandoned matches
 
 A match lives in memory until somebody ends it; closing the tab does not. One

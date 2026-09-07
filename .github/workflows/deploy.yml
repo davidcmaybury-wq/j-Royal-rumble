@@ -74,6 +74,7 @@ jobs:
           RUMBLE_ADMIN_KEY=ci-admin-key RUMBLE_LOG_KEY=ci-log-key \
             node src/server.js & sleep 10
           node test/e2e.mjs
+          node test/entrance.mjs
           node test/setup.mjs
           node test/buzzer.mjs
           node test/record.mjs

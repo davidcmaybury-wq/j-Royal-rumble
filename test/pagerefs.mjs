@@ -192,6 +192,7 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
   const probe = `
     ;globalThis.__refErrors = [];
     try { globalThis.__rerender = render; } catch (e) {}
+    try { globalThis.__apply = apply; } catch (e) {}
     ${stateVar ? `try { ${stateVar} = globalThis.__seed; } catch (e) {}` : ''}
     ${painters.map((fn) => {
       // Plausible arguments: most take (state-ish, player-ish). Anything the
@@ -304,6 +305,38 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
     check(`${page}: the ring renders a row for every live player`,
       wanted > 0 && got === wanted,
       ring ? `${got} rows for ${wanted} live` : 'the probe never touched #ring');
+  }
+
+  // --- a player walking in must not throw ----------------------------------
+  //
+  // Everything above executes renderers against a *single* state. Entry and
+  // elimination are derived from the difference between two states, so no
+  // amount of re-rendering reaches that code — `detectEvents` returns on its
+  // first line unless a previous state exists and the rosters differ.
+  //
+  // That gap hid a live bug for three weeks. `detectEvents` read `e.entrances`,
+  // where `e` belongs to the `resolved` handler and is not in scope, so every
+  // entry threw ReferenceError. `apply()` runs `detectEvents(); render();` on
+  // one line with no catch, so the throw took the repaint with it: the host
+  // console stopped updating and the entry banner never drew. Reported twice
+  // from live matches as "the console freezes when a player enters".
+  //
+  // So: apply a state, then apply one with an extra live player, and insist
+  // the transition survives it.
+  if (page === 'console.html' && globalThis.__apply) {
+    try {
+      const base = JSON.parse(JSON.stringify(SEED));
+      base.phase = 'live';
+      globalThis.__apply(base);
+      const after = JSON.parse(JSON.stringify(base));
+      after.live = [...base.live, { ...base.live[0], token: 'NEW', name: 'Newcomer', draw: 9 }];
+      after.roster = [...base.roster, { token: 'NEW', name: 'Newcomer', connected: true,
+        hasAvatar: false, isBot: false, hasTheme: false, tokenArt: null }];
+      globalThis.__apply(after);
+      check(`${page}: a player entering does not throw`, true, 'entry transition survived');
+    } catch (e) {
+      check(`${page}: a player entering does not throw`, false, e.message);
+    }
   }
 
   const errs = [loadError, ...(globalThis.__refErrors || [])].filter(Boolean);

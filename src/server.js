@@ -511,6 +511,13 @@ class Match {
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
         hasAvatar: !!p.avatar, latency: p.latency ?? null,
+        // Whether this player brought their own entrance music, so the console
+        // can skip the horn rather than playing two sounds over each other. A
+        // flag and not the theme itself: the console only needs to know that
+        // music is coming. It has to ride the state because the state push
+        // beats the `resolved` event that carries `entrances`, so at the moment
+        // the console notices somebody walked in, nothing else has told it yet.
+        hasTheme: !!p.theme,
         tokenArt: p.tokenArt || null, look: p.look || null,
         isBot: !!p.isBot, level: this.bots.get(p.token)?.level || null,
         bot: p.isBot ? describeBot(this.bots.get(p.token)) : null })),

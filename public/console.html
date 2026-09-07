@@ -437,10 +437,24 @@ const GID = gameId();
 
 let S = null, prev = null, muted = false;
 const $ = (id) => document.getElementById(id);
-const say = (m, cls) => { const f = $('feed'), e = document.createElement('div');
+// Most of the feed is chatter and clears itself after five seconds. A few
+// messages are advice the host has to act on — the entrance-music refusal names
+// the fix — and those stay put. The five-second version was worse than useless
+// for that one: it fires at the exact moment somebody is walking in, which is
+// when the host is least likely to be reading the feed, so the only signal that
+// explained a silent entrance expired before it could be read.
+const say = (m, cls, sticky) => { const f = $('feed'), e = document.createElement('div');
   e.className = 'ev ' + (cls || ''); e.textContent = m; f.appendChild(e);
-  setTimeout(() => e.remove(), 5000);
-  while (f.children.length > 4) f.firstChild.remove();
+  if (sticky) e.dataset.keep = '1';
+  else setTimeout(() => e.remove(), 5000);
+  // Evict the oldest message that is not pinned. Written as a search rather
+  // than `f.firstChild.remove()` because a pinned message at the front would
+  // make that loop spin forever without removing anything.
+  while (f.children.length > 4) {
+    const drop = [...f.children].find((c) => c.dataset.keep !== '1');
+    if (!drop) break;
+    drop.remove();
+  }
   $('sr').textContent = m; };
 
 // Cues are sample files now — see tools/make-audio.py. Synthesis got us to
@@ -531,7 +545,8 @@ window.addEventListener('theme-refused', (ev) => {
   if (themeWarned) return;
   themeWarned = true;
   const who = ev.detail && ev.detail.name ? ev.detail.name + "'s" : 'The';
-  say(`${who} entrance music was blocked by the browser. Click Sound to allow it.`, 'enter');
+  say(`${who} entrance music was blocked by the browser. Click Sound to allow it.`,
+    'enter', true);
 });
 
 socket.on('resolved', (e) => {
@@ -608,7 +623,15 @@ function detectEvents() {
   // The horn is the stand-in for an entrance. If the player brought their own
   // music, that IS the entrance — playing both was two sounds over each other.
   if (entered.length) {
-    const hasTheme = (e.entrances || []).some((x) => x && x.theme);
+    // Read from the roster in the state we just applied, not from the resolved
+    // event: this used to say `e.entrances`, and `e` is the parameter of the
+    // `resolved` handler, which is a different function. It threw
+    // ReferenceError on every single entry from 2026-08-16, and because
+    // `apply()` calls `detectEvents(); render();` on one line with no catch,
+    // the throw took `render()` with it — the console stopped repainting and
+    // the entry banner never drew. That is the freeze.
+    const hasTheme = entered.some((p) => (S.roster || [])
+      .some((r) => r.token === p.token && r.hasTheme));
     if (!hasTheme) sfxEntry();
     banner(entered);
   }
