@@ -1186,6 +1186,23 @@ function wire() {
       setTimeout(() => { b.textContent = 'Start the Rumble'; }, 3000);
       return;
     }
+    // A match that records no host is a hole in every cross-match comparison of
+    // reaction times, because the read is a large part of how a match plays and
+    // nothing else in the log can see it. Two of the last five recorded matches
+    // are host-unattributed, including one whose neighbour the same evening was
+    // attributed — the browser-remembered value was simply empty on the night's
+    // first match, and nothing said so.
+    //
+    // Asked once, not enforced: the host is mid-setup with people waiting, and
+    // a hard block on a metadata field would be the wrong trade. Cancelling
+    // puts the cursor in the box.
+    const hostEl = document.getElementById('hostName');
+    if (hostEl && !hostEl.value.trim()
+        && !confirm('No host name is set, so this match will be recorded without one.\n\n'
+                  + 'Start anyway?')) {
+      hostEl.focus();
+      return;
+    }
     b.disabled = true;
     b.textContent = 'Starting...';
     // Wait for the server to confirm rather than navigating on a timer: if the

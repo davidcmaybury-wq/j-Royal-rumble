@@ -904,6 +904,27 @@ on 0.95.x. Pace has settled well under the model's 17.5s per clue — 19.3s on t
 first night, 12.9–16.6 once rooms learned the game, 18.7–18.9 in the Aug 22 pair.
 Human buzz median ~150ms, with 49% under it.
 
+**The revival-off overtime tail is 29 clues, not 22 — and the correction had to
+be checked before it was applied.** The analysis chat measured all eleven
+revival-off matches: tails run 17-34, median 29, with no clean field-size trend
+(a four-player match drained in 18, a six-player one in 30). Their own earlier
+recommendation of ~20 came from the three shortest tails on record and is
+recorded as a correction rather than deleted.
+
+Applied to `expectedClues` as a floor, and **the floor branches on `revival`**.
+Raising it for revival-on as well moves one recorded match onto its actual
+(89 -> 101, actual 101) and knocks another off it (55 -> 67, actual 56) — a coin
+toss wearing a repair's clothing. Revival-on tails ran 28, 31, 47 and 72; they
+are modelled by the multiplier and want their own measurement. `test/estimate.mjs`
+pins both regimes, and the two revival-on fixtures failing is what caught the
+over-broad first attempt.
+
+Verified before shipping rather than after: over the twelve revival-off matches
+with a real length, mean absolute error goes 11.5 -> 9.7 clues; of the six where
+the floor binds, four improve. It changes nothing for the two most recent
+matches, whose entry phases were long enough that the proportional term already
+dominated.
+
 **The estimator is no longer 2-for-2** — that line stood here for eleven matches
 after it stopped being true. It is 7 of 11 on the older set, and both Aug 22
 matches ran roughly double: 52 predicted against 101 actual, 32 against 56. The

@@ -200,6 +200,19 @@ for (const [what, needle] of [
   ['that aiming back is not a surcharge', 'neither a discount nor a surcharge'],
   ['the draw-slot finding', 'The draw slot is the biggest lever measured'],
   ['and the renumbered figure run', 'Figure 37'],
+  // Matches 21-22, merged from the analysis chat's live-sep07 page. Keyed on
+  // the finding rather than the figure number, so a later renumber does not
+  // quietly drop the check — the rule the Figure 22 needle above exists to
+  // remind everyone of.
+  ['the night one player took both belts', 'Two belts in one night'],
+  ['the anticipation finding', 'timing the read the whole time'],
+  ['that a settled median measures two skills', 'the fastest <em>numbers</em> are rhythm'],
+  ['the overtime-tail correction', 'Time to eat a correction: the overtime tail'],
+  ['that the correction keeps the number it replaced', 'about twenty clues for the overtime drain'],
+  ['and the corrected figure itself', '17 to 34 clues, median 29'],
+  ['that the tail branches on revival', 'revival refills a ring the drain has already emptied'],
+  ['the discoverability count, now at twenty-two', 'without a single use between them'],
+  ['and the renumbered run reaches forty', 'Figure 40'],
   // Matches 14-20, merged 0.96.0 from the analysis chat's pre-voiced pages.
   // Keyed on the finding, never the figure number.
   ['the new rooms broke the fastest-buzzer streak', 'The fastest buzzer won once in five matches'],

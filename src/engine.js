@@ -452,7 +452,37 @@ export function fairnessWarning(playerCount, interval) {
 // is a rule, not a page. estimate.js delegates here.
 export function expectedClues(playerCount, interval, settings = {}) {
   const entry = Math.max(0, playerCount - 3) * interval;
-  const base = entry + Math.max(22, entry * 0.67);
+  // The tail is the overtime drain: entry queue empty, nobody else coming, the
+  // ring grinding down to one. It scales with the entry phase in a big field
+  // and hits a floor in a small one.
+  //
+  // The floor was 22 and is 29. Measured across every revival-off match on
+  // record — eleven of them — the tail runs 17-34 clues with a median of 29,
+  // and it does not track field size: a four-player match drained in 18 and a
+  // six-player one in 30. An interim recommendation of ~20 (DEV-NOTES-AUG31)
+  // was drawn from the three shortest tails on record and is the number being
+  // corrected here; it never shipped, so 22 is what 29 replaces.
+  //
+  // Checked before applying rather than after: over the twelve revival-off
+  // matches with a real length, mean absolute error goes 11.5 -> 9.7 clues, and
+  // of the six matches where the floor binds at all, four improve. It changes
+  // nothing for the two most recent matches — both had entry phases long
+  // enough that the proportional term already dominated, which is why they
+  // predicted 82 against 82 and 75 against 73 with the old floor.
+  //
+  // The remaining miss is the 7-8 player over-prediction (+15 to +24), which
+  // lives in the entry term and is untouched by any of this.
+  //
+  // The floor branches on revival, because the two regimes are not the same
+  // measurement. Revival-on tails ran 28, 31, 47 and 72 — revival refills a
+  // ring the drain has already emptied — and they are modelled by the `rev`
+  // multiplier below, fitted separately. Raising their floor as well moves one
+  // recorded match onto its actual (89 -> 101, actual 101) and pushes another
+  // off it (55 -> 67, actual 56), which is a coin toss dressed up as a repair.
+  // Their tail wants its own measurement across all four; until then it keeps
+  // the number it was fitted with.
+  const tailFloor = settings.revival ? 22 : 29;
+  const base = entry + Math.max(tailFloor, entry * 0.67);
   // Revival refills a queue the rest of the model assumes drains once. The
   // multiplier is fitted to the simulator, not derived — see tools/sim-mechanics.
   const rev = settings.revival
