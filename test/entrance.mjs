@@ -92,6 +92,53 @@ check('the entrance reaches the host with the theme attached',
   !!theirs && !!theirs.theme && theirs.theme.key === pick.key,
   theirs ? `theme=${theirs.theme ? theirs.theme.key : 'null'}` : 'no entrance carried their name');
 
+// --- robots walk in to music too -----------------------------------------
+//
+// The whole reason this is testable by one person: reproducing the failure used
+// to need a human to pick a link and then walk into a live ring. Robots do both
+// on demand, and they alternate YouTube with library .mp3 so a match tells you
+// which half is silent instead of only that something was.
+{
+  const r2 = await fetch(`${U}/api/match`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ settings: { entryInterval: 1, startScore: 3000 } }),
+  });
+  const g2 = await r2.json();
+  // The host key travels in the x-host-key header, not a query string.
+  const addBots = (g, body) => fetch(`${U}/api/match/${g.gameId}/bots`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-host-key': g.hostKey },
+    body: JSON.stringify(body),
+  });
+  const added2 = await addBots(g2, { count: 6 });
+  check('the robots were actually added', added2.ok, `HTTP ${added2.status}`);
+  const h2 = io(U, { transports: ['websocket'] });
+  await once(h2, 'connect');
+  let s2 = null;
+  await new Promise((r) => h2.emit('host-join',
+    { gameId: g2.gameId, hostKey: g2.hostKey }, (x) => { s2 = x.state; r(); }));
+  const bots = (s2.roster || []).filter((p) => p.isBot);
+  check('every robot walks in to music', bots.length === 6 && bots.every((b) => b.hasTheme),
+    `${bots.filter((b) => b.hasTheme).length} of ${bots.length} have a theme`);
+
+  // Both kinds, or the match cannot tell you which branch is broken.
+  const r3 = await fetch(`${U}/api/match`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ settings: { entryInterval: 1 } }),
+  });
+  const g3 = await r3.json();
+  await addBots(g3, { count: 4, themes: false });
+  const h3 = io(U, { transports: ['websocket'] });
+  await once(h3, 'connect');
+  let s3 = null;
+  await new Promise((r) => h3.emit('host-join',
+    { gameId: g3.gameId, hostKey: g3.hostKey }, (x) => { s3 = x.state; r(); }));
+  const quiet = (s3.roster || []).filter((p) => p.isBot);
+  check('and `themes: false` gives a silent field', quiet.length === 4 && quiet.every((b) => !b.hasTheme),
+    `${quiet.filter((b) => b.hasTheme).length} unexpectedly have one`);
+  h2.close(); h3.close();
+}
+
 host.close();
 players.forEach((p) => p.s.close());
 console.log(fails ? `\n${fails} FAILURES` : '\nall checks passed');

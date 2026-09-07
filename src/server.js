@@ -971,6 +971,32 @@ app.post('/api/match/:id/bots', (req, res) => {
   // sample of two people until this game has accumulated its own.
   const profile = ['measured', 'broadcast', 'observed'].includes(req.body?.profile)
     ? req.body.profile : 'observed';
+  // Robots walk in to music unless the caller says otherwise.
+  //
+  // Entrance music went unheard in every recorded match while players kept
+  // choosing it — seven of them on 2026-09-07 alone — and the reason took a
+  // week to find because reproducing it needed a human to pick a link and then
+  // walk into a live ring. A robot can do both, so the feature is now testable
+  // by one person with no players in the room.
+  //
+  // The YouTube ids are real picks from the 2026-09-07 matches, kept because
+  // the failure is specific to the YouTube branch and a library .mp3 would test
+  // the half that already worked. They are video ids and nothing else: no
+  // player is named here and no mapping to one exists.
+  const wantsThemes = req.body?.themes !== false;
+  const BOT_THEMES = [
+    { kind: 'youtube', id: 'CMV850rhcQM', seconds: 5, start: 0 },
+    { kind: 'library', key: 'wrestling-heel', seconds: 5 },
+    { kind: 'youtube', id: 'HMuYfScGpbE', seconds: 5, start: 0 },
+    { kind: 'library', key: 'sports-anthem', seconds: 5 },
+    { kind: 'youtube', id: 'jumyqrz1MAY', seconds: 7, start: 0 },
+    { kind: 'library', key: 'horror-stalker', seconds: 5 },
+    { kind: 'youtube', id: '52PHX4m07aI', seconds: 5, start: 0 },
+    { kind: 'library', key: 'horror-dirge', seconds: 5 },
+  ];
+  // Alternating the two kinds is the point: if the library entries are heard
+  // and the YouTube ones are not, that is the answer in one match rather than
+  // an argument about whether the sound was on.
   const rng = m.rng || makeRng(Date.now() & 0x7fffffff);
   const taken = new Set([...m.roster.values()].map((p) => p.name));
   const added = [];
@@ -983,6 +1009,7 @@ app.post('/api/match/:id/bots', (req, res) => {
     m.bots.set(token, brain);
     m.roster.set(token, { token, name, socketId: null, connected: true,
       avatar: null, isBot: true,
+      theme: wantsThemes ? BOT_THEMES[m.bots.size % BOT_THEMES.length] : null,
       look: distinctLook(token, [...m.roster.values()].map((x) => x.look).filter(Boolean)) });
     added.push({ name, ...brain });
   }

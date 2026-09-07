@@ -544,9 +544,14 @@ let themeWarned = false;
 window.addEventListener('theme-refused', (ev) => {
   if (themeWarned) return;
   themeWarned = true;
-  const who = ev.detail && ev.detail.name ? ev.detail.name + "'s" : 'The';
-  say(`${who} entrance music was blocked by the browser. Click Sound to allow it.`,
-    'enter', true);
+  const d = ev.detail || {};
+  const who = d.name ? d.name + "'s" : 'The';
+  // Say what happened and what to do about it. The old wording assumed the
+  // browser-gesture case and told the host to click Sound, which is the wrong
+  // instruction for a YouTube link that is not allowed to be embedded — they
+  // would click it, hear nothing again, and blame the console.
+  say(`${who} entrance music did not play — ${d.reason || 'the browser blocked it'}.`
+    + (d.fix ? ' ' + d.fix : ''), 'enter', true);
 });
 
 socket.on('resolved', (e) => {

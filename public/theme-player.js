@@ -36,10 +36,59 @@ color:var(--chalk,#EEEBE1);font-size:13.5px}
 let audioEl = null;
 let frameEl = null;
 let styled = false;
+// The YouTube half used to have no failure signal at all. The audio half raises
+// `theme-refused` when play() is rejected; the iframe was appended and then
+// nobody asked whether anything came out of it, so a blocked embed and a
+// playing one looked identical from here. Seven players set YouTube themes on
+// 2026-09-07 and the room heard none of them, with nothing logged anywhere,
+// because this is the branch almost everybody picks.
+//
+// enablejsapi=1 makes the player answer. Everything below exists to turn "it
+// was quiet" into a reason somebody can act on.
+let ytWatch = null;
+
+const YT_REASON = {
+  2: 'the link is malformed',
+  5: 'the player failed in this browser',
+  100: 'that video does not exist any more',
+  101: 'the owner does not allow it to be embedded',
+  150: 'the owner does not allow it to be embedded',
+  153: 'YouTube refused to embed it here',
+};
+
+// `fix` matters as much as `reason`. "Click Sound" is right when the browser is
+// waiting for a gesture and actively misleading when YouTube will not embed the
+// video at all — the host would click Sound, hear nothing again, and conclude
+// the console was broken.
+function refuse(name, reason, fix) {
+  window.dispatchEvent(new CustomEvent('theme-refused', { detail: { name, reason, fix } }));
+}
+
+// One listener for the module, not one per entrance: a listener added on every
+// walk-in would still be there thirty entrances later, all of them firing.
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', (ev) => {
+    if (!ytWatch) return;
+    if (!/^https:\/\/(www\.)?youtube(-nocookie)?\.com$/.test(ev.origin)) return;
+    let d;
+    try { d = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data; } catch { return; }
+    if (!d || d.id !== ytWatch.id) return;
+    if (d.event === 'onError') {
+      ytWatch.settled = true;
+      refuse(ytWatch.name, YT_REASON[d.info] || `YouTube error ${d.info}`,
+        'That link cannot be used here — ask them for a different one.');
+    }
+    // 1 is playing. Anything reaching it means the room heard something.
+    if (d.event === 'onStateChange' && d.info === 1) ytWatch.settled = true;
+  });
+}
 
 export function stopTheme() {
   if (audioEl) { audioEl.pause(); audioEl = null; }
   if (frameEl) { frameEl.remove(); frameEl = null; }
+  // Settle it before dropping it, or the silence check below fires against a
+  // player the caller deliberately cut short when the buzzers armed.
+  if (ytWatch) { ytWatch.settled = true; ytWatch = null; }
 }
 
 /**
@@ -72,8 +121,37 @@ export function playTheme(entrance, enabled = true) {
     f.width = 200; f.height = 113;
     f.allow = 'autoplay; encrypted-media';
     f.setAttribute('playsinline', '');
+    // origin is required alongside enablejsapi, and YouTube checks it: the pair
+    // has to travel together or the player answers nothing.
     f.src = `https://www.youtube-nocookie.com/embed/${t.id}`
-      + `?autoplay=1&start=${t.start || 0}&controls=0&modestbranding=1&rel=0&playsinline=1`;
+      + `?autoplay=1&start=${t.start || 0}&controls=0&modestbranding=1&rel=0&playsinline=1`
+      + `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+    const watch = { id: 'jrr:' + Date.now(), name: entrance.name || null, settled: false };
+    ytWatch = watch;
+    f.onload = () => {
+      // Subscribing is two messages, not one: `listening` opens the channel and
+      // `addEventListener` asks for the events. Sending only the second gets a
+      // player that never speaks, which is indistinguishable from the failure
+      // this code exists to report.
+      for (const ev of ['onReady', 'onStateChange', 'onError']) {
+        try {
+          f.contentWindow.postMessage(JSON.stringify(
+            { event: 'listening', id: watch.id, channel: 'widget' }), '*');
+          f.contentWindow.postMessage(JSON.stringify(
+            { event: 'command', func: 'addEventListener', args: [ev], id: watch.id, channel: 'widget' }), '*');
+        } catch { /* cross-origin before load; the timer below still reports */ }
+      }
+    };
+    // If nothing has reported playing by now, nothing is going to. Long enough
+    // to clear a slow start on a cold connection, short enough that the host
+    // still has the entrance in mind when the console tells them.
+    setTimeout(() => {
+      if (ytWatch === watch && !watch.settled) {
+        watch.settled = true;
+        refuse(watch.name, 'YouTube never started playing',
+          'Check the console for a player error, or ask them for a different link.');
+      }
+    }, 4000);
     box.appendChild(f);
     const cover = document.createElement('div');
     cover.className = 'ytcover';
@@ -95,9 +173,9 @@ export function playTheme(entrance, enabled = true) {
   // could tell which. The entrance still happens either way; the difference is
   // that somebody is now told why it was silent.
   a.play().catch((err) => {
-    window.dispatchEvent(new CustomEvent('theme-refused', {
-      detail: { name: entrance.name || null, reason: (err && err.name) || 'refused' },
-    }));
+    refuse(entrance.name || null,
+      `the browser refused to play it (${(err && err.name) || 'refused'})`,
+      'Click Sound to allow it.');
   });
   a.onended = () => { if (audioEl === a) audioEl = null; };
   setTimeout(() => { if (audioEl === a) stopTheme(); }, secs * 1000);
