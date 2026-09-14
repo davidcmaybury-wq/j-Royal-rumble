@@ -37,7 +37,60 @@ Important: keep these records **DNS only** in Cloudflare. Turning on the orange-
 - App cloned to `/home/ubuntu/app` from https://github.com/davidcmaybury-wq/j-Royal-rumble
 - systemd unit `rumble.service`: runs `node src/server.js` as user `ubuntu`, PORT=8080, NODE_ENV=production, auto-restart + starts on boot
 - Match logs go to `/data/logs` (dir persists across deploys/reboots)
+- `/when` availability goes to `/data/when.json`, same reason. `/data` is
+  already created and owned by `ubuntu`; `/api/health` says `durable: true` when
+  it is landing in the right place.
 - Node 20 (nodesource), deps installed with `npm install --omit=dev`
+
+## Secrets and environment
+Everything the app needs beyond the code. **No value in this file, ever** — this
+repo is public.
+
+Where they live now: `/etc/systemd/system/rumble.service.d/override.conf`, as
+inline `Environment=` lines. That file is `644 root:root`, i.e. **readable by
+any local user on the box**. Fine-ish for two keys on a one-user machine, not
+fine once a Discord bot token is in there. Move them to an `EnvironmentFile`:
+
+```
+sudo install -m 600 -o root -g root /dev/null /etc/rumble.env
+sudo nano /etc/rumble.env          # KEY=value per line, no quotes, no export
+sudo nano /etc/systemd/system/rumble.service.d/override.conf
+#   [Service]
+#   EnvironmentFile=/etc/rumble.env
+#   (delete the inline Environment= lines for the same names)
+sudo systemctl daemon-reload && sudo systemctl restart rumble
+```
+
+`600` means root only; systemd reads the file as root before dropping to
+`ubuntu`. A restart ends live matches — do this when nobody is playing.
+
+### The variables
+
+| Variable | Needed for | If it is missing |
+|---|---|---|
+| `RUMBLE_ADMIN_KEY` | `/control`, downloading logs | **fails closed** — locks everyone out, including David. The server shouts at boot. |
+| `RUMBLE_LOG_KEY` | `/api/logs` | fails closed. The admin key is a superset and also satisfies it. |
+| `RUMBLE_DISCORD_CLIENT_ID` | `/when` sign-in | sign-in answers 503, page still collects nothing |
+| `RUMBLE_DISCORD_CLIENT_SECRET` | `/when` sign-in | as above |
+| `RUMBLE_DISCORD_BOT_TOKEN` | posting proposals | Send answers 502 naming the variable; the proposal is **not** marked sent |
+| `RUMBLE_DISCORD_ALERT_CHANNEL` | where a found night is announced to David | no alert post |
+| `RUMBLE_DISCORD_ROOM_CHANNEL` | where Send posts the invite | Send refuses |
+| `RUMBLE_DISCORD_GUILD` | restricts sign-in to Rumble Discord members | optional; without it anyone with a Discord account can sign in |
+| `RUMBLE_PUBLIC_URL` | the OAuth redirect URI behind CloudFront | sign-in breaks — see the gotcha below |
+| `RUMBLE_SESSION_SECRET` | signs the `/when` session cookie | a new one per boot, so every deploy signs everybody out of `/when`. A boot note, not a refusal — it protects a list of free evenings, not the match records. |
+| `ANTHROPIC_API_KEY` | robots' wrong answers | falls back to local nonsense; reported at `/api/health` |
+
+The Discord application itself — the two channel ids, the redirect URI, what
+the bot posts — is `docs/discord-setup.md`, about five minutes of clicking.
+
+### Checking it took
+```
+curl -s localhost:8080/api/health | python3 -m json.tool | head -40
+```
+From the box (or with `?key=<admin key>` from anywhere) the body names what is
+missing, per integration. `discord.missing` is the list to work through;
+`availability.durable` must be `true`, meaning the store is `/data/when.json`
+and not inside the app directory where the next deploy would take it.
 
 ## Deploying a new version
 SSH in (Lightsail console → Connect), then:
@@ -52,6 +105,8 @@ Note: the app keeps live matches in memory — restarting kills in-progress game
 - Keep CloudFront cache policy = CachingDisabled (live game state must not be cached).
 - The AWS account is on the Free Plan tier, which cannot register Route 53 domains — that's why the domain lives at Cloudflare.
 - Latency-sensitive buzzer play also works direct via the IP URL if CloudFront ever adds noticeable lag.
+- **Discord sign-in needs `RUMBLE_PUBLIC_URL` because of CloudFront.** OAuth demands the redirect URI sent to Discord match the one registered, byte for byte, and the request's own idea of its host is whatever the proxy forwarded — which is the origin hostname, not the domain. Set it to `https://j-royal-rumble.net` and register exactly `https://j-royal-rumble.net/auth/discord/callback`. A mismatch shows up as Discord refusing the sign-in, not as anything in our logs.
+- **The unit's drop-in is world-readable at 644.** See Secrets and environment — with a bot token in play, use an `EnvironmentFile` at `600` instead of more inline `Environment=` lines.
 
 ## Monthly cost
 ~$7 (Lightsail 1 GB) + ~$11/yr domain at Cloudflare. CloudFront/data transfer ≈ $0 at friends-scale. No WAF.
