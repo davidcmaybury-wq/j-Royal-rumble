@@ -75,7 +75,9 @@
     "doubleresolve-test": "node test/doubleresolve.mjs",
     "arcade-test": "node test/arcade.mjs",
     "wrongs-test": "node test/wrongs.mjs",
-    "when-test": "node test/when.mjs"
+    "when-test": "node test/when.mjs",
+    "tts-test": "node test/tts.mjs",
+    "tts-bench": "node tools/tts-bench.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

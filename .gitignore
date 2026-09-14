@@ -13,3 +13,6 @@ when.json.tmp
 # The desktop app drops files it hands over into here. `npm run ship` runs
 # `git add -A`, so without this a screenshot lands in a release commit.
 Claude outputs/
+# The host's voice cache: clips and the downloaded model, written by
+# src/tts.js when /data is absent. Regenerable, large, and not the project.
+tts-cache/
