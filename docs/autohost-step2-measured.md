@@ -48,23 +48,76 @@ the **15** that `readingTimeMs()` assumes. The fallback clock is therefore about
 these, and re-measure on whichever engine ships, since rate is a property of the
 voice and not of the text.
 
-## Piper is still unmeasured, and is now the question
+## Piper, measured — and it clears both bars
 
-It skipped with `no piper binary: set PIPER_BIN or put piper on the PATH`.
-Installing it is `pip install piper-tts`, which was not done: with Kokoro
-eliminated, the choice between Piper and ElevenLabs is a decision about sound
-and about paying per character, and that is David's rather than a benchmark's.
+```
+                    Mike (en_US-ryan)   Gene (en_US-joe)
+  synthesis p50         3,116 ms            3,132 ms
+  synthesis p90         4,741 ms            3,800 ms
+  max                   4,856 ms            5,343 ms
+  RTF p50                  0.74               0.66
+  peak RSS                 36 MB              27 MB
+  clips completed         18 of 18           17 of 17
+  warm-up                   0 ms (no model to load)
+```
 
-What the next run needs to answer, in this order:
+**Thirty-five of thirty-five clips, no failures.** p90 is 4.7 s against a
+12-second window; Kokoro's was 18.9. RTF below 1 means a clue is synthesized
+faster than it is spoken, which is the property the whole schedule depends on.
+And there is no resident worker — piper is spawned per clip and peaks at 36 MB,
+against 461 MB — so the 836 MB arithmetic that killed Kokoro does not arise.
 
-1. Piper p90 for a clue, against the 12-second window.
-2. Piper worker RSS against the same 836 MB arithmetic.
-3. Whether it sounds like a game-show host. `/data/tts/bench/*.wav` holds one
-   clip per voice from this run to compare against.
+**Piper is the engine.** Nothing in the caller changes, exactly as the design
+said it would not.
 
-If Piper also misses the window, the honest options are ElevenLabs, a bigger
-box, or narrowing what gets spoken — and that last one is a design change, not
-an engineering one.
+Two things the numbers carry that a table hides:
+
+- **RTF p90 reads 5.79 for Mike and means nothing.** It is process start-up
+  divided by the length of "No." — the short fixed phrases are all start-up.
+  Those are cached after first use, so it costs once per phrase per voice, ever.
+  Judge piper on the p50 and on absolute p90, not on RTF for one-word lines.
+- **A full board is about ninety seconds of CPU.** Thirty clues at ~3 s each,
+  on two vCPU, in the background while a match runs. That is fine if it starts
+  when the board is dealt and nothing waits on it, which is the design — but it
+  is the first thing step three should confirm under a live match rather than
+  assume.
+
+### `READ_CHARS_PER_SEC` has to move again, and this is the trap
+
+It was just set to **11.5**, correctly, from Kokoro. Piper measures **16.0**
+(Mike) and **14.9** (Gene). The constant was measured on the engine that then
+got eliminated — so it is now about 30% slow, and the text fallback would arm
+the buzzers late rather than early. Set it from the slower shipping voice
+(14.9) and re-measure if the voice changes. A constant is only as good as the
+engine it was taken from.
+
+## Piper's install is not what the report assumed
+
+**Voices are not downloaded on first use.** The report said they were; on
+`piper1-gpl` a missing voice is a hard `ValueError: Unable to find voice
+(use piper.download_voices)` and every single clip fails. They have to be
+fetched once, explicitly.
+
+Ubuntu 24.04 also marks the system interpreter externally-managed, so a plain
+`pip install` is refused. What actually worked, and what the box now has:
+
+```bash
+sudo apt-get install -y python3-venv
+python3 -m venv /home/ubuntu/piper-venv
+/home/ubuntu/piper-venv/bin/pip install piper-tts
+/home/ubuntu/piper-venv/bin/python -m piper.download_voices \
+    en_US-ryan-medium en_US-joe-medium --data-dir /data/piper
+```
+
+Then `PIPER_BIN=/home/ubuntu/piper-venv/bin/piper` and
+`PIPER_DATA_DIR=/data/piper`. The venv is 55 MB, the two voices 121 MB, and both
+live outside the app directory so a deploy cannot take them. Neither belongs in
+`npm install`, which means **the deploy needs a line about them or a fresh box
+has no voice** — that is a `HOSTING.md` entry, not a code change.
+
+What is left is the one thing a benchmark cannot answer: whether it sounds like
+a game-show host. `/data/tts/bench/piper-mike.wav` and `piper-gene.wav` are the
+clips to judge, and they are David's call.
 
 ## What the box looks like now
 

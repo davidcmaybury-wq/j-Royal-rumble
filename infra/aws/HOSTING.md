@@ -83,6 +83,24 @@ sudo systemctl daemon-reload && sudo systemctl restart rumble
 The Discord application itself — the two channel ids, the redirect URI, what
 the bot posts — is `docs/discord-setup.md`, about five minutes of clicking.
 
+### The voice (autohost), installed outside npm
+Piper is a Python package and its voices are 61 MB files, so neither arrives
+with `npm install` and **a rebuilt box has no voice until this is redone**:
+
+```bash
+sudo apt-get install -y python3-venv
+python3 -m venv /home/ubuntu/piper-venv
+/home/ubuntu/piper-venv/bin/pip install piper-tts
+/home/ubuntu/piper-venv/bin/python -m piper.download_voices \
+    en_US-ryan-medium en_US-joe-medium --data-dir /data/piper
+```
+
+Then `PIPER_BIN=/home/ubuntu/piper-venv/bin/piper` and
+`PIPER_DATA_DIR=/data/piper` in the env file. Ubuntu 24.04 marks the system
+interpreter externally-managed, which is why this is a venv and not a plain
+`pip install`. Voices live in `/data` so a deploy cannot take them. Measured on
+this box: about 3 s to synthesize a clue, peak 36 MB, no resident process.
+
 ### Checking it took
 ```
 curl -s localhost:8080/api/health | python3 -m json.tool | head -40
