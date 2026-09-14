@@ -14,6 +14,7 @@ import { distinctLook, looksAlike } from '../public/wrestlers.js';
 import { wrongAnswer, status as wrongsStatus } from './wrongs.js';
 import * as reports from './reports.js';
 import * as logs from './logstore.js';
+import { mountAvailability, when, discord } from './when-routes.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS,
          loadDistributions, drawReadJitter, referenceHumanMedian,
          nightlyForm } from './bots.js';
@@ -1165,6 +1166,11 @@ app.get('/api/health', (req, res) => {
   }
   res.json({
     logs: logs.status(),
+    // Both of these report their own storage and what they are missing,
+    // because an unconfigured integration and a broken one look the same
+    // from outside and only one of them is worth getting out of bed for.
+    availability: when.status(),
+    discord: discord.status(),
     version: VERSION, machine: MACHINE,
     uptimeSeconds: Math.round((Date.now() - BOOTED) / 1000),
     liveMatches: matches.size,
@@ -1796,6 +1802,12 @@ app.get('/j/:id', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html
 app.get('/join', (_req, res) => res.sendFile(join(__dir, '../public/buzzer.html')));
 app.get('/host/:id', (_req, res) => res.sendFile(join(__dir, '../public/console.html')));
 app.get('/admin/:id', (_req, res) => res.sendFile(join(__dir, '../public/admin.html')));
+
+// Availability, the heat map and the game-night scan. Mounted here rather
+// than written here, and mounted at this point in the file because it borrows
+// `localReq` and `adminOk` — the guards that already exist — instead of
+// growing a second copy of either.
+mountAvailability(app, { dir: __dir, localReq, adminOk });
 
 // ---------------------------------------------------------------- sockets
 
@@ -2716,5 +2728,12 @@ http.listen(PORT, () => {
   if (!process.env.RUMBLE_LOG_KEY) {
     console.warn('WARNING: RUMBLE_LOG_KEY is not set — /api/logs is refusing '
       + 'everyone. The saved match logs are unreachable until it is set.');
+  }
+  // Not a refusal, unlike the two above: this one protects somebody's list of
+  // free evenings, and the cost of leaving it unset is that a deploy signs
+  // everybody out of /when rather than that anything is exposed.
+  if (!discord.sessionSecretSet()) {
+    console.warn('note: RUMBLE_SESSION_SECRET is not set — /when sign-ins will '
+      + 'not survive a restart.');
   }
 });

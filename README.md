@@ -590,6 +590,36 @@ the recommended interval. **It never refuses anything.** A host who wants a
 two-hour thirty-player match can have one; they should just know late draws will
 run away with it.
 
+## When can you play
+
+The match is not the hard part; getting eight people into the same evening is.
+`/when` is a shared calendar for that. A player signs in with Discord, paints
+the half hours they are usually free — dragging across a grid of the week — and
+marks the particular dates that differ from their usual. Everybody else's
+answers show up as a heat map, and the page lists the best windows in the next
+month.
+
+Two kinds of answer, deliberately:
+
+- **A usual week** is the pattern. Thursday evenings, most Sundays after eight.
+  It is what makes the thing useful with ten answers instead of a hundred.
+- **Particular dates** override it, in both directions: free this one Tuesday,
+  away the Thursday after next.
+
+Everything is stored in the player's own local time with their timezone beside
+it, and converted per real date. A weekly pattern held as UTC slots would be an
+hour wrong for half the year and could not hold two timezones at all.
+
+When a run of half hours clears the threshold — by default eight people free for
+the same two hours, adjustable from the control room — the bot posts it to the
+host's channel with a link. **The invite to the players is sent by hand**, from
+the control room, because an automatic ping is a message about a game nobody has
+agreed to host.
+
+`docs/discord-setup.md` is what has to exist on the Discord side. Until it does,
+the page still collects answers and the heat map still works; the posting half
+refuses and says which variable is missing.
+
 ## Entrance music
 
 Every player can pick something to walk in to. It plays on **the one screen with

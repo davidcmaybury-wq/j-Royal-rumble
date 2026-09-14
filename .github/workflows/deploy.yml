@@ -54,6 +54,12 @@ jobs:
           SEC_URL=http://127.0.0.1:8097 node test/security.mjs
           kill $SEC_PID 2>/dev/null || true
 
+      - name: Availability, the clock arithmetic and the overlap
+        run: |
+          # Spawns its own server on 8095 with the local test door open and its
+          # own store in a temp directory, so it never touches the real one.
+          node test/when.mjs
+
       - name: The reaper drops finished matches
         run: |
           # Its own server: the idle window, the finished-match grace and the

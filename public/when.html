@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J! Royal Rumble — when can you play?</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0E1C;--panel:#131A30;--panel2:#1B2444;--line:#2A3556;--chalk:#EEEBE1;
+--slate:#7C88AB;--brass:#D6A93F;--alarm:#E24A3C;--live:#4FB286;--r:5px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--chalk);
+font:400 15px/1.5 "IBM Plex Sans",system-ui,sans-serif;padding:22px 16px 70px}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:920px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.top a{color:var(--slate);text-decoration:none;font-size:13px}
+.top a:hover{color:var(--brass)}
+.ver{color:#3C486E;font-size:12px}
+h1{font-family:"Anton",Impact,sans-serif;font-size:30px;letter-spacing:.02em;margin:0 0 3px}
+h1 .j{color:var(--brass)}
+.sub{color:var(--slate);font-size:13.5px;margin-bottom:18px;max-width:64ch}
+
+/* Sign-in, and the account strip once you are in. */
+.gate{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+padding:18px 20px;margin-bottom:18px}
+.gate.warn{border-color:#6A4A12;background:#2A1A08;color:#E8C77A;font-size:13.5px}
+.gate.warn code{font-family:"IBM Plex Mono",monospace;background:#00000044;
+padding:1px 5px;border-radius:3px}
+.who{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.who img{width:30px;height:30px;border-radius:50%;border:1px solid var(--line)}
+.who b{font-weight:500}
+.who .sp{flex:1}
+.btn{display:inline-block;background:var(--brass);color:var(--ink);border:0;
+border-radius:var(--r);padding:11px 18px;font-weight:500;cursor:pointer;
+text-decoration:none}
+.btn:hover{background:#E8BC52}
+.ghost{background:none;border:1px solid var(--line);color:var(--slate);
+border-radius:var(--r);padding:6px 12px;font-size:13px;cursor:pointer}
+.ghost:hover{border-color:var(--brass);color:var(--brass)}
+.ghost.danger:hover{border-color:var(--alarm);color:var(--alarm)}
+
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{background:none;border:1px solid var(--line);color:var(--slate);
+border-radius:var(--r);padding:8px 16px;cursor:pointer;font-size:14px}
+.tab:hover{color:var(--chalk)}
+.tab.on{border-color:var(--brass);color:var(--brass);background:var(--panel2)}
+
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.segb{background:none;border:0;color:var(--slate);padding:7px 13px;cursor:pointer;
+font-size:13.5px}
+.segb.on{background:var(--panel2);color:var(--brass)}
+.sp{flex:1}
+.chk{display:flex;align-items:center;gap:7px;color:var(--slate);font-size:13px;
+cursor:pointer}
+.state{font-size:12.5px;color:var(--slate);font-family:"IBM Plex Mono",monospace}
+.state.ok{color:var(--live)}
+.state.bad{color:var(--alarm)}
+.nav{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.nav b{font-weight:500;font-size:14px}
+.nav .rng{color:var(--slate);font-size:13px}
+
+/* The grid. One column per day, one row per half hour, and a gutter of times.
+   Cells are deliberately big enough to hit with a thumb: this is painted on a
+   phone more often than not. */
+/* One pixel between rows, two between columns: a run of half hours somebody
+   painted should read as one block of evening, not as six separate bars. */
+.grid{display:grid;gap:1px 2px;user-select:none;touch-action:none;
+grid-template-columns:52px repeat(7,minmax(0,1fr))}
+.hd{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);
+text-align:center;padding:4px 0 6px;line-height:1.25}
+.hd .dt{display:block;font-size:11.5px;letter-spacing:0;text-transform:none;color:#4E5B85}
+.hd.today{color:var(--brass)}
+.tm{font-size:11px;color:#4E5B85;font-family:"IBM Plex Mono",monospace;
+text-align:right;padding-right:7px;line-height:20px;height:20px}
+.tm.half{color:#28304E}
+.cell{height:20px;border-radius:2px;background:#101731;border:1px solid #17203C;
+cursor:pointer}
+.cell:hover{border-color:var(--slate)}
+.cell.on{background:var(--brass);border-color:#E8BC52}
+.cell.ghost{background:#3A3113;border-color:#4A3E19}
+.cell.add{background:var(--live);border-color:#6FCFA4}
+.cell.drop{background:#2A1A1A;border-color:var(--alarm)}
+.cell.gap{background:#0B1122;border-color:#0B1122;cursor:default}
+.cell.past{opacity:.35;cursor:default}
+/* The heat ramp. Not scoped to .cell: the legend swatches wear the same
+   classes, and scoping it left the one place the ramp is explained blank. */
+.h0{background:#101731;border-color:#17203C}
+.h1{background:#1D2647;border-color:#243056}
+.h2{background:#2E3357;border-color:#3A4068}
+.h3{background:#4A4356;border-color:#5C5366}
+.h4{background:#6E5540;border-color:#84663F}
+.h5{background:#9C7530;border-color:#B98A32}
+.h6{background:var(--brass);border-color:#F0CB70}
+.cell.hit{outline:1px solid var(--live);outline-offset:-3px}
+
+.legend{display:flex;align-items:center;gap:9px;color:var(--slate);font-size:12.5px;
+margin-top:12px;flex-wrap:wrap}
+.key{display:inline-block;width:16px;height:12px;border-radius:2px;
+border:1px solid #17203C;vertical-align:-1px}
+.tip{min-height:2.6em;margin-top:10px;color:var(--chalk);font-size:13px;
+background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+padding:9px 12px}
+.tip .none{color:var(--slate)}
+
+.best{margin-top:22px}
+h2{font-family:"Anton",Impact,sans-serif;font-size:16px;letter-spacing:.05em;
+color:var(--brass);margin:24px 0 9px}
+.win{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;
+border:1px solid var(--line);border-left-width:3px;border-radius:var(--r);
+padding:11px 14px;margin-bottom:8px;background:var(--panel)}
+.win.good{border-left-color:var(--live)}
+.win b{font-weight:500}
+.win .n{color:var(--brass);font-family:"IBM Plex Mono",monospace}
+.win .names{color:var(--slate);font-size:12.5px;flex-basis:100%}
+.none{color:var(--slate);font-size:13.5px;padding:10px 0}
+.tzrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:20px;
+color:var(--slate);font-size:13px}
+select{background:var(--ink);border:1px solid var(--line);border-radius:var(--r);
+padding:7px 9px;color:var(--chalk);font-size:13px}
+select:focus{outline:none;border-color:var(--brass)}
+.foot{margin-top:30px;color:#3C486E;font-size:12px;line-height:1.6}
+@media (max-width:560px){
+  .grid{grid-template-columns:40px repeat(7,minmax(0,1fr))}
+  .hd{font-size:10px}
+  .hd .dt{font-size:10px}
+  .tm{font-size:10px;padding-right:4px}
+}
+</style></head>
+<body><div class="wrap">
+  <div class="top"><a href="/">&larr; J! Royal Rumble</a><span class="ver" id="ver"></span></div>
+  <h1><span class="j">J!</span> WHEN CAN YOU PLAY?</h1>
+  <p class="sub">Paint the half hours you could usually make a match, and the
+    odd evening that is different from your usual. When enough of us line up on
+    the same night, David gets told and sends the invite.</p>
+
+  <div id="gate"></div>
+
+  <div id="panel" hidden>
+    <div class="tabs">
+      <button class="tab on" id="tabMine">Your availability</button>
+      <button class="tab" id="tabAll">Everyone</button>
+    </div>
+
+    <div id="mine">
+      <div class="bar">
+        <div class="seg">
+          <button class="segb on" id="modeWeek">A usual week</button>
+          <button class="segb" id="modeDates">Particular dates</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="allDay"> All 24 hours</label>
+        <span class="sp"></span>
+        <button class="ghost" id="clear">Clear</button>
+        <span class="state" id="saveState"></span>
+      </div>
+      <div class="nav" id="navMine"></div>
+      <div class="grid" id="grid"></div>
+      <div class="legend" id="legendMine"></div>
+      <div class="tzrow">
+        <span>Your timezone</span>
+        <select id="tz"></select>
+        <span class="sp"></span>
+        <button class="ghost danger" id="forget">Forget me</button>
+      </div>
+    </div>
+
+    <div id="all" hidden>
+      <div class="bar">
+        <span class="state" id="heatCount"></span>
+        <span class="sp"></span>
+        <label class="chk"><input type="checkbox" id="allDay2"> All 24 hours</label>
+      </div>
+      <div class="nav" id="navAll"></div>
+      <div class="grid" id="heat"></div>
+      <div class="tip" id="tip"></div>
+      <div class="legend" id="legendAll"></div>
+      <div class="best">
+        <h2>Best windows in the next month</h2>
+        <div id="best"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script type="module">
+import { DAYS, SLOT, zonedToUtc, localParts, isoDate, dowOf, addDays,
+         minutesToRanges, rangeMinutes, knownZone } from '/zoned.js';
+
+const $ = (id) => document.getElementById(id);
+
+// --- state -----------------------------------------------------------------
+
+let USER = null;                 // the signed-in Discord account
+let TZ = 'America/Los_Angeles';
+let WEEK = {};                   // day name -> Set of local minutes
+let DATES = {};                  // 'YYYY-MM-DD' -> { add:Set, drop:Set }
+let HEAT = null;
+let tab = 'mine';
+let mode = 'week';
+let offset = 0;                  // weeks from this one
+let dirty = null;                // pending save timer
+
+const guessZone = () => {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return TZ; }
+};
+
+// Rows. Evenings by default — the whole point of the page is finding a night,
+// and 48 rows of mostly-empty daytime is a worse first sight than 20 rows of
+// the hours anybody actually plays.
+const EVENING = [15 * 60, 24 * 60];
+const ALLDAY = [0, 24 * 60];
+const STEP = SLOT / 60000;        // the server's half hour, in minutes
+const rows = () => {
+  const [a, b] = ($('allDay').checked || $('allDay2').checked) ? ALLDAY : EVENING;
+  const out = [];
+  for (let m = a; m < b; m += STEP) out.push(m);
+  return out;
+};
+
+const ZONES = ['America/Los_Angeles', 'America/Denver', 'America/Phoenix',
+  'America/Chicago', 'America/New_York', 'America/Halifax', 'Europe/London',
+  'Europe/Dublin', 'Europe/Paris', 'Europe/Berlin', 'Europe/Zurich',
+  'Europe/Athens', 'Asia/Tokyo', 'Asia/Seoul', 'Asia/Kolkata', 'Asia/Singapore',
+  'Australia/Sydney', 'Pacific/Auckland', 'UTC'];
+
+// --- little helpers --------------------------------------------------------
+
+const setOf = (ranges) => new Set(rangeMinutes(ranges || []));
+const ranges = (set) => minutesToRanges([...set]);
+
+function hhmm(minutes) {
+  const h = Math.floor(minutes / 60) % 24, m = minutes % 60;
+  const ampm = h < 12 ? 'am' : 'pm';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return m ? `${h12}:30${ampm}` : `${h12}${ampm}`;
+}
+
+function fmtDay(date) {
+  return new Date(Date.UTC(date.y, date.m - 1, date.d))
+    .toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' });
+}
+
+function fmtWhen(ms) {
+  return new Date(ms).toLocaleString('en-US', {
+    timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  });
+}
+
+function fmtClock(ms) {
+  return new Date(ms).toLocaleString('en-US', {
+    timeZone: TZ, hour: 'numeric', minute: '2-digit',
+  });
+}
+
+/** The Sunday of the week being shown, as a calendar date in TZ. */
+function weekStart() {
+  const now = localParts(TZ, Date.now());
+  const back = dowOf(now.y, now.m, now.d);
+  return addDays(now.y, now.m, now.d, offset * 7 - back);
+}
+
+const dateKey = (d) => isoDate(d.y, d.m, d.d);
+
+function exceptionsFor(key) {
+  if (!DATES[key]) DATES[key] = { add: new Set(), drop: new Set() };
+  return DATES[key];
+}
+
+/** Is this player free at this local minute on this date, all rules applied? */
+function freeOn(date, minute) {
+  const key = dateKey(date);
+  const ex = DATES[key];
+  const base = (WEEK[DAYS[dowOf(date.y, date.m, date.d)]] || new Set()).has(minute);
+  if (!ex) return base;
+  if (ex.drop.has(minute)) return false;
+  if (ex.add.has(minute)) return true;
+  return base;
+}
+
+// --- loading and saving ----------------------------------------------------
+
+async function boot() {
+  const d = await (await fetch('/api/when/me')).json();
+  USER = d.user;
+  renderGate(d);
+  $('foot').innerHTML = d.storage && !d.storage.durable
+    ? 'Answers are being written inside the app directory, which the next deploy '
+      + 'replaces. Make <code>/data</code> on the server to keep them.'
+    : '';
+  if (!USER) { await loadHeat(); return; }
+
+  TZ = (d.me && knownZone(d.me.tz)) ? d.me.tz : guessZone();
+  WEEK = {};
+  for (const day of DAYS) WEEK[day] = setOf(d.me && d.me.weekly ? d.me.weekly[day] : []);
+  DATES = {};
+  for (const [key, v] of Object.entries((d.me && d.me.dates) || {})) {
+    DATES[key] = { add: setOf(v.add), drop: setOf(v.drop) };
+  }
+  $('panel').hidden = false;
+  renderZones();
+  renderAll();
+  await loadHeat();
+}
+
+function queueSave() {
+  $('saveState').textContent = 'saving…';
+  $('saveState').className = 'state';
+  clearTimeout(dirty);
+  dirty = setTimeout(saveNow, 700);
+}
+
+async function saveNow() {
+  const weekly = {};
+  for (const day of DAYS) {
+    const r = ranges(WEEK[day] || new Set());
+    if (r.length) weekly[day] = r;
+  }
+  const dates = {};
+  for (const [key, v] of Object.entries(DATES)) {
+    const add = ranges(v.add), drop = ranges(v.drop);
+    if (add.length || drop.length) dates[key] = { add, drop };
+  }
+  try {
+    const r = await fetch('/api/when/me', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tz: TZ, weekly, dates }),
+    });
+    if (!r.ok) throw new Error((await r.json()).error || 'save failed');
+    $('saveState').textContent = 'saved';
+    $('saveState').className = 'state ok';
+    await loadHeat();
+  } catch (e) {
+    $('saveState').textContent = e.message;
+    $('saveState').className = 'state bad';
+  }
+}
+
+async function loadHeat() {
+  try {
+    HEAT = await (await fetch('/api/when/heat')).json();
+  } catch { HEAT = null; }
+  renderHeat();
+  renderBest();
+}
+
+// --- rendering -------------------------------------------------------------
+
+function renderGate(d) {
+  const g = $('gate');
+  if (d.user) {
+    g.className = 'gate';
+    g.innerHTML = `<div class="who">
+      ${d.user.avatar ? `<img src="${d.user.avatar}" alt="">` : ''}
+      <span>Signed in as <b>${esc(d.user.name)}</b></span>
+      <span class="sp"></span>
+      <button class="ghost" data-act="signout">Sign out</button></div>`;
+    return;
+  }
+  if (!d.discord || !d.discord.signIn) {
+    g.className = 'gate warn';
+    g.innerHTML = 'Discord sign-in is not switched on for this server yet.'
+      + (d.discord && d.discord.missing.length
+        ? ` Missing: <code>${d.discord.missing.join('</code> <code>')}</code>.` : '');
+    return;
+  }
+  g.className = 'gate';
+  g.innerHTML = `<div class="who">
+    <span>Sign in with Discord so we know who is free — and so the invite can
+      reach you. Nothing else is asked for and no email is stored.</span>
+    <span class="sp"></span>
+    <a class="btn" href="/auth/discord?next=/when">Sign in with Discord</a></div>`;
+}
+
+function renderZones() {
+  const all = [...new Set([TZ, guessZone(), ...ZONES])].filter(knownZone);
+  $('tz').innerHTML = all.map((z) =>
+    `<option value="${z}"${z === TZ ? ' selected' : ''}>${z.replace(/_/g, ' ')}</option>`).join('');
+}
+
+function renderAll() {
+  renderNav();
+  renderGrid();
+  renderLegend();
+}
+
+function renderNav() {
+  const showDates = mode === 'dates' || tab === 'all';
+  const w = weekStart();
+  const end = addDays(w.y, w.m, w.d, 6);
+  const label = offset === 0 ? 'This week' : offset === 1 ? 'Next week' : `${offset} weeks out`;
+  // The buttons carry what they do in a data attribute and the container
+  // handles the click, so re-rendering the strip cannot leave a live element
+  // behind a dead handler.
+  $(tab === 'all' ? 'navAll' : 'navMine').innerHTML = showDates
+    ? `<button class="ghost" data-step="-1">&lsaquo;</button>
+       <b>${label}</b><span class="rng">${fmtDay(w)} – ${fmtDay(end)}</span>
+       <button class="ghost" data-step="1">&rsaquo;</button>`
+    : '<span class="rng">Every week, unless you say otherwise on a particular date.</span>';
+}
+
+function repaint() {
+  if (tab === 'all') { renderNav(); renderHeat(); } else renderAll();
+}
+
+/** The seven column headings, dated or not. */
+function headings(dated) {
+  const w = weekStart();
+  const today = dateKey(localParts(TZ, Date.now()));
+  let out = '<div class="hd"></div>';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(w.y, w.m, w.d, i);
+    const is = dated && dateKey(d) === today;
+    out += `<div class="hd${is ? ' today' : ''}">${DAYS[i]}`
+      + (dated ? `<span class="dt">${fmtDay(d)}</span>` : '') + '</div>';
+  }
+  return out;
+}
+
+function renderGrid() {
+  const dated = mode === 'dates';
+  const w = weekStart();
+  const now = Date.now();
+  let html = headings(dated);
+  for (const minute of rows()) {
+    html += `<div class="tm${minute % 60 ? ' half' : ''}">${minute % 60 ? '' : hhmm(minute)}</div>`;
+    for (let i = 0; i < 7; i++) {
+      const day = DAYS[i];
+      if (!dated) {
+        const on = (WEEK[day] || new Set()).has(minute);
+        html += `<div class="cell${on ? ' on' : ''}" data-day="${day}" data-min="${minute}"></div>`;
+        continue;
+      }
+      const d = addDays(w.y, w.m, w.d, i);
+      const key = dateKey(d);
+      const t = zonedToUtc(TZ, d.y, d.m, d.d, minute);
+      if (t == null) {
+        // An hour that does not exist, the morning the clocks go forward.
+        html += '<div class="cell gap"></div>';
+        continue;
+      }
+      const ex = DATES[key];
+      const base = (WEEK[day] || new Set()).has(minute);
+      let cls = 'cell';
+      if (ex && ex.drop.has(minute)) cls += ' drop';
+      else if (ex && ex.add.has(minute)) cls += ' add';
+      else if (base) cls += ' ghost';
+      if (t < now) cls += ' past';
+      html += `<div class="${cls}" data-date="${key}" data-day="${day}" data-min="${minute}"></div>`;
+    }
+  }
+  $('grid').innerHTML = html;
+}
+
+function renderLegend() {
+  $('legendMine').innerHTML = mode === 'dates'
+    ? '<span><span class="key" style="background:#3A3113"></span> your usual week</span>'
+      + '<span><span class="key" style="background:#4FB286"></span> free just this once</span>'
+      + '<span><span class="key" style="background:#2A1A1A;border-color:#E24A3C"></span> not this time</span>'
+      + '<span class="sp"></span><span>Tap a cell to change only that date.</span>'
+    : '<span><span class="key" style="background:#D6A93F"></span> free most weeks</span>'
+      + '<span class="sp"></span><span>Drag to paint. This is the pattern; '
+      + 'particular dates override it.</span>';
+  $('legendAll').innerHTML = [1, 2, 3, 4, 5, 6]
+    .map((i) => `<span class="key h${i}"></span>`).join('')
+    + '<span>fewer &rarr; more people free</span>'
+    + '<span class="sp"></span><span>Tap a square to see who.</span>';
+}
+
+function renderHeat() {
+  if (!HEAT) { $('heat').innerHTML = ''; return; }
+  const by = new Map();
+  for (const s of HEAT.slots) by.set(s.t, s);
+  const threshold = (HEAT.settings && HEAT.settings.threshold) || 8;
+  const w = weekStart();
+  const now = Date.now();
+  let html = headings(true);
+  for (const minute of rows()) {
+    html += `<div class="tm${minute % 60 ? ' half' : ''}">${minute % 60 ? '' : hhmm(minute)}</div>`;
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(w.y, w.m, w.d, i);
+      const t = zonedToUtc(TZ, d.y, d.m, d.d, minute);
+      if (t == null) { html += '<div class="cell gap"></div>'; continue; }
+      const s = by.get(t);
+      const n = s ? s.n : 0;
+      const lvl = n === 0 ? 0 : Math.max(1, Math.min(6, Math.ceil((n / threshold) * 6)));
+      const mine = USER && s && s.who.some((p) => p.id === USER.id);
+      html += `<div class="cell h${lvl}${mine ? ' hit' : ''}${t < now ? ' past' : ''}"`
+        + ` data-t="${t}"></div>`;
+    }
+  }
+  $('heat').innerHTML = html;
+  $('heatCount').textContent = HEAT.players
+    ? `${HEAT.players} ${HEAT.players === 1 ? 'person has' : 'people have'} answered`
+    : 'Nobody has answered yet';
+  $('tip').innerHTML = '<span class="none">Tap a square to see who is free then.</span>';
+}
+
+function renderBest() {
+  const el = $('best');
+  if (!HEAT || !HEAT.windows || !HEAT.windows.length) {
+    el.innerHTML = `<div class="none">No window yet where ${
+      (HEAT && HEAT.settings ? HEAT.settings.threshold : 8)} people can all make
+      the same two hours. It only takes a few more answers.</div>`;
+    return;
+  }
+  el.innerHTML = HEAT.windows.map((w) => `<div class="win good">
+      <b>${esc(fmtWhen(w.start))}</b>
+      <span class="rng">to ${esc(fmtClock(w.end))}</span>
+      <span class="sp"></span>
+      <span class="n">${w.n} free</span>
+      ${w.who.length ? `<span class="names">${w.who.map((p) => esc(p.name)).join(', ')}</span>` : ''}
+    </div>`).join('');
+}
+
+const esc = (s) => String(s).replace(/[<>&"]/g, (c) =>
+  ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+
+// --- painting --------------------------------------------------------------
+//
+// One gesture, three meanings, decided by the first cell touched: if it starts
+// on something that is on, the drag turns things off, and the other way round.
+// A drag that decided per cell would toggle a cell twice the moment a finger
+// wobbled back over it.
+
+let paint = null;
+
+function cellAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  return el && el.classList && el.classList.contains('cell') ? el : null;
+}
+
+function apply(el) {
+  if (!el || !el.dataset || el.dataset.min == null) return;
+  const minute = Number(el.dataset.min);
+  const day = el.dataset.day;
+  // A drag passes over the same cell many times. Repainting the grid for a
+  // change that is not a change makes the whole gesture stutter on a phone.
+  const already = mode === 'dates'
+    ? freeOn(parseKey(el.dataset.date), minute)
+    : (WEEK[day] || new Set()).has(minute);
+  if (already === paint.on) return;
+  if (mode === 'dates') {
+    const key = el.dataset.date;
+    if (!key) return;
+    const ex = exceptionsFor(key);
+    const base = (WEEK[day] || new Set()).has(minute);
+    ex.add.delete(minute); ex.drop.delete(minute);
+    if (paint.on) { if (!base) ex.add.add(minute); } else if (base) ex.drop.add(minute);
+    if (!ex.add.size && !ex.drop.size) delete DATES[key];
+  } else {
+    if (!WEEK[day]) WEEK[day] = new Set();
+    if (paint.on) WEEK[day].add(minute); else WEEK[day].delete(minute);
+  }
+  renderGrid();
+  queueSave();
+}
+
+function startPaint(e) {
+  const el = cellAt(e.clientX, e.clientY);
+  if (!el || el.classList.contains('gap')) return;
+  const minute = Number(el.dataset.min);
+  const day = el.dataset.day;
+  const on = mode === 'dates'
+    ? !freeOn({ ...parseKey(el.dataset.date) }, minute)
+    : !(WEEK[day] || new Set()).has(minute);
+  paint = { on };
+  $('grid').setPointerCapture(e.pointerId);
+  apply(el);
+  e.preventDefault();
+}
+
+function parseKey(key) {
+  const [y, m, d] = String(key || '').split('-').map(Number);
+  return { y, m, d };
+}
+
+function movePaint(e) {
+  if (!paint) return;
+  const el = cellAt(e.clientX, e.clientY);
+  if (el && !el.classList.contains('gap')) apply(el);
+}
+
+function endPaint() { paint = null; }
+
+// --- wiring ----------------------------------------------------------------
+
+function stepWeek(e) {
+  const b = e.target.closest ? e.target.closest('[data-step]') : null;
+  if (!b) return;
+  offset = Math.max(0, Math.min(4, offset + Number(b.dataset.step)));
+  repaint();
+}
+$('navMine').addEventListener('click', stepWeek);
+$('navAll').addEventListener('click', stepWeek);
+
+$('gate').addEventListener('click', async (e) => {
+  const b = e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!b || b.dataset.act !== 'signout') return;
+  await fetch('/api/when/signout', { method: 'POST' });
+  location.reload();
+});
+
+$('grid').addEventListener('pointerdown', startPaint);
+$('grid').addEventListener('pointermove', movePaint);
+$('grid').addEventListener('pointerup', endPaint);
+$('grid').addEventListener('pointercancel', endPaint);
+
+$('heat').addEventListener('click', (e) => {
+  const el = e.target.closest ? e.target.closest('.cell') : null;
+  if (!el || !el.dataset.t || !HEAT) return;
+  const s = HEAT.slots.find((x) => x.t === Number(el.dataset.t));
+  if (!s) { $('tip').innerHTML = '<span class="none">Nobody, yet.</span>'; return; }
+  $('tip').innerHTML = `<b>${esc(fmtWhen(s.t))}</b> — ${s.n} free`
+    + (s.who.length ? `: ${s.who.map((p) => esc(p.name)).join(', ')}`
+      : ' <span class="none">(sign in to see who)</span>');
+});
+
+$('tabMine').onclick = () => {
+  tab = 'mine'; $('tabMine').className = 'tab on'; $('tabAll').className = 'tab';
+  $('mine').hidden = false; $('all').hidden = true; renderAll();
+};
+$('tabAll').onclick = () => {
+  tab = 'all'; $('tabAll').className = 'tab on'; $('tabMine').className = 'tab';
+  $('all').hidden = false; $('mine').hidden = true;
+  renderNav(); renderHeat(); renderLegend();
+};
+$('modeWeek').onclick = () => {
+  mode = 'week'; $('modeWeek').className = 'segb on'; $('modeDates').className = 'segb';
+  renderAll();
+};
+$('modeDates').onclick = () => {
+  mode = 'dates'; $('modeDates').className = 'segb on'; $('modeWeek').className = 'segb';
+  renderAll();
+};
+$('allDay').onchange = () => { $('allDay2').checked = $('allDay').checked; repaint(); };
+$('allDay2').onchange = () => { $('allDay').checked = $('allDay2').checked; repaint(); };
+$('tz').onchange = () => { TZ = $('tz').value; renderAll(); renderHeat(); queueSave(); };
+$('clear').onclick = () => {
+  if (!confirm(mode === 'dates'
+    ? 'Clear every change you have made to particular dates?'
+    : 'Clear your usual week?')) return;
+  if (mode === 'dates') DATES = {}; else for (const day of DAYS) WEEK[day] = new Set();
+  renderGrid(); queueSave();
+};
+$('forget').onclick = async () => {
+  if (!confirm('Remove your availability entirely?')) return;
+  await fetch('/api/when/me', { method: 'DELETE' });
+  location.reload();
+};
+
+fetch('/api/health').then((r) => r.json())
+  .then((h) => { $('ver').textContent = 'v' + h.version; })
+  .catch(() => {});
+
+boot();
+</script>
+</body></html>

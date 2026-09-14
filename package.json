@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.96.1",
+  "version": "0.97.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -74,7 +74,8 @@
     "comeback-study": "node tools/comeback-study.mjs",
     "doubleresolve-test": "node test/doubleresolve.mjs",
     "arcade-test": "node test/arcade.mjs",
-    "wrongs-test": "node test/wrongs.mjs"
+    "wrongs-test": "node test/wrongs.mjs",
+    "when-test": "node test/when.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

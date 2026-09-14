@@ -6,3 +6,10 @@ logs/
 # Runtime, like logs/: the server writes bug reports here when /data is absent,
 # so a local test run leaves files that are not part of the project.
 reports/
+# Same again for availability: with no /data the store is written next to the
+# app, and a local run should not leave somebody's free evenings in a diff.
+when.json
+when.json.tmp
+# The desktop app drops files it hands over into here. `npm run ship` runs
+# `git add -A`, so without this a screenshot lands in a release commit.
+Claude outputs/

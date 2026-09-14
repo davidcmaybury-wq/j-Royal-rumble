@@ -59,7 +59,16 @@ margin-top:12px;text-decoration:underline;text-underline-offset:3px}
 /* Two ways in for somebody who has never played. Deliberately below the three
    doors and above the small print: a returning player skips them without
    noticing, a new one cannot miss them. */
-.learn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+/* The scheduling door. Wider than the two learn buttons and quieter than the
+   three doors: it is not what most visitors came for, but it is the only thing
+   on the page that makes the next match happen. */
+.when{display:block;margin-top:22px;padding:14px 16px;border:1px solid var(--line);
+border-radius:var(--r);text-decoration:none;background:#101731}
+.when:hover{border-color:var(--brass)}
+.when b{display:block;color:var(--chalk);font-weight:500;font-size:14.5px}
+.when span{display:block;color:var(--slate);font-size:12.5px;margin-top:3px;line-height:1.45}
+.when:hover b{color:var(--brass)}
+.learn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 @media (max-width:560px){.learn{grid-template-columns:1fr}}
 .lbtn{display:block;padding:13px 15px;border:1px solid var(--line);
 border-radius:var(--r);text-decoration:none;background:#101731}
@@ -120,6 +129,13 @@ footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
     <div class="err" id="err" role="status"></div>
     <button class="back" id="back">Back</button>
   </div>
+
+  <!-- Scheduling, not playing: below the three doors because somebody who
+       came here to join a match should not have to read past it, and above the
+       small print because a game only happens if people answer it. -->
+  <a class="when" href="/when"><b>When can you play?</b>
+    <span>Mark the evenings you are usually free. When enough of us line up,
+      David gets told and sends the invite.</span></a>
 
   <div class="learn">
     <a class="lbtn" href="/how-to-play"><b>New here? How to play</b>
