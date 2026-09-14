@@ -139,7 +139,14 @@ padding:9px;border-radius:7px;
 box-shadow:inset 0 1px 0 #B5AC9C,inset 0 -2px 5px #00000066}
 .cat{font-size:10px;line-height:1.25;letter-spacing:.05em;text-transform:uppercase;text-align:center;
 padding:7px 4px;background:linear-gradient(175deg,#EFE9DC,#CFC7B6);color:#1C2242;font-weight:700;
-border:2px solid #3A352C;border-radius:4px;min-height:66px;max-height:96px;overflow:hidden;
+border:2px solid #3A352C;border-radius:4px;
+/* A FIXED height, not a range. min-height:66px with max-height:96px meant a
+   card carrying a hint stood up to 30px taller than its neighbours and pushed
+   its own column of clues down, so the board stopped lining up across the six
+   columns. watch.html hit this first and fixed it the same way; this card was
+   left behind. Every card is now the same height and the hint clamps inside
+   it. */
+height:96px;overflow:hidden;
 box-shadow:inset 0 1px 0 #FFFFFFAA,inset 0 -2px 3px #00000033;
 display:flex;flex-direction:column;justify-content:center;gap:2px;position:relative}
 /* Clamped to one line so a long note cannot make one column taller than the
@@ -150,6 +157,10 @@ display:flex;flex-direction:column;justify-content:center;gap:2px;position:relat
 .cat .note{font-size:9.5px;line-height:1.3;letter-spacing:0;text-transform:none;
 color:#7A4C10;font-style:italic;max-width:100%;
 display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* Dim, small, and under the title rather than appended to it: the year is
+   context, not part of the category's name, and a card this size cannot afford
+   to have it competing for the title's two lines. */
+.cat .yr{font-size:8.5px;font-weight:600;letter-spacing:.08em;color:#6E6858}
 .cat .src{position:absolute;top:2px;left:4px;font-size:8px;color:#6E6858;letter-spacing:.08em}
 .veto{position:absolute;top:2px;right:3px;font-size:13px;color:#6E6858;padding:1px 3px;border-radius:3px}
 .veto:hover{color:var(--alarm);background:#0004}
@@ -1181,7 +1192,9 @@ function renderBoard() {
     const col = document.createElement('div'), h = document.createElement('div');
     h.className = 'cat';
     h.innerHTML = '<div class="src">' + (cat.source === 'original' ? 'TTG' : 'J!') + '</div>'
-      + '<div>' + cat.title + '</div>' + (cat.note ? '<div class="note">' + cat.note + '</div>' : '');
+      + '<div>' + cat.title + '</div>'
+      + (cat.year ? '<div class="yr">' + cat.year + '</div>' : '')
+      + (cat.note ? '<div class="note">' + cat.note + '</div>' : '');
     if (cat.note) h.title = cat.note;      // the clamped note in full, on hover
     const v = document.createElement('button'); v.className = 'veto'; v.textContent = '\u21BB';
     v.setAttribute('aria-label', 'Reroll ' + cat.title);

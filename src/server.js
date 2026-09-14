@@ -98,7 +98,8 @@ const app = express();
 app.disable('x-powered-by');
 
 // The site was sending no security headers at all — no HSTS, no nosniff, no
-// frame protection, no referrer policy. helmet's defaults cover those.
+// frame protection. helmet's defaults cover those; the referrer policy is
+// overridden below, because its default broke YouTube embeds outright.
 //
 // Content-Security-Policy is off on purpose, not by oversight. Every page here
 // is a single self-contained file with its inline <script> and <style>, which a
@@ -107,7 +108,25 @@ app.disable('x-powered-by');
 // moving every page's script to its own file and hashing it. That is a real
 // piece of work and a separate change; doing it badly would break the one page
 // players cannot do without.
-app.use(helmet({ contentSecurityPolicy: false }));
+//
+// The referrer policy is set rather than inherited. helmet defaults to
+// `no-referrer`, which strips the Referer from every outbound request — and
+// YouTube uses it to decide whether a site may embed a video. With no referrer
+// it refuses, answering error 153, so every YouTube entrance theme died
+// silently for as long as entrance music has existed. Players kept choosing
+// them: seven on 2026-09-07 alone, and the room never heard one.
+//
+// `strict-origin-when-cross-origin` sends the origin and nothing else to a
+// cross-origin HTTPS destination, so YouTube learns `https://j-royal-rumble.net`
+// and no more. The two things worth protecting are untouched: the host key
+// lives in the URL *fragment*, which no policy ever sends, and the path — the
+// room code in /host/LXAF or /j/ABCD — is not sent cross-origin under this
+// policy either. Same-origin requests still get the full URL, and a downgrade
+// to http sends nothing.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
 app.use(express.json({ limit: '12mb' }));
 
 // A retired host, kept running as a fallback, is a hazard: matches live in
@@ -435,6 +454,15 @@ class Match {
 
       board: g.board.map((c) => ({
         title: c.title, note: c.note, source: c.source,
+        // The year the category was written, for archive material only. A J!
+        // category is of its time — "STATE OF THE UNION ADDRESSES" plays very
+        // differently in 2005 than now — and the room should be able to see
+        // that before somebody buzzes. Original boards have an author rather
+        // than an air date and show nothing, which is why this keys off the
+        // source and not merely on the field being present.
+        year: c.source === 'archive' && c.provenance?.airDate
+          ? Number(String(c.provenance.airDate).slice(0, 4)) || null
+          : null,
         clues: c.clues.map((x) => ({
           row: x.row, revealed: x.revealed,
           value: [100, 200, 300, 400, 500][x.row - 1] * g.overtimeMultiplier(),
@@ -532,6 +560,15 @@ class Match {
         overtime: g.overtime ? g.overtime() : null,
         board: g.board.map((c) => ({
           title: c.title, note: c.note, source: c.source,
+        // The year the category was written, for archive material only. A J!
+        // category is of its time — "STATE OF THE UNION ADDRESSES" plays very
+        // differently in 2005 than now — and the room should be able to see
+        // that before somebody buzzes. Original boards have an author rather
+        // than an air date and show nothing, which is why this keys off the
+        // source and not merely on the field being present.
+        year: c.source === 'archive' && c.provenance?.airDate
+          ? Number(String(c.provenance.airDate).slice(0, 4)) || null
+          : null,
           clues: c.clues.map((x) => ({ row: x.row, revealed: x.revealed,
             // What it will actually cost, not what the row says.
             value: [100, 200, 300, 400, 500][x.row - 1] * g.overtimeMultiplier() })) })),

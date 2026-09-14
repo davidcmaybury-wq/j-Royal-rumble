@@ -345,6 +345,33 @@ for (const page of ['setup.html', 'console.html', 'buzzer.html', 'admin.html']) 
     errs.length ? errs[0] : `${painters.length} renderers exercised`);
 }
 
+// --- the category card is a fixed height on every board -------------------
+//
+// A card that grows to fit a hint pushes its own column of clues down, and the
+// six columns stop lining up. watch.html fixed this with a fixed height and
+// said so in a comment; console.html was left on min-height:66px/max-height:96px
+// and grew by up to 30px whenever a category carried a hint. Reported from a
+// live match, twice — the second time with a screenshot.
+//
+// The buzzer is exempt and has to be: its .bgrid puts every card in one shared
+// grid row, so the row itself equalizes them.
+{
+  const bad = [];
+  for (const page of ['console.html', 'watch.html']) {
+    const css = readFileSync(new URL(`../public/${page}`, import.meta.url), 'utf8');
+    const rule = /\n\.cat\{[\s\S]*?\}/.exec(css);
+    if (!rule) { bad.push(`${page}: no .cat rule found`); continue; }
+    const body = rule[0].replace(/\/\*[\s\S]*?\*\//g, '');
+    if (/min-height:/.test(body) || /max-height:/.test(body)) {
+      bad.push(`${page}: .cat sizes by min/max-height, so a hint makes it taller`);
+    } else if (!/(^|[;{\s])height:/.test(body)) {
+      bad.push(`${page}: .cat sets no fixed height`);
+    }
+  }
+  check('the category card is a fixed height, so a hint cannot misalign the board',
+    bad.length === 0, bad.join('; ') || 'console and watch both pin a height');
+}
+
 // --- a function that is called but never defined --------------------------
 //
 // `lagHint()` was called from renderMech and defined nowhere, through several

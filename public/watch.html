@@ -146,6 +146,9 @@ border:2px solid #3A352C}
 overflow:hidden;text-transform:none;letter-spacing:0;font-style:italic;font-weight:400;
 font-size:clamp(9.5px,0.95vw,12.5px);line-height:1.3;color:#6A4A12;margin-top:4px;
 max-width:100%}
+/* Context rather than name, so it sits under the title and does not eat one of
+   the title's two clamped lines — the mistake the source tag made here once. */
+.cat .yr{display:block;font-size:.72em;font-weight:600;letter-spacing:.1em;color:#6E6858}
 .cat .src{display:block;font-size:8.5px;letter-spacing:.14em;color:#6E6858;margin-bottom:3px}
 .cat .ttl{width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
 overflow:hidden}
@@ -363,6 +366,7 @@ function board() {
       + (c.source ? '<span class="src">'
           + (c.source === 'original' ? 'TTG' : 'J!') + '</span>' : '')
       + '<span class="ttl">' + c.title + '</span>'
+      + (c.year ? '<span class="yr">' + c.year + '</span>' : '')
       + (c.note ? '<span class="note">' + esc(c.note) + '</span>' : '')
       + '</div>'
     + c.clues.map((x) => {

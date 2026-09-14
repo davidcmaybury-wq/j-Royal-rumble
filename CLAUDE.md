@@ -530,6 +530,15 @@ different fixed-position overlays have now covered them:
 
 - the entry banner, twice, anchored at `bottom:92px` against a dock whose height
   grows when the chip row wraps;
+A fourth alignment bug, same family, different axis: `console.html`'s `.cat`
+sized itself with `min-height:66px` and `max-height:96px`, so a category
+carrying a hint stood up to 30px taller than its neighbours and pushed its own
+column of clues down — the six columns stopped lining up. `watch.html` had
+already hit this and fixed it with a fixed height, saying so in a comment; the
+console card was simply left behind. Both pin a height now and `pagerefs.mjs`
+fails if either goes back to a range. The buzzer is exempt and must stay so: its
+`.bgrid` puts every card in one shared grid row, which equalizes them.
+
 - the YouTube entrance box (`.ytbox` in `theme-player.js`), at `bottom:14px`,
   200x113, with no `pointer-events:none` — measured at 1440x900 it spanned
   y 773-886 against a dock starting at 808. The host pressed Correct, nothing
@@ -613,6 +622,34 @@ entrance from here is the browser refusing playback, which raises
 `theme-refused` and now leaves a message that **stays in the feed**. It used to
 expire after five seconds, which is the window in which a host is busiest — the
 one signal explaining the silence timed out before anybody could read it.
+
+## YouTube entrance music died on a security header
+
+Every YouTube theme failed with YouTube's error 153 — "Video player
+configuration error" — for as long as entrance music has existed. The cause was
+`helmet`'s default `Referrer-Policy: no-referrer`, which strips the Referer from
+every outbound request. YouTube uses it to decide whether a site may embed a
+video, and with no referrer it refuses outright.
+
+Set explicitly now: `strict-origin-when-cross-origin`. Cross-origin destinations
+get the origin and nothing more. **The two things worth protecting are
+untouched** — the host key rides the URL *fragment*, which no policy ever sends,
+and the path (the room code in `/host/LXAF`) is not sent cross-origin under this
+policy either. Do not relax it to `no-referrer-when-downgrade`, which would send
+the full URL and leak room codes.
+
+Verified by loading the four real player picks from 2026-09-07: before the
+change all five embeds including a known-good control returned 153; after it the
+control and one player's pick play, and the other three fail individually
+("video is unavailable", "video is private") — real problems with those links,
+now named by the console.
+
+**The instrument was fine and I called it broken.** Chasing this, every embed
+failed in the browser harness *including the control*, and I concluded the
+harness could not play YouTube and stopped trusting it. The control was failing
+for the same reason as everything else — it was served from a page carrying the
+same header. A control that fails is evidence the bug is broader than you think,
+not evidence the test rig is broken.
 
 ## Abandoned matches
 
@@ -760,6 +797,11 @@ nothing, so the host could not tell what had happened.
   measuring it; don't.
 
 ## Queued, not started
+
+**~~Show the year on an archive category card.~~ Done.** `year` rides the board
+payload for `source === 'archive'` only, computed from `provenance.airDate`, and
+renders as a dim line under the title on all three cards. Original boards send
+null and show nothing. Original note follows.
 
 **Show the year on an archive category card.** A J! category should say when it
 was written — "STATE OF THE UNION ADDRESSES · 2005" — so the room knows whether
