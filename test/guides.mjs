@@ -200,6 +200,20 @@ for (const [what, needle] of [
   ['that aiming back is not a surcharge', 'neither a discount nor a surcharge'],
   ['the draw-slot finding', 'The draw slot is the biggest lever measured'],
   ['and the renumbered figure run', 'Figure 37'],
+  // Matches 23-24, merged from the analysis chat's live-sep14 page. The top
+  // rope needle matters most: this document told people for twenty-two matches
+  // that nothing optional had ever been used, and that claim is now wrong in a
+  // specific, interesting way. Keyed on the finding, not the figure number.
+  ['the first live use of an optional mechanic', 'Somebody finally jumped'],
+  ['that the top rope pays and drains in equal measure', 'it pays double, and it drains double'],
+  ['that four uses is not a measurement', 'Four uses is\nnot a measurement'],
+  ['why it went unused, which was never that it was broken', 'never\nthat it was broken'],
+  ['that stables and targeting are still at zero', 'neither\nhas ever been used'],
+  ['the tail correction meeting live data', 'the two hardest tests available'],
+  ['that a right prediction is a boring one', 'Boring is the goal'],
+  ['the two-median exhibit', 'Every fast number in the room is two numbers'],
+  ['that the mode has not missed in twenty-four', 'zero for eight'],
+  ['and the renumbered run reaches forty-three', 'Figure 43'],
   // Matches 21-22, merged from the analysis chat's live-sep07 page. Keyed on
   // the finding rather than the figure number, so a later renumber does not
   // quietly drop the check — the rule the Figure 22 needle above exists to

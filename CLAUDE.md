@@ -437,12 +437,57 @@ own change.
 /host/:id         the host console
 /j/:id            a player's buzzer
 /watch/:id        the public read-only board
+/when             mark when you can play; everybody's heat map
+/auth/discord     sign-in, `identify` scope and nothing else
 /api/match/:id/exists   does this room exist — used by the welcome screen
 ```
 
 The host key travels in the **fragment**, which browsers do not send to the
 server, keeping it out of logs and referrer headers. Don't move it to a query
 string.
+
+## Availability, and why a weekly pattern is not stored in UTC
+
+`/when` is the scheduling half of the site: players sign in with Discord, paint
+the half hours they are usually free, mark the odd evening that is different,
+and the server watches for a window enough of them can all make. `src/when.js`
+is the store and the arithmetic, `src/when-routes.js` the endpoints and the
+scan, `src/discord.js` sign-in and the bot, `public/when.html` the page.
+
+**"Thursday at 7pm" is a wall-clock fact, and the instant it names moves.** A
+weekly pattern stored as UTC slot indices is correct for half the year and an
+hour out for the other half — on 1 November the same stored slot means 6pm in
+Los Angeles — and it cannot represent two players in different zones at all. So
+a pattern is kept as local minutes plus an IANA zone and converted per real
+date, which is why the projection walks each player's own calendar rather than
+the UTC clock. `public/zoned.js` holds that arithmetic and is shared with the
+page the way `engine.js` is shared with the setup screen: a cell the browser
+draws at 7pm and a slot the server counts at 7pm have to be the same instant.
+Two implementations of it disagree twice a year. `test/when.mjs` projects across
+the real November boundary and asserts the clock reads 7 on both sides.
+
+**A window is an intersection, not a headcount.** Nine people free at seven and
+nine different people free at eight is not a game night; the first version
+counted each half hour on its own and said it was. `windows()` walks a run of
+consecutive half hours intersecting the members as it goes, and the number it
+reports is who can make the whole thing.
+
+**It proposes; it does not announce.** A window that clears the threshold is
+recorded and posted to David's channel with a link to the control room. The
+invite reaches the players only when he presses Send, twice. An automatic ping
+is a message to thirty people about a game nobody has decided to host, and one
+of those is all it takes for the room to mute the bot.
+
+**The store lives outside the app directory, for the same reason the logs do.**
+`/data/when.json`, written atomically through a rename. Without `/data` it
+writes next to the app and `/api/health`, `/when` and the control room all say
+plainly that the next deploy will wipe it.
+
+Nothing here is wired until the Discord application exists —
+`docs/discord-setup.md` is the five-minute version. Unconfigured means refusing
+and naming the missing variable, never a silent no-op: an invite nobody received
+and an invite never sent look identical from the inside, and only one of them is
+a bug you find that week.
 
 ## Editing a workflow
 
@@ -930,6 +975,21 @@ read back and is a real engine setting.
 **Bounties are still untested in live play** — the mechanic has never fired in a
 real match. Worth checking whether the `B` key is discoverable.
 
+**The top rope broke the seal, and how it happened is the finding.** For
+twenty-two matches no optional mechanic had ever been used. In match 24 the top
+rope was jumped four times — three by the game's author, playing rather than
+hosting, in somebody else's room. Two jumps paid double, two drained double, and
+both jumpers who lost their jump were gone within two clues. Four uses is not a
+measurement and must not be quoted as one; what it settles is that the mechanic
+works in live play and that the reason for the silence was never that it was
+broken.
+
+Stables, targeting and bounties are still at zero across twenty-four matches with
+stables and targeting switched on in both of the most recent. So the
+discoverability item now has a control group of one, and the thing that moved it
+was a person demonstrating the mechanic at the table — not a UI change, which is
+worth knowing before building one.
+
 **Softening the double-dip at high overtime multipliers** was raised and left
 open: at ×8 a missed clue costs the value twice, which can eliminate a player
 from 8,000 points in one press.
@@ -982,6 +1042,13 @@ toss wearing a repair's clothing. Revival-on tails ran 28, 31, 47 and 72; they
 are modelled by the multiplier and want their own measurement. `test/estimate.mjs`
 pins both regimes, and the two revival-on fixtures failing is what caught the
 over-broad first attempt.
+
+**Validated live on the next two matches, which were the two biggest fields ever
+recorded** (eleven players, then ten): predicted 94 against 98 actual, and 105
+against 106. Their tails ran 36 and 35 clues, which widens the recorded band to
+17-36 with the median holding at 29 across thirteen revival-off matches. Pace
+came in at 16.4 and 17.2 s/clue, the closest any room has run to the 17.5
+assumption.
 
 Verified before shipping rather than after: over the twelve revival-off matches
 with a real length, mean absolute error goes 11.5 -> 9.7 clues; of the six where
