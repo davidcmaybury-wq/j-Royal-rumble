@@ -349,6 +349,28 @@ bandwidth. One screen in the room can turn on sound.
 
 ---
 
+## 13. WHEN THE COMPUTER HOSTS
+
+Some matches have no human host. Two voices run the room: **Mike** is the
+game-show host — he hands the board over, announces the category and value,
+reads the clue and rules on it — and **Gene** is the ring announcer, who calls
+entrances, eliminations, the field clearing and overtime.
+
+The voice plays out of **your own buzzer window**, not the call, so everybody
+hears the read at the same instant as their own buzzer. Turn your sound on and
+click the page once so your browser will play it; the buzzer nags you until it
+can. The buzzers arm the moment Mike finishes the read.
+
+**Whoever has the board calls the next clue.** At the bell that's draw number 1;
+after that it's whoever last answered correctly, and it stays put on a stumper.
+Click the clue on the board in your buzzer window. Leave it twelve seconds and
+Mike picks one for you.
+
+For now a person at a console still presses Correct or Wrong; the computer
+settles a clue nobody buzzed on by itself.
+
+---
+
 ## HOW TO JOIN (paste this before a match)
 
 1. Open the buzzer link on your phone or a second tab.

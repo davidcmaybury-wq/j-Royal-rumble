@@ -246,6 +246,16 @@ export const DEFAULT_SETTINGS = {
   // let the host call it. Off means the buzzers stay open until they press X.
   autoStumper: true,
   lecternSeconds: 5,         // how long the lights run
+  // No human host. The server reads the clues in a synthesized voice, arms
+  // the buzzers off the length of the clip, and calls the ring. The engine
+  // never reads this — it is here so setup.html, the record and the presets
+  // treat it like every other setting — see src/autohost.js.
+  autohost: false,
+  // How long the player holding the board gets to call the next clue before
+  // the host calls one for them. Twelve seconds, by David's call: long enough
+  // to read six categories, short enough that a player who stepped away does
+  // not stall thirty people.
+  pickSeconds: 12,
   botReadJitter: 45,         // ms, shared per clue: the host activates by hand
   botMatchField: true,       // shift robots to sit alongside the humans present
   botOffset: null,           // ms; null means use the built-in default, then

@@ -564,10 +564,16 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
   // So the rule is now general: on the host's screens, a fixed overlay anchored
   // to the bottom must be click-through. Full-screen modals (inset:0) are
   // exempt — those are things the host is meant to click.
+  //
+  // And the buzzer, since the autohost put overlays on it. Its dock is the
+  // buzz button itself, and the host's captions and the corner animation sit
+  // above it at bottom:96px and bottom:16px — click-through, or the fifth
+  // instance of this bug is a player who cannot buzz.
   {
     const themeCss = readFileSync(new URL('../public/theme-player.js', import.meta.url), 'utf8');
+    const buzzer = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
     const offenders = [];
-    for (const [file, text] of [['console.html', src], ['theme-player.js', themeCss]]) {
+    for (const [file, text] of [['console.html', src], ['theme-player.js', themeCss], ['buzzer.html', buzzer]]) {
       for (const m of text.matchAll(/(^|\n)\s*(\.[A-Za-z0-9_-]+)\{([^}]*position\s*:\s*fixed[^}]*)\}/g)) {
         const body = m[3].replace(/\s+/g, ' ');
         if (!/(^|;|\s)bottom\s*:/.test(body)) continue;   // not near the dock
@@ -575,7 +581,7 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
         if (!/pointer-events\s*:\s*none/.test(body)) offenders.push(`${file} ${m[2]}`);
       }
     }
-    check('and no bottom-anchored overlay on the console can take a click',
+    check('and no bottom-anchored overlay on the console or the buzzer can take a click',
       offenders.length === 0, offenders.join(', ') || 'all click-through');
   }
 

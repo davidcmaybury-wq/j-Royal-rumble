@@ -117,6 +117,7 @@ jobs:
           node test/arcade.mjs
           node test/wrongs.mjs
           node test/tts.mjs
+          node test/autohost.mjs
           node test/entry-countdown.mjs
           node test/tokens.mjs
           node test/bots.mjs

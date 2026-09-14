@@ -70,6 +70,8 @@ see `infra/aws/README.md`. Don't resurrect it.
 src/engine.js      rules, scoring, overtime, the fairness grid. No I/O.
 src/server.js      express + socket.io, match lifecycle, bot driving, logs
 src/bots.js        Matt Schiffler's real generator, ported
+src/autohost.js    the computer host: reads, arms, calls the ring, on a clock
+src/tts.js         the voice — one line in, a cached WAV and its length out
 public/*.html      console, buzzer, setup, watch, admin — each self-contained
 public/wrestlers.js  parametric 8-bit sprites: avatars AND animation figures
 public/toss.js     the three animations, generated at runtime
@@ -488,6 +490,51 @@ Nothing here is wired until the Discord application exists —
 and naming the missing variable, never a silent no-op: an invite nobody received
 and an invite never sent look identical from the inside, and only one of them is
 a bug you find that week.
+
+## The computer host
+
+`autohost: true` on a match means no human host: `src/autohost.js` drives the
+same four rulings the console does — `runPick`, `runActivate`, `runResolve`,
+`runMarkWrong` — through `matchDeps(m)`, with no socket of its own. It never
+holds a second copy of a rule. The design and every decision behind it are in
+`docs/autohost-design.md`; the step-three build is the read-and-call layer,
+with a human at a console still pressing Correct / Wrong, and the stumper the
+one ruling it makes alone.
+
+**The voice is a clip and the clip's length is the clock.** `src/tts.js` turns
+a line into a WAV, cached on disk under `/data/tts` by engine, voice and text;
+`host-speaks {sid, url, durationMs, at}` goes to every screen; the buzzers are
+armed when the clip ends, through the same `activate-buzzers` send. Piper is
+the engine (`RUMBLE_TTS=piper`, `PIPER_BIN`, `PIPER_DATA_DIR`; the recipe is in
+`infra/aws/HOSTING.md`). Kokoro measured out — p90 18.9 s a clue, 461 MB — and
+the numbers are in `src/tts.js`'s header so nobody re-reads "first choice" off
+the old design. With no engine the host reads from the clock
+(`readingTimeMs`) with the text on screen, counted as `fromClock`; that is how
+CI runs `test/autohost.mjs`.
+
+**Two voices, never in the same step.** Mike (`en_US-ryan`) says everything
+that touches the rules; Gene (`en_US-joe`, marginal and parked) calls the ring.
+Which one speaks is an argument to `say()`, not a string match.
+
+**Clip waits are plain timers.** `Autohost.clearTimers()` cancels what the host
+was *going* to do; the wait for a line already playing (`emitClip`) is a bare
+`setTimeout` and must stay one. The first version put it in `this.timers`, a
+pick that landed mid-line cleared it, and the chain waited forever on a resolve
+that no longer existed — every line after that silently never played.
+
+**One emit for all four rooms.** A buzzer in full mode is in `players` and
+`board` both; `io.to([rooms]).emit` sends it once, four separate emits sent it
+twice and it played twice.
+
+**The buzzer now has overlays, and the overlay guard covers it.** Same rule as
+the console: `position:fixed` with a `bottom:` is `pointer-events:none` unless
+it is a full-screen modal. `pagerefs.mjs` checks all three files.
+
+**What step three owes the box** is the `heard {lateMs}` spread across a real
+room — it sets the `settle` (`SETTLE_MS` in `src/autohost.js`, 250 and
+unmeasured) — and what the background board synthesis did under a live match.
+Both are in the match record (`autohost-summary`, `synth`, `clip-wait` events)
+and on the host view as `autohost`.
 
 ## Editing a workflow
 

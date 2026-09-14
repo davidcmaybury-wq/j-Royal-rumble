@@ -23,6 +23,8 @@ The winner is the last one standing. Every other statistic is for fun.
     src/engine.js     rules, headless and framework-free
     src/sources.js    adapters: TTG/LearningMan JSON, seven-column CSV, clue TSV
     src/server.js     Socket.IO v4 server, authoritative on scoring and timing
+    src/autohost.js   the computer host, driving the same rulings the console does
+    src/tts.js        the host's voice: text to a cached WAV, Piper on the box
     public/           console (host + shared screen), buzzer (player), admin
     data/library.json seed clue library, tagged by source
     test/harness.js   Monte Carlo verification of the tuning presets

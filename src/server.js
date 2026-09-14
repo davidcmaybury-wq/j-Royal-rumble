@@ -12,6 +12,8 @@ import { makeWeightedPool, fromTtgJson, fromJpartyCsv, parseCsv, parseLooseJson 
 import { assignToken, resolveChoice } from './tokens-server.js';
 import { distinctLook, looksAlike } from '../public/wrestlers.js';
 import { wrongAnswer, status as wrongsStatus } from './wrongs.js';
+import * as tts from './tts.js';
+import { Autohost } from './autohost.js';
 import * as reports from './reports.js';
 import * as logs from './logstore.js';
 import { mountAvailability, when, discord } from './when-routes.js';
@@ -167,6 +169,19 @@ if (MOVED_TO) {
 app.get('/src/engine.js', (_req, res) => {
   res.type('application/javascript');
   res.sendFile(join(__dir, 'engine.js'));
+});
+
+// The host's voice, one clip at a time. The key is the one the server put in
+// `host-speaks`, forty hex characters of a hash, and anything else is refused
+// before the filesystem is consulted. A clip is immutable once written, so it
+// can be cached hard: thirty clients fetching the same read hit CloudFront,
+// not the box.
+app.get('/clip/:engine/:key.wav', (req, res) => {
+  const p = tts.locate(req.params.engine, req.params.key);
+  if (!p) return res.status(404).type('text/plain').send('no such clip');
+  res.set('Cache-Control', 'public, max-age=31536000, immutable');
+  res.type('audio/wav');
+  res.sendFile(p);
 });
 
 app.use(express.static(join(__dir, '../public')));
@@ -375,7 +390,7 @@ class Match {
         startedAt: new Date().toISOString(),
         // Null rather than '' so a log written before hosts were recorded and
         // one where the box was left empty read the same in the analysis.
-        host: this.hostName || null,
+        host: this.settings.autohost ? 'autohost' : (this.hostName || null),
         settings: { ...this.settings },
         blend: { ...this.blend },
         available: this.available(),
@@ -537,6 +552,10 @@ class Match {
     return {
       phase: this.phase, gameId: this.id, version: VERSION,
       settings: this.settings,
+      // What the computer host is doing and how the room is hearing it — for
+      // a console left open to watch, and for the test that proves the spread
+      // of playback starts is being collected.
+      autohost: this.autohost ? { ...this.autohost.status(), heard: this.autohost.heardSummary() } : null,
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
         hasAvatar: !!p.avatar, latency: p.latency ?? null,
@@ -689,6 +708,9 @@ class Match {
     return {
       gameId: this.id, phase: this.phase, version: VERSION,
       settings: this.settings, blend: this.blend, hostName: this.hostName,
+      // Whether the box has a voice, so the setup page can say so beside the
+      // autohost switch rather than letting a silent match be discovered live.
+      voice: { engine: tts.status().engine, configured: tts.status().configured, reason: tts.status().reason },
       seasons: [SEASONS[0], SEASONS.at(-1)],
       available: this.available(),
       uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
@@ -946,6 +968,10 @@ class Match {
       control: this.control,
       delay: this.settings.delay,
       overtime: g.overtime ? g.overtime() : null,
+      // With no human host, the buzzer is where a player learns what the host
+      // is doing and whether it is their board to call.
+      autohost: !!this.settings.autohost,
+      host: this.autohost ? { state: this.autohost.state, line: this.autohost.line } : null,
       myBuzz: mine ? { ms: mine.ms, early: mine.early, ...(mine.ranked || {}) } : null,
       stables: this.settings.stables ? this.stableList() : null,
       ...(this.phase === 'over'
@@ -1185,6 +1211,7 @@ app.get('/api/health', (req, res) => {
     // fallback used to be silent: nonsense answers were the only symptom of a
     // missing key, a rejected key, or a bad model name, and they look the same.
     wrongAnswers: wrongsStatus(),
+    voice: tts.status(),
   });
 });
 
@@ -1423,6 +1450,7 @@ app.post('/api/control/:id/end', (req, res) => {
   if (m.phase === 'live') {
     m.phase = 'over';
     m.endedReason = 'admin';
+    m.autohost?.onOver();
     try { m.finishRecord(); m.saveLog(); } catch { /* record what we can */ }
     broadcast(m);
     io.to(`${m.id}:host`).emit('error-msg', 'This match was ended from the control room.');
@@ -1487,6 +1515,7 @@ function announceLeader(match) {
       io.to(`${match.id}:${room}`).emit('bot-said',
         { said: [{ token: lead.token, name: lead.name, ...line }] });
     }
+    match.autohost?.onBotSaid({ name: lead.name, ...line });
   }, (match.settings?.lockout || 250) + 450);
 }
 
@@ -1516,14 +1545,52 @@ const soundScreens = new Set();
 // the same three sends without that assumption.
 function broadcast(m) {
   if (!m) return;
+  pushHostNow(m);
+  pushPlayersNow(m);
+}
+
+// The two halves of a push, at module level so the socket handlers, the
+// reaper and the autohost all send the same thing.
+function pushHostNow(m) {
+  if (!m) return;
   io.to(`${m.id}:host`).emit('state', m.hostView());
+  // Watchers get their own view, never the host's.
+  // Two audiences, two rooms. A watch screen listens for `state`; a player in
+  // full mode already uses `state` for their own buzzer view, so putting them
+  // in the same room would overwrite it with somebody else's. They get their
+  // own room and their own event name.
   const wv = m.watchView();
   io.to(`${m.id}:watch`).emit('state', wv);
   io.to(`${m.id}:board`).emit('watch-state', wv);
+}
+function pushPlayersNow(m) {
+  if (!m) return;
   for (const p of m.roster.values()) {
     if (p.socketId) io.to(p.socketId).emit('state', m.playerView(p.token));
   }
 }
+
+// A burst of buzzes would otherwise fan out one full state push per buzz,
+// per player. Coalescing them costs a few milliseconds of staleness and
+// keeps the socket clear for the messages that are actually time-critical.
+// The pending flag and timer live on the match, so a push scheduled from a
+// socket handler and one scheduled by the autohost fold into the same send.
+function schedulePush(m, what) {
+  if (!m) return;
+  m._pending = m._pending === 'all' || m._pending !== what ? (m._pending ? 'all' : what) : what;
+  if (m._pushTimer) return;
+  m._pushTimer = setTimeout(() => {
+    const kind = m._pending;
+    m._pushTimer = null; m._pending = null;
+    if (kind === 'host' || kind === 'all') pushHostNow(m);
+    if (kind === 'players' || kind === 'all') pushPlayersNow(m);
+  }, PUSH_COALESCE_MS);
+}
+const pushDeps = (m) => ({
+  pushAll: () => schedulePush(m, 'all'),
+  pushHost: () => schedulePush(m, 'host'),
+  pushPlayers: () => schedulePush(m, 'players'),
+});
 
 // Matches that nobody is touching.
 //
@@ -1563,6 +1630,7 @@ function reapIdle() {
     if (m.phase === 'live') {
       m.phase = 'over';
       m.endedReason = 'idle';
+      m.autohost?.onOver();
       try { m.finishRecord(); m.saveLog(); } catch { /* record what we can */ }
       io.to(`${id}:host`).emit('error-msg',
         'This match was ended after ten minutes with nobody doing anything.');
@@ -1826,6 +1894,146 @@ mountAvailability(app, { dir: __dir, localReq, adminOk });
 // Everything these need that used to be in the connection closure arrives as
 // `deps`. `match` keeps its name so the bodies could move verbatim; that is the
 // whole reason this diff is readable.
+// What the host does when they pick a clue: put it up, open a closed race,
+// and get the robots' wrong answer written while the room is still reading.
+// A function rather than a handler body so the autohost can pick too.
+function runPick(match, { slot, row }) {
+  const g = match.game;
+  const cat = g.board[slot];
+  const clue = cat?.clues.find((c) => c.row === row);
+  if (!clue || clue.revealed) return false;
+  // What the clue is actually worth right now, not its face value. The
+  // engine computes the same thing independently when it scores, so this is
+  // display only — but every surface that showed a raw $400 during a x4
+  // overtime was telling the room the wrong number.
+  const face = [100, 200, 300, 400, 500][row - 1];
+  match.clue = {
+    slot, row, face, value: face * g.overtimeMultiplier(),
+    category: cat.title, note: cat.note, text: clue.text, answer: clue.answer,
+  };
+  match.race = { open: false, activatedAt: null, buzzes: [], lockedOut: new Set() };
+  match.retoss = 0;
+  clearTimeout(match.raceTimer);
+
+  // Work out the robots' wrong answer now, while the host is still reading.
+  // Doing it at buzz time would put a network call inside the race.
+  match.wrongAnswer = null;
+  clearTimeout(match.saidTimer);
+  match.saidTimer = null;
+  match.saidFor = null;
+  const siblings = g.board.flatMap((c) => c.clues.map((x) => x.answer))
+    .filter((a) => a && a !== clue.answer);
+  wrongAnswer(match.clue, siblings).then((w) => { match.wrongAnswer = w; });
+
+  schedulePush(match, 'host');
+  io.to(`${match.id}:players`).emit('clue-shown', { value: match.clue.value });
+  schedulePush(match, 'players');
+  match.autohost?.onPicked();
+  return true;
+}
+
+// Lights and buzzers are separate signals, matching the existing app.
+// `delay` compensates for Zoom audio lagging the socket by ~150ms: clients
+// wait `delay` ms, then arm locally, and every client anchors on that same
+// post-delay instant so live and spectator times stay comparable.
+// The five lights are a promise: when they go out, the clue is over. There
+// was no timeout at all, so a clue nobody wanted sat open until the host
+// noticed and pressed X — and on a re-toss the lights ran a second time,
+// which read as a glitch rather than as a second race.
+function armTimeoutFor(match) {
+  clearTimeout(match.raceTimer);
+  if (!match.settings.autoStumper) return;
+  const grace = (match.settings.lecternSeconds ?? 5) * 1000
+    + match.settings.delay + 400;
+  match.raceTimer = setTimeout(() => {
+    if (!match || !match.race || !match.race.open || !match.clue) return;
+    if (match.race.buzzes.some((b) => !b.spectator)) return;   // somebody is on the clock
+    match.race.open = false;
+    match.race.timedOut = true;
+    io.to(`${match.id}:host`).emit('race-timeout', {});
+    schedulePush(match, 'all');
+    match.autohost?.onRaceTimeout();
+  }, grace);
+}
+
+// Bots buzz by the clock rather than by hand. Each one is scheduled at the
+// moment its drawn reaction time lands, so the race fills in on the console
+// the way it would with people — rather than all at once the instant the
+// buzzers open.
+function runBotsFor(match) {
+  if (!match?.game || !match.race || !match.clue) return;
+  clearBotTimersFor(match);
+  const rng = match.rng || makeRng(Date.now() & 0x7fffffff);
+  const armAt = match.race.activatedAt;
+  // One offset for the whole clue: the host activates by hand at the end of a
+  // spoken read, so when a read runs long everybody anticipating it is early
+  // together.
+  const jitter = drawReadJitter(rng, match.settings.botReadJitter ?? 45);
+  const offset = match.botOffset();
+  for (const p of match.game.live()) {
+    const brain = match.bots.get(p.id);
+    if (!brain) continue;
+    if (match.race.lockedOut.has(p.id)) continue;
+    const plan = planClue(brain, match.clue.row, rng, match.settings.lockout, jitter, offset);
+    if (!plan.attempt) continue;
+
+    if (plan.early) {
+      const at = armAt + plan.earlyAt;
+      match.botTimers.push(setTimeout(() => {
+        const st = match.stat(p.id); st.early++; st.att++;
+        schedulePush(match, 'host');
+      }, Math.max(0, at - Date.now())));
+    }
+    const fireAt = armAt + plan.ms;
+    match.botTimers.push(setTimeout(() => {
+      if (!match.race || !match.race.open) return;
+      if (match.race.lockedOut.has(p.id)) return;
+      if (match.race.buzzes.some((b) => b.token === p.id)) return;
+      const st = match.stat(p.id);
+      st.att++; st.times.push(plan.ms);
+      match.race.buzzes.push({ token: p.id, name: p.name, ms: plan.ms,
+        early: false, spectator: false, bot: true, botCorrect: plan.correct });
+      rankRace(match);
+      announceLeader(match);
+      if (!match.fastest || plan.ms < match.fastest.ms) {
+        match.fastest = { ms: plan.ms, name: p.name, clue: match.game.cluesRevealed + 1,
+          category: match.clue?.category, value: match.clue?.value };
+      }
+      schedulePush(match, 'all');
+    }, Math.max(0, fireAt - Date.now())));
+  }
+}
+function clearBotTimersFor(match) {
+  if (!match) return;
+  match.botTimers.forEach(clearTimeout);
+  match.botTimers = [];
+}
+
+// Everything the extracted rulings need, for a caller with no socket.
+function matchDeps(m) {
+  return {
+    ...pushDeps(m),
+    runBots: () => runBotsFor(m),
+    armTimeout: () => armTimeoutFor(m),
+    clearBotTimers: () => clearBotTimersFor(m),
+  };
+}
+
+// Wire an autohost to a match that just started: it drives the same four
+// rulings the console does, through the same functions, with no socket.
+function startAutohost(m) {
+  const deps = matchDeps(m);
+  const report = (msg) => console.log(`[autohost ${m.id}] refused: ${msg}`);
+  m.autohost = new Autohost(m, {
+    runPick: (pick) => runPick(m, pick),
+    runActivate: () => runActivate(m, deps),
+    runResolve: (r) => runResolve(m, r, deps, report),
+    runMarkWrong: (t) => runMarkWrong(m, t, deps),
+    pushPlayers: deps.pushPlayers,
+  }, io, { log: (type, data) => { m.note(type, data); if (data.event === 'error' || data.event === 'voice-fallback' || data.event === 'synth-failed') console.log(`[autohost ${m.id}]`, data); } });
+  m.autohost.start();
+}
+
 function runActivate(match, { pushAll, runBots, armTimeout }) {
   if (!match.race) return;
   const at = Date.now() + match.settings.delay;
@@ -1974,7 +2182,8 @@ function runResolve(match, { winnerToken }, { pushAll, clearBotTimers }, report)
       && match.game.players.get(caller)?.state === 'live') {
     const open = [];
     match.game.board.forEach((c) => c.clues.forEach((x) => {
-      if (!x.revealed) open.push({ category: c.title, value: [100, 200, 300, 400, 500][x.row - 1] });
+      if (!x.revealed) open.push({ category: c.title, value: [100, 200, 300, 400, 500][x.row - 1],
+        slot: match.game.board.indexOf(c), row: x.row });
     }));
     if (open.length) {
       const pick = open[Math.floor(Math.random() * open.length)];
@@ -1983,16 +2192,21 @@ function runResolve(match, { winnerToken }, { pushAll, clearBotTimers }, report)
           token: caller, name: match.roster.get(caller)?.name,
           kind: 'pick', text: `${pick.category} for $${pick.value}` }] });
       }
+      // With no human host, somebody has to actually put the robot's pick up.
+      entry.botPick = { slot: pick.slot, row: pick.row, name: match.roster.get(caller)?.name };
     }
   }
 
   io.to(`${match.id}:host`).emit('resolved', entry);
   io.to(`${match.id}:watch`).emit('resolved', entry);
+  match.autohost?.onResolved(entry, { winnerToken, clue: clueMeta });
   // Entrance music comes out of the buzzers and the host console now. A watch
   // screen is optional and in a live match nobody had one open with sound, so
   // every entrance passed in silence. The players always have a buzzer open;
   // that is the whole point of it.
-  if (entry.entrances?.length) {
+  // With an autohost the walk-in music waits for Gene to say the name; the
+  // autohost sends this one itself, after the call.
+  if (entry.entrances?.length && !match.autohost) {
     io.to(`${match.id}:players`).emit('entrances', { entrances: entry.entrances });
   }
   for (const t of entry.revived || []) {
@@ -2005,6 +2219,7 @@ function runResolve(match, { winnerToken }, { pushAll, clearBotTimers }, report)
     match.finishRecord();
     match.saveLog();
     pushAll();
+    match.autohost?.onOver();
   }
 }
 
@@ -2045,49 +2260,19 @@ function runMarkWrong(match, t, { pushAll, runBots, armTimeout }) {
   runBots();
   armTimeout();
   pushAll();
+  match.autohost?.onMarkedWrong(t);
 }
 
 
 io.on('connection', (socket) => {
   let match = null, token = null, isHost = false;
 
-  const pushHostNow = () => {
-    if (!match) return;
-    io.to(`${match.id}:host`).emit('state', match.hostView());
-    // Watchers get their own view, never the host's.
-    // Two audiences, two rooms. A watch screen listens for `state`; a player in
-    // full mode already uses `state` for their own buzzer view, so putting them
-    // in the same room would overwrite it with somebody else's. They get their
-    // own room and their own event name.
-    const wv = match.watchView();
-    io.to(`${match.id}:watch`).emit('state', wv);
-    io.to(`${match.id}:board`).emit('watch-state', wv);
-  };
-  const pushPlayersNow = () => {
-    if (!match) return;
-    for (const p of match.roster.values()) {
-      if (p.socketId) io.to(p.socketId).emit('state', match.playerView(p.token));
-    }
-  };
-
-  // A burst of buzzes would otherwise fan out one full state push per buzz,
-  // per player. Coalescing them costs a few milliseconds of staleness and
-  // keeps the socket clear for the messages that are actually time-critical.
-  const pushHost = () => schedule(match, 'host');
-  const pushPlayers = () => schedule(match, 'players');
-  const pushAll = () => schedule(match, 'all');
-
-  function schedule(m, what) {
-    if (!m) return;
-    m._pending = m._pending === 'all' || m._pending !== what ? (m._pending ? 'all' : what) : what;
-    if (m._pushTimer) return;
-    m._pushTimer = setTimeout(() => {
-      const kind = m._pending;
-      m._pushTimer = null; m._pending = null;
-      if (kind === 'host' || kind === 'all') pushHostNow();
-      if (kind === 'players' || kind === 'all') pushPlayersNow();
-    }, PUSH_COALESCE_MS);
-  }
+  // The push helpers live at module level (schedulePush and friends) so the
+  // autohost can drive a match with no socket of its own; these read the
+  // connection's current match at call time, which is why they are closures.
+  const pushHost = () => schedulePush(match, 'host');
+  const pushPlayers = () => schedulePush(match, 'players');
+  const pushAll = () => schedulePush(match, 'all');
 
   socket.on('host-join', ({ gameId, hostKey }, ack) => {
     const m = matches.get((gameId || '').toUpperCase());
@@ -2212,6 +2397,12 @@ io.on('connection', (socket) => {
   socket.on('start-match', hostOnly((_d, ack) => {
     if (match.phase !== 'lobby') return ack?.({ error: 'This match has already started' });
     if (match.roster.size < 3) return ack?.({ error: 'Three players are needed to start' });
+    // Fail at the start button, naming the fix, rather than at clue one. The
+    // silent engine is allowed through: it reads from the clock with the text
+    // on screen, which is how the autohost is tested without a voice.
+    if (match.settings.autohost && !tts.status().configured) {
+      return ack?.({ error: `The computer cannot host: ${tts.status().reason}` });
+    }
     try {
       match.start();
     } catch (e) {
@@ -2224,6 +2415,7 @@ io.on('connection', (socket) => {
       startScore: match.settings.startScore,
       players: match.roster.size,
     });
+    if (match.settings.autohost) startAutohost(match);
     pushAll();
   }));
 
@@ -2321,6 +2513,23 @@ io.on('connection', (socket) => {
     ack?.({ ok: true, theme: r.theme });
   });
 
+  // The player holding the board calls the next clue from their own board.
+  // Only in an autohost match, only the holder, only between clues — the
+  // autohost is the judge of all three, and says which one refused.
+  socket.on('player-pick', ({ slot, row }, ack) => {
+    touch();
+    if (!match || !token) return ack?.({ error: 'no match' });
+    if (!match.autohost) return ack?.({ error: 'This match has a host; they call the clues' });
+    ack?.(match.autohost.playerPick(token, { slot, row }));
+  });
+
+  // When a clip actually started on this client's speaker, against the moment
+  // the server sent it. The spread across a room is what sets the settle.
+  socket.on('heard', ({ sid, lateMs }) => {
+    if (!match?.autohost || !token) return;
+    match.autohost.onHeard(token, { sid: Number(sid), lateMs: Number(lateMs) });
+  });
+
   socket.on('want-board', ({ on }, ack) => {
     if (!match) return ack?.({ error: 'no match' });
     if (on) {
@@ -2366,38 +2575,7 @@ io.on('connection', (socket) => {
     ack?.({ ok: true, setup: m.setupView() });
   });
 
-  socket.on('pick-clue', hostOnly(({ slot, row }) => {
-    const g = match.game;
-    const cat = g.board[slot];
-    const clue = cat.clues.find((c) => c.row === row);
-    if (!clue || clue.revealed) return;
-    // What the clue is actually worth right now, not its face value. The
-    // engine computes the same thing independently when it scores, so this is
-    // display only — but every surface that showed a raw $400 during a x4
-    // overtime was telling the room the wrong number.
-    const face = [100, 200, 300, 400, 500][row - 1];
-    match.clue = {
-      slot, row, face, value: face * g.overtimeMultiplier(),
-      category: cat.title, note: cat.note, text: clue.text, answer: clue.answer,
-    };
-    match.race = { open: false, activatedAt: null, buzzes: [], lockedOut: new Set() };
-    match.retoss = 0;
-    clearTimeout(match.raceTimer);
-
-    // Work out the robots' wrong answer now, while the host is still reading.
-    // Doing it at buzz time would put a network call inside the race.
-    match.wrongAnswer = null;
-    clearTimeout(match.saidTimer);
-    match.saidTimer = null;
-    match.saidFor = null;
-    const siblings = g.board.flatMap((c) => c.clues.map((x) => x.answer))
-      .filter((a) => a && a !== clue.answer);
-    wrongAnswer(match.clue, siblings).then((w) => { match.wrongAnswer = w; });
-
-    pushHost();
-    io.to(`${match.id}:players`).emit('clue-shown', { value: match.clue.value });
-    pushPlayers();
-  }));
+  socket.on('pick-clue', hostOnly(({ slot, row }) => runPick(match, { slot, row })));
 
   // Lights and buzzers are separate signals, matching the existing app.
   // `delay` compensates for Zoom audio lagging the socket by ~150ms: clients
@@ -2407,20 +2585,7 @@ io.on('connection', (socket) => {
   // was no timeout at all, so a clue nobody wanted sat open until the host
   // noticed and pressed X — and on a re-toss the lights ran a second time,
   // which read as a glitch rather than as a second race.
-  const armTimeout = () => {
-    clearTimeout(match.raceTimer);
-    if (!match.settings.autoStumper) return;
-    const grace = (match.settings.lecternSeconds ?? 5) * 1000
-      + match.settings.delay + 400;
-    match.raceTimer = setTimeout(() => {
-      if (!match || !match.race || !match.race.open || !match.clue) return;
-      if (match.race.buzzes.some((b) => !b.spectator)) return;   // somebody is on the clock
-      match.race.open = false;
-      match.race.timedOut = true;
-      io.to(`${match.id}:host`).emit('race-timeout', {});
-      pushAll();
-    }, grace);
-  };
+  const armTimeout = () => armTimeoutFor(match);
 
   socket.on('activate', hostOnly(() => runActivate(match, { pushAll, runBots, armTimeout })));
 
@@ -2428,54 +2593,8 @@ io.on('connection', (socket) => {
   // moment its drawn reaction time lands, so the race fills in on the console
   // the way it would with people — rather than all at once the instant the
   // buzzers open.
-  function runBots() {
-    if (!match?.game || !match.race || !match.clue) return;
-    clearBotTimers();
-    const rng = match.rng || makeRng(Date.now() & 0x7fffffff);
-    const armAt = match.race.activatedAt;
-    // One offset for the whole clue: the host activates by hand at the end of a
-    // spoken read, so when a read runs long everybody anticipating it is early
-    // together.
-    const jitter = drawReadJitter(rng, match.settings.botReadJitter ?? 45);
-    const offset = match.botOffset();
-    for (const p of match.game.live()) {
-      const brain = match.bots.get(p.id);
-      if (!brain) continue;
-      if (match.race.lockedOut.has(p.id)) continue;
-      const plan = planClue(brain, match.clue.row, rng, match.settings.lockout, jitter, offset);
-      if (!plan.attempt) continue;
-
-      if (plan.early) {
-        const at = armAt + plan.earlyAt;
-        match.botTimers.push(setTimeout(() => {
-          const st = match.stat(p.id); st.early++; st.att++;
-          pushHost();
-        }, Math.max(0, at - Date.now())));
-      }
-      const fireAt = armAt + plan.ms;
-      match.botTimers.push(setTimeout(() => {
-        if (!match.race || !match.race.open) return;
-        if (match.race.lockedOut.has(p.id)) return;
-        if (match.race.buzzes.some((b) => b.token === p.id)) return;
-        const st = match.stat(p.id);
-        st.att++; st.times.push(plan.ms);
-        match.race.buzzes.push({ token: p.id, name: p.name, ms: plan.ms,
-          early: false, spectator: false, bot: true, botCorrect: plan.correct });
-        rankRace(match);
-        announceLeader(match);
-        if (!match.fastest || plan.ms < match.fastest.ms) {
-          match.fastest = { ms: plan.ms, name: p.name, clue: match.game.cluesRevealed + 1,
-            category: match.clue?.category, value: match.clue?.value };
-        }
-        pushAll();
-      }, Math.max(0, fireAt - Date.now())));
-    }
-  }
-  function clearBotTimers() {
-    if (!match) return;
-    match.botTimers.forEach(clearTimeout);
-    match.botTimers = [];
-  }
+  function runBots() { runBotsFor(match); }
+  function clearBotTimers() { clearBotTimersFor(match); }
 
   socket.on('resolve', hostOnly(({ winnerToken }, ack) => runResolve(
     match, { winnerToken }, { pushAll, clearBotTimers },
@@ -2507,6 +2626,7 @@ io.on('connection', (socket) => {
 
   socket.on('end-match', hostOnly(() => {
     match.phase = 'over'; match.finishRecord(); match.saveLog(); pushAll();
+    match.autohost?.onOver();
   }));
 
   // --- corrections -----------------------------------------------------
@@ -2526,6 +2646,7 @@ io.on('connection', (socket) => {
     match.note('undo', { category: last.clue?.category, value: last.clue?.value });
     pushAll();
     io.to(`${match.id}:host`).emit('undone', { category: last.clue?.category, value: last.clue?.value });
+    match.autohost?.onUndo();
   }));
 
   socket.on('adjust-score', hostOnly(({ token: t, delta, reason }) => {

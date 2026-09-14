@@ -315,9 +315,61 @@ export function voiceFor(host) {
 
 // ---------------------------------------------------------------------- speak
 
-function cachePath(engine, voice, text) {
-  const key = createHash('sha1').update(`${engine}\n${voice}\n${text}`).digest('hex');
+function cacheKey(engine, voice, text) {
+  return createHash('sha1').update(`${engine}\n${voice}\n${text}`).digest('hex');
+}
+function cachePath(engine, key) {
   return join(DIR, engine, key.slice(0, 2), `${key}.wav`);
+}
+
+/**
+ * Where a clip the server has already spoken lives on disk, for the route
+ * that serves it to the room. The key is the one `speak()` returned; anything
+ * that does not look like one is refused before it touches the filesystem.
+ */
+export function locate(engine, key) {
+  if (!ENGINES.includes(engine) || !/^[0-9a-f]{40}$/.test(key || '')) return null;
+  const p = cachePath(engine, key);
+  return existsSync(p) ? p : null;
+}
+
+// Join clips end to end with a short breath between them. Same rate and
+// channel count required — every engine here produces mono, and one engine is
+// in use at a time, so the parts always match; the check is for the day that
+// stops being true.
+export function joinWavs(parts, gapMs = 160) {
+  if (!parts.length) throw new TtsError('nothing to join');
+  const fmt = (buf) => {
+    let off = 12;
+    while (off + 8 <= buf.length) {
+      const id = buf.toString('ascii', off, off + 4), size = buf.readUInt32LE(off + 4);
+      if (id === 'fmt ') return { channels: buf.readUInt16LE(off + 10), rate: buf.readUInt32LE(off + 12), bits: buf.readUInt16LE(off + 22) };
+      off += 8 + size + (size & 1);
+    }
+    throw new TtsError('WAV has no fmt chunk');
+  };
+  const data = (buf) => {
+    let off = 12;
+    while (off + 8 <= buf.length) {
+      const id = buf.toString('ascii', off, off + 4), size = buf.readUInt32LE(off + 4);
+      if (id === 'data') return buf.subarray(off + 8, off + 8 + Math.min(size, buf.length - off - 8));
+      off += 8 + size + (size & 1);
+    }
+    throw new TtsError('WAV has no data chunk');
+  };
+  const f0 = fmt(parts[0]);
+  if (f0.bits !== 16) throw new TtsError('joinWavs wants 16-bit PCM');
+  const gap = Buffer.alloc(Math.round(f0.rate * gapMs / 1000) * f0.channels * 2);
+  const pcm = [];
+  parts.forEach((p, i) => {
+    const f = fmt(p);
+    if (f.rate !== f0.rate || f.channels !== f0.channels || f.bits !== f0.bits) {
+      throw new TtsError(`clip ${i} is ${f.rate} Hz x${f.channels}, the first is ${f0.rate} Hz x${f0.channels}`);
+    }
+    if (i) pcm.push(gap);
+    pcm.push(data(p));
+  });
+  return pcm16ToWav(Buffer.concat(pcm), f0.rate, f0.channels);
 }
 
 /**
@@ -336,11 +388,12 @@ export async function speak(text, voice = voiceFor('mike')) {
     throw new TtsError(chosen.reason);
   }
   const engine = chosen.name;
-  const path = cachePath(engine, voice, t);
+  const key = cacheKey(engine, voice, t);
+  const path = cachePath(engine, key);
   if (engine !== 'silent' && existsSync(path)) {
     const audio = readFileSync(path);
     stats.cached++;
-    return { audio, mime: 'audio/wav', durationMs: wavDurationMs(audio), engine, voice, cached: true };
+    return { audio, mime: 'audio/wav', durationMs: wavDurationMs(audio), engine, voice, key, cached: true };
   }
   const started = Date.now();
   let audio;
@@ -359,7 +412,31 @@ export async function speak(text, voice = voiceFor('mike')) {
     writeFileSync(path + '.tmp', audio);
     renameSync(path + '.tmp', path);
   }
-  return { audio, mime: 'audio/wav', durationMs, engine, voice, cached: false, synthMs: Date.now() - started };
+  return { audio, mime: 'audio/wav', durationMs, engine, voice, key, cached: false, synthMs: Date.now() - started };
+}
+
+/**
+ * Several lines as one clip, each in its own voice, so a call assembled from
+ * cached pieces — a name, "enters with", a number — plays as one file and is
+ * served under one key. The joined clip is cached like any other.
+ */
+export async function speakJoined(parts, { gapMs = 160 } = {}) {
+  const clips = [];
+  for (const p of parts) clips.push(await speak(p.text, p.voice));
+  if (clips.length === 1) return clips[0];
+  const engine = chosen.name;
+  const audio = joinWavs(clips.map((c) => c.audio), gapMs);
+  const key = cacheKey(engine, 'join', clips.map((c) => c.key).join('+'));
+  if (engine !== 'silent') {
+    const path = cachePath(engine, key);
+    if (!existsSync(path)) {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path + '.tmp', audio);
+      renameSync(path + '.tmp', path);
+    }
+  }
+  return { audio, mime: 'audio/wav', durationMs: wavDurationMs(audio), engine, voice: 'join', key,
+    cached: clips.every((c) => c.cached), synthMs: clips.reduce((n, c) => n + (c.synthMs || 0), 0) };
 }
 
 /** Warm the engine (load the model, spawn the worker) without speaking. */

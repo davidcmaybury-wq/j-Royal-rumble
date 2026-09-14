@@ -38,6 +38,7 @@ check('every step is illustrated',
   (g.match(/class="pic"/g) || []).length >= 4,
   `${(g.match(/class="pic"/g) || []).length} pictures`);
 check('and the focus warning is there', /in front/i.test(g));
+check('and it says what to do when the computer hosts', /computer is hosting/.test(g));
 check('the banner identifies the page, not a bare heading',
   g.includes("markBanner") && /HOW TO PLAY/.test(g));
 
@@ -138,6 +139,11 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
       'wait five clues'],
     ['and that taking the climb back before the clue is free', 'costs you nothing'],
     ['that an aimed miss costs a host-set share', 'the host sets that share'],
+    ['that the computer can host', 'Sometimes the computer hosts'],
+    ['who Mike is', 'Mike'],
+    ['and who Gene is', 'Gene'],
+    ['that the voice needs sound on', 'turn your sound on'],
+    ['that the board holder calls the next clue', 'calls the next clue'],
   ]) {
     check(`the rules mention ${what}`, both.includes(needle), needle);
   }
@@ -247,6 +253,8 @@ for (const [what, needle] of [
   // wrestling term. The negative check is the one that matters — the analysis
   // folder still ships the old name, so it can arrive again in a merge.
   ['the rejected buzz boost under its proper name', 'Kickout on 2'],
+  ['the computer host, and the two voices', 'When the computer hosts'],
+  ['why the voice plays on every buzzer', 'own buzzer window'],
 ]) {
   check(`the handbook covers ${what}`, hb.includes(needle), needle);
 }

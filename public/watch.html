@@ -256,6 +256,7 @@ import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import { scoreChart } from '/chart.js';
 import { animation, SECONDS } from '/toss.js';
 import * as sfx from '/sound.js';
+import { attachHostVoice } from '/host-voice.js';
 
 const socket = io({ transports: ['websocket'] });
 const root = document.getElementById('root');
@@ -579,6 +580,24 @@ socket.on('bot-said', (d) => {
   sayTimer = setTimeout(() => box.classList.remove('on'), 4200);
 });
 
+// What the host says, when the host is a program: the same bubble the robots
+// use, click-through by the same rule, and the clip through this screen's
+// speaker when its sound is on.
+let hostSayTimer = null;
+function showHostLine(msg) {
+  let box = document.getElementById('hostbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'hostbox'; box.className = 'says';
+    document.body.appendChild(box);
+  }
+  clearTimeout(hostSayTimer);
+  box.innerHTML = `<div class="sayrow"><span class="who">${msg.host === 'gene' ? 'Gene' : 'Mike'}</span>
+    <span class="what">${msg.text}</span></div>`;
+  box.classList.add('on');
+  hostSayTimer = setTimeout(() => box.classList.remove('on'), Math.max(2500, msg.durationMs + 800));
+}
+attachHostVoice(socket, { onSpeak: showHostLine, enabled: () => audioOn });
 
 // The swept column, held up while it is celebrated. By slot, not by name: the
 // engine replaces a cleared category in the same resolve that awards the bonus.

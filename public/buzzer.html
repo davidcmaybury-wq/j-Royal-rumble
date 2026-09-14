@@ -29,6 +29,19 @@ color:var(--brass);margin-left:6px;opacity:.9}
 z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;
 pointer-events:none;opacity:0;transition:opacity .16s ease,transform .16s ease}
 .says.on{opacity:1;transform:translateX(-50%)}
+/* What the host is doing, when the host is a program. A strip under the header
+   rather than an overlay: it is information the player acts on (call a clue),
+   so it must never be click-through or float over the buzzer. */
+.hostline{display:flex;align-items:center;gap:10px;margin:0 16px 8px;padding:8px 12px;
+border-radius:10px;background:#131A30;border:1px solid var(--line);font-size:13px;color:var(--slate)}
+.hostline .who{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);white-space:nowrap}
+.hostline.yours{border-color:var(--brass);color:var(--ink)}
+.hostline .what{flex:1;min-width:0}
+.soundnag{margin:0 16px 8px;padding:10px 12px;border-radius:10px;background:#3A2D08;border:1px solid var(--brass);
+color:#FFD98A;font-size:13px;cursor:pointer}
+.bcell.callable{cursor:pointer;outline:1px solid var(--brass);outline-offset:-1px}
+.bcell.callable:hover{background:#3A2D08}
+.hostsay .who{color:var(--brass)}
 .sayrow{display:flex;align-items:baseline;gap:10px;padding:10px 16px;border-radius:999px;
 background:#131A30EE;border:1px solid var(--line);max-width:78vw}
 .sayrow .who{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);
@@ -404,7 +417,8 @@ white-space:nowrap;border-bottom:1px solid var(--line);z-index:2}
 <script type="module">
 import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
          lockoutRemaining, startLatencyReports, syncClock,
-         getLag, setLag, fmt, ord } from '/rumble.js';
+         getLag, setLag, fmt, ord, serverNow } from '/rumble.js';
+import { attachHostVoice } from '/host-voice.js';
 import { scoreChart } from '/chart.js';
 // The line-art weapons are gone: everyone sees wrestlers now, including the
 // player themselves.
@@ -780,8 +794,17 @@ socket.on('watch-state', (s2) => { detectRing(s2); W = s2; paintBoard(); });
 // Once we know who we are, honour a full-mode preference from a previous
 // session — the label alone was not enough to actually get the board.
 let fullApplied = false;
-socket.on('state', () => {
-  if (!fullApplied && myToken()) { fullApplied = true; applyStoredFull(); }
+socket.on('state', (v) => {
+  if (!fullApplied && myToken()) {
+    fullApplied = true;
+    // With no human host, the board is where a player calls the next clue,
+    // so an autohost match opens with it up unless this device said otherwise.
+    if (v && v.autohost && CAN_FULL && localStorage.getItem('rumble-full') === null) {
+      full = true;
+      localStorage.setItem('rumble-full', '1');
+    }
+    applyStoredFull();
+  }
 });
 
 // Applied on load as well as on click. The stored preference set the label to
@@ -807,7 +830,7 @@ const money = (n) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString();
 function boardHtml() {
   if (!full) return '';
   if (!W) return '<aside class="board"><div class="bwait">Loading the board...</div></aside>';
-  const cols = (W.board || []).map((c) => '<div class="bcol">'
+  const cols = (W.board || []).map((c, slot) => '<div class="bcol">'
     + `<div class="bcat" title="${c.title}"><span>${c.title}</span>${
         c.year ? `<span class="yr">${c.year}</span>` : ''}${
         c.note ? `<span class="note">${c.note}</span>` : ''}</div>`
@@ -816,7 +839,8 @@ function boardHtml() {
     // 'played', not 'gone': .gone already exists on this page as the
     // full-screen overlay for an eliminated player, and a cell that inherited
     // position:absolute;inset:0 turned the whole window solid blue.
-    + c.clues.map((x) => `<div class="bcell${x.revealed ? ' played' : ''}">`
+    + c.clues.map((x) => `<div class="bcell${x.revealed ? ' played' : ''}${
+        !x.revealed && canCall() ? ' callable' : ''}" data-slot="${slot}" data-row="${x.row}">`
         + '$' + x.value + '</div>').join('')
     + '</div>').join('');
   const stableOf = (id) => (W.stables || []).find((x) => x.id === id) || null;
@@ -841,6 +865,70 @@ function paintBoard() {
   if (el) el.outerHTML = boardHtml();
 }
 const say = (m) => { document.getElementById('sr').textContent = m; };
+
+// ---------------- the host, when it is a program ----------------
+//
+// Whether this player can call the next clue: an autohost match, their token
+// holds the board, and the board is between clues. The card outline and the
+// click handler both read this, so they cannot disagree.
+const canCall = () => !!(V && V.autohost && V.control && V.control === myToken()
+  && V.host && V.host.state === 'handover' && !V.clueUp);
+
+// Clicking a card on your own board is the fallback for saying it aloud
+// (the spoken pick is step four). The server is the judge of whether it is
+// your board; this only asks.
+addEventListener('click', (e) => {
+  const cell = e.target && e.target.closest && e.target.closest('.bcell.callable');
+  if (!cell || !canCall()) return;
+  socket.emit('player-pick', { slot: +cell.dataset.slot, row: +cell.dataset.row }, (r) => {
+    if (r && r.error) say(r.error);
+  });
+});
+
+// What the host just said, as a caption under the buzzer — the same bubble the
+// robots use, so it is click-through by the same rule.
+let hostSayTimer = null;
+function showHostLine(msg) {
+  let box = document.getElementById('hostbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'hostbox'; box.className = 'says hostsay';
+    document.body.appendChild(box);
+  }
+  clearTimeout(hostSayTimer);
+  const who = msg.host === 'gene' ? 'Gene' : 'Mike';
+  box.innerHTML = `<div class="sayrow"><span class="who">${who}</span><span class="what">${msg.text}</span></div>`;
+  box.classList.add('on');
+  hostSayTimer = setTimeout(() => box.classList.remove('on'), Math.max(2500, msg.durationMs + 800));
+}
+
+// A clip this page could not play is said on the page. The server already
+// counts it; the player is the one who can fix it.
+let voiceTrouble = null;
+const voice = attachHostVoice(socket, {
+  now: serverNow,
+  onSpeak: (msg) => { showHostLine(msg); if (msg.fromClock) voiceTrouble = 'no voice on the server — the clue is read from the clock'; },
+  onRefused: (_msg, why) => { voiceTrouble = `this browser refused to play the host (${why}) — click anywhere, then check your sound`; render(); },
+  enabled: () => !sfx.isMuted(),
+});
+
+// The nag is the thing that stops a silent host being invisible: an autohost
+// match with no gesture yet cannot make a sound, and the player is the only
+// one who can change that.
+function hostStrip() {
+  if (!V || !V.autohost) return '';
+  const you = V.you || {};
+  const mine = canCall();
+  const nag = !voice.isPrimed()
+    ? `<div class="soundnag">The host speaks through this page — click here or press any key so your browser will play sound.</div>`
+    : voiceTrouble ? `<div class="soundnag">${voiceTrouble}</div>` : '';
+  const what = mine
+    ? (full ? 'You have the board — click a clue on it to call it.'
+      : 'You have the board — show the board here (below) to call a clue, or the host will pick in a moment.')
+    : (V.host && V.host.line) || 'Waiting for the host';
+  return `${nag}<div class="hostline${mine ? ' yours' : ''}"><span class="who">${
+    mine ? 'Your call' : 'Host'}</span><span class="what">${what}</span></div>`;
+}
 
 // ---------------- join ----------------
 function renderJoin() {
@@ -1224,6 +1312,7 @@ renderJoin();
         : 'One foot on the floor is off: the fastest press wins every race.'}">${
         V.arcade ? 'Arcade' : 'Tournament'}</span>
     </header>
+    ${hostStrip()}
     <section class="meter" id="meter"></section>
     <section class="pad">
       <button class="buzz" id="buzz"><span class="big mq" id="bzbig">WAIT</span><span id="bzsub"></span></button>
@@ -1537,6 +1626,11 @@ function renderResults() {
 
 sfx.preload();
 sfx.armUnlock();
+// The sound nag reads voice.isPrimed(), which flips on the first gesture; the
+// gesture itself is the moment to repaint it away.
+for (const ev of ['pointerdown', 'keydown']) {
+  addEventListener(ev, () => { if (V && V.autohost) setTimeout(render, 250); }, true);
+}
 
 // The context is read fresh each time: which clue is up changes while the page
 // is open, and a snapshot taken at load would describe the wrong moment.

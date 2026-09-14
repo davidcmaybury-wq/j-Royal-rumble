@@ -432,7 +432,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
-import { socket, gameId, hostKey, fmt, syncClock, ord } from '/rumble.js';
+import { socket, gameId, hostKey, fmt, syncClock, ord, serverNow } from '/rumble.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, brainAvatar } from '/brand.js';
 import { gem } from '/gems.js';
@@ -443,6 +443,7 @@ import { weaponToken } from '/tokens.js';
 import { avatar as wrestlerAvatar } from '/wrestlers.js';
 import { animation, SECONDS } from '/toss.js';
 import * as sfx from '/sound.js';
+import { attachHostVoice } from '/host-voice.js';
 import { summaryImage, fullStatsImage, statsCsv } from '/share.js';
 const GID = gameId();
 
@@ -557,6 +558,25 @@ socket.on('bot-said', (d) => {
   box.classList.add('on');
   sayTimer = setTimeout(() => box.classList.remove('on'), 4200);
 });
+
+// What the host says, when the host is a program: the same bubble the robots
+// use, click-through by the same rule, and the clip through this screen's
+// speaker when its sound is on.
+let hostSayTimer = null;
+function showHostLine(msg) {
+  let box = document.getElementById('hostbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'hostbox'; box.className = 'says';
+    document.body.appendChild(box);
+  }
+  clearTimeout(hostSayTimer);
+  box.innerHTML = `<div class="sayrow"><span class="who">${msg.host === 'gene' ? 'Gene' : 'Mike'}</span>
+    <span class="what">${msg.text}</span></div>`;
+  box.classList.add('on');
+  hostSayTimer = setTimeout(() => box.classList.remove('on'), Math.max(2500, msg.durationMs + 800));
+}
+attachHostVoice(socket, { now: serverNow, onSpeak: showHostLine, enabled: () => !muted });
 
 // The browser refuses audio until the page has been clicked, and a muted
 // console plays nothing by design. Either way the host used to get silence with

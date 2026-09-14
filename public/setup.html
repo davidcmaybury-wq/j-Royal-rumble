@@ -133,6 +133,9 @@ font-family:"IBM Plex Mono",monospace;font-size:21px;text-align:center}
    code, because a name is long and the four-letter code is the thing the eye
    should land on first. */
 .hostbox{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.hostbox .autohost{margin-top:12px}
+.hostbox .pickrow{display:none}
+.hostbox:has(#autohost:checked) .pickrow{display:flex}
 .hostbox label{display:block;color:var(--chalk);font-weight:500;font-size:14.5px;
 margin-bottom:7px}
 .hostbox input{width:100%;max-width:320px;padding:9px 11px;background:var(--ink);
@@ -569,6 +572,19 @@ function render(keepEdits) {
              value="${attr(S.hostName || savedHost())}">
       <span class="hint">saved with the match record, so how players do can be
         compared across hosts</span>
+      <!-- Plain checkbox rather than adv(): this is who hosts, not a rule of the
+           game, so no quick-setup rule set should switch it. Read back by id in
+           collect() like everything else. -->
+      <label class="rec autohost"><input type="checkbox" id="autohost" ${s.autohost ? 'checked' : ''}>
+        <span><b>Let the computer host</b><span class="hint2">Mike reads the clues and runs the board,
+        Gene calls the ring, and the buzzers arm off the end of each read. You play from a buzzer
+        like everybody else. Everyone needs sound on. Somebody at a console still rules Correct
+        or Wrong for now.${voiceHint(S.voice)}</span></span></label>
+      <div class="f pickrow" style="margin-top:8px">
+        <label for="pickSeconds">Seconds to call a clue</label>
+        <input type="number" id="pickSeconds" value="${s.pickSeconds ?? 12}" min="4" max="60" style="width:118px">
+        <span class="hint">before the host picks one for whoever has the board</span>
+      </div>
     </div>
     <ul class="links">
       <li class="playrow"><div>
@@ -811,6 +827,14 @@ function render(keepEdits) {
   if (edits) restoreEdits(edits);
 }
 
+// What the box can say. No engine at all is a warning, not a refusal — the
+// autohost then reads from the clock with the text on screen, which is how
+// it is tested — but a broken one is refused at the start button by name.
+const voiceHint = (v) => !v ? ''
+  : !v.configured ? `<br><b style="color:var(--alarm)">The server's voice is not working: ${v.reason}</b>`
+  : v.engine === 'silent' ? '<br><b style="color:var(--brass)">This server has no voice configured, so the host will be silent and the room reads each clue from the screen.</b>'
+  : `<br>Voice: ${v.engine}.`;
+
 const adv = (k, label, on, blurb) =>
   `<label class="rec adv"><input type="checkbox" id="${k}" ${on ? 'checked' : ''}>
     <span><b>${label}</b><span class="hint2">${blurb}</span></span></label>`;
@@ -966,6 +990,8 @@ function collect() {
       revivalLimit: +g('revivalLimit').value || 1,
       revivalFraction: +g('revivalFraction').value,
       seasonRange: [+g('s-lo').value, +g('s-hi').value],
+      autohost: g('autohost').checked,
+      pickSeconds: Math.max(4, Math.min(60, +g('pickSeconds').value || 12)),
     },
     blend: Object.fromEntries(SRC.map(([k]) => [k, mix[k] || 0])),
     // Beside the settings rather than inside them: it is not a rule and the
@@ -1197,7 +1223,8 @@ function wire() {
     // a hard block on a metadata field would be the wrong trade. Cancelling
     // puts the cursor in the box.
     const hostEl = document.getElementById('hostName');
-    if (hostEl && !hostEl.value.trim()
+    const computerHosts = document.getElementById('autohost').checked;
+    if (!computerHosts && hostEl && !hostEl.value.trim()
         && !confirm('No host name is set, so this match will be recorded without one.\n\n'
                   + 'Start anyway?')) {
       hostEl.focus();
@@ -1205,6 +1232,10 @@ function wire() {
     }
     b.disabled = true;
     b.textContent = 'Starting...';
+    // With the computer hosting there is nothing for the starter to do at a
+    // console; they join as a player. The console still exists for anybody who
+    // wants to watch it — or, for now, to press Correct and Wrong.
+    const after = computerHosts ? `/j/${code}` : `/host/${code}#${hostKey}`;
     // Wait for the server to confirm rather than navigating on a timer: if the
     // start is refused, landing on a console for a match that never began is
     // the least useful thing that can happen.
@@ -1217,10 +1248,10 @@ function wire() {
         setTimeout(() => { b.textContent = 'Start the Rumble'; }, 4000);
         return;
       }
-      location.href = `/host/${code}#${hostKey}`;
+      location.href = after;
     });
     // Older servers do not acknowledge; go anyway rather than hang.
-    setTimeout(() => { if (!done) location.href = `/host/${code}#${hostKey}`; }, 1200);
+    setTimeout(() => { if (!done) location.href = after; }, 1200);
   };
 }
 
