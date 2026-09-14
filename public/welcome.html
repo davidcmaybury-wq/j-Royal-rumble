@@ -68,6 +68,11 @@ border-radius:var(--r);text-decoration:none;background:#101731}
 .when b{display:block;color:var(--chalk);font-weight:500;font-size:14.5px}
 .when span{display:block;color:var(--slate);font-size:12.5px;margin-top:3px;line-height:1.45}
 .when:hover b{color:var(--brass)}
+/* The one outbound door on the page, and it says so with colour rather than a
+   second line of text. */
+.discord{margin-top:10px;border-color:#3A3F63}
+.discord:hover{border-color:#7B85C9}
+.discord:hover b{color:#AEB6EE}
 .learn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 @media (max-width:560px){.learn{grid-template-columns:1fr}}
 .lbtn{display:block;padding:13px 15px;border:1px solid var(--line);
@@ -136,6 +141,15 @@ footer a:hover{color:var(--brass);border-bottom-color:var(--brass)}
   <a class="when" href="/when"><b>When can you play?</b>
     <span>Mark the evenings you are usually free. When enough of us line up,
       David gets told and sends the invite.</span></a>
+
+  <!-- Where the room actually lives. Next to the scheduling door because the
+       two go together: marking your evenings is no use if you are not in the
+       server that gets told about them. Outbound, so it opens in its own tab
+       and does not lose somebody's half-filled grid. -->
+  <a class="when discord" href="https://discord.gg/tguzGMSPW"
+     target="_blank" rel="noopener noreferrer"><b>Join the Discord</b>
+    <span>Where matches get called, and where the computer host posts when
+      enough people are free.</span></a>
 
   <div class="learn">
     <a class="lbtn" href="/how-to-play"><b>New here? How to play</b>

@@ -190,6 +190,9 @@ color:var(--slate);margin-bottom:5px}
 .qwhat{font-size:11.5px;color:var(--slate);font-style:italic;margin:7px 0 0;min-height:2.6em}
 .qbots{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px;
 padding-top:14px;border-top:1px solid var(--line)}
+.alpha{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:3px;
+font-size:9.5px;font-weight:700;letter-spacing:.09em;vertical-align:1px;
+background:#5A3A0C;color:#F3D9A4;border:1px solid #8A5E15}
 </style>
 </head>
 <body>
@@ -576,7 +579,9 @@ function render(keepEdits) {
            game, so no quick-setup rule set should switch it. Read back by id in
            collect() like everything else. -->
       <label class="rec autohost"><input type="checkbox" id="autohost" ${s.autohost ? 'checked' : ''}>
-        <span><b>Let the computer host</b><span class="hint2">Mike reads the clues and runs the board,
+        <span><b>Let the computer host <span class="alpha">ALPHA</span></b><span class="hint2"><b>Not yet
+        played in a real room.</b> Expect rough edges and keep a console open — anyone at one can rule
+        Correct or Wrong, and ending the match there always works. Mike reads the clues and runs the board,
         Gene calls the ring, and the buzzers arm off the end of each read. You play from a buzzer
         like everybody else. Everyone needs sound on. Somebody at a console still rules Correct
         or Wrong for now.${voiceHint(S.voice)}</span></span></label>

@@ -120,8 +120,30 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
       over.length === 0, over.join('; ') || 'all within the cap');
   }
 
+  // --- the ALPHA label, on every surface that offers the computer host -------
+  //
+  // David asked for it before this shipped, and it is a needle rather than a
+  // comment because "we will take the label off later" is the kind of promise
+  // this suite exists to keep honest. Taking it off should be a deliberate
+  // change that also has to come here, not something that quietly rots off one
+  // page at a time while the other three still warn people.
+  {
+    const surfaces = [
+      ['RULES.md', '../RULES.md', 'this has never been played in a real room'],
+      ['the illustrated guide', '../public/howto.html', 'brand new, so expect'],
+      ['the setup page', '../public/setup.html', 'Not yet\n        played in a real room'],
+      ['a player\u2019s buzzer', '../public/buzzer.html', 'alphatag'],
+    ];
+    for (const [what, rel, needle] of surfaces) {
+      const body = readFileSync(new URL(rel, import.meta.url), 'utf8');
+      check(`the computer host is marked alpha on ${what}`,
+        body.includes(needle), needle);
+    }
+  }
+
   const both = read('discord-rules-v2.md') + read('discord-advanced-mechanics.md');
   for (const [what, needle] of [
+    ['that the computer host is flagged as an experiment', 'treat it as an experiment'],
     ['the entry stake scales in overtime', 'stake climbs with it'],
     ['stables are named after gemstones', 'Diamond'],
     ['revival scales too', 'stake scales with it'],
@@ -206,6 +228,12 @@ for (const [what, needle] of [
   ['that aiming back is not a surcharge', 'neither a discount nor a surcharge'],
   ['the draw-slot finding', 'The draw slot is the biggest lever measured'],
   ['and the renumbered figure run', 'Figure 37'],
+  // The computer host is ALPHA and every surface that offers it says so.
+  // David asked for this before it shipped, and the reason it is a needle and
+  // not a comment is that "we will take the label off later" is exactly the
+  // kind of promise this suite exists to keep honest — the label must come off
+  // deliberately, in a change that also fails this check.
+  ['that the computer host is marked alpha in the handbook', 'Not yet played in a real room'],
   // Matches 23-24, merged from the analysis chat's live-sep14 page. The top
   // rope needle matters most: this document told people for twenty-two matches
   // that nothing optional had ever been used, and that claim is now wrong in a

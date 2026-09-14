@@ -351,6 +351,10 @@ bandwidth. One screen in the room can turn on sound.
 
 ## 13. WHEN THE COMPUTER HOSTS
 
+**ALPHA — this has never been played in a real room.** It works in testing and
+it will have rough edges in front of people. Somebody keeps a console open, and
+anyone at one can rule a clue or end the match.
+
 Some matches have no human host. Two voices run the room: **Mike** is the
 game-show host — he hands the board over, announces the category and value,
 reads the clue and rules on it — and **Gene** is the ring announcer, who calls
