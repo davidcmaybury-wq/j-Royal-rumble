@@ -1811,6 +1811,243 @@ mountAvailability(app, { dir: __dir, localReq, adminOk });
 
 // ---------------------------------------------------------------- sockets
 
+
+// --- the three rulings, as plain functions -----------------------------------
+//
+// Extracted from their socket handlers without a line of behaviour changing, so
+// that a second caller can drive a match. The autohost has no socket and no
+// host, and the alternative to this was a second copy of the rules — which is
+// how `tools/` fell a release behind the engine and printed rows labelled
+// SHIPPED that described a rule nobody was playing any more.
+//
+// `hostOnly` deliberately stays on the socket side: it is about who is allowed
+// to ask, which is a question about a connection, not about the match.
+//
+// Everything these need that used to be in the connection closure arrives as
+// `deps`. `match` keeps its name so the bodies could move verbatim; that is the
+// whole reason this diff is readable.
+function runActivate(match, { pushAll, runBots, armTimeout }) {
+  if (!match.race) return;
+  const at = Date.now() + match.settings.delay;
+  match.race.open = true;
+  match.race.activatedAt = at;
+  // Sent before anything else and deliberately tiny. This is the one message
+  // in the whole app where a few milliseconds are worth protecting.
+  // NOT volatile: volatile packets are dropped rather than queued, which is
+  // precisely wrong for the one signal that must reach everybody.
+  io.to(`${match.id}:players`).emit('activate-lights', { at });
+  io.to(`${match.id}:players`).emit('activate-buzzers', { at, lockout: match.settings.lockout });
+  runBots();
+  armTimeout();
+  pushAll();
+}
+
+// `report` is the one thing here that knew about a socket: a refusal answers the
+// acknowledgement when the caller sent one and falls back to an error message on
+// the connection. The autohost passes its own, because "tell the host" means
+// something different when there is no host.
+function runResolve(match, { winnerToken }, { pushAll, clearBotTimers }, report) {
+  // Adjudicating a clue that has already been settled.
+  //
+  // The console sends this twice more easily than it looks: Y fires on
+  // keydown and the guard in front of it reads the console's own copy of the
+  // state, which is still the old clue until the server's push lands. A
+  // second press — or a second click on Correct — arrives after match.clue is
+  // already null.
+  //
+  // Every sibling handler checks; this one did not, so it destructured null
+  // and threw "cannot destructure property 'slot' of 'match.clue' as it is
+  // null". hostOnly caught that and handed it to the host verbatim: a
+  // developer's sentence, on a screen where the game had apparently stopped,
+  // in the middle of a live match. Reported from clue 16 of VWQW.
+  if (!match.clue || !match.race) {
+    const m = 'That clue is already settled — pick the next one.';
+    report(m);
+    return;
+  }
+  const { slot, row } = match.clue;
+  const missed = [...match.race.lockedOut];
+  const snap = match.game.snapshot();
+  const statsSnap = JSON.stringify([...match.stats.entries()]);
+  const clueMeta = { ...match.clue };
+  const buzzes = (match.race?.buzzes || []).map((b) => ({ ...b }));
+  const before = Object.fromEntries(match.game.live().map((p) => [p.id, p.score]));
+  const t0 = match.lastClueAt || match.startedAt;
+  match.lastClueAt = Date.now();
+
+  // Whoever was actually on the clock when the race closed took it — not
+  // whoever happened to be fastest at the instant they pressed.
+  const tookIt = (match.race?.buzzes || []).filter((b) => !b.spectator)[0];
+  if (tookIt) match.stat(tookIt.token).won++;
+
+  const entry = match.game.resolveClue(slot, row, { winnerId: winnerToken ?? null, missedIds: missed });
+  match.undoStack.push({ snap, statsSnap, fastest: match.fastest, clue: clueMeta });
+  if (match.undoStack.length > 60) match.undoStack.shift();
+  if (winnerToken && entry.gain) match.stat(winnerToken).drained += entry.gain;
+  // Whoever took the clue calls the next one, as at a real lectern.
+  if (winnerToken && match.game.players.get(winnerToken)?.state === 'live') {
+    match.control = winnerToken;
+  } else if (match.control && match.game.players.get(match.control)?.state !== 'live') {
+    match.control = null;
+  }
+  for (const p of match.game.live()) {
+    const st = match.stat(p.id);
+    if (p.score > st.peak) st.peak = p.score;
+  }
+  const after = Object.fromEntries(match.game.live().map((p) => [p.id, p.score]));
+  match.history.push({ clue: match.game.cluesRevealed, ceiling: match.game.ceiling, scores: after });
+
+  if (match.record) {
+    // What the clue was actually worth over its face value.
+    const mult = clueMeta.face ? Math.round(clueMeta.value / clueMeta.face) : 1;
+    match.record.clues.push({
+      n: match.game.cluesRevealed,
+      at: match.elapsed(),
+      seconds: t0 ? Math.round((Date.now() - t0) / 100) / 10 : null,
+      category: clueMeta.category, source: match.game.board[slot]?.source,
+      note: clueMeta.note || null, row: clueMeta.row, value: clueMeta.value,
+      faceValue: clueMeta.face ?? clueMeta.value,
+      buzzes: buzzes.map((b) => ({ name: b.name, ms: b.ms, spectator: b.spectator,
+        early: !!b.early, latency: match.roster.get(b.token)?.latency ?? null })),
+      winner: winnerToken ? match.roster.get(winnerToken)?.name : null,
+      missed: missed.map((t) => match.roster.get(t)?.name),
+      stumper: !winnerToken,
+      ceiling: match.game.ceiling,
+      inRing: Object.keys(after).length,
+      scoresBefore: before, scoresAfter: after,
+      eliminated: (entry.eliminated || []).map((t) => match.roster.get(t)?.name),
+      fieldClear: entry.fieldClear ? true : undefined,
+
+      // Everything below had to be inferred from arithmetic before, and I got
+      // it wrong on the first pass: a clue paying 2x looked like overtime when
+      // it was pot scoring with three in the ring. If the log is the way this
+      // game gets tuned, the log has to say what happened.
+      overtime: mult > 1 ? mult : undefined,
+      overtimeStarted: entry.overtimeStarted ? true : undefined,
+      overtimeRaised: entry.overtimeRaised ? entry.overtimeRaised.multiplier : undefined,
+      stalledClues: match.game.stalledClues,
+      // entry.entered is a single id on a normal entry and a list when the
+      // field clears and two come in at once.
+      entered: (() => {
+        const ids = entry.entered == null ? []
+          : (Array.isArray(entry.entered) ? entry.entered : [entry.entered]);
+        return ids.length ? ids.map((t) => ({
+          name: match.roster.get(t)?.name,
+          draw: match.game.players.get(t)?.drawNumber,
+          stake: match.game.players.get(t)?.score })) : undefined;
+      })(),
+      queueLength: match.game.queued().length,
+      topRope: match.game.live().filter((p) => p.topRope)
+        .map((p) => match.roster.get(p.id)?.name).filter(Boolean).length || undefined,
+      bounties: (entry.bountyCollected || []).length
+        ? entry.bountyCollected.map((b) => ({
+            by: match.roster.get(b.by)?.name, on: match.roster.get(b.on)?.name,
+            amount: b.amount })) : undefined,
+      bountiesOpen: match.settings.bounties
+        ? [...match.game.players.values()]
+            .reduce((n, p) => n + match.game.bountyTotal(p.id), 0) || undefined
+        : undefined,
+    });
+  }
+
+  clearBotTimers();
+  clearTimeout(match.raceTimer);
+  match.clue = null; match.race = null; match.retoss = 0;
+  pushAll();
+  // Whoever just walked in, and what they walk in to. Added here rather than
+  // in the engine: the engine deals in rules and knows nothing about music.
+  if (entry.entered != null) {
+    const ids = Array.isArray(entry.entered) ? entry.entered : [entry.entered];
+    entry.entrances = ids.map((t) => ({
+      name: match.roster.get(t)?.name,
+      theme: match.roster.get(t)?.theme || null,
+    })).filter((x) => x.name);
+  }
+  // Whoever holds the board calls the next clue.
+  //
+  // Control passes to whoever answered correctly and stays put on a stumper,
+  // the way it does on the show — so a robot that was already leading the
+  // board keeps calling clues until somebody takes it off them.
+  if (winnerToken) match.control = winnerToken;
+  const caller = match.control;
+  if (caller && match.bots.has(caller)
+      && match.game.players.get(caller)?.state === 'live') {
+    const open = [];
+    match.game.board.forEach((c) => c.clues.forEach((x) => {
+      if (!x.revealed) open.push({ category: c.title, value: [100, 200, 300, 400, 500][x.row - 1] });
+    }));
+    if (open.length) {
+      const pick = open[Math.floor(Math.random() * open.length)];
+      for (const room of ['host', 'watch', 'board']) {
+        io.to(`${match.id}:${room}`).emit('bot-said', { said: [{
+          token: caller, name: match.roster.get(caller)?.name,
+          kind: 'pick', text: `${pick.category} for $${pick.value}` }] });
+      }
+    }
+  }
+
+  io.to(`${match.id}:host`).emit('resolved', entry);
+  io.to(`${match.id}:watch`).emit('resolved', entry);
+  // Entrance music comes out of the buzzers and the host console now. A watch
+  // screen is optional and in a live match nobody had one open with sound, so
+  // every entrance passed in silence. The players always have a buzzer open;
+  // that is the whole point of it.
+  if (entry.entrances?.length) {
+    io.to(`${match.id}:players`).emit('entrances', { entrances: entry.entrances });
+  }
+  for (const t of entry.revived || []) {
+    const sid = match.roster.get(t)?.socketId;
+    if (sid) io.to(sid).emit('revived', {
+      stake: Math.round(match.settings.startScore * match.settings.revivalFraction) });
+  }
+  if (match.game.finished) {
+    match.phase = 'over';
+    match.finishRecord();
+    match.saveLog();
+    pushAll();
+  }
+}
+
+function runMarkWrong(match, t, { pushAll, runBots, armTimeout }) {
+  if (!match.race) return;
+  match.race.lockedOut.add(t);
+
+  // A genuinely fresh race, which is what the rules promise: "a missed clue
+  // goes straight back out to everyone still eligible as a fresh buzzer
+  // race". Keeping the old queue and promoting the next-fastest instead put
+  // somebody on the clock the instant the host pressed N — no second race
+  // happened, and the players who had not buzzed the first time never got
+  // the chance the rules say they get.
+  match.race.buzzes = [];
+  match.race.open = true;
+  match.race.activatedAt = Date.now() + match.settings.delay;
+  match.retoss = (match.retoss || 0) + 1;
+
+  // A fresh race needs a fresh answer.
+  //
+  // These are cleared per clue, which meant a robot picking up the rebound
+  // never spoke: the marker from the first race was still set and the
+  // announcement bailed out. The wrong answer is regenerated too, so the
+  // second robot does not repeat the first one's guess.
+  clearTimeout(match.saidTimer);
+  match.saidTimer = null;
+  match.saidFor = null;
+  const said = match.wrongAnswer;
+  match.wrongAnswer = null;
+  {
+    const sibs = match.game.board.flatMap((c) => c.clues.map((x) => x.answer))
+      .filter((a) => a && a !== match.clue.answer && a !== said);
+    wrongAnswer(match.clue, sibs).then((w) => { match.wrongAnswer = w || said; });
+  }
+  io.to(`${match.id}:players`).emit('activate-buzzers',
+    { at: match.race.activatedAt, lockout: match.settings.lockout });
+  io.to(`${match.id}:host`).emit('retoss', { lockedOut: [...match.race.lockedOut] });
+  runBots();
+  armTimeout();
+  pushAll();
+}
+
+
 io.on('connection', (socket) => {
   let match = null, token = null, isHost = false;
 
@@ -2185,21 +2422,7 @@ io.on('connection', (socket) => {
     }, grace);
   };
 
-  socket.on('activate', hostOnly(() => {
-    if (!match.race) return;
-    const at = Date.now() + match.settings.delay;
-    match.race.open = true;
-    match.race.activatedAt = at;
-    // Sent before anything else and deliberately tiny. This is the one message
-    // in the whole app where a few milliseconds are worth protecting.
-    // NOT volatile: volatile packets are dropped rather than queued, which is
-    // precisely wrong for the one signal that must reach everybody.
-    io.to(`${match.id}:players`).emit('activate-lights', { at });
-    io.to(`${match.id}:players`).emit('activate-buzzers', { at, lockout: match.settings.lockout });
-    runBots();
-    armTimeout();
-    pushAll();
-  }));
+  socket.on('activate', hostOnly(() => runActivate(match, { pushAll, runBots, armTimeout })));
 
   // Bots buzz by the clock rather than by hand. Each one is scheduled at the
   // moment its drawn reaction time lands, so the race fills in on the console
@@ -2254,208 +2477,14 @@ io.on('connection', (socket) => {
     match.botTimers = [];
   }
 
-  socket.on('resolve', hostOnly(({ winnerToken }, ack) => {
-    // Adjudicating a clue that has already been settled.
-    //
-    // The console sends this twice more easily than it looks: Y fires on
-    // keydown and the guard in front of it reads the console's own copy of the
-    // state, which is still the old clue until the server's push lands. A
-    // second press — or a second click on Correct — arrives after match.clue is
-    // already null.
-    //
-    // Every sibling handler checks; this one did not, so it destructured null
-    // and threw "cannot destructure property 'slot' of 'match.clue' as it is
-    // null". hostOnly caught that and handed it to the host verbatim: a
-    // developer's sentence, on a screen where the game had apparently stopped,
-    // in the middle of a live match. Reported from clue 16 of VWQW.
-    if (!match.clue || !match.race) {
-      const m = 'That clue is already settled — pick the next one.';
-      if (ack) ack({ error: m }); else socket.emit('error-msg', m);
-      return;
-    }
-    const { slot, row } = match.clue;
-    const missed = [...match.race.lockedOut];
-    const snap = match.game.snapshot();
-    const statsSnap = JSON.stringify([...match.stats.entries()]);
-    const clueMeta = { ...match.clue };
-    const buzzes = (match.race?.buzzes || []).map((b) => ({ ...b }));
-    const before = Object.fromEntries(match.game.live().map((p) => [p.id, p.score]));
-    const t0 = match.lastClueAt || match.startedAt;
-    match.lastClueAt = Date.now();
-
-    // Whoever was actually on the clock when the race closed took it — not
-    // whoever happened to be fastest at the instant they pressed.
-    const tookIt = (match.race?.buzzes || []).filter((b) => !b.spectator)[0];
-    if (tookIt) match.stat(tookIt.token).won++;
-
-    const entry = match.game.resolveClue(slot, row, { winnerId: winnerToken ?? null, missedIds: missed });
-    match.undoStack.push({ snap, statsSnap, fastest: match.fastest, clue: clueMeta });
-    if (match.undoStack.length > 60) match.undoStack.shift();
-    if (winnerToken && entry.gain) match.stat(winnerToken).drained += entry.gain;
-    // Whoever took the clue calls the next one, as at a real lectern.
-    if (winnerToken && match.game.players.get(winnerToken)?.state === 'live') {
-      match.control = winnerToken;
-    } else if (match.control && match.game.players.get(match.control)?.state !== 'live') {
-      match.control = null;
-    }
-    for (const p of match.game.live()) {
-      const st = match.stat(p.id);
-      if (p.score > st.peak) st.peak = p.score;
-    }
-    const after = Object.fromEntries(match.game.live().map((p) => [p.id, p.score]));
-    match.history.push({ clue: match.game.cluesRevealed, ceiling: match.game.ceiling, scores: after });
-
-    if (match.record) {
-      // What the clue was actually worth over its face value.
-      const mult = clueMeta.face ? Math.round(clueMeta.value / clueMeta.face) : 1;
-      match.record.clues.push({
-        n: match.game.cluesRevealed,
-        at: match.elapsed(),
-        seconds: t0 ? Math.round((Date.now() - t0) / 100) / 10 : null,
-        category: clueMeta.category, source: match.game.board[slot]?.source,
-        note: clueMeta.note || null, row: clueMeta.row, value: clueMeta.value,
-        faceValue: clueMeta.face ?? clueMeta.value,
-        buzzes: buzzes.map((b) => ({ name: b.name, ms: b.ms, spectator: b.spectator,
-          early: !!b.early, latency: match.roster.get(b.token)?.latency ?? null })),
-        winner: winnerToken ? match.roster.get(winnerToken)?.name : null,
-        missed: missed.map((t) => match.roster.get(t)?.name),
-        stumper: !winnerToken,
-        ceiling: match.game.ceiling,
-        inRing: Object.keys(after).length,
-        scoresBefore: before, scoresAfter: after,
-        eliminated: (entry.eliminated || []).map((t) => match.roster.get(t)?.name),
-        fieldClear: entry.fieldClear ? true : undefined,
-
-        // Everything below had to be inferred from arithmetic before, and I got
-        // it wrong on the first pass: a clue paying 2x looked like overtime when
-        // it was pot scoring with three in the ring. If the log is the way this
-        // game gets tuned, the log has to say what happened.
-        overtime: mult > 1 ? mult : undefined,
-        overtimeStarted: entry.overtimeStarted ? true : undefined,
-        overtimeRaised: entry.overtimeRaised ? entry.overtimeRaised.multiplier : undefined,
-        stalledClues: match.game.stalledClues,
-        // entry.entered is a single id on a normal entry and a list when the
-        // field clears and two come in at once.
-        entered: (() => {
-          const ids = entry.entered == null ? []
-            : (Array.isArray(entry.entered) ? entry.entered : [entry.entered]);
-          return ids.length ? ids.map((t) => ({
-            name: match.roster.get(t)?.name,
-            draw: match.game.players.get(t)?.drawNumber,
-            stake: match.game.players.get(t)?.score })) : undefined;
-        })(),
-        queueLength: match.game.queued().length,
-        topRope: match.game.live().filter((p) => p.topRope)
-          .map((p) => match.roster.get(p.id)?.name).filter(Boolean).length || undefined,
-        bounties: (entry.bountyCollected || []).length
-          ? entry.bountyCollected.map((b) => ({
-              by: match.roster.get(b.by)?.name, on: match.roster.get(b.on)?.name,
-              amount: b.amount })) : undefined,
-        bountiesOpen: match.settings.bounties
-          ? [...match.game.players.values()]
-              .reduce((n, p) => n + match.game.bountyTotal(p.id), 0) || undefined
-          : undefined,
-      });
-    }
-
-    clearBotTimers();
-    clearTimeout(match.raceTimer);
-    match.clue = null; match.race = null; match.retoss = 0;
-    pushAll();
-    // Whoever just walked in, and what they walk in to. Added here rather than
-    // in the engine: the engine deals in rules and knows nothing about music.
-    if (entry.entered != null) {
-      const ids = Array.isArray(entry.entered) ? entry.entered : [entry.entered];
-      entry.entrances = ids.map((t) => ({
-        name: match.roster.get(t)?.name,
-        theme: match.roster.get(t)?.theme || null,
-      })).filter((x) => x.name);
-    }
-    // Whoever holds the board calls the next clue.
-    //
-    // Control passes to whoever answered correctly and stays put on a stumper,
-    // the way it does on the show — so a robot that was already leading the
-    // board keeps calling clues until somebody takes it off them.
-    if (winnerToken) match.control = winnerToken;
-    const caller = match.control;
-    if (caller && match.bots.has(caller)
-        && match.game.players.get(caller)?.state === 'live') {
-      const open = [];
-      match.game.board.forEach((c) => c.clues.forEach((x) => {
-        if (!x.revealed) open.push({ category: c.title, value: [100, 200, 300, 400, 500][x.row - 1] });
-      }));
-      if (open.length) {
-        const pick = open[Math.floor(Math.random() * open.length)];
-        for (const room of ['host', 'watch', 'board']) {
-          io.to(`${match.id}:${room}`).emit('bot-said', { said: [{
-            token: caller, name: match.roster.get(caller)?.name,
-            kind: 'pick', text: `${pick.category} for $${pick.value}` }] });
-        }
-      }
-    }
-
-    io.to(`${match.id}:host`).emit('resolved', entry);
-    io.to(`${match.id}:watch`).emit('resolved', entry);
-    // Entrance music comes out of the buzzers and the host console now. A watch
-    // screen is optional and in a live match nobody had one open with sound, so
-    // every entrance passed in silence. The players always have a buzzer open;
-    // that is the whole point of it.
-    if (entry.entrances?.length) {
-      io.to(`${match.id}:players`).emit('entrances', { entrances: entry.entrances });
-    }
-    for (const t of entry.revived || []) {
-      const sid = match.roster.get(t)?.socketId;
-      if (sid) io.to(sid).emit('revived', {
-        stake: Math.round(match.settings.startScore * match.settings.revivalFraction) });
-    }
-    if (match.game.finished) {
-      match.phase = 'over';
-      match.finishRecord();
-      match.saveLog();
-      pushAll();
-    }
-  }));
+  socket.on('resolve', hostOnly(({ winnerToken }, ack) => runResolve(
+    match, { winnerToken }, { pushAll, clearBotTimers },
+    (m) => { if (ack) ack({ error: m }); else socket.emit('error-msg', m); })));
 
   // A miss locks that player out of the rest of the clue and re-opens the
   // race for everyone still eligible.
-  socket.on('mark-wrong', hostOnly(({ token: t }) => {
-    if (!match.race) return;
-    match.race.lockedOut.add(t);
-
-    // A genuinely fresh race, which is what the rules promise: "a missed clue
-    // goes straight back out to everyone still eligible as a fresh buzzer
-    // race". Keeping the old queue and promoting the next-fastest instead put
-    // somebody on the clock the instant the host pressed N — no second race
-    // happened, and the players who had not buzzed the first time never got
-    // the chance the rules say they get.
-    match.race.buzzes = [];
-    match.race.open = true;
-    match.race.activatedAt = Date.now() + match.settings.delay;
-    match.retoss = (match.retoss || 0) + 1;
-
-    // A fresh race needs a fresh answer.
-    //
-    // These are cleared per clue, which meant a robot picking up the rebound
-    // never spoke: the marker from the first race was still set and the
-    // announcement bailed out. The wrong answer is regenerated too, so the
-    // second robot does not repeat the first one's guess.
-    clearTimeout(match.saidTimer);
-    match.saidTimer = null;
-    match.saidFor = null;
-    const said = match.wrongAnswer;
-    match.wrongAnswer = null;
-    {
-      const sibs = match.game.board.flatMap((c) => c.clues.map((x) => x.answer))
-        .filter((a) => a && a !== match.clue.answer && a !== said);
-      wrongAnswer(match.clue, sibs).then((w) => { match.wrongAnswer = w || said; });
-    }
-    io.to(`${match.id}:players`).emit('activate-buzzers',
-      { at: match.race.activatedAt, lockout: match.settings.lockout });
-    io.to(`${match.id}:host`).emit('retoss', { lockedOut: [...match.race.lockedOut] });
-    runBots();
-    armTimeout();
-    pushAll();
-  }));
+  socket.on('mark-wrong', hostOnly(({ token: t }) =>
+    runMarkWrong(match, t, { pushAll, runBots, armTimeout })));
 
   // Players can't tell you the delay is wrong until they've played a clue, so
   // this can't be a setup-only setting.

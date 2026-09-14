@@ -1,0 +1,166 @@
+# Autohost — design
+
+*Revision 5, 2026-09-14, after four rounds of review; nothing remains open. Nothing here is built. Every event name and file was checked against the repo at 0.96.1. Decisions from review are stated as settled, and each earlier answer they replaced is kept where it changed, per the house rule that corrections are recorded rather than deleted.*
+
+## What it is
+
+A match that runs with no human host and no console. An AI voice reads each clue, opens the buzzers when the read ends, listens to whoever wins the race, rules on the answer, and calls the moments a host would call — entrances, eliminations, overtime, a field clear, the reveal on a stumper. The player who holds the board calls the next clue by saying it. The room polices the host: any player can object to a ruling, and enough objections reverse it.
+
+The engine, the race, the scoring and the record are untouched. The autohost is a new *caller* of the same `pick-clue` / `activate` / `resolve` / `mark-wrong` path the console drives today, plus a microphone on the buzzer page, a vote, and three services behind it: a text-to-speech engine for the voice, Deepgram for hearing, Claude for judgment. Delete the autohost and the game is exactly what it is now.
+
+## Settled in review
+
+**Nobody looks at the console.** Whoever sets the match up and starts the autohost gets a normal player window, not `/host/:id`. The first draft kept the console as a human override and as the fallback when the judge could not rule; both are gone. Every piece of status the console would have shown — what the host is doing, the last transcript and ruling, who has sound on, who has a mic — lives on the buzzer page instead, and every fallback that used to be "hand it to the human at the console" is now "put it to the room."
+
+**Desktop clients only, for now.** The buzzer's full-board mode (`want-board`, the `:board` room, `watchView()`) is desktop-only by David's earlier decision and is exactly the surface the autohost needs: the board beside the buzzer, so the player with control can see what to call. In an autohost match the buzzer opens in full mode by default.
+
+**The pick is spoken first, clicked second.** The player holding the board says "Presidents for 400"; if they click the card on their board instead, the host announces the category and value so the room hears the call either way. If they do neither within the pick window, the host picks for them and says so.
+
+**Objections, hotkey O.** A ruling is reversed if a simple majority of all players in the match object, or a supermajority of the players actively in the ring. Objections are assumed rare, so a ruling takes effect immediately and the board goes straight back to the players; objections are collected through the following clue and, if enough arrive, the ruling is walked back. Where walking it back would be ambiguous — three players ruled wrong, say — the players get a popup to award the clue, and it is thrown out only if they cannot agree. Section below.
+
+**Board control at the bell goes to player 1** — draw number 1. Today `match.control` starts null and the host calls the first clue; in an autohost match the first pick belongs to whoever drew first.
+
+**A cheap or free voice until the feature earns a better one.** ElevenLabs stays in the design as an adapter to swap in later; it is not what ships first. The first draft assumed ElevenLabs from day one.
+
+**No question form.** Answers are judged on content. The rubric is one string in one file for when that changes.
+
+## Where the voice comes out of
+
+Unchanged from the first draft and worth restating, because it drives the timing: **the voice plays on every client, not through the video call.** The server owns each clip and knows its duration, so it schedules the arm at `spokenAt + durationMs + settle` and sends the same `activate-buzzers {at}` the console sends now. Every player hears the read from their own machine in step with their own buzzer, and Zoom drops out of the timing problem. The `delay` setting stays for anyone running audio through a shared screen; an autohost match should default it low, and the right number is measured once it exists (see "two players hear the read at different times," below).
+
+The room still talks over the call. The answer is heard by everyone over Zoom exactly as now; the autohost hears it separately, from the answering player's own mic.
+
+The cost is that a client with sound off has no host. The buzzer therefore refuses to sit quietly: an autohost match shows a banner until the sound unlock has taken (the page already arms `unlock()` and retries on every interaction), each client reports when a clip actually started playing (`heard {clueId, lateMs}`), and every player's board shows who has heard the current clue. A silence with no signal is the bug — the same shape as `theme-refused`.
+
+## The voice
+
+The first build uses a local, free engine on the server, behind an interface small enough that swapping it is one file: `speak(text) → {audio, durationMs}` in `src/tts.js`, with the engine chosen by `RUMBLE_TTS` (`kokoro` | `piper` | `elevenlabs`). Two open-source candidates fit a Node server with no GPU. Kokoro (82M parameters, Apache-licensed, runs in-process through `kokoro-js` on ONNX) sounds clearly better than Piper and is the first choice; Piper is smaller and faster on a very small CPU and is the fallback if the Lightsail box cannot keep Kokoro ahead of the game. Which one the box can sustain is a measurement, not a guess — the first task of the build is to time both on the actual VM. Neither costs anything per clip.
+
+Because a local engine is slower than a hosted one, nothing is synthesized on the critical path. When a board is dealt — at match start and on every field-clear refresh — the server queues every clue on it for synthesis in the background and caches the clips for the match; a pick jumps its clue to the front of the queue, so the read waits only if the pick beats the queue, which the first few clues of a fresh board might. Category-and-value calls, the verdict phrases, the fixed narration fragments and the numbers are synthesized once at boot and cached on disk. Each player's name is synthesized once when they join. Narration is then assembled from cached fragments — *[name] [enters with] [3,000]* — and only an optional flourish line ever needs live synthesis. An undo-and-replay never re-synthesizes, which also matters for the objection path.
+
+## Two hosts: Mike and Gene
+
+Settled in review: there are two voices, not one. **Mike** is the game-show host — straight, even, no color. He hands over the board, confirms the pick, reads the clue, names the player he is listening to, rules, reads the correct response on a stumper, runs the objection and the award vote, and says when a clue is thrown out. Everything that touches the rules is Mike, in the same register the show uses, because a ruling delivered in character is a ruling that sounds negotiable. **Gene** is the ring announcer and calls the game events in the wrestling register: a new player entering (draw number, stake, and the walk-in before their theme plays), an elimination, a revival, a top rope, a field clear and the bonus it pays, overtime opening and each escalation, a bounty collected, a longevity bonus, a comeback return. Gene never rules and never touches the board; Mike never calls a walk-in.
+
+Mechanically they are two voice ids on the same engine (`voiceMike`, `voiceGene`) and two phrase sets, and the narration step below is Gene's while every other step is Mike's. The fragment cache is per voice — player names are synthesized in both, since Mike says "Priya" when he listens to her and Gene says it when she walks in. The two hand off cleanly because they never speak in the same step: Mike rules, the resolve fires, Gene calls what it caused, Mike hands over the board. The optional flourish (`autohostFlourish`) is Gene's, and it is the one place a model-written line is worth the synthesis latency, because it is the one place the room is waiting to be entertained rather than to play. Mike's lines are fixed phrases and clue text; he has no flourish and should not get one.
+
+## The loop
+
+The autohost is one object per match, `src/autohost.js`, a state machine driven by the same events the console fires. Each transition is a function the socket handlers also call: the build starts by pulling the bodies of `activate`, `resolve` and `mark-wrong` out of their `socket.on` handlers into plain functions with no behavior change, so the autohost and the console share one implementation rather than two copies. The `hostOnly` wrapper stays on the socket side. The autohost is the server and is trusted.
+
+**Pick.** Whoever holds the board (`match.control`) calls the clue; at the bell that is draw number 1, set by `match.start()` in an autohost match. Mike says "You have the board, Priya" and opens her mic for `pickSeconds` (12 seconds, with a spoken nudge at 8). Her audio streams to Deepgram as it does for an answer; the transcript is matched against the open cards on the board — category titles plus the five values — locally first, with a fuzzy match on the title and a number in the text, and only if that is ambiguous does a short Claude call disambiguate ("Presidents for four" against two categories starting with P). A clean match is confirmed by the host repeating it: "Presidents, 400." If she clicks the card on her board instead, the buzzer emits `player-pick {slot, row}` — a new event accepted only from the token that holds control and only in an autohost match — and the host announces the category and value before reading. If the window closes with neither, the host picks at random the way a robot with control does today and says so. A robot with control already announces its pick through `bot-said` kind `pick`; the autohost simply performs the pick it announces.
+
+**Read.** Mike reads the clue text. Category and value have already been said in the pick. On the first clue of a board, or when the category changes and the pick was spoken ambiguously, the host says the category once more before the clue.
+
+**Arm.** When the clip's `durationMs` elapses the server runs the extracted `activate` body: `race.open`, `activatedAt = at`, `activate-lights` and `activate-buzzers` to `:players`, `runBots()`, `armTimeout()`.
+
+**Race.** Unchanged. Buzz arbitration, lockout, comeback edge, `rankRace`, `announceLeader` know nothing about who the host is.
+
+**Listen.** When a live buzz sits on top of the race after the settle that `announceLeader` already uses (`lockout + 450 ms`, so a slower press cannot still take the lead), the server emits `answer-window {token, ms}` to that one player's socket and, if `autohostSayName` is on, says their name. Their buzzer opens the mic and streams audio over the existing socket as binary chunks (Opus via `MediaRecorder` in 100 ms slices, or raw PCM through an `AudioWorklet` if Opus framing fights Deepgram). The server forwards chunks into a Deepgram live connection it opened *when the race armed*, so the handshake is never on the clock. The window closes on Deepgram's end-of-utterance signal or a hard cap (`answerSeconds`, 6), then the mic stops. A robot on the clock has nothing to hear: its line arrives through `bot-said` and the autohost rules on `botCorrect` directly.
+
+The mic is hot only in the pick window and the answer window, only for that player, only after they pressed the buzzer or were handed the board. Nothing is recorded to disk. The transcript, text only, goes into the match record beside the buzz, because a disputed ruling with no transcript is unresolvable and because it is the calibration set for the judge.
+
+**Judge.** Transcript, clue, accepted answer, category and the standing rubric go to Claude — Haiku, the `wrongs.js` reasoning: one short call, latency over cleverness, 2 s timeout, one retry. It returns `{verdict: 'right' | 'wrong' | 'unclear', say}`. The rubric is the show's minus question form: judged on content, a surname alone stands for a person unless the category demands the full name, pronunciation and spelling never count, a player who offers two answers has given the wrong one. `unclear` — nothing said, or nothing intelligible — is a miss, said plainly: "I didn't catch that — that's a miss." If the judge fails outright, the host does not guess and cannot hand it to a console; it puts the ruling to the room: "I couldn't hear that one. Was it correct? Y or N, ten seconds," and the same vote machinery as an objection decides, with the answering player's own vote excluded and a tie going to *wrong*, because that is what silence would have been.
+
+**Rule.** The host speaks the verdict and it fires at once: `right` runs the extracted `resolve` body with `winnerToken`; `wrong` runs the `mark-wrong` body, which locks the player out and reopens the race as today. The board goes straight back to the players; nothing waits on a possible objection. On a stumper — `race-timeout` with nobody on the clock, or the last eligible player marked wrong — the host reads the correct response and resolves with no winner, which is what the console's X does now.
+
+*Superseded:* revision 2 of this section held every ruling for four seconds so that a reversal could simply fire the ruling the other way. David's call is that objections will be rare, so the common case should not pay for the rare one; the cost moves to the reversal instead, which is now a walk-back, below.
+
+**Narrate.** This step is Gene's. The `entry` object from `resolveClue` already carries what a ring announcer calls: `entered` with draw and stake, `eliminated`, `revived`, `fieldClear`, `overtimeStarted`, `overtimeRaised`, `bountyCollected`. The autohost turns those into at most two lines from the cached fragments, in priority order — an elimination beats an entrance beats a longevity bonus — so the game never waits more than a few seconds on commentary. A player's entrance theme replaces the horn today; narration yields the same way: the name, then the theme, then on to the pick. `autohostFlourish` adds a model-written line on top and is off by default.
+
+**Repeat.** Back to Pick. The whole loop from one resolve to the next arm should land in the 12–19 s per clue that live rooms have settled at; that is the pace target and it is what the estimator assumes.
+
+## Objections
+
+Any player — in the ring, queued, or eliminated — can press **O** from the moment a ruling is spoken until the *next* ruling is spoken. That is the objection window: one full clue cycle, so the room can object while the next pick, read and race are already under way and nobody is held up. The first press opens the objection: the host says "Objection on the last ruling — press O to join," every buzzer shows the count as it grows, and the objector's press is the first vote. The threshold is either of two, whichever is met first: a **simple majority of all players in the match**, or a **supermajority of the players active in the ring** (two-thirds, rounded up — settled; a ring of three needs two, a ring of four needs three). Two tests because the roster is thirty and the ring is three: a majority of the room lets the crowd correct a host that is plainly wrong, and a supermajority of the ring lets the people with money on the clue correct it without needing twenty-five spectators to look up from their drinks. The answering player's own O counts toward reversing a ruling against them — settled; they are one vote among many.
+
+The threshold being met is what fires the walk-back, and it fires the instant it is met, wherever the game is. If the window closes first, the objection lapses and the host says nothing; the count is still recorded.
+
+**Walking a ruling back.** The game has moved on, so a reversal is a restore, not a re-fire. `undo-clue` already does the hard part: `undoStack` holds a snapshot of the engine, the stats, and the record for every resolved clue, and `restore()` puts them back — scores, entries, eliminations, the ceiling, all of it. The walk-back reuses that path from inside the server rather than the socket handler, then re-resolves the objected clue the other way and, where the next clue was already in progress, abandons it back to the board: its clip is cached, its card is unrevealed, and it will be picked again. There are exactly three shapes, and the autohost decides which by what has happened since the ruling.
+
+A *wrong* is reversed and the clue is still open — the reopened race is running or nobody has taken it yet. Close the race, lift the lockout, resolve with the objected player as winner. Clean; nothing else has happened.
+
+A *wrong* is reversed after the clue ended as a stumper, exactly one player answered on it, and the next clue has not been ruled on yet. Undo back to before the objected clue — which also retracts any entry or elimination it caused and puts the next clue's card back — then resolve it with the objected player as winner.
+
+Anything else is **ambiguous**, and the room settles it. The clear cases of ambiguity: three players were each ruled wrong and the clue went to a stumper — an objection says the host was wrong, but not about whom; or somebody took the rebound after a *wrong* and was ruled right, so a reversal has to pick between two answers the room heard. A reversed *right* is ambiguous in a different way: the rules say a miss reopens the race, and that race cannot be run now, minutes later, with the answer spoken to the room, so the engine cannot express what the room wants.
+
+When the objection carries on an ambiguous ruling, every player's buzzer gets a popup: **award the clue** to one of the players who gave an answer on it, or to *nobody — throw it out*. Each candidate is listed with what the transcript heard them say. Plurality wins, `awardSeconds` (15) to vote, and a tie or an empty vote means throw it out; the answering players vote like anyone else. On a reversed *right* the only candidate is the player the room just overruled, so the popup is skipped and the clue is thrown out. The walk-back then undoes through the snapshot and re-resolves with the awarded player as winner and every other answerer on that clue as a miss — which is what the engine's `resolveClue` already takes as `winnerId` and `missedIds` — or, on *nobody*, voids the clue. If the objected clue's snapshot is no longer the top of the undo stack — the next clue has been ruled on while the vote ran — the vote lands too late, the ruling stands, and the host says so; the window was a full clue cycle and the vote ran inside it, so this should be rare, and it is recorded when it happens.
+
+**Throwing a clue out** is one small engine addition: `voidClue(slot, row)` marks the card revealed and pays nobody, charges nobody, and does not advance `cluesRevealed` — the entry clock, the ceiling clock and the overtime clock all run on that counter, and a voided clue was never read as far as they are concerned. It is applied after the undo, so the objected clue's every effect is gone and the card is simply dead. Control goes back to whoever held it before the objected clue was picked. The host says "That clue is thrown out," reads the correct response so the room is not left hanging, and hands the board back. When the clue is awarded instead, control passes to the awarded player, as a correct answer always does.
+
+Whatever the shape, the record says what happened: `objection: {votes, of, ring, met, shape: 'reversed' | 'awarded' | 'voided' | 'lapsed' | 'late', award?: {to, votes}}` on the objected clue, and a `correction` of type `objection` beside the undos and delay changes, so the analysis chat can measure how often the room disagrees with the judge — the number that decides when the judge is good enough — and how often a disagreement cost a clue.
+
+One objection per ruling; an O after the vote has closed is ignored. There is no objection to a stumper reveal, an entrance, or an elimination — those are the engine, not the host's judgment — and none to the walk-back itself.
+
+## Latency budget
+
+The number that matters is the silence between a player finishing an answer and the ruling.
+
+| Step | Target | Notes |
+|---|---|---|
+| End of speech → Deepgram end-of-utterance | ≤ 400 ms | live stream with endpointing; Deepgram's turn-detection model (Flux) is built for exactly this and is worth trying first |
+| Transcript → Claude verdict | ≤ 900 ms | Haiku, short prompt, small `max_tokens` |
+| Verdict → first audio out | ≈ 0 | verdict phrases are pre-synthesized; this is a cache hit |
+| **Total silence** | **≈ 1.3 s** | a human host takes about that long to say "yes" |
+
+The clue read is not on this table because it is not a race: the clip exists before the read starts, and the arm is scheduled off its duration. The one place a local engine can show is a pick that beats the synthesis queue on a fresh board; the host covers a few seconds of that with the category-and-value call, and the queue order (picked clue first, then the rest of that column, then the board) makes it rare after the first clue or two.
+
+## Cost per match
+
+With a local voice, a match costs what it costs to hear and to judge. Deepgram streams only during pick and answer windows — a hundred clues at perhaps eight seconds of open mic each is under fifteen minutes, on the order of a dime at the streaming rate found today. The judgment calls are short Haiku calls and cost pennies. **A match is well under a dollar** until the voice is upgraded; with ElevenLabs it becomes a few dollars, dominated by the voice, at which point the clip cache matters for the bill as well as for latency.
+
+## Settings
+
+New settings go in the defaults block in `src/engine.js` with the others and render in `setup.html` under expert, hidden with CSS in quick mode — every expert control renders in both modes because `collect()` reads each by id and an absent card kills Save. `pagerefs.mjs` will insist each is rendered, read back, and named by every preset.
+
+`autohost: false` is the switch. `pickSeconds: 12`, `answerSeconds: 6`, `awardSeconds: 15`, `ringSupermajority: 0.67`. There is no objection timer: the window is the next clue cycle, which is a state, not a clock. `autohostSayName: true` has Mike name the player he is listening to. `autohostFlourish: false` adds a model-written line to Gene's calls. `voiceMike` and `voiceGene` are engine-specific voice ids with a default pair per engine.
+
+On the server, `RUMBLE_TTS` picks the engine, `DEEPGRAM_API_KEY` and the existing `ANTHROPIC_API_KEY` are required, and `ELEVENLABS_API_KEY` only when that engine is selected. These follow the `RUMBLE_ADMIN_KEY` rule: a missing key makes the setup page refuse to enable the autohost with a sentence naming the key, and `/api/health` reports each service the way `wrongAnswers` does now. Fail loud at setup, never quiet at clue 9.
+
+Setup itself changes in two ways. "Who's hosting?" records `autohost` (the field already rides the record as `host`, never reaching the engine; `test/setup.mjs` keeps it out of `settings`). And the start button, which today navigates to `/host/${code}#${hostKey}`, instead joins the starter as a player and lands them on `/j/${code}` in full-board mode. The host key still exists for the match — `/control` can still end it, and a human can still open the console to watch — but nobody needs to.
+
+## Failure modes, and what the room sees
+
+Every one of these has a visible symptom on the buzzer page by design, because there is no console to show it on.
+
+A player's mic is denied or absent. The buzzer asks for the mic at join time in an autohost match, not at the first buzz, and shows a badge until it is granted; every player's board shows a mic icon per player. A player with no mic who wins a race hears "no microphone — say it to the room," and the ruling goes to the room by the same Y/N vote as a judge failure. Typed answers are deliberately out of the first build; they change the pace of the game and belong after a real match has been watched.
+
+The voice engine falls behind or dies. The clue is already on every screen. The host emits the clue as text, waits a reading time computed from a measured speaking rate, and arms. A sticky notice on every buzzer names the problem; play continues. If the engine is merely slow — a fresh board, a cold cache — the category-and-value call covers the gap and the queue catches up.
+
+Deepgram is down. The host cannot hear picks or answers. It says so once; picks fall back to the click-on-board path with the spoken confirmation, and every ruling goes to the room's Y/N vote until the service returns. The notice is sticky, 45 s plus click-to-dismiss, per the entrance-music lesson.
+
+The judge is wrong. It will be, sometimes. That is what objections are for, and the transcript in the record makes the dispute checkable afterward. Rulings are tagged `judge: 'ai'` in the log, and reversals are recorded, so the miss rate is measured against the human-hosted matches rather than guessed.
+
+Two players hear the read at different times. This is the old delay problem in a smaller coat: per-client audio-start latency rather than a Zoom path. `heard {clueId, lateMs}` from each buzzer gives the spread; if it is wide, that is the number to feed back into `settle`. Measure, then tune.
+
+The player with the board has walked away. The pick window expires, the host picks, the game continues. If they are still gone when they win a race, the answer window expires as `unclear` and it is a miss. Nothing waits on one person.
+
+## What has to change, by file
+
+`src/autohost.js` — new: the state machine, the objection vote, the two phrase sets and the per-voice fragment cache, the rubric, the pick matcher. `src/tts.js` — new: the engine adapter, Kokoro and Piper first, ElevenLabs later. `src/server.js` — extract the bodies of `activate`, `resolve`, `mark-wrong` into functions both the socket handlers and the autohost call; add `player-pick`, `answer-audio` (binary chunks), `heard`, `object`, `vote`, `award`; emit `host-speaks`, `answer-window`, `pick-window`, `objection`, `award-vote`; wire the autohost into `pick-clue`, `buzz`, `race-timeout` and the post-resolve `entry`. `src/engine.js` — the new settings and nothing else; the engine still knows nothing about hosts. `public/buzzer.html` and `public/rumble.js` — play `host-speaks` clips, the sound banner, mic at join, streaming on `pick-window` and `answer-window`, the O key, the vote display and the award popup, the host-status strip (what it is doing, last transcript and ruling, who has heard the clue, who has a mic), full-board default in autohost matches, and the click-to-pick affordance when you hold control. `public/watch.html` — play the clips, show the vote. `public/setup.html` — the settings, the key refusal, and the start path that lands the starter on a buzzer. `public/console.html` — no new duty; it keeps working for anyone who opens it. `docs/discord-rules-v2.md`, `docs/discord-advanced-mechanics.md`, `docs/handbook.html`, `public/howto.html` — turn sound on, allow the mic, say your pick, press O to object, the two thresholds, and who Mike and Gene are; all in the same change, per the house rule.
+
+Tests, each a sentence: `test/autohost.mjs` plays a whole match over real sockets against stubbed services — a fake voice that returns a 1 s silent clip with a known duration, a fake Deepgram that emits scripted transcripts, a fake judge — and asserts the arm fires after the clip, a spoken pick lands on the right card and a clicked pick is announced, the window opens for the leader only, a `wrong` reopens the race at once, a stumper reads the answer, control at the bell is draw 1, a judge failure opens a Y/N vote, an objection below both thresholds lapses at the next ruling with the ruling standing, one that meets either threshold while the reopened race is still open hands the clue to the objected player, one that lands mid-next-clue undoes through the snapshot and puts the abandoned card back, a reversed *right* voids the clue without moving the entry clock, a reversal after three misses opens the award popup and the plurality winner is paid while the others are charged, a tied award throws the clue out, and a second O from the same player on the same ruling is ignored. `test/pagerefs.mjs` picks up the new controls on its own. `test/security.mjs` gets two lines: `player-pick` from a token that does not hold control is refused, and `object` with no ruling in its window is refused.
+
+## Build order
+
+Each step ships on its own and is measured before the next.
+
+First, the refactor: the three handler bodies into callable functions with no behavior change, full suite green. Zero risk, unlocks everything.
+
+Second, the voice on the box: time Kokoro and Piper on the actual VM, pick, build `tts.js` and the cache. Nothing user-facing yet; this decides whether the queue design above is comfortable or tight.
+
+Third, the voice with no ears: `host-speaks` on every client, the arm scheduled off the clip, robot answers spoken through the same path, narration from `entry`, the starter landing on a buzzer, click-to-pick with the spoken announcement, and autopick on timeout. At this point a match is playable end to end with the console's Correct / Wrong as the only human duty — an assist-mode milestone worth a real match on its own, and the one that measures the client playback spread before the mic exists.
+
+Fourth, the ears: mic at join, streaming, transcripts shown on every buzzer but *not yet ruling* — a human at a console still presses. One night of transcripts against human rulings is the calibration set for the judge, and the spoken pick can ship here since it needs no judgment.
+
+Fifth, the judge, then objections with `voidClue`, the walk-back and the award popup. Measure the reversal rate against step four's set before the first real match.
+
+Before step one: read `~/Developer/j-royal-rumble-data/README-FOR-DEV-CHAT.md`, per the standing rule.
+
+## Settled in the final round
+
+Answer window 6 seconds or end of utterance. Pick window 12 seconds, nudge at 8. Award vote 15 seconds, tie or no votes throws the clue out. The game keeps going during an award vote; a vote that lands after the next ruling is too late and the original ruling stands. Two hosts, Mike and Gene, as above. Nothing in this document is open; the next step is the build, in the order given, starting with the refactor and the timing of the two engines on the box.
+
+## Superseded from the first draft
+
+Kept so the reasoning is not lost. The first draft had ElevenLabs as the voice from day one, with a per-character cost that made the clip cache a billing feature; it is now a latency feature and the voice is free. It had a console "take over" toggle and used the console's Correct / Wrong buttons as the fallback for a judge that could not rule and for a player with no mic; both fallbacks are now a vote of the room, since nobody is at a console. It required a human with control to click the board; the spoken pick is now primary and the click is the fallback, with the host announcing the click so the room hears the call. It left "question form" undecided; it is decided against. Revision 2 held every ruling for four seconds so a reversal could fire the other way with no undo; revision 3 fires rulings at once and makes a reversal a walk-back through the undo snapshot, discarding the clue when the walk-back is ambiguous — the rare case pays instead of the common one. Revision 2 also left the first pick with a null `control`; it goes to draw 1. Revision 3 discarded every ambiguous reversal outright; revision 4 puts the ambiguous ones to an award vote on the players' screens and throws the clue out only when that vote cannot choose.
