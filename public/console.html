@@ -456,8 +456,18 @@ const $ = (id) => document.getElementById(id);
 // explained a silent entrance expired before it could be read.
 const say = (m, cls, sticky) => { const f = $('feed'), e = document.createElement('div');
   e.className = 'ev ' + (cls || ''); e.textContent = m; f.appendChild(e);
-  if (sticky) e.dataset.keep = '1';
-  else setTimeout(() => e.remove(), 5000);
+  // `sticky` used to mean forever, and forever is too long: the entrance-music
+  // warning sat on the board for an entire match because nothing ever took it
+  // down. Five seconds was too short — it expired while the host was busy with
+  // the entrance itself — so this is the middle: long enough to read twice,
+  // and gone before it becomes furniture. A click removes it sooner.
+  if (sticky) {
+    e.dataset.keep = '1';
+    e.style.cursor = 'pointer';
+    e.title = 'Click to dismiss';
+    e.onclick = () => e.remove();
+    setTimeout(() => e.remove(), 45000);
+  } else setTimeout(() => e.remove(), 5000);
   // Evict the oldest message that is not pinned. Written as a search rather
   // than `f.firstChild.remove()` because a pinned message at the front would
   // make that loop spin forever without removing anything.

@@ -233,6 +233,13 @@ padding:4px 3px;
 box-shadow:inset 0 1px 0 #FFFFFFAA,inset 0 -2px 3px #00000033}
 /* Five lines rather than three. The row grows to the tallest card now, so a long
    category costs a little height on every column instead of losing its tail. */
+/* The picker's answer about a pasted link. Said here, next to the box they
+   pasted into, because the alternative is finding out during their entrance —
+   when the only person who can see the problem is the host and the only person
+   who can fix it is already walking in. */
+.terr{margin:10px 0 0;font-size:12.5px;line-height:1.35;color:#F3D9A4;
+background:#3A2A12;border:1px solid #7A5A1E;border-radius:6px;padding:8px 10px}
+.terr.ok{color:#BFE3C2;background:#16301C;border-color:#2E5C36}
 .bcat span{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 /* Not clamped like its siblings: four digits never wrap, and the clamp would
    only cost it a line of the card. */
@@ -473,6 +480,7 @@ async function openMusic() {
     <div class="trywrap" id="trywrap"></div>
     <p class="snote" style="margin:14px 0 0">Tap a theme to hear it. Nothing is
       saved until you press Save.</p>
+    <div class="terr" id="terr" hidden></div>
     <div class="sbtns">
       <button id="tnone">No music</button>
       <button id="tsave" class="prim">Save</button>
@@ -545,9 +553,30 @@ async function openMusic() {
     if (!raw) return save(null, el);
     const id = ytId(raw);
     if (!id) { el.querySelector('#tlink').classList.add('bad'); return; }
-    save({ kind: 'youtube', id,
+    const theme = { kind: 'youtube', id,
       start: +el.querySelector('#tstart').value || 0,
-      seconds: Math.min(10, Math.max(1, +el.querySelector('#tsecs').value || 5)) }, el);
+      seconds: Math.min(10, Math.max(1, +el.querySelector('#tsecs').value || 5)) };
+    // Ask whether YouTube will actually let this play here before saving it.
+    // Plenty of videos — music videos especially, which is most of what people
+    // pick — are blocked from playing outside YouTube, and the old flow saved
+    // them happily and failed in silence on the night.
+    const err = el.querySelector('#terr');
+    const btn = el.querySelector('#tsave');
+    btn.disabled = true; btn.textContent = 'Checking...';
+    err.hidden = true; err.classList.remove('ok');
+    fetch('/api/theme-check?id=' + encodeURIComponent(id))
+      .then((r) => r.json())
+      .catch(() => ({ ok: true }))   // the server fails open; so does the picker
+      .then((v) => {
+        btn.disabled = false; btn.textContent = 'Save';
+        if (v && v.ok === false) {
+          err.textContent = v.reason || 'That link cannot be used here.';
+          err.hidden = false;
+          el.querySelector('#tlink').classList.add('bad');
+          return;
+        }
+        save(theme, el);
+      });
   };
 }
 

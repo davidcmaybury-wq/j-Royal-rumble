@@ -644,6 +644,28 @@ control and one player's pick play, and the other three fail individually
 ("video is unavailable", "video is private") — real problems with those links,
 now named by the console.
 
+**Telling the player is where this belongs, not telling the host.** With the
+referrer fixed, most links play and the ones that fail are individual videos
+whose owners block embedding — common for exactly the music videos people pick.
+The host learning that mid-entrance can do nothing about it. So the picker now
+asks `/api/theme-check` before it saves, and the player is told next to the box
+they pasted into; `set-theme` runs the same check as a backstop for a client
+that skipped it. YouTube's oEmbed endpoint answers it: 401/403 for embedding
+disabled, 404 for private or deleted.
+
+**It fails open, deliberately.** A timeout or a network blip returns playable.
+A false rejection takes away a theme that would have worked, which is worse than
+the silence this prevents — and the console still reports a refusal at entrance
+time either way. `test/entrance.mjs` probes reachability and skips the
+network-dependent assertions rather than failing when youtube.com is not
+routable.
+
+**The host's warning is 45 seconds, not forever.** It shipped sticky and
+exempt from feed eviction, and sat on the board for a whole match. Five seconds
+was too short — it expired while the host was busy with the entrance — so the
+middle is 45 seconds plus click-to-dismiss. A message with no way to leave is
+its own bug.
+
 **The instrument was fine and I called it broken.** Chasing this, every embed
 failed in the browser harness *including the control*, and I concluded the
 harness could not play YouTube and stopped trusting it. The control was failing

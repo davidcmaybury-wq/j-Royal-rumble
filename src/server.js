@@ -1020,13 +1020,19 @@ app.post('/api/match/:id/bots', (req, res) => {
   // the failure is specific to the YouTube branch and a library .mp3 would test
   // the half that already worked. They are video ids and nothing else: no
   // player is named here and no mapping to one exists.
+  //
+  // One of the original four was swapped out: its owner blocks embedding, so
+  // every robot match would have cried wolf with a warning about a link nobody
+  // could act on. The replacement is a Creative Commons Blender short, which
+  // will not quietly become unplayable later. The blocked id lives on as a
+  // fixture in test/entrance.mjs, where a refusal is the point.
   const wantsThemes = req.body?.themes !== false;
   const BOT_THEMES = [
     { kind: 'youtube', id: 'CMV850rhcQM', seconds: 5, start: 0 },
     { kind: 'library', key: 'wrestling-heel', seconds: 5 },
     { kind: 'youtube', id: 'HMuYfScGpbE', seconds: 5, start: 0 },
     { kind: 'library', key: 'sports-anthem', seconds: 5 },
-    { kind: 'youtube', id: 'jumyqrz1MAY', seconds: 7, start: 0 },
+    { kind: 'youtube', id: 'aqz-KE-bpKQ', seconds: 7, start: 0 },
     { kind: 'library', key: 'horror-stalker', seconds: 5 },
     { kind: 'youtube', id: '52PHX4m07aI', seconds: 5, start: 0 },
     { kind: 'library', key: 'horror-dirge', seconds: 5 },
@@ -1183,6 +1189,48 @@ app.get('/api/health', (req, res) => {
 // becomes mood Wrestling, title Champion — which keeps the folder the single
 // source of truth and means there is no manifest to fall out of step.
 const THEME_DIR = join(__dir, '../public/audio/themes');
+// Can YouTube actually be embedded here, or is the room about to hear nothing?
+//
+// A player picks a link, the match starts, they walk in, and the video refuses
+// — by which point the only person who can act on it is mid-entrance and has no
+// idea. The oEmbed endpoint answers the same question the player needs answered
+// at the moment they choose: 403 for a video whose owner has turned embedding
+// off, 404 for one that is private or gone. Checked against the four real picks
+// from 2026-09-07, it flags exactly the one that failed live and passes the
+// three that played.
+//
+// Fails OPEN. A network blip, a timeout, or anything unexpected returns
+// playable: a false rejection takes away a theme that would have worked, which
+// is worse than the silence this is trying to prevent, and the console still
+// reports a refusal at entrance time either way.
+const YT_CHECK = new Map();   // id -> { ok, reason }, for the life of the process
+
+async function ytPlayable(id) {
+  if (!/^[A-Za-z0-9_-]{6,20}$/.test(id || '')) return { ok: false, reason: 'That is not a YouTube link.' };
+  if (YT_CHECK.has(id)) return YT_CHECK.get(id);
+  let out = { ok: true };
+  try {
+    const url = 'https://www.youtube.com/oembed?url='
+      + encodeURIComponent('https://www.youtube.com/watch?v=' + id) + '&format=json';
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (r.status === 401 || r.status === 403) {
+      out = { ok: false, reason: 'That video\u2019s owner does not allow it to be played on other sites. Pick a different one.' };
+    } else if (r.status === 404) {
+      out = { ok: false, reason: 'That video is private or no longer exists. Pick a different one.' };
+    }
+  } catch { /* fail open, deliberately — see above */ }
+  YT_CHECK.set(id, out);
+  return out;
+}
+
+// Used by the buzzer's picker before it saves, so the answer arrives while the
+// player is still looking at the box they pasted into. A plain GET and not a
+// socket call because the picker is reachable before joining a match, which is
+// where most themes are actually chosen.
+app.get('/api/theme-check', async (req, res) => {
+  res.json(await ytPlayable(String(req.query.id || '')));
+});
+
 app.get('/api/themes', (_req, res) => {
   let files = [];
   try {
@@ -1998,13 +2046,20 @@ io.on('connection', (socket) => {
     ack?.(r);
   });
 
-  socket.on('set-theme', ({ theme }, ack) => {
+  socket.on('set-theme', async ({ theme }, ack) => {
     if (!match || !token) return ack?.({ error: 'no match' });
     const r = match.roster.get(token);
     if (!r) return ack?.({ error: 'not in this match' });
     if (!theme) { r.theme = null; pushAll(); return ack?.({ ok: true, theme: null }); }
 
     const clean = sanitiseTheme(theme);
+    // The picker asks /api/theme-check before it gets here, but a client that
+    // skipped the question still should not be able to store a theme the room
+    // will never hear.
+    if (clean && clean.kind === 'youtube') {
+      const playable = await ytPlayable(clean.id);
+      if (!playable.ok) return ack?.({ error: playable.reason });
+    }
     if (!clean) {
       return ack?.({ error: theme && theme.kind === 'url'
         ? 'The link must start with https'

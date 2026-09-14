@@ -139,6 +139,55 @@ check('the entrance reaches the host with the theme attached',
   h2.close(); h3.close();
 }
 
+// --- a link the room will never hear is refused at the picker --------------
+//
+// The failure this prevents: a player pastes a music video, it saves happily,
+// and the first anybody hears of it is the host watching a silent entrance. The
+// check runs when they press Save, next to the box they pasted into.
+//
+// Network-dependent by nature, and the implementation fails OPEN for exactly
+// that reason — a blip must not take away a theme that would have worked. So
+// this suite probes reachability first and only asserts the blocking behaviour
+// when YouTube actually answered. A CI box with no route to youtube.com reports
+// the skip rather than a failure.
+{
+  const shapeBad = await (await fetch(`${U}/api/theme-check?id=not a video id`)).json();
+  check('the check refuses something that is not a video id at all',
+    shapeBad.ok === false, JSON.stringify(shapeBad));
+
+  let reachable = true;
+  try {
+    const probe = await fetch('https://www.youtube.com/oembed?url='
+      + encodeURIComponent('https://www.youtube.com/watch?v=aqz-KE-bpKQ') + '&format=json',
+      { signal: AbortSignal.timeout(8000) });
+    reachable = probe.status === 200;
+  } catch { reachable = false; }
+
+  if (!reachable) {
+    check('YouTube embeddability checks (skipped: youtube.com unreachable)', true,
+      'the endpoint fails open, which is the intended behaviour here');
+  } else {
+    // jumyqrz1MAY is the real pick that played silently on 2026-09-07; its owner
+    // has embedding turned off. 52PHX4m07aI is a pick from the same night that
+    // did play. Both are kept as fixtures because a synthetic id cannot tell
+    // these two answers apart.
+    const blocked = await (await fetch(`${U}/api/theme-check?id=jumyqrz1MAY`)).json();
+    check('a video whose owner blocks embedding is refused, with a reason',
+      blocked.ok === false && /different one/.test(blocked.reason || ''),
+      blocked.reason || JSON.stringify(blocked));
+
+    const fine = await (await fetch(`${U}/api/theme-check?id=52PHX4m07aI`)).json();
+    check('and a video that plays is allowed through', fine.ok === true, JSON.stringify(fine));
+
+    // The endpoint is advice; this is the one that guards what gets stored.
+    const p0 = players[0];
+    const refused = await new Promise((r) =>
+      p0.s.emit('set-theme', { theme: { kind: 'youtube', id: 'jumyqrz1MAY', seconds: 5 } }, r));
+    check('and the socket refuses to store it even if the picker is skipped',
+      !!(refused && refused.error), refused && (refused.error || 'it was stored'));
+  }
+}
+
 host.close();
 players.forEach((p) => p.s.close());
 console.log(fails ? `\n${fails} FAILURES` : '\nall checks passed');
