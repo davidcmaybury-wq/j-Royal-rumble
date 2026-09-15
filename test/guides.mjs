@@ -234,6 +234,15 @@ for (const [what, needle] of [
   // kind of promise this suite exists to keep honest — the label must come off
   // deliberately, in a change that also fails this check.
   ['that the computer host is marked alpha in the handbook', 'Not yet played in a real room'],
+  // The longevity bonus, merged 2026-09-15. It has paid out since the mechanic
+  // shipped and this document never once mentioned it — the gap David caught
+  // reading his own handbook. Keyed on the closing line rather than a figure;
+  // there is no figure to renumber.
+  ['the longevity bonus is documented at all', 'getting paid to still be here'],
+  ['that it fires every ten clues by default', 'Every 10th tick'],
+  ['that it is flat, unlike the sweep', "survival money doesn't inflate"],
+  ['and roof-clipped like everything else', 'never float you above the roof'],
+  ['and the section closes on the line David wanted', 'The pot pays the fast. The clock pays the stubborn.'],
   // Matches 23-24, merged from the analysis chat's live-sep14 page. The top
   // rope needle matters most: this document told people for twenty-two matches
   // that nothing optional had ever been used, and that claim is now wrong in a

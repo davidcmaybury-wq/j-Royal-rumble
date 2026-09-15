@@ -388,4 +388,4 @@ get a horn when you enter, a countdown over your last three clues in the queue,
 and something less pleasant when you go out.
 
 Start buzzing straight away, even before you're in. It doesn't count for
-anything, and that's exactly why it's the right time to practise.
+anything, and that's exactly why it's the right time to practice.

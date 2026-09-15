@@ -123,6 +123,61 @@ check('it carries the standings', (rec.standings || []).length >= 4);
 const noKey = await fetch(`${U}/api/match/${m.gameId}/record`);
 check('the record needs the host key', noKey.status === 403, `HTTP ${noKey.status}`);
 
+// --- the longevity bonus used to be invisible in the log -----------------
+//
+// The engine writes entry.longevity and entry.sweep on the resolve entry, and
+// nothing here carried either into match.record.clues, so a payment could
+// only be reconstructed after the fact from score deltas — which is how the
+// analysis chat found the gap while writing the handbook's longevity section.
+// A large entryInterval keeps the roster fixed and every stumper still ticks
+// cluesRevealed, so ten resolves puts everyone's tenure at exactly 10.
+{
+  const m3 = await (await fetch(`${U}/api/match`, { method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ settings: { entryInterval: 999, startScore: 3000,
+      recordMatch: true, delay: 0 } }) })).json();
+  const h3 = io(U, { transports: ['websocket'] });
+  await once(h3, 'connect');
+  let s3 = null;
+  h3.on('state', (v) => { s3 = v; });
+  await new Promise((r) => h3.emit('host-join', { gameId: m3.gameId, hostKey: m3.hostKey },
+    (x) => { s3 = x.state; r(); }));
+  const p3 = [];
+  for (const name of ['Ux', 'Vy', 'Wz']) {
+    const s = io(U, { transports: ['websocket'] });
+    await once(s, 'connect');
+    await new Promise((r) => s.emit('join', { gameId: m3.gameId, name }, r));
+    p3.push(s);
+  }
+  await wait(150);
+  h3.emit('start-match');
+  await wait(250);
+  const playStumper = async () => {
+    const open = [];
+    s3.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) open.push([si, x.row]); }));
+    h3.emit('pick-clue', { slot: open[0][0], row: open[0][1] });
+    await wait(90);
+    h3.emit('activate');
+    await wait(120);
+    h3.emit('resolve', { winnerToken: null });
+    await wait(150);
+  };
+  for (let i = 0; i < 10; i++) await playStumper();
+  h3.emit('end-match');
+  await wait(250);
+  const rec3 = await (await fetch(
+    `${U}/api/match/${m3.gameId}/record?key=${encodeURIComponent(m3.hostKey)}`)).json();
+  const paidClue = rec3.clues.find((c) => c.longevity);
+  check('the tenth clue records a longevity payment', !!paidClue,
+    paidClue ? JSON.stringify(paidClue.longevity) : `${rec3.clues.length} clues, none carried it`);
+  check('every player still in the ring was paid', !!paidClue && paidClue.longevity.length === 3,
+    paidClue ? paidClue.longevity.length : '');
+  check('and it names them rather than a bare id', !!paidClue
+    && paidClue.longevity.every((x) => typeof x.name === 'string' && x.amount === 500 && x.tenure === 10),
+    paidClue ? JSON.stringify(paidClue.longevity) : '');
+  h3.close(); p3.forEach((s) => s.close());
+}
+
 // an unrecorded match offers nothing
 const m2 = await (await fetch(`${U}/api/match`, { method: 'POST',
   headers: { 'content-type': 'application/json' }, body: '{}' })).json();

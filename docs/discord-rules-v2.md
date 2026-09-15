@@ -47,7 +47,7 @@ It says which one at the top of your buzzer all match.
 
 ⚔️ **Overtime.** When the queue empties (or the match stalls long enough), the stakes start climbing: clue values double every six clues, up to 8×, and the ceiling starts falling. The climb never resets. Somebody's going in the water. **If you walk in once overtime has started, your stake climbs with it** — enter at 4× and you enter with four times the money, because a normal stake against quadrupled clues is a death sentence. **And you aren't clipped to a ceiling you never touched** — you're capped by the roof as it stood when overtime opened, and you keep whatever you walked in with until your score first drops to the falling roof. Same for a revival or a comeback.
 
-⏱️ **Buzz early, buzz often.** Your buzzer works while you're queued, and after you're out. Warm-up buzzes never touch your stats — but they clock you against the live field, so practise freely. Jumping the lights = quarter-second lockout. Sub-150ms times are normal here: don't react to the lights, learn the rhythm.
+⏱️ **Buzz early, buzz often.** Your buzzer works while you're queued, and after you're out. Warm-up buzzes never touch your stats — but they clock you against the live field, so practice freely. Jumping the lights = quarter-second lockout. Sub-150ms times are normal here: don't react to the lights, learn the rhythm.
 
 🏆 **Winning.** Last one standing. That's the only result — everything else is bragging rights.
 

@@ -2125,6 +2125,18 @@ function runResolve(match, { winnerToken }, { pushAll, clearBotTimers }, report)
       scoresBefore: before, scoresAfter: after,
       eliminated: (entry.eliminated || []).map((t) => match.roster.get(t)?.name),
       fieldClear: entry.fieldClear ? true : undefined,
+      // The engine writes both of these on the resolve entry and nothing here
+      // used to carry them into the log, so a category sweep or a longevity
+      // payment had to be reconstructed from score deltas after the fact —
+      // found doing exactly that for the handbook's longevity section.
+      sweep: entry.sweep
+        ? { name: match.roster.get(entry.sweep.playerId)?.name,
+            category: entry.sweep.category, bonus: entry.sweep.bonus }
+        : undefined,
+      longevity: (entry.longevity || []).length
+        ? entry.longevity.map((p) => ({
+            name: match.roster.get(p.playerId)?.name, amount: p.amount, tenure: p.tenure }))
+        : undefined,
 
       // Everything below had to be inferred from arithmetic before, and I got
       // it wrong on the first pass: a clue paying 2x looked like overtime when
