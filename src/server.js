@@ -13,6 +13,7 @@ import { assignToken, resolveChoice } from './tokens-server.js';
 import { distinctLook, looksAlike } from '../public/wrestlers.js';
 import { wrongAnswer, status as wrongsStatus } from './wrongs.js';
 import * as tts from './tts.js';
+import * as judge from './judge.js';
 import { Autohost } from './autohost.js';
 import * as reports from './reports.js';
 import * as logs from './logstore.js';
@@ -1212,6 +1213,7 @@ app.get('/api/health', (req, res) => {
     // missing key, a rejected key, or a bad model name, and they look the same.
     wrongAnswers: wrongsStatus(),
     voice: tts.status(),
+    judge: judge.status(),
   });
 });
 
@@ -1506,8 +1508,12 @@ function announceLeader(match) {
   match.saidTimer = setTimeout(() => {
     match.saidTimer = null;
     const lead = (match.race?.buzzes || []).filter((b) => !b.spectator)[0];
-    if (!lead || !lead.bot || !match.clue) return;
+    if (!lead || !match.clue) return;
     match.saidFor = lead.token;
+    // A person on the clock is the autohost's cue to listen: the same settle
+    // that stops a robot speaking too early is exactly when a human should be
+    // asked for their answer, because it is the moment the race is settled.
+    if (!lead.bot) return match.autohost?.onLeader({ token: lead.token, name: lead.name });
     const line = lead.botCorrect
       ? { kind: 'right', text: match.clue.answer }
       : { kind: 'wrong', text: match.wrongAnswer || "...I'll pass" };
@@ -2025,6 +2031,7 @@ function startAutohost(m) {
   const deps = matchDeps(m);
   const report = (msg) => console.log(`[autohost ${m.id}] refused: ${msg}`);
   m.autohost = new Autohost(m, {
+    judge: (args) => judge.judge(args),
     runPick: (pick) => runPick(m, pick),
     runActivate: () => runActivate(m, deps),
     runResolve: (r) => runResolve(m, r, deps, report),
@@ -2415,6 +2422,13 @@ io.on('connection', (socket) => {
     if (match.settings.autohost && !tts.status().configured) {
       return ack?.({ error: `The computer cannot host: ${tts.status().reason}` });
     }
+    // The judge is not optional for a match with nobody at a console. Its
+    // local fallback is a mid-match safety net for one failed call, not a way
+    // to run a whole match — so this refuses at the start button, naming the
+    // variable, rather than letting the room discover it at clue one.
+    if (match.settings.autohost && !judge.status().configured) {
+      return ack?.({ error: 'The computer cannot host: no ANTHROPIC_API_KEY set, so it cannot rule on answers' });
+    }
     try {
       match.start();
     } catch (e) {
@@ -2533,6 +2547,28 @@ io.on('connection', (socket) => {
     if (!match || !token) return ack?.({ error: 'no match' });
     if (!match.autohost) return ack?.({ error: 'This match has a host; they call the clues' });
     ack?.(match.autohost.playerPick(token, { slot, row }));
+  });
+
+  // What the recognizer on this player's own machine heard them say.
+  //
+  // The buzzer sends text, never audio: the speech recognition runs in the
+  // browser, so nothing here is a microphone stream and the server never
+  // holds a recording. `sid` is the window the autohost opened, so a
+  // transcript that arrives after that window closed is discarded rather
+  // than ruled on.
+  socket.on('answer-heard', ({ sid, text }, ack) => {
+    touch();
+    if (!match?.autohost || !token) return ack?.({ error: 'no match' });
+    ack?.(match.autohost.onAnswerHeard(token, { sid: Number(sid), text: String(text || '').slice(0, 300) }));
+  });
+
+  // The same, for the player holding the board calling the next clue.
+  socket.on('pick-heard', ({ sid, alternatives }, ack) => {
+    touch();
+    if (!match?.autohost || !token) return ack?.({ error: 'no match' });
+    const alts = (Array.isArray(alternatives) ? alternatives : [alternatives])
+      .map((t) => String(t || '').slice(0, 200)).filter(Boolean).slice(0, 5);
+    ack?.(match.autohost.onPickHeard(token, { sid: Number(sid), alternatives: alts }));
   });
 
   // When a clip actually started on this client's speaker, against the moment

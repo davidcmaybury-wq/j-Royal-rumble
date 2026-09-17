@@ -37,6 +37,16 @@ border-radius:10px;background:#131A30;border:1px solid var(--line);font-size:13p
 .hostline .who{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);white-space:nowrap}
 .hostline.yours{border-color:var(--brass);color:var(--ink)}
 .hostline .what{flex:1;min-width:0}
+/* Live microphone. Deliberately in the flow of the page rather than an
+   overlay: a player needs to know their mic is open, and a floating box near
+   the buzzer is the bug this project has now shipped four times. */
+.hostline.listening{border-color:var(--live);color:var(--ink)}
+.hostline.listening .who{color:var(--live)}
+.hostline .dotmic{width:9px;height:9px;border-radius:50%;background:var(--live);flex:none;
+animation:micpulse 1s ease-in-out infinite}
+@keyframes micpulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.hostline .dotmic{animation:none}}
+.hostline .said{color:var(--slate);font-style:italic}
 .soundnag{margin:0 16px 8px;padding:10px 12px;border-radius:10px;background:#3A2D08;border:1px solid var(--brass);
 color:#FFD98A;font-size:13px;cursor:pointer}
 .bcell.callable{cursor:pointer;outline:1px solid var(--brass);outline-offset:-1px}
@@ -421,6 +431,7 @@ import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBu
          lockoutRemaining, startLatencyReports, syncClock,
          getLag, setLag, fmt, ord, serverNow } from '/rumble.js';
 import { attachHostVoice } from '/host-voice.js';
+import * as ear from '/listen.js';
 import { scoreChart } from '/chart.js';
 // The line-art weapons are gone: everyone sees wrestlers now, including the
 // player themselves.
@@ -914,6 +925,54 @@ const voice = attachHostVoice(socket, {
   enabled: () => !sfx.isMuted(),
 });
 
+// ---------------- the microphone ----------------
+//
+// The server opens a window and names it; this page listens, sends text, and
+// closes when told. Recognition happens in the browser (see /listen.js) — the
+// browser's own speech service sees the audio, the way it does for any
+// dictation feature; only the resulting words ever reach us.
+let session = null, micTrouble = null, heardNow = '';
+
+socket.on('listen', (w) => {
+  if (session) { session.stop(); session = null; }
+  if (w.close || !w.ms) { heardNow = ''; render(); return; }
+  if (!ear.supported()) {
+    micTrouble = 'this browser cannot do speech recognition \u2014 use Chrome, or click a clue on the board';
+    render();
+    return;
+  }
+  heardNow = '';
+  const ack = (r) => { if (r && r.error) say(r.error); };
+  const send = (alts) => {
+    if (w.kind === 'answer') socket.emit('answer-heard', { sid: w.sid, text: alts[0] }, ack);
+    else socket.emit('pick-heard', { sid: w.sid, alternatives: alts }, ack);
+  };
+  session = ear.listen({
+    kind: w.kind,
+    onText: (alts) => {
+      heardNow = alts[0];
+      send(alts);
+      // One answer per window; a pick can be tried again until the clock runs
+      // out, so its session stays open.
+      if (w.kind === 'answer' && session) { session.stop(); session = null; }
+      render();
+    },
+    onTrouble: (why) => { micTrouble = 'microphone: ' + why; render(); },
+  });
+  render();
+  // The deadline is the server's; this only has to not fire first. If the
+  // window closes on a best guess the recognizer never committed to, send
+  // that rather than nothing — an answer that was heard but not confirmed is
+  // still an answer.
+  setTimeout(() => {
+    if (!session) return;
+    const b = session.best();
+    session.stop(); session = null;
+    if (b) send([b]);
+    render();
+  }, w.ms + 150);
+});
+
 // The nag is the thing that stops a silent host being invisible: an autohost
 // match with no gesture yet cannot make a sound, and the player is the only
 // one who can change that.
@@ -924,15 +983,21 @@ function hostStrip() {
   const nag = !voice.isPrimed()
     ? `<div class="soundnag">The host speaks through this page — click here or press any key so your browser will play sound.</div>`
     : voiceTrouble ? `<div class="soundnag">${voiceTrouble}</div>` : '';
-  const what = mine
-    ? (full ? 'You have the board — click a clue on it to call it.'
-      : 'You have the board — show the board here (below) to call a clue, or the host will pick in a moment.')
-    : (V.host && V.host.line) || 'Waiting for the host';
+  const listening = !!session;
+  const what = listening
+    ? (mine ? 'Say the category and the amount, or click a clue on the board.' : 'Say your answer.')
+    : mine
+      ? (full ? 'You have the board — say it, or click a clue on it.'
+        : 'You have the board — say the category and the amount, or show the board here to click one.')
+      : (V.host && V.host.line) || 'Waiting for the host';
+  const said = heardNow ? `<span class="said">&ldquo;${heardNow}&rdquo;</span>` : '';
+  const trouble = micTrouble ? `<div class="soundnag">${micTrouble}</div>` : '';
   // Said on every screen in the match, not tucked in a setting somebody else
   // ticked: the people it can go wrong for are the players, and they did not
   // choose it.
-  return `${nag}<div class="hostline${mine ? ' yours' : ''}"><span class="who">${
-    mine ? 'Your call' : 'Host'}</span><span class="what">${what}</span>`
+  return `${nag}${trouble}<div class="hostline${mine ? ' yours' : ''}${listening ? ' listening' : ''}">${
+    listening ? '<span class="dotmic"></span>' : ''}<span class="who">${
+    listening ? 'Live' : mine ? 'Your call' : 'Host'}</span><span class="what">${what}</span>${said}`
     + `<span class="alphatag" title="The computer host is new and has not been played in a real room yet.">ALPHA</span></div>`;
 }
 
@@ -1634,8 +1699,16 @@ sfx.preload();
 sfx.armUnlock();
 // The sound nag reads voice.isPrimed(), which flips on the first gesture; the
 // gesture itself is the moment to repaint it away.
+let micPrimed = false;
 for (const ev of ['pointerdown', 'keydown']) {
-  addEventListener(ev, () => { if (V && V.autohost) setTimeout(render, 250); }, true);
+  addEventListener(ev, () => {
+    if (!(V && V.autohost)) return;
+    // Warm the recognizer on a real gesture, once. Without this the first
+    // genuine request of the match lands many async hops from any click, deep
+    // inside a race, which is where Chrome is least forgiving. Matt's.
+    if (!micPrimed && ear.supported()) { micPrimed = true; ear.prime(); }
+    setTimeout(render, 250);
+  }, true);
 }
 
 // The context is read fresh each time: which clue is up changes while the page

@@ -39,6 +39,29 @@ check('every step is illustrated',
   `${(g.match(/class="pic"/g) || []).length} pictures`);
 check('and the focus warning is there', /in front/i.test(g));
 check('and it says what to do when the computer hosts', /computer is hosting/.test(g));
+
+// Everything the computer host expects a player to DO has to be on this page.
+// A player who does not know it is listening will sit waiting to be asked, and
+// one who does not know the question form was dropped will waste their five
+// seconds on "what is".
+check('the guide says the computer host listens', /also <strong>listens/.test(g));
+check('and shows how a clue is called out loud', /for four\s*\n?\s*hundred/.test(g));
+check('and says a spoken answer is what gets ruled on',
+  /say the answer out loud/i.test(g));
+check('and that the question form is not required',
+  /not have to phrase it as a question/.test(g));
+check('and explains "be more specific" rather than leaving it a mystery',
+  /be more\s*\n?\s*specific/i.test(g));
+// "No audio leaves the device" was the first wording here and it overclaims:
+// Chrome and Edge's own speech recognizer sends the audio to their speech
+// service to produce a transcript, which this project does not control. What
+// is true, and the part that actually matters to a player deciding whether to
+// say yes to the mic prompt, is that WE never receive or store it.
+check('and says we never receive or store the audio, not that none is sent',
+  /never receive or store\s*\n?\s*your audio/i.test(g));
+check('and names the browsers that can do it', /Chrome and Edge/.test(g));
+check('and says what to do when they cannot, so a refusal is not a dead end',
+  /If you say no/.test(g));
 check('the banner identifies the page, not a bare heading',
   g.includes("markBanner") && /HOW TO PLAY/.test(g));
 
@@ -166,6 +189,9 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     ['and who Gene is', 'Gene'],
     ['that the voice needs sound on', 'turn your sound on'],
     ['that the board holder calls the next clue', 'calls the next clue'],
+    ['that a spoken pick works too', 'say it'],
+    ['that you can just say your answer when you win a buzz', 'just say your answer'],
+    ['and that a partial answer earns a second try, not a miss', 'be more specific'],
   ]) {
     check(`the rules mention ${what}`, both.includes(needle), needle);
   }

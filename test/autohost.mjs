@@ -10,6 +10,7 @@
 // Run with the server already listening on :8080. Slow by nature — the host
 // speaks at reading pace — so the settings are turned down as far as they go.
 import { io } from 'socket.io-client';
+import { matchPick } from '../src/pick-match.js';
 
 const U = process.env.URL || 'http://127.0.0.1:8080';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -180,6 +181,142 @@ console.log('\nA HOLDER WHO WILL NOT CALL, AND A CONSOLE THAT RULES');
   check('and the board is handed to them next', buzzer.said.some((m) => /You have the board/.test(m.text) && m.text.includes(buzzer.name)));
 }
 
+console.log('\nTHE HOST LISTENS, AND RULES WITHOUT A CONSOLE');
+{
+  // Each player's "browser": the server opens a window, the page answers with
+  // text. Nothing here is audio — that is the whole point of the design.
+  for (const p of players) {
+    p.windows = [];
+    p.s.on('listen', (w) => { p.windows.push(w); p.live = w.close || !w.ms ? null : w; });
+  }
+
+  // Get to a fresh clue with somebody holding the board.
+  await until(() => H.control && !H.clue, 20000);
+  const holder = players.find((p) => p.token === H.control);
+  await until(() => holder && holder.live && holder.live.kind === 'pick', 15000);
+  const pickWin = holder.live;
+  check('the board-holder\'s microphone opens for the pick', !!pickWin, JSON.stringify(pickWin));
+  check('and only theirs', players.filter((p) => p.live).length === 1,
+    String(players.filter((p) => p.live).length));
+
+  // The board is real, drawn content, not a fixture — six arbitrary category
+  // titles. matchPick refuses a tie deliberately (a spoken title that sounds
+  // like two categories at once must not be guessed at), and with six real
+  // titles drawn from a library of tens of thousands, one occasionally does
+  // tie against a sibling on the same board purely by chance of the draw —
+  // "I'M AMEN-ABLE TO THAT" tied "EMMY TIME" here once. That is matchPick
+  // working, not a bug, and the fix belongs in the test: verify the utterance
+  // this section is about to speak actually resolves before relying on it,
+  // the same way `test/bots.mjs` learned not to bet on which of three robots
+  // takes a clue.
+  let cat, openRow, spoken;
+  for (const candidate of H.board || []) {
+    const row = (candidate.clues || []).find((c) => !c.revealed);
+    if (!row) continue;
+    const say = `${candidate.title} for ${[100, 200, 300, 400, 500][row.row - 1]}`;
+    const probe = matchPick(say, H.board, { multiplier: H.overtime?.multiplier || 1 });
+    if (probe.slot != null && probe.row === row.row && !probe.taken) {
+      cat = candidate; openRow = row; spoken = say; break;
+    }
+  }
+  check('at least one open category resolves unambiguously when spoken verbatim',
+    !!spoken, JSON.stringify((H.board || []).map((c) => c.title)));
+  const bad = await new Promise((r) => players.find((p) => p !== holder).s
+    .emit('pick-heard', { sid: pickWin.sid, alternatives: ['presidents for 400'] }, r));
+  check('somebody else speaking into that window is refused', !!bad?.error, bad?.error);
+  const nonsense = await new Promise((r) => holder.s
+    .emit('pick-heard', { sid: pickWin.sid, alternatives: ['aardvarks for a million'] }, r));
+  check('a call that matches nothing is refused with a reason, not guessed',
+    nonsense && nonsense.ok === false && /did not sound like|dollar value/.test(nonsense.why), nonsense?.why);
+  await until(() => holder.said.some((m) => /Which category|category and the amount|For how much/.test(m.text)), 8000);
+  check('and the host asks for it again out loud',
+    holder.said.some((m) => /Which category|category and the amount|For how much/.test(m.text)));
+
+  const ok = await new Promise((r) => holder.s.emit('pick-heard', { sid: pickWin.sid, alternatives: [spoken] }, r));
+  check('a spoken call puts the clue up', !!ok?.ok, JSON.stringify(ok));
+  await until(() => H.clue, 4000);
+  check('the right one', H.clue && H.clue.category === cat.title, H.clue?.category);
+  check('and the pick window is closed behind it',
+    holder.windows.some((w) => w.close || !w.ms), 'closed');
+
+  // Now the race, and an answer.
+  await until(() => holder.arms.length > 0 && H.race?.open, 30000);
+  await wait(120);
+  const answerer = players[2];
+  answerer.s.emit('buzz', { ms: 130, status: 'good' });
+  await until(() => answerer.live && answerer.live.kind === 'answer', 6000);
+  const win = answerer.live;
+  check('the buzz winner\'s microphone opens', !!win && win.ms > 0, JSON.stringify(win));
+  check('nobody else\'s does', players.filter((p) => p.live).length === 1);
+  await until(() => answerer.said.some((m) => m.text === answerer.name + '.'), 6000);
+  check('and the host says their name', answerer.said.some((m) => m.text === answerer.name + '.'));
+
+  const stale = await new Promise((r) => answerer.s.emit('answer-heard', { sid: win.sid - 1, text: 'anything' }, r));
+  check('a transcript from a window that has closed is refused',
+    !!stale?.error && /closed/.test(stale.error), stale?.error);
+  const notYours = await new Promise((r) => players[1].s.emit('answer-heard', { sid: win.sid, text: 'anything' }, r));
+  check('and so is one from somebody not on the clock', !!notYours?.error, notYours?.error);
+
+  const answer = H.clue.answer;
+  const before = resolved.length;
+  const sent = await new Promise((r) => answerer.s.emit('answer-heard', { sid: win.sid, text: answer }, r));
+  check('the right answer is accepted', !!sent?.ok, JSON.stringify(sent));
+  await until(() => resolved.length > before, 12000);
+  check('and settles the clue with no console involved', resolved.length > before);
+  await until(() => answerer.said.some((m) => new RegExp('^Correct, ' + answerer.name).test(m.text)), 10000);
+  check('the host confirms it by name',
+    answerer.said.some((m) => new RegExp('^Correct, ' + answerer.name).test(m.text)));
+  await until(() => H.control === answerer.token, 4000);
+  check('control passes to whoever answered', H.control === answerer.token,
+    `${(H.roster || []).find((x) => x.token === H.control)?.name} has it`);
+  check('the ruling is on the host view, with how it was decided',
+    (H.autohost?.transcripts || []).some((r) => r.kind === 'answer' && r.verdict === 'correct' && r.via),
+    JSON.stringify((H.autohost?.transcripts || []).slice(-1)));
+}
+
+console.log('\nAN ANSWER THAT IS NOT THE ANSWER');
+{
+  // Whoever has the board now, and their next open window — the pick clock is
+  // short in this suite, so the host may already have picked once while the
+  // section above was running.
+  await until(() => H.control && !H.clue, 25000);
+  const holder = players.find((p) => p.token === H.control) || players[0];
+  const got = await until(() => holder.live && holder.live.kind === 'pick', 25000);
+  if (got) {
+    // Same unlucky-draw risk as the section above: verify before speaking.
+    let say = null;
+    for (const candidate of H.board || []) {
+      const row = (candidate.clues || []).find((c) => !c.revealed);
+      if (!row) continue;
+      const s2 = `${candidate.title} for ${[100, 200, 300, 400, 500][row.row - 1]}`;
+      const probe = matchPick(s2, H.board, { multiplier: H.overtime?.multiplier || 1 });
+      if (probe.slot != null && probe.row === row.row && !probe.taken) { say = s2; break; }
+    }
+    await new Promise((r) => holder.s.emit('pick-heard',
+      { sid: holder.live.sid, alternatives: [say || 'nothing on the board resolves'] }, r));
+  }
+  await until(() => H.clue, 25000);
+  await until(() => holder.arms.length > 0 && H.race?.open, 30000);
+  await wait(120);
+  const inRing = new Set((H.live || []).map((x) => x.token));
+  const misser = players.find((p) => inRing.has(p.token)) || players[0];
+  misser.s.emit('buzz', { ms: 140, status: 'good' });
+  await until(() => misser.live && misser.live.kind === 'answer', 8000);
+  const win = misser.live;
+  const lockedBefore = (H.race?.lockedOut || []).length;
+  await new Promise((r) => misser.s.emit('answer-heard', { sid: win.sid, text: 'a completely different thing' }, r));
+  await until(() => (H.race?.lockedOut || []).length > lockedBefore, 12000);
+  check('a wrong answer locks that player out and reopens the race',
+    (H.race?.lockedOut || []).length > lockedBefore && H.race?.open === true,
+    `${(H.race?.lockedOut || []).length} locked, open=${H.race?.open}`);
+  // Both the ruling and the rule it drives want to announce the miss; one of
+  // them is told to stay quiet (`suppressWrongLine`) so the room hears it once.
+  const misslines = misser.said.filter((m) => /did not catch|^No, |could not rule/.test(m.text));
+  check('and the host says so once, not twice', misslines.length === 1,
+    misslines.map((m) => m.text).join(' / '));
+  check('the clue is still up for whoever is left', !!H.clue);
+}
+
 console.log('\nWHAT THE RECORD AND THE HEALTH PAGE SAY');
 {
   check('the host view reports the computer host is working', H.autohost && H.autohost.spoke > 5,
@@ -190,6 +327,11 @@ console.log('\nWHAT THE RECORD AND THE HEALTH PAGE SAY');
   check('a clip that does not exist is a 404, not a crash', clip.status === 404);
   const bad = await fetch(`${U}/clip/piper/../../package.json`);
   check('and the clip route does not walk the filesystem', bad.status === 404 || bad.status === 400, String(bad.status));
+  const h = await (await fetch(`${U}/api/health`)).json();
+  check('health reports the judge and the mode it is in',
+    !!h.judge && typeof h.judge.configured === 'boolean', JSON.stringify(h.judge || null));
+  check('and how the rulings were reached', h.judge.asked > 0 && !!h.judge.verdicts,
+    JSON.stringify(h.judge?.verdicts));
   host.emit('end-match');
   await wait(400);
   check('ending the match stops the host', H.phase === 'over');

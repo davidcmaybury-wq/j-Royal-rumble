@@ -590,6 +590,18 @@ function render(keepEdits) {
         <input type="number" id="pickSeconds" value="${s.pickSeconds ?? 12}" min="4" max="60" style="width:118px">
         <span class="hint">before the host picks one for whoever has the board</span>
       </div>
+      <div class="f pickrow" style="margin-top:8px">
+        <label for="answerSeconds">Seconds to answer</label>
+        <input type="number" id="answerSeconds" value="${s.answerSeconds ?? 5}" min="3" max="20" style="width:118px">
+        <span class="hint">how long the buzz winner's microphone stays open</span>
+      </div>
+      <!-- Plain, like the autohost box above and for the same reason: whether a
+           half-answer gets a second try is a hosting manner, not a rule of the
+           game, so no quick-setup rule set should flip it. -->
+      <label class="rec"><input type="checkbox" id="specificRetry" ${s.specificRetry === false ? '' : 'checked'}>
+        <span><b>Ask for a more specific answer</b><span class="hint2">When a player names only part of
+        the answer, the host says &ldquo;be more specific&rdquo; once and gives them the rest of their
+        time, instead of ruling them wrong. Off means a partial answer is simply wrong.</span></span></label>
     </div>
     <ul class="links">
       <li class="playrow"><div>
@@ -997,6 +1009,8 @@ function collect() {
       seasonRange: [+g('s-lo').value, +g('s-hi').value],
       autohost: g('autohost').checked,
       pickSeconds: Math.max(4, Math.min(60, +g('pickSeconds').value || 12)),
+      answerSeconds: Math.max(3, Math.min(20, +g('answerSeconds').value || 5)),
+      specificRetry: g('specificRetry').checked,
     },
     blend: Object.fromEntries(SRC.map(([k]) => [k, mix[k] || 0])),
     // Beside the settings rather than inside them: it is not a rule and the

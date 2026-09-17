@@ -530,6 +530,44 @@ twice and it played twice.
 the console: `position:fixed` with a `bottom:` is `pointer-events:none` unless
 it is a full-screen modal. `pagerefs.mjs` checks all three files.
 
+**The ears are the browser's, not ours.** `public/listen.js` wraps
+`SpeechRecognition`; Chrome and Edge send the audio to their own speech
+service to produce a transcript — the same one they use for any dictation
+feature — and the page sends US only the resulting text over `answer-heard` /
+`pick-heard`. We never see, hold, or pay for audio, and there is no speech
+service of ours to be down or to key. **The comments and howto copy first
+shipped saying "audio never leaves the device," which overclaimed it** — the
+browser's own recognizer does see it; ours never does, which is the part that
+was actually true and actually mattered. The server opens a window for exactly
+one player at a time (`listen {sid, kind, ms}`) and every transcript is
+checked against the current window's `sid` and owner before it is allowed to
+touch a rule — a stale transcript from a closed window is refused by reason,
+not ignored. Chrome and Edge only; a player without it clicks, and a console
+can still rule.
+
+**The judge never guesses "wrong" when it does not know.** `src/judge.js` rules
+through deterministic fast paths first and only then a model, and with no key —
+or with `RUMBLE_JUDGE=local`, which is a deliberate mode and how CI runs — it
+returns `correct`, `too_broad` or `unclear` and never `wrong`. A failed model
+call must not be able to cost a player money. `too_broad` is not a ruling: Mike
+says "be more specific" once per clue and the player keeps the rest of their
+window. `start-match` refuses an autohost match with no judge configured,
+naming the variable.
+
+**A miss is announced once, by whichever half was told to.** Both the ruling
+and `runMarkWrong` want to say it; `suppressWrongLine` silences the second.
+`test/autohost.mjs` counts the lines rather than trusting it.
+
+**`hostView()` spreads `autohost.status()` and then overrides `heard`** with
+the playback spread, so a status field called `heard` is silently clobbered.
+The transcripts are called `transcripts` for that reason.
+
+**What was taken from Matt Schiffler's j-trivia, and what was not**, is in
+`docs/autohost-from-jtrivia.md` — the ears, the ruling ladder, the phonetic
+pick matcher, the clip trim. Read it before changing a rule in `src/judge.js`
+or `src/pick-match.js` that looks arbitrary: most of them are a live match's
+scar tissue and the comment beside each one says whose.
+
 **What step three owes the box** is the `heard {lateMs}` spread across a real
 room — it sets the `settle` (`SETTLE_MS` in `src/autohost.js`, 250 and
 unmeasured) — and what the background board synthesis did under a live match.

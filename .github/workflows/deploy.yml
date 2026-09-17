@@ -28,6 +28,8 @@ jobs:
         run: node test/estimate.mjs
       - name: Pages bind only to elements that exist
         run: node test/pagerefs.mjs
+      - name: Rulings and spoken picks, with no server and no key
+        run: node test/judge.mjs
       - name: Box score parser
         run: node test/boxparse.mjs
       - name: Box score collector, end to end
@@ -77,7 +79,11 @@ jobs:
           # The admin and log guards fail closed since the hardening pass, so the
           # suites that exercise /api/control and /api/logs need a key to exist.
           # Test-only values; the box gets real ones from its service environment.
-          RUMBLE_ADMIN_KEY=ci-admin-key RUMBLE_LOG_KEY=ci-log-key \
+          # RUMBLE_JUDGE=local: the autohost refuses to start a match with no
+          # judge configured, and CI has no ANTHROPIC_API_KEY. The local judge
+          # rules on overlap alone and never returns "wrong", which is exactly
+          # what the autohost suite drives it for.
+          RUMBLE_ADMIN_KEY=ci-admin-key RUMBLE_LOG_KEY=ci-log-key RUMBLE_JUDGE=local \
             node src/server.js & sleep 10
           node test/e2e.mjs
           node test/entrance.mjs

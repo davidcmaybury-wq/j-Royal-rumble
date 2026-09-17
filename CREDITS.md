@@ -36,6 +36,18 @@ fifths on a square wave. The 8-bit power-up is a genre rather than a recording,
 so this is built from the same ingredients — fast ascending arpeggio, narrowing
 duty cycle — without borrowing anybody's tune.
 
+## Code
+
+The computer host's ears and its judge follow Matt Schiffler's j-trivia, which
+solved both against real rooms before this project started. Matt gave David the
+codebase to work from. Nothing was copied file for file, but the approach —
+speech recognition in the player's own browser rather than a streaming service,
+and a ladder of deterministic rulings that decides most answers with no model
+call at all — is his, along with a long list of specific rules that only a live
+match teaches. `docs/autohost-from-jtrivia.md` records every one of them, and
+each is commented where it lives in `src/judge.js`, `src/pick-match.js`,
+`public/listen.js` and `src/tts.js`.
+
 ## Fonts
 
 | Font | Use | Licence |

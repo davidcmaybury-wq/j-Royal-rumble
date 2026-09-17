@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.98.1",
+  "version": "0.99.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -78,10 +78,13 @@
     "when-test": "node test/when.mjs",
     "tts-test": "node test/tts.mjs",
     "tts-bench": "node tools/tts-bench.mjs",
-    "autohost-test": "node test/autohost.mjs"
+    "autohost-test": "node test/autohost.mjs",
+    "judge-test": "node test/judge.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
+    "double-metaphone": "^2.0.1",
+    "edge-tts-universal": "^1.4.0",
     "express": "^4.21.2",
     "helmet": "^8.3.0",
     "socket.io": "^4.8.1"

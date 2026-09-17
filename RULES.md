@@ -365,13 +365,23 @@ hears the read at the same instant as their own buzzer. Turn your sound on and
 click the page once so your browser will play it; the buzzer nags you until it
 can. The buzzers arm the moment Mike finishes the read.
 
-**Whoever has the board calls the next clue.** At the bell that's draw number 1;
-after that it's whoever last answered correctly, and it stays put on a stumper.
-Click the clue on the board in your buzzer window. Leave it twelve seconds and
-Mike picks one for you.
+**Whoever has the board calls the next clue, out loud or by clicking.** At the
+bell that's draw number 1; after that it's whoever last answered correctly, and
+it stays put on a stumper. Say the category and the value &mdash; "presidents
+for four hundred" &mdash; or click the clue on the board in your buzzer window.
+Leave it twelve seconds and Mike picks one for you.
 
-For now a person at a console still presses Correct or Wrong; the computer
-settles a clue nobody buzzed on by itself.
+**When you win a buzz, say your answer.** Your microphone opens for five
+seconds and closes the moment you finish a sentence. You do not have to phrase
+it as a question &mdash; just answer. If you name only part of the answer,
+Mike says "be more specific" and gives you the rest of your time rather than
+ruling you wrong.
+
+Chrome and Edge only: the recognition is your browser's own, and it sends us
+nothing but the words it heard &mdash; we never receive or store audio.
+Anything else, or saying no to the microphone, costs you nothing: click your
+clues and answer on the call instead, the way the game has always worked, and
+a player at a console can still rule.
 
 ---
 

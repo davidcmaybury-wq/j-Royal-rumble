@@ -23,6 +23,12 @@
 //   piper      the piper binary, spawned per clip. Smaller and faster on a
 //              small CPU; the open-source candidate still standing, and
 //              unmeasured until `npm run tts-bench` runs with it installed.
+//   edge       Microsoft's Edge neural voices through edge-tts-universal —
+//              hosted, free, no key, the voice Matt Schiffler's j-trivia
+//              autohost runs on. Answers as MP3, so it needs `ffmpeg` on the
+//              box to land in the same WAV shape as the rest (FFMPEG_BIN, or
+//              on the PATH). Unofficial endpoint: it can change under us,
+//              which is why it is an engine and not the engine.
 //   elevenlabs hosted, paid, the upgrade for later. Same shape, so the swap is
 //              RUMBLE_TTS=elevenlabs and a key, nothing in the caller.
 //
@@ -45,7 +51,7 @@ import { tmpdir } from 'node:os';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 
-export const ENGINES = ['silent', 'kokoro', 'piper', 'elevenlabs'];
+export const ENGINES = ['silent', 'kokoro', 'piper', 'edge', 'elevenlabs'];
 
 // Where clips (and, for kokoro, the downloaded model) live. /data is the box's
 // persistent volume, the same choice the logs and bug reports make; a local
@@ -60,6 +66,7 @@ export const DEFAULT_VOICES = {
   silent:     { mike: 'silent', gene: 'silent' },
   kokoro:     { mike: 'am_michael', gene: 'am_fenrir' },
   piper:      { mike: 'en_US-ryan-medium', gene: 'en_US-joe-medium' },
+  edge:       { mike: 'en-US-GuyNeural', gene: 'en-US-ChristopherNeural' },
   elevenlabs: { mike: '', gene: '' },   // voice ids; there is no sensible default
 };
 
@@ -186,6 +193,24 @@ const engines = {
     },
   },
 
+  edge: {
+    configure: () => (process.env.FFMPEG_BIN || whichSync('ffmpeg'))
+      ? { ok: true }
+      : { ok: false, reason: 'the edge voice needs ffmpeg to decode its MP3: set FFMPEG_BIN or put `ffmpeg` on the PATH' },
+    async speak(text, voice) {
+      let mod;
+      try { mod = await import('edge-tts-universal'); } catch (e) {
+        throw new TtsError(`edge-tts-universal is not installed (${e.message.split('\n')[0]}); run npm install`);
+      }
+      const v = /^[a-z]{2}-[A-Z]{2}-[A-Za-z]+Neural$/.test(voice || '') ? voice : DEFAULT_VOICES.edge.mike;
+      const tts = new mod.EdgeTTS(text, v);
+      const result = await withTimeout(tts.synthesize(), SPEAK_TIMEOUT_MS, 'edge');
+      const mp3 = Buffer.from(await result.audio.arrayBuffer());
+      if (!mp3.length) throw new TtsError('edge returned no audio');
+      return mp3ToWav(mp3);
+    },
+  },
+
   elevenlabs: {
     configure: () => process.env.ELEVENLABS_API_KEY
       ? { ok: true }
@@ -207,6 +232,93 @@ const engines = {
     },
   },
 };
+
+function withTimeout(promise, ms, what) {
+  let timer;
+  const bomb = new Promise((_, reject) => { timer = setTimeout(() => reject(new TtsError(`${what} took longer than ${ms}ms`)), ms); });
+  return Promise.race([promise, bomb]).finally(() => clearTimeout(timer));
+}
+
+// MP3 in on stdin, 16-bit mono WAV out on stdout, through ffmpeg. 24 kHz
+// because that is what the Edge voices are encoded at; resampling would only
+// add a step.
+export function mp3ToWav(mp3) {
+  const bin = process.env.FFMPEG_BIN || 'ffmpeg';
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let err = '';
+    const child = spawn(bin, ['-loglevel', 'error', '-i', 'pipe:0', '-f', 'wav', '-acodec', 'pcm_s16le', '-ac', '1', '-ar', '24000', 'pipe:1'],
+      { stdio: ['pipe', 'pipe', 'pipe'] });
+    const timer = setTimeout(() => { child.kill(); reject(new TtsError(`ffmpeg took longer than ${SPEAK_TIMEOUT_MS}ms`)); }, SPEAK_TIMEOUT_MS);
+    child.on('error', (e) => { clearTimeout(timer); reject(new TtsError(`could not start ${bin}: ${e.message}`)); });
+    child.stdout.on('data', (d) => chunks.push(d));
+    child.stderr.on('data', (d) => { err += d; });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code !== 0) return reject(new TtsError(`ffmpeg exited ${code}: ${err.trim().split('\n').pop() || 'no output'}`));
+      const wav = Buffer.concat(chunks);
+      // ffmpeg writing to a pipe cannot seek back to fill in the sizes, so
+      // the RIFF and data lengths come out as 0xFFFFFFFF or 0; rewrite them
+      // from what actually arrived so the header is trustworthy.
+      resolve(fixWavSizes(wav));
+    });
+    child.stdin.on('error', () => {});
+    child.stdin.end(mp3);
+  });
+}
+
+// Rewrite a WAV's RIFF and data chunk sizes from the buffer's real length.
+export function fixWavSizes(buf) {
+  if (buf.length < 44 || buf.toString('ascii', 0, 4) !== 'RIFF') return buf;
+  const out = Buffer.from(buf);
+  out.writeUInt32LE(out.length - 8, 4);
+  let off = 12;
+  while (off + 8 <= out.length) {
+    const id = out.toString('ascii', off, off + 4);
+    const size = out.readUInt32LE(off + 4);
+    if (id === 'data') { out.writeUInt32LE(out.length - off - 8, off + 4); break; }
+    off += 8 + size + (size & 1);
+  }
+  return out;
+}
+
+/**
+ * Cut the silence off the end of a clip, so the clip's length is the moment
+ * the voice stops and not the moment the encoder did. Every engine pads the
+ * tail — Piper by a few hundred milliseconds, Edge by up to half a second —
+ * and since the buzzers arm at `durationMs`, that padding was dead air the
+ * room waited through on every clue. Matt Schiffler's j-trivia autohost
+ * trims the same way ("the clips are trimmed to the end of speech, so
+ * duration IS the marker"); this is the pure-JS version on our 16-bit PCM.
+ *
+ * `threshold` is a fraction of full scale — 0.002 is Matt's figure, about
+ * -54 dB, under any voice and above the encoders' noise floor. `keepMs` of
+ * tail is left so the last consonant is not clipped.
+ */
+export function trimTrailingSilence(buf, { threshold = 0.002, keepMs = 60 } = {}) {
+  if (buf.length < 44 || buf.toString('ascii', 0, 4) !== 'RIFF') return buf;
+  let off = 12, rate = 0, channels = 0, bits = 0, dataOff = -1, dataLen = 0;
+  while (off + 8 <= buf.length) {
+    const id = buf.toString('ascii', off, off + 4), size = buf.readUInt32LE(off + 4);
+    if (id === 'fmt ') { channels = buf.readUInt16LE(off + 10); rate = buf.readUInt32LE(off + 12); bits = buf.readUInt16LE(off + 22); }
+    if (id === 'data') { dataOff = off + 8; dataLen = Math.min(size, buf.length - dataOff); break; }
+    off += 8 + size + (size & 1);
+  }
+  if (dataOff < 0 || bits !== 16 || !rate) return buf;
+  const frame = channels * 2;
+  const limit = Math.round(threshold * 32767);
+  let lastLoud = -1;
+  for (let i = dataOff + dataLen - frame; i >= dataOff; i -= frame) {
+    let loud = false;
+    for (let c = 0; c < channels && !loud; c++) loud = Math.abs(buf.readInt16LE(i + c * 2)) > limit;
+    if (loud) { lastLoud = i; break; }
+  }
+  if (lastLoud < 0) return buf;   // all silence: a beat is still a beat
+  const keep = Math.round(rate * keepMs / 1000) * frame;
+  const end = Math.min(dataOff + dataLen, lastLoud + frame + keep);
+  if (end >= dataOff + dataLen) return buf;
+  return pcm16ToWav(buf.subarray(dataOff, end), rate, channels);
+}
 
 function whichSync(name) {
   for (const p of (process.env.PATH || '').split(':')) {
@@ -403,6 +515,9 @@ export async function speak(text, voice = voiceFor('mike')) {
     stats.failed++; stats.lastError = e.message;
     throw e instanceof TtsError ? e : new TtsError(`${engine}: ${e.message}`);
   }
+  // The silent engine is exactly as long as the clock says; every real one is
+  // trimmed to where the voice stops, because that is where the buzzers arm.
+  if (engine !== 'silent') audio = trimTrailingSilence(audio);
   const durationMs = wavDurationMs(audio);
   stats.spoken++;
   if (engine !== 'silent') {

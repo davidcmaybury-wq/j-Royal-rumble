@@ -256,6 +256,17 @@ export const DEFAULT_SETTINGS = {
   // to read six categories, short enough that a player who stepped away does
   // not stall thirty people.
   pickSeconds: 12,
+  // How long the player on the clock has to say their answer. Five seconds,
+  // matching what the show gives and what Matt Schiffler's j-trivia autohost
+  // settled on for the same job; the window closes early the moment the
+  // recognizer commits to a sentence, so this is the outer bound rather than
+  // the usual wait.
+  answerSeconds: 5,
+  // "Be more specific." A player whose answer names something real but wider
+  // than the clue wanted has not answered wrongly, and a host prompts rather
+  // than ruling. They keep the rest of their window and the clue is not
+  // resolved either way. Off makes too_broad a plain miss.
+  specificRetry: true,
   botReadJitter: 45,         // ms, shared per clue: the host activates by hand
   botMatchField: true,       // shift robots to sit alongside the humans present
   botOffset: null,           // ms; null means use the built-in default, then

@@ -23,6 +23,16 @@ check('setup reports available material', setup.available.archive > 40000 && set
 // Recorded with the match so saved logs can be grouped by host. It is metadata,
 // not a rule, so the one thing that must never happen is it reaching the engine
 // settings — hence the check that it stays out of them.
+// Every setting the computer host reads has to be on the page and read back by
+// collect(), or a host changes it and nothing happens. Both of these are plain
+// controls rather than adv(), so they show in quick mode too.
+const page = await (await fetch(`${U}/setup.html`)).text();
+for (const id of ['autohost', 'pickSeconds', 'answerSeconds', 'specificRetry']) {
+  check(`the setup page offers ${id}`, page.includes(`id="${id}"`));
+  check(`  and collect() reads it back`, page.includes(`g('${id}')`));
+  check(`  in quick mode as well as expert`, !new RegExp(`adv\\([^)]*${id}`).test(page));
+}
+
 check('a fresh match has no host recorded', setup.hostName === '',
   JSON.stringify(setup.hostName));
 let h = await (await api(`/api/match/${m.gameId}`, { method: 'PATCH',

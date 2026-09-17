@@ -32,6 +32,7 @@
 // fallback is a counted event, not a silent one.
 
 import { speak, speakJoined, voiceFor, readingTimeMs, status as ttsStatus, TtsError } from './tts.js';
+import { matchPick } from './pick-match.js';
 
 export const MIKE = 'mike';
 export const GENE = 'gene';
@@ -72,6 +73,13 @@ export class Autohost {
     this.backlog = { queued: 0, done: 0, waitedMs: 0, waits: 0, maxDepth: 0 };
     this.stumperSpoken = false;
     this.stopped = false;
+    // The open window, if any: { kind: 'answer' | 'pick', sid, token, closesAt }.
+    // One at a time by construction — the host is either listening to the
+    // person on the clock or to the person holding the board, never both.
+    this.window = null;
+    this.windowSeq = 0;
+    this.retried = new Set();   // clue keys that have already had one "be more specific"
+    this.heardText = [];        // { at, kind, token, name, text, verdict, via, ms }
   }
 
   // ------------------------------------------------------------ lifecycle
@@ -90,13 +98,15 @@ export class Autohost {
 
   onOver() {
     this.state = 'over';
+    this.closeWindow();
     this.clearTimers();
     const g = this.m.game;
     const winner = g.live()[0];
     const line = winner ? `Your winner: ${winner.name}!` : 'That is the match.';
     this.m.note('autohost-summary', { spoke: this.spoke.length,
       fromClock: this.spoke.filter((s) => s.fromClock).length,
-      backlog: { ...this.backlog }, heard: this.heardSummary() });
+      backlog: { ...this.backlog }, heard: this.heardSummary(),
+      rulings: this.rulingSummary() });
     this.say(GENE, line, { then: () => {
       this.line = 'The match is over.'; this.pushState(); this.stopped = true;
     } });
@@ -105,6 +115,7 @@ export class Autohost {
   /** The console undid a clue. Everything scheduled is stale. */
   onUndo() {
     if (this.stopped) return;
+    this.closeWindow();
     this.clearTimers();
     this.stumperSpoken = false;
     this.say(MIKE, 'That clue is undone.', { then: () => this.handover() });
@@ -135,6 +146,10 @@ export class Autohost {
     this.say(MIKE, `You have the board, ${holder.name}.`, { then: () => {
       if (this.state !== 'handover') return;
       const total = Number(this.m.settings.pickSeconds || 12) * 1000;
+      // Their microphone opens for the whole pick clock: the pick is spoken
+      // first and clicked second (docs/autohost-design.md), so the window is
+      // the window, not a separate step they have to trigger.
+      this.openWindow('pick', holder.id, total / 1000);
       this.after(Math.max(0, total - NUDGE_BEFORE_S * 1000), () => {
         if (this.state !== 'handover' || this.m.clue) return;
         this.say(MIKE, `${holder.name}, call a clue.`);
@@ -171,6 +186,7 @@ export class Autohost {
   /** runPick happened — by a player, the host, or a console. Read it. */
   onPicked() {
     if (this.stopped) return;
+    this.closeWindow();
     this.clearTimers();
     const c = this.m.clue;
     if (!c) return;
@@ -196,6 +212,173 @@ export class Autohost {
       .catch((e) => this.log('autohost', { event: 'error', where: 'read', error: e.message }));
   }
 
+  // --------------------------------------------------------------- listening
+  //
+  // The microphone is on the player's own machine and so is the recognizer:
+  // the browser turns speech into text and sends the text. Nothing here is
+  // audio, the server never holds a recording, and there is no speech service
+  // to pay for or to be down — the approach Matt Schiffler's j-trivia autohost
+  // proved in live play, and a straight simplification of what this design
+  // originally specified (see docs/autohost-from-jtrivia.md).
+  //
+  // A window is a small object with an id. Everything that arrives carries
+  // that id, so a transcript from a window that has already closed — the
+  // recognizer finishing its sentence a beat late — is dropped instead of
+  // ruling on a clue that has moved on.
+
+  /** Open a window and tell exactly one player their microphone is live. */
+  openWindow(kind, token, seconds) {
+    const sid = ++this.windowSeq;
+    this.window = { kind, sid, token, closesAt: Date.now() + seconds * 1000 };
+    const sock = this.m.roster.get(token)?.socketId;
+    if (sock) this.io.to(sock).emit('listen', { sid, kind, ms: seconds * 1000 });
+    this.after(seconds * 1000, () => {
+      if (this.window?.sid !== sid) return;
+      this.closeWindow();
+      if (kind === 'answer') this.onAnswerTimeout(token);
+    });
+    return sid;
+  }
+
+  closeWindow() {
+    const w = this.window;
+    this.window = null;
+    if (!w) return;
+    const sock = this.m.roster.get(w.token)?.socketId;
+    if (sock) this.io.to(sock).emit('listen', { sid: w.sid, kind: w.kind, ms: 0, close: true });
+  }
+
+  /** A person won the race. Ask them, and start the clock on the answer. */
+  onLeader({ token, name }) {
+    if (this.stopped || !this.m.clue) return;
+    this.state = 'listening';
+    this.line = `${name} is answering`;
+    this.pushState();
+    const secs = Number(this.m.settings.answerSeconds || 5);
+    this.openWindow('answer', token, secs);
+    if (this.m.settings.autohostSayName !== false) this.say(MIKE, `${name}.`);
+  }
+
+  /** The window closed with nothing said. That is a miss, said plainly. */
+  onAnswerTimeout(token) {
+    if (this.stopped || !this.m.clue) return;
+    this.record({ kind: 'answer', token, text: '', verdict: 'unclear', via: 'timeout', ms: 0 });
+    this.say(MIKE, 'Time.', { then: () => {
+      if (this.stopped || !this.m.clue) return;
+      this.act.runMarkWrong(token);
+    } });
+  }
+
+  /**
+   * What the player on the clock said. Judge it, then do what a host does.
+   *
+   * Returns an acknowledgement for the buzzer rather than throwing: a client
+   * that speaks into a closed window should be told so, not left waiting.
+   */
+  onAnswerHeard(token, { sid, text }) {
+    if (this.stopped) return { error: 'the match is over' };
+    const w = this.window;
+    if (!w || w.kind !== 'answer' || w.sid !== sid) return { error: 'that window is closed' };
+    if (w.token !== token) return { error: 'you are not on the clock' };
+    if (!this.m.clue) return { error: 'that clue is already settled' };
+    this.closeWindow();
+    this.clearTimers();
+    const clue = this.m.clue;
+    const name = this.m.roster.get(token)?.name || 'somebody';
+    this.state = 'ruling';
+    this.line = `"${text}" — ruling`;
+    this.pushState();
+
+    this.chain = this.chain.then(async () => {
+      if (this.stopped || this.m.clue !== clue) return;
+      let r;
+      try {
+        r = await this.act.judge({ clue: clue.text, answer: clue.answer, said: text, category: clue.category });
+      } catch (e) {
+        // judge() is written never to throw; if it somehow does, the clue is
+        // not silently swallowed.
+        r = { verdict: 'unclear', reason: e.message, via: 'local', local: true, ms: 0 };
+      }
+      this.record({ kind: 'answer', token, text, verdict: r.verdict, via: r.via, ms: r.ms, reason: r.reason });
+      this.log('autohost', { event: 'ruling', name, said: text, verdict: r.verdict, via: r.via, ms: r.ms });
+      if (this.stopped || this.m.clue !== clue) return;
+      return this.rule(r, token, name, clue);
+    }).catch((e) => this.log('autohost', { event: 'error', where: 'judge', error: e.message }));
+    return { ok: true };
+  }
+
+  /** Act on a verdict, in the host's voice. */
+  async rule(r, token, name, clue) {
+    const key = `${clue.slot}:${clue.row}`;
+
+    // "Be more specific." The clue is not resolved either way and the player
+    // keeps the clock — a host's prompt, not a ruling. Once per clue, because
+    // a second prompt is just a slower no.
+    if (r.verdict === 'too_broad' && this.m.settings.specificRetry !== false && !this.retried.has(key)) {
+      this.retried.add(key);
+      await this.play(MIKE, 'Be more specific.');
+      if (this.stopped || this.m.clue !== clue) return;
+      this.state = 'listening';
+      this.line = `${name} is answering again`;
+      this.pushState();
+      this.openWindow('answer', token, Number(this.m.settings.answerSeconds || 5));
+      return;
+    }
+
+    if (r.verdict === 'correct') {
+      return this.act.runResolve({ winnerToken: token });
+    }
+
+    // Everything else is a miss. `unclear` is said differently from `wrong`
+    // because they are different things to be on the end of, and a player who
+    // was misheard should hear that rather than "no".
+    const line = r.local
+      ? `I could not rule on that one, so I have to say no, ${name}.`
+      : r.verdict === 'unclear' ? `I did not catch that, ${name}.` : `No, ${name}.`;
+    // runMarkWrong says "No, name" itself through onMarkedWrong; suppress that
+    // so the room does not hear the ruling twice.
+    this.suppressWrongLine = true;
+    await this.play(MIKE, line);
+    if (this.stopped || this.m.clue !== clue) { this.suppressWrongLine = false; return; }
+    this.act.runMarkWrong(token);
+    this.suppressWrongLine = false;
+  }
+
+  /** What the board-holder said when asked to call a clue. */
+  onPickHeard(token, { sid, alternatives }) {
+    if (this.stopped) return { error: 'the match is over' };
+    const w = this.window;
+    if (!w || w.kind !== 'pick' || w.sid !== sid) return { error: 'that window is closed' };
+    if (w.token !== token) return { error: 'you do not hold the board' };
+    if (this.m.clue) return { error: 'a clue is already up' };
+    const m = matchPick(alternatives, this.m.game.board,
+      { multiplier: this.m.game.overtimeMultiplier() });
+    const name = this.m.roster.get(token)?.name || 'somebody';
+    this.record({ kind: 'pick', token, text: alternatives.join(' | '), verdict: m.slot != null && m.row != null ? 'picked' : 'unmatched', via: 'phonetic', ms: 0, reason: m.why });
+    this.log('autohost', { event: 'pick-heard', name, heard: alternatives[0], slot: m.slot, row: m.row, why: m.why });
+    if (m.slot != null && m.row != null && !m.taken) {
+      this.closeWindow();
+      this.clearTimers();
+      this.act.runPick({ slot: m.slot, row: m.row });
+      return { ok: true, slot: m.slot, row: m.row };
+    }
+    // Not understood. Say why and leave the window open for the rest of the
+    // pick clock — the player can simply say it again, and the autopick timer
+    // is still running underneath, so nothing stalls.
+    const ask = m.taken ? 'That one is gone. Something else?'
+      : m.row == null && m.slot != null ? 'For how much?'
+      : m.slot == null && m.row != null ? 'Which category?'
+      : 'Say the category and the amount.';
+    this.say(MIKE, ask);
+    return { ok: false, why: m.why };
+  }
+
+  /** Every transcript and ruling, for the record and the console. */
+  record(row) {
+    this.heardText.push({ at: Date.now(), name: this.m.roster.get(row.token)?.name || null, ...row });
+    if (this.heardText.length > 400) this.heardText.shift();
+  }
+
   /** A robot took the buzz and said something. Read it to the room. */
   onBotSaid({ name, kind, text }) {
     if (this.stopped || kind === 'pick') return;
@@ -204,6 +387,10 @@ export class Autohost {
 
   onMarkedWrong(token) {
     if (this.stopped) return;
+    // The judge path has already said its own line, which is more specific
+    // than this one ("I did not catch that" rather than "No"). This is for a
+    // console's N, which says nothing on its own.
+    if (this.suppressWrongLine) return;
     const name = this.m.roster.get(token)?.name;
     this.say(MIKE, name ? `No, ${name}.` : 'No.');
   }
@@ -358,6 +545,26 @@ export class Autohost {
     list.push({ token, lateMs: Math.round(lateMs) });
   }
 
+  /**
+   * How the rulings were made, for the record: how many never needed a model,
+   * how many the model decided, and how many fell back to the local judge —
+   * that last count is the one that says whether a room needs objections.
+   */
+  rulingSummary() {
+    const answers = this.heardText.filter((r) => r.kind === 'answer');
+    const by = (k) => answers.filter((r) => r.via === k).length;
+    const times = answers.filter((r) => r.ms > 0).map((r) => r.ms).sort((a, b) => a - b);
+    return {
+      answers: answers.length,
+      exact: by('exact') + by('grace'), model: by('model'), local: by('local'),
+      timedOut: by('timeout'),
+      verdicts: answers.reduce((acc, r) => ({ ...acc, [r.verdict]: (acc[r.verdict] || 0) + 1 }), {}),
+      judgeMs: times.length ? { p50: times[Math.floor(times.length / 2)], max: times.at(-1) } : null,
+      picks: this.heardText.filter((r) => r.kind === 'pick').length,
+      picksUnmatched: this.heardText.filter((r) => r.kind === 'pick' && r.verdict === 'unmatched').length,
+    };
+  }
+
   /** The spread of playback starts per clip — the number step three owes. */
   heardSummary() {
     const rows = [];
@@ -449,6 +656,8 @@ export class Autohost {
   status() {
     return { state: this.state, line: this.line, voice: ttsStatus().engine,
       spoke: this.spoke.length, fromClock: this.spoke.filter((s) => s.fromClock).length,
+      listening: this.window ? { kind: this.window.kind, name: this.m.roster.get(this.window.token)?.name || null } : null,
+      transcripts: this.heardText.slice(-8),
       backlog: { ...this.backlog, depth: this.jobs.length } };
   }
 }
