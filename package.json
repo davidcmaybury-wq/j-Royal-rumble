@@ -1,14 +1,14 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.99.0",
+  "version": "0.100.0",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "start": "node --env-file=.env src/server.js",
+    "dev": "node --env-file=.env --watch src/server.js",
     "sim": "node test/harness.js",
     "e2e": "node test/e2e.mjs",
     "setup-test": "node test/setup.mjs",
@@ -79,7 +79,8 @@
     "tts-test": "node test/tts.mjs",
     "tts-bench": "node tools/tts-bench.mjs",
     "autohost-test": "node test/autohost.mjs",
-    "judge-test": "node test/judge.mjs"
+    "judge-test": "node test/judge.mjs",
+    "objection-test": "node test/objection.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

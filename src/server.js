@@ -712,6 +712,10 @@ class Match {
       // Whether the box has a voice, so the setup page can say so beside the
       // autohost switch rather than letting a silent match be discovered live.
       voice: { engine: tts.status().engine, configured: tts.status().configured, reason: tts.status().reason },
+      // Same reasoning, for the other way an autohost match refuses to start:
+      // no judge configured. David hit that refusal after gathering a full
+      // lobby; the setup page should say so before anyone shows up.
+      judge: { configured: judge.status().configured, mode: judge.status().mode },
       seasons: [SEASONS[0], SEASONS.at(-1)],
       available: this.available(),
       uploads: this.uploads.map((u) => ({ name: u.name, categories: u.categories.length })),
@@ -972,7 +976,10 @@ class Match {
       // With no human host, the buzzer is where a player learns what the host
       // is doing and whether it is their board to call.
       autohost: !!this.settings.autohost,
-      host: this.autohost ? { state: this.autohost.state, line: this.autohost.line } : null,
+      host: this.autohost ? { state: this.autohost.state, line: this.autohost.line,
+        // Per viewer: a player needs to know whether their own O is already in.
+        objection: this.autohost.objectionView(token),
+        award: this.autohost.awardView() } : null,
       myBuzz: mine ? { ms: mine.ms, early: mine.early, ...(mine.ranked || {}) } : null,
       stables: this.settings.stables ? this.stableList() : null,
       ...(this.phase === 'over'
@@ -1521,7 +1528,7 @@ function announceLeader(match) {
       io.to(`${match.id}:${room}`).emit('bot-said',
         { said: [{ token: lead.token, name: lead.name, ...line }] });
     }
-    match.autohost?.onBotSaid({ name: lead.name, ...line });
+    match.autohost?.onBotSaid({ name: lead.name, token: lead.token, ...line });
   }, (match.settings?.lockout || 250) + 450);
 }
 
@@ -1903,20 +1910,31 @@ mountAvailability(app, { dir: __dir, localReq, adminOk });
 // What the host does when they pick a clue: put it up, open a closed race,
 // and get the robots' wrong answer written while the room is still reading.
 // A function rather than a handler body so the autohost can pick too.
+// What a card is worth and says, right now. Factored out of runPick because
+// an objection's walk-back has to rebuild exactly this after a restore, and a
+// second copy of "what is this clue worth in overtime" is the kind of thing
+// that drifts.
+//
+// The value is display only — the engine works it out again when it scores —
+// but every surface that showed a raw $400 during a x4 overtime was telling
+// the room the wrong number.
+function clueAt(match, slot, row) {
+  const g = match.game;
+  const cat = g.board[slot];
+  const clue = cat?.clues.find((c) => c.row === row);
+  if (!clue || clue.revealed) return null;
+  const face = [100, 200, 300, 400, 500][row - 1];
+  return { slot, row, face, value: face * g.overtimeMultiplier(),
+    category: cat.title, note: cat.note, text: clue.text, answer: clue.answer };
+}
+
 function runPick(match, { slot, row }) {
   const g = match.game;
   const cat = g.board[slot];
   const clue = cat?.clues.find((c) => c.row === row);
-  if (!clue || clue.revealed) return false;
-  // What the clue is actually worth right now, not its face value. The
-  // engine computes the same thing independently when it scores, so this is
-  // display only — but every surface that showed a raw $400 during a x4
-  // overtime was telling the room the wrong number.
-  const face = [100, 200, 300, 400, 500][row - 1];
-  match.clue = {
-    slot, row, face, value: face * g.overtimeMultiplier(),
-    category: cat.title, note: cat.note, text: clue.text, answer: clue.answer,
-  };
+  const built = clueAt(match, slot, row);
+  if (!built) return false;
+  match.clue = built;
   match.race = { open: false, activatedAt: null, buzzes: [], lockedOut: new Set() };
   match.retoss = 0;
   clearTimeout(match.raceTimer);
@@ -2036,9 +2054,67 @@ function startAutohost(m) {
     runActivate: () => runActivate(m, deps),
     runResolve: (r) => runResolve(m, r, deps, report),
     runMarkWrong: (t) => runMarkWrong(m, t, deps),
+    // The objection's walk-back. `quiet`, because the autohost writes its own
+    // correction saying what the room decided — an undo logged as an undo
+    // would read as the host having had second thoughts.
+    runUndo: () => runUndo(m, deps, report, { quiet: true }),
+    reresolve: (args) => runReresolve(m, args, deps, report),
+    voidClue: (slot, row) => m.game.voidClue(slot, row),
     pushPlayers: deps.pushPlayers,
   }, io, { log: (type, data) => { m.note(type, data); if (data.event === 'error' || data.event === 'voice-fallback' || data.event === 'synth-failed') console.log(`[autohost ${m.id}]`, data); } });
   m.autohost.start();
+}
+
+// Walking one clue back.
+//
+// At module level because there are now two callers and only one of them has a
+// socket: the console's undo button, and the autohost when the room objects to
+// a ruling and wins. The snapshot in `undoStack` is the whole engine — scores,
+// entries, eliminations, the ceiling — so a restore puts all of it back;
+// re-doing the clue the other way is the caller's business, not this
+// function's.
+//
+// `quiet` is for the objection path, which writes its own correction saying
+// what the room decided. A plain undo that also logged itself as an undo would
+// read as the host having second thoughts.
+function runUndo(match, { pushAll }, report, { quiet = false } = {}) {
+  const last = match.undoStack.pop();
+  if (!last) { report('nothing to undo'); return null; }
+  match.game.restore(last.snap);
+  match.stats = new Map(JSON.parse(last.statsSnap));
+  match.fastest = last.fastest;
+  match.history.pop();
+  if (match.record) match.record.clues.pop();
+  match.phase = 'live';
+  match.clue = null; match.race = null;
+  if (!quiet) {
+    match.corrections.push({ at: match.elapsed(), clue: match.game.cluesRevealed,
+      type: 'undo', category: last.clue?.category, value: last.clue?.value });
+    match.note('undo', { category: last.clue?.category, value: last.clue?.value });
+  }
+  pushAll();
+  io.to(`${match.id}:host`).emit('undone', { category: last.clue?.category, value: last.clue?.value });
+  return last;
+}
+
+// Re-run a clue that has just been walked back, the other way round.
+//
+// The card is unrevealed again and `match.clue` is null, so the state a ruling
+// needs has to be rebuilt before the rule can run — but only the state. The
+// ruling itself is `runResolve`, the same one the console and the host call,
+// because a second implementation of scoring is the one thing this whole
+// design is arranged to avoid. There is no read, no race and no buzz: the room
+// already heard this clue, and it is being corrected rather than replayed.
+function runReresolve(match, { slot, row, winnerToken, missedTokens = [] }, deps, report) {
+  const built = clueAt(match, slot, row);
+  if (!built) { report('that card is not on the board'); return false; }
+  match.clue = built;
+  match.race = { open: false, activatedAt: null, buzzes: [],
+    lockedOut: new Set(missedTokens) };
+  match.retoss = 0;
+  clearTimeout(match.raceTimer);
+  runResolve(match, { winnerToken }, deps, report);
+  return true;
 }
 
 function runActivate(match, { pushAll, runBots, armTimeout }) {
@@ -2427,7 +2503,13 @@ io.on('connection', (socket) => {
     // to run a whole match — so this refuses at the start button, naming the
     // variable, rather than letting the room discover it at clue one.
     if (match.settings.autohost && !judge.status().configured) {
-      return ack?.({ error: 'The computer cannot host: no ANTHROPIC_API_KEY set, so it cannot rule on answers' });
+      // Both ways out, because a refusal that names one of two fixes sends
+      // somebody looking for a key when they might not want one tonight.
+      return ack?.({ error: 'The computer cannot host: it has no way to rule on answers. '
+        + 'Set ANTHROPIC_API_KEY on the server, or set RUMBLE_JUDGE=local to play '
+        + 'without one — the local judge accepts an answer that contains the whole '
+        + 'response and says "I could not rule on that one" to everything else, '
+        + 'so it never calls somebody wrong.' });
     }
     try {
       match.start();
@@ -2562,6 +2644,23 @@ io.on('connection', (socket) => {
     ack?.(match.autohost.onAnswerHeard(token, { sid: Number(sid), text: String(text || '').slice(0, 300) }));
   });
 
+  // The room's check on the host. Anybody in the match may object — in the
+  // ring, queued or eliminated — and nobody at all may object to a ruling
+  // nobody made, which is the refusal `test/security.mjs` pins.
+  socket.on('object', (_payload, ack) => {
+    touch();
+    if (!match?.autohost || !token) return ack?.({ error: 'no match' });
+    ack?.(match.autohost.onObject(token));
+  });
+
+  // Who should have had the clue, when reversing the ruling was not enough to
+  // say. `to` is a player token, or null for "nobody — throw it out".
+  socket.on('award-vote', ({ to } = {}, ack) => {
+    touch();
+    if (!match?.autohost || !token) return ack?.({ error: 'no match' });
+    ack?.(match.autohost.onAwardVote(token, { to: to == null ? null : String(to).slice(0, 80) }));
+  });
+
   // The same, for the player holding the board calling the next clue.
   socket.on('pick-heard', ({ sid, alternatives }, ack) => {
     touch();
@@ -2680,21 +2779,8 @@ io.on('connection', (socket) => {
   // --- corrections -----------------------------------------------------
 
   socket.on('undo-clue', hostOnly(() => {
-    const last = match.undoStack.pop();
-    if (!last) return socket.emit('error-msg', 'nothing to undo');
-    match.game.restore(last.snap);
-    match.stats = new Map(JSON.parse(last.statsSnap));
-    match.fastest = last.fastest;
-    match.history.pop();
-    if (match.record) match.record.clues.pop();
-    match.phase = 'live';
-    match.clue = null; match.race = null;
-    match.corrections.push({ at: match.elapsed(), clue: match.game.cluesRevealed,
-      type: 'undo', category: last.clue?.category, value: last.clue?.value });
-    match.note('undo', { category: last.clue?.category, value: last.clue?.value });
-    pushAll();
-    io.to(`${match.id}:host`).emit('undone', { category: last.clue?.category, value: last.clue?.value });
-    match.autohost?.onUndo();
+    const last = runUndo(match, { pushAll }, (msg) => socket.emit('error-msg', msg));
+    if (last) match.autohost?.onUndo();
   }));
 
   socket.on('adjust-score', hostOnly(({ token: t, delta, reason }) => {

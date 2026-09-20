@@ -562,6 +562,32 @@ and `runMarkWrong` want to say it; `suppressWrongLine` silences the second.
 the playback spread, so a status field called `heard` is silently clobbered.
 The transcripts are called `transcripts` for that reason.
 
+**The room can overrule the host, and a reversal is a walk-back.** Any player
+presses O from the moment a ruling is spoken until the next one is; it reverses
+on a majority of the people in the match or two thirds of the ring, whichever
+lands first. Nothing re-fires a rule: `runUndo` restores the snapshot
+`undoStack` already kept, and `runReresolve` rebuilds `match.clue` (through
+`clueAt`, the same function `runPick` uses) and calls the ordinary `runResolve`
+the other way round. Where that cannot express what the room wants, the award
+vote asks, and a clue nobody can agree on is thrown out with `voidClue`.
+
+**`voidClue` must never advance `cluesRevealed`.** The entry clock, the ceiling
+decay and the overtime trigger all run on that counter, so a thrown-out clue
+that moved it would bring the next player in a clue early — which is the one
+thing the room certainly did not vote for. `test/mechanics.mjs` pins it.
+
+**The ring threshold is tolerant on purpose.** `setup.html` stores the share as
+a whole percent, so two thirds arrives as 0.67, and a bare `ceil` would make a
+ring of three unanimous when the settled rule says two. `objectionCounts` allows
+half a percent of the ring, and the resulting table is in the comment beside it.
+Robots are left out of both denominators, because a robot cannot press O and
+counting votes that can never be cast makes a threshold unreachable by
+arithmetic rather than by disagreement.
+
+**The award timer is a bare `setTimeout`, like the clip waits.** The game keeps
+playing under an award vote by design, so the next pick's `clearTimers()` would
+cancel the count and leave the popup on thirty screens forever.
+
 **What was taken from Matt Schiffler's j-trivia, and what was not**, is in
 `docs/autohost-from-jtrivia.md` — the ears, the ruling ladder, the phonetic
 pick matcher, the clip trim. Read it before changing a rule in `src/judge.js`

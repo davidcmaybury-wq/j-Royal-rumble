@@ -308,5 +308,32 @@ console.log('\nOFF BY DEFAULT');
     `${spacing} clues apart`);
 }
 
+// --- a clue the room threw out ---------------------------------------------
+//
+// The whole point of voiding rather than resolving to nobody is that the
+// clocks must not move: entry, ceiling decay and overtime all run on
+// cluesRevealed, so a thrown-out clue that advanced it would bring the next
+// player in a clue early — which is not what the room voted for.
+console.log('\nA CLUE THE ROOM THREW OUT');
+{
+  const g = game({ entryInterval: 2, topRope: false }, 4);
+  const before = live(g).map((id) => score(g, id));
+  const clues = g.cluesRevealed;
+  const queued = g.queued().length;
+  const [slot, row] = pick(g, 3);
+  const e = g.voidClue(slot, row);
+  check('the card is dead', g.board[slot].clues.find((c) => c.row === row).revealed === true);
+  check('and says so in the log', e.type === 'void' && e.row === 3, JSON.stringify(e));
+  check('nobody was paid and nobody was charged',
+    live(g).map((id) => score(g, id)).join() === before.join());
+  check('the clue clock did not move', g.cluesRevealed === clues,
+    `${clues} -> ${g.cluesRevealed}`);
+  check('so nobody was brought in by it', g.queued().length === queued,
+    `${queued} -> ${g.queued().length}`);
+  let threw = false;
+  try { g.voidClue(slot, row) } catch (err) { threw = true }
+  check('and a card cannot be thrown out twice', threw);
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

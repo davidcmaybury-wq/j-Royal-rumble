@@ -262,6 +262,16 @@ export const DEFAULT_SETTINGS = {
   // recognizer commits to a sentence, so this is the outer bound rather than
   // the usual wait.
   answerSeconds: 5,
+  // The room's check on the host. `objections: false` switches it off
+  // entirely; the two thresholds are a majority of everybody in the match or
+  // this fraction of the ring, whichever is met first. Two thirds exactly, not
+  // 0.67 — see the epsilon in autohost.js's objectionCounts, where a ring of
+  // three would otherwise need to be unanimous.
+  objections: true,
+  ringSupermajority: 2 / 3,
+  // How long the room has to say who should have had a clue, when reversing
+  // the ruling was not enough to decide it. The game keeps playing underneath.
+  awardSeconds: 15,
   // "Be more specific." A player whose answer names something real but wider
   // than the clue wanted has not answered wrongly, and a host prompts rather
   // than ruling. They keep the rest of their window and the clue is not
@@ -1291,6 +1301,34 @@ export class RumbleGame {
       if (p) entry.entered = p.id;
     }
 
+    this.log.push(entry);
+    return entry;
+  }
+
+  /**
+   * Throw a clue out: the card is dead and nothing else happened.
+   *
+   * The room reverses a ruling, the reversal turns out to be ambiguous, and
+   * the fair answer is that this clue never counted. Nobody is paid, nobody is
+   * charged, nobody enters and nobody goes out.
+   *
+   * **`cluesRevealed` deliberately does not move.** The entry clock, the
+   * ceiling decay and the overtime trigger all run on that counter, so
+   * advancing it here would make a thrown-out clue bring the next player in a
+   * clue early — which is the one thing the room definitely did not vote for.
+   * As far as every clock in the game is concerned this clue was never read.
+   *
+   * Applied after the walk-back, so the objected clue's every effect is
+   * already gone and this only kills the card.
+   */
+  voidClue(slotIndex, row) {
+    if (this.finished) throw new Error('match is over');
+    const cat = this.board[slotIndex];
+    const clue = cat?.clues.find((c) => c.row === row);
+    if (!clue || clue.revealed) throw new Error('clue unavailable');
+    clue.revealed = true;
+    const entry = { type: 'void', category: cat.title, row,
+      faceValue: ROW_VALUES[row - 1], at: this.cluesRevealed };
     this.log.push(entry);
     return entry;
   }

@@ -1,14 +1,20 @@
-<!-- Runs past Discord's 2,000-character limit. Post as THREE messages now,
-     breaking before "Two shapes of match" and before "Gang up."
+<!-- Runs past Discord's 2,000-character limit. Post as FOUR messages now,
+     breaking before the computer-host block (🤖), before "Two shapes of match"
+     and before "Gang up."
 
      It outgrew two messages when the comeback's overtime stake was added: the
      old split went to 2,186 / 1,707 against a 2,000 cap. The previous note here
      had already called that — thirty characters of headroom left, next rule
      needs a third message. It did.
 
-     Three-way: 1,026 / 1,477 / 1,388, leaving 523 characters of headroom in the
-     tightest part. Discord truncates silently, so count before posting rather
-     than trusting the eye.
+     Three-way was 1,026 / 1,477 / 1,388. It outgrew that in turn when the
+     computer host learned to be overruled: the first message went past the cap
+     again. Four-way now, with the computer host on a message of its own —
+     which is the right shape anyway, since it is the part a room reads twice.
+
+     Four-way: 1,026 / 1,267 / 1,586 / 1,633, leaving 367 characters of
+     headroom in the tightest part. Discord truncates silently, so count before
+     posting rather than trusting the eye.
 
      Do not paste a comment-stripping regex into this note. The first draft did,
      the pattern contained the comment's own closing delimiter, and the comment
@@ -31,6 +37,8 @@ Thirty players. Three start. Last one above water wins. 🔗 j-royal-rumble.net
 ☠️ **Elimination.** Drop below zero and you're out. Exactly zero survives.
 
 🤖 **Sometimes the computer hosts — this is brand new, treat it as an experiment.** Two voices: **Mike** reads the clues and rules on them, **Gene** calls the ring — entrances, eliminations, overtime. The voice comes out of *your own buzzer*, so **turn your sound on** and click the page once so your browser will play it. The buzzers arm the moment Mike finishes reading. **Whoever has the board calls the next clue** — say it ("presidents for four hundred") or click it; leave it twelve seconds and Mike picks one for you. **Win a buzz and just say your answer** — five seconds, no question form needed, and "be more specific" earns you a second try instead of a miss. Chrome or Edge, and say yes to the mic; anything else and you click and answer on the call like always.
+
+⚖️ **Press O to object if Mike gets one wrong.** Anyone can — in the ring, in the queue or already out — until the next ruling. It reverses on a **majority of the whole match** or **two thirds of the ring**, and your own objection counts. Play carries on while they're collected. If reversing it is ambiguous, everybody gets fifteen seconds to vote on who had it, and a clue the room can't agree on is **thrown out** — nobody paid, nobody charged, and it doesn't count toward the entry clock.
 
 🕹️ **Two shapes of match, and the host says which before the bell.**
 **ARCADE** — one foot on the floor is on, so somebody knocked out early comes back with time off their buzz. Because that reorders the race, the room sees **1st, 2nd, 3rd** instead of times. **You still see your own milliseconds on your own buzzer** — you just don't see anybody else's, and they don't see yours.

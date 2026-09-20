@@ -49,6 +49,24 @@ animation:micpulse 1s ease-in-out infinite}
 .hostline .said{color:var(--slate);font-style:italic}
 .soundnag{margin:0 16px 8px;padding:10px 12px;border-radius:10px;background:#3A2D08;border:1px solid var(--brass);
 color:#FFD98A;font-size:13px;cursor:pointer}
+.objline{display:flex;align-items:center;gap:10px;margin:0 16px 8px;padding:8px 12px;
+border-radius:10px;background:#3A1111;border:1px solid var(--alarm);font-size:13px;color:#FFC9C9}
+.objline .ocount{font-family:"IBM Plex Mono",monospace;color:var(--chalk);white-space:nowrap}
+.objline .owhat{flex:1;min-width:0}
+.objline button{background:var(--alarm);border:none;border-radius:var(--r);color:#fff;
+padding:6px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.objline button.in{background:transparent;border:1px solid var(--alarm);color:#FFC9C9;cursor:default}
+.acand{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:var(--r);
+background:var(--ink);margin-bottom:6px;font-size:14px;border:1px solid transparent;
+color:var(--chalk);text-align:left;cursor:pointer}
+.acand:hover{border-color:var(--brass)}
+.acand.mine{border-color:var(--brass)}
+.acand .asaid{color:var(--slate);font-style:italic;font-size:12.5px}
+.acand.none{color:var(--slate)}
+.aclock{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--slate);margin-top:8px}
+/* Its own name as well as .sheet, so the page can tell whether the vote is
+   already up without matching every sheet on the screen. */
+.awardsheet{z-index:95}
 .bcell.callable{cursor:pointer;outline:1px solid var(--brass);outline-offset:-1px}
 .bcell.callable:hover{background:#3A2D08}
 .hostsay .who{color:var(--brass)}
@@ -1001,6 +1019,76 @@ function hostStrip() {
     + `<span class="alphatag" title="The computer host is new and has not been played in a real room yet.">ALPHA</span></div>`;
 }
 
+/**
+ * Press O. A refusal is said out loud on this page rather than swallowed: a
+ * key that does nothing and explains nothing is indistinguishable from a key
+ * that is broken.
+ */
+function object() {
+  socket.emit('object', {}, (r) => {
+    if (r && r.error) say(r.error);
+    else if (r && r.already) say('Your objection is already in');
+    else if (r && r.ok) say(`Objection ${r.votes}`);
+  });
+}
+
+/**
+ * The room's check on the host.
+ *
+ * Shown to everybody, in the ring or not, because everybody can object — and
+ * showing both thresholds rather than one number is the point: a player has to
+ * be able to see whether it is the ring or the room that is close, or the O
+ * key is a press into the dark.
+ */
+function objectionStrip() {
+  const o = V && V.host && V.host.objection;
+  if (!o) return '';
+  const need = o.needRing ? `${o.needAll} of the room or ${o.needRing} of the ring` : `${o.needAll} of the room`;
+  return `<div class="objline"><span class="ocount">${o.votes}</span>`
+    + `<span class="owhat">Objection${o.on ? ' &mdash; ' + o.on : ''}. Takes ${need}.</span>`
+    + (o.mine ? `<button class="in" id="objin" disabled>Yours is in</button>`
+      : `<button id="objbtn">Object &middot; O</button>`) + `</div>`;
+}
+
+/**
+ * Who should have had it, when reversing the ruling was not enough to say.
+ *
+ * A full-screen modal, which is also what keeps it out of the way of the
+ * overlay rule: anything fixed to the bottom of the screen has to be
+ * click-through unless it covers the whole thing, and this covers the whole
+ * thing. The game is still running underneath — the vote does not stop play,
+ * so the popup closes itself when the count does.
+ */
+function awardSheet(a) {
+  if (document.querySelector('.awardsheet')) return;
+  const el = document.createElement('div');
+  el.className = 'sheet awardsheet';
+  el.innerHTML = `<div class="sbox">
+    <h3>Who had it?</h3>
+    <p class="snote">The room overruled the host on ${a.on || 'that clue'}, but not
+      about whom. Pick whoever you think had it &mdash; most votes wins, and a tie
+      throws the clue out.</p>
+    ${a.candidates.map((c) => `<button class="acand" data-to="${c.token}">
+      <span>${c.name}</span><span class="asaid">&ldquo;${c.text}&rdquo;</span></button>`).join('')}
+    <button class="acand none" data-to="">Nobody &mdash; throw it out</button>
+    <div class="aclock" id="aclock"></div>
+  </div>`;
+  document.body.appendChild(el);
+  for (const b of el.querySelectorAll('[data-to]')) {
+    b.onclick = () => {
+      socket.emit('award-vote', { to: b.dataset.to || null }, () => {});
+      for (const x of el.querySelectorAll('.acand')) x.classList.remove('mine');
+      b.classList.add('mine');
+    };
+  }
+  const tick = setInterval(() => {
+    const left = Math.max(0, Math.round((a.closesAt - Date.now()) / 1000));
+    const c = el.querySelector('#aclock');
+    if (c) c.textContent = left ? `${left}s left` : 'counting';
+    if (!V || !V.host || !V.host.award) { clearInterval(tick); el.remove(); }
+  }, 250);
+}
+
 // ---------------- join ----------------
 function renderJoin() {
   root.innerHTML = `<div class="join">
@@ -1315,6 +1403,11 @@ addEventListener('keydown', (e) => {
     e.preventDefault(); return betraySheet(you);
   }
 
+  // O objects to the last ruling. Not gated on being in the ring: the crowd
+  // polices the host too, and a player who has just been ruled against is
+  // exactly the person most likely to reach for it.
+  if (k === 'o' && V.autohost) { e.preventDefault(); return object(); }
+
   if (k === 'r' && M.topRope && you.state === 'live' && !V.clueUp
       && (you.topRope || !(you.topRopeWait > 0))) {
     e.preventDefault(); socket.emit('top-rope', { on: !you.topRope });
@@ -1384,6 +1477,7 @@ renderJoin();
         V.arcade ? 'Arcade' : 'Tournament'}</span>
     </header>
     ${hostStrip()}
+    ${objectionStrip()}
     <section class="meter" id="meter"></section>
     <section class="pad">
       <button class="buzz" id="buzz"><span class="big mq" id="bzbig">WAIT</span><span id="bzsub"></span></button>
@@ -1405,6 +1499,12 @@ renderJoin();
   if (sb) sb.onclick = stableSheet;
   const bb = document.getElementById('m-betray');
   if (bb) bb.onclick = () => betraySheet(you);
+  const ob = document.getElementById('objbtn');
+  if (ob) ob.onclick = () => object();
+  // The vote opens and closes on the server's clock, not on a click, so the
+  // popup is opened from whatever the state says rather than from an event —
+  // which also means a player who reloads mid-vote gets it back.
+  if (V.host && V.host.award) awardSheet(V.host.award);
   maybeGone(st, you);
 }
 

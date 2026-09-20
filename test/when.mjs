@@ -180,8 +180,18 @@ check('a proposal survives a reload of the store', (() => {
     me: { id: 'u1', name: 'Tester', tz: LA, weekly: { Thu: [[19 * 60, 21 * 60]] }, dates: {} },
     settings: { threshold: 8, minSlots: 4 }, storage: { durable: true },
   };
-  // A Thursday evening in the window the page shows by default.
-  const hot = zoned.zonedToUtc(LA, 2026, 9, 17, 19 * 60);
+  // An evening in the window the page shows by default — which is *this*
+  // calendar week, computed from the real clock the moment the page loads.
+  // This used to be a fixed date (2026-09-17) and the test passed for exactly
+  // as many days as that date stayed inside the current week; once "today"
+  // rolled past it, the fixed slot fell outside weekStart()'s 7-day span and
+  // no cell in the rendered grid ever matched it, so "no hot cell" was not a
+  // regression in the page — it was the fixture going stale on a clock. Today
+  // is always inside the week that contains it, by construction of
+  // weekStart() (it walks back to the most recent Sunday), so anchoring on
+  // today rather than a specific weekday can't drift the same way again.
+  const today = zoned.localParts(LA, Date.now());
+  const hot = zoned.zonedToUtc(LA, today.y, today.m, today.d, 19 * 60);
   const heatBody = {
     from: hot - 86400000, to: hot + 86400000, players: 9, named: true,
     slots: [{ t: hot, n: 9, who: [{ id: 'u1', name: 'Tester' }] }],

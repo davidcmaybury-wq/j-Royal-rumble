@@ -78,7 +78,8 @@ sudo systemctl daemon-reload && sudo systemctl restart rumble
 | `RUMBLE_DISCORD_GUILD` | restricts sign-in to Rumble Discord members | optional; without it anyone with a Discord account can sign in |
 | `RUMBLE_PUBLIC_URL` | the OAuth redirect URI behind CloudFront | sign-in breaks — see the gotcha below |
 | `RUMBLE_SESSION_SECRET` | signs the `/when` session cookie | a new one per boot, so every deploy signs everybody out of `/when`. A boot note, not a refusal — it protects a list of free evenings, not the match records. |
-| `ANTHROPIC_API_KEY` | robots' wrong answers | falls back to local nonsense; reported at `/api/health` |
+| `ANTHROPIC_API_KEY` | robots' wrong answers, **and the computer host's rulings** | the robots fall back to local nonsense, but an autohost match **refuses to start**, naming this variable — there is nobody at a console to rule, so a match with no judge is a match that cannot be played. `RUMBLE_JUDGE=local` is the deliberate way to run without it. Both are reported at `/api/health`. |
+| `RUMBLE_JUDGE` | set to `local` to run the computer host with no key | unset means the key is required. The local judge rules `correct` when the answer is all there in what was said and `unclear` otherwise — it never returns `wrong`, so a failed call cannot cost somebody money, and a right answer worded loosely gets a miss. Playable, and weaker than the real thing. |
 
 The Discord application itself — the two channel ids, the redirect URI, what
 the bot posts — is `docs/discord-setup.md`, about five minutes of clicking.
@@ -109,6 +110,24 @@ From the box (or with `?key=<admin key>` from anywhere) the body names what is
 missing, per integration. `discord.missing` is the list to work through;
 `availability.durable` must be `true`, meaning the store is `/data/when.json`
 and not inside the app directory where the next deploy would take it.
+
+### Running it locally, with the same variables
+`npm start` and `npm run dev` both run as `node --env-file=.env src/server.js`,
+so a `.env` in the repo root is read straight into the process — the same names
+as everywhere above, none of them ever touching git. Node refuses to start at
+all if that file does not exist, on purpose: the first-time step really is
+
+```
+cp .env.example .env
+```
+
+even if every line stays blank. Blank is a legitimate way to run: no key means
+the guards fail closed and the robots write local nonsense, exactly as
+documented, and every route still answers — it is the same box, minus two
+secrets. No `dotenv` dependency, because Node has done this itself since 20.6.
+CI and the box never go through `npm start` — both invoke `node src/server.js`
+directly with the environment already set by the workflow or by systemd — so
+this only ever affects a local checkout.
 
 ## Deploying a new version
 SSH in (Lightsail console → Connect), then:

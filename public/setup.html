@@ -584,7 +584,7 @@ function render(keepEdits) {
         Correct or Wrong, and ending the match there always works. Mike reads the clues and runs the board,
         Gene calls the ring, and the buzzers arm off the end of each read. You play from a buzzer
         like everybody else. Everyone needs sound on. Somebody at a console still rules Correct
-        or Wrong for now.${voiceHint(S.voice)}</span></span></label>
+        or Wrong for now.${voiceHint(S.voice)}${judgeHint(S.judge)}</span></span></label>
       <div class="f pickrow" style="margin-top:8px">
         <label for="pickSeconds">Seconds to call a clue</label>
         <input type="number" id="pickSeconds" value="${s.pickSeconds ?? 12}" min="4" max="60" style="width:118px">
@@ -598,6 +598,26 @@ function render(keepEdits) {
       <!-- Plain, like the autohost box above and for the same reason: whether a
            half-answer gets a second try is a hosting manner, not a rule of the
            game, so no quick-setup rule set should flip it. -->
+      <!-- Also plain: whether the room can overrule the computer is about how
+           the match is hosted, not about the rules of the game, so no quick
+           rule set should switch it on or off behind the host's back. -->
+      <label class="rec"><input type="checkbox" id="objections" ${s.objections === false ? '' : 'checked'}>
+        <span><b>Let the room overrule the host</b><span class="hint2">Any player presses <b>O</b> to object
+        to the last ruling &mdash; in the ring, in the queue or already out. It is reversed if a majority of
+        everybody in the match objects, or two thirds of the players in the ring. Where reversing it is
+        ambiguous, the room votes on who should have had the clue, and a clue nobody can agree on is thrown
+        out.</span></span></label>
+      <div class="f pickrow" style="margin-top:8px">
+        <label for="awardSeconds">Seconds to award a clue</label>
+        <input type="number" id="awardSeconds" value="${s.awardSeconds ?? 15}" min="5" max="60" style="width:118px">
+        <span class="hint">how long the room has to say who should have had it &mdash; the game keeps going</span>
+      </div>
+      <div class="f pickrow" style="margin-top:8px">
+        <label for="ringSupermajority">Share of the ring to reverse</label>
+        <input type="number" id="ringSupermajority" value="${Math.round((s.ringSupermajority ?? 2 / 3) * 100)}"
+               min="50" max="100" step="1" style="width:118px">
+        <span class="hint">percent &mdash; two thirds means a ring of three needs two</span>
+      </div>
       <label class="rec"><input type="checkbox" id="specificRetry" ${s.specificRetry === false ? '' : 'checked'}>
         <span><b>Ask for a more specific answer</b><span class="hint2">When a player names only part of
         the answer, the host says &ldquo;be more specific&rdquo; once and gives them the rest of their
@@ -852,6 +872,16 @@ const voiceHint = (v) => !v ? ''
   : v.engine === 'silent' ? '<br><b style="color:var(--brass)">This server has no voice configured, so the host will be silent and the room reads each clue from the screen.</b>'
   : `<br>Voice: ${v.engine}.`;
 
+// The other way an autohost match refuses at the start button: no judge.
+// `mode` distinguishes an honest "no key at all" from the deliberate keyless
+// demo mode, because a host who chose RUMBLE_JUDGE=local on purpose does not
+// need to be warned about the thing they set on purpose.
+const judgeHint = (j) => !j || j.configured === false ? '<br><b style="color:var(--alarm)">'
+  + 'No judge is configured, so the computer cannot rule on answers and this match will refuse to start.</b>'
+  : j.mode === 'local (on purpose)'
+  ? '<br><b style="color:var(--brass)">Judging locally: it accepts an answer that contains the whole response and never rules anybody wrong for anything less.</b>'
+  : '';
+
 const adv = (k, label, on, blurb) =>
   `<label class="rec adv"><input type="checkbox" id="${k}" ${on ? 'checked' : ''}>
     <span><b>${label}</b><span class="hint2">${blurb}</span></span></label>`;
@@ -1011,6 +1041,11 @@ function collect() {
       pickSeconds: Math.max(4, Math.min(60, +g('pickSeconds').value || 12)),
       answerSeconds: Math.max(3, Math.min(20, +g('answerSeconds').value || 5)),
       specificRetry: g('specificRetry').checked,
+      objections: g('objections').checked,
+      awardSeconds: Math.max(5, Math.min(60, +g('awardSeconds').value || 15)),
+      // Shown as a percentage because "67" is a thing a host can type and
+      // 0.6666666666666666 is not; stored as the fraction the rule uses.
+      ringSupermajority: Math.max(0.5, Math.min(1, (+g('ringSupermajority').value || 67) / 100)),
     },
     blend: Object.fromEntries(SRC.map(([k]) => [k, mix[k] || 0])),
     // Beside the settings rather than inside them: it is not a rule and the

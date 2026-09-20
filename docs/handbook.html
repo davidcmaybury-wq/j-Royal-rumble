@@ -232,10 +232,56 @@ so until the browser will play, and every client reports when a clip actually
 started &mdash; the spread of those reports across a room is the number that sets
 how much settle to add, and it is recorded per clip.</p>
 <p>Whoever has the board calls the next clue &mdash; draw 1 at the bell, then
-whoever last answered correctly, staying put on a stumper &mdash; by clicking it
-on the board in their buzzer window. Twelve seconds without a call and Mike picks
-one. For now a person at a console still presses Correct or Wrong; the computer
-settles a stumper by itself.</p>
+whoever last answered correctly, staying put on a stumper &mdash; by saying it
+aloud, or by clicking it on the board in their buzzer window. Twelve seconds
+without a call and Mike picks one. The spoken call is matched on <em>sound</em>
+rather than meaning: the dollar value and the category are found by completely
+separate machinery, so a garbled category cannot cost you the value, and a call
+that could be either of two categories is refused rather than guessed &mdash;
+putting the wrong clue up and unpicking it in front of the room is worse than
+asking again.</p>
+<p>The ears are the player's own browser. Speech recognition runs on their
+machine and the server receives words, never audio, which removes a streaming
+service, an API key, a per-minute bill and a third party holding a room's
+recordings from the design in one step. It costs Chrome and Edge, and a player
+who refuses the microphone still clicks their clues and can still be ruled on
+from a console. Mike judges what he was given through a ladder of deterministic
+checks before any model is asked &mdash; the question form and the thinking out
+loud are stripped, a misheard "What is" is repaired, a bare "what&hellip;" is
+not an answer &mdash; so most rulings never reach a model at all. A player who
+names only part of the answer is told to be more specific once and keeps the
+rest of their clock, which is a host's prompt rather than a ruling. With no
+model available the judge returns "I could not tell" and never "no": a failed
+call must not be able to cost somebody money.</p>
+<p>It will still be wrong sometimes, and that is what the objection is for.
+Any player &mdash; in the ring, queued or eliminated &mdash; presses <b>O</b>
+from the moment a ruling is spoken until the next one is, and the ruling is
+reversed on a majority of everybody in the match or two thirds of the ring,
+whichever arrives first. Two thresholds because the roster is thirty and the
+ring is three: a majority of the room lets the crowd correct a host that is
+plainly wrong, and two thirds of the ring lets the people with money on the clue
+correct it without needing twenty-five spectators to look up from their drinks.
+The answering player's own O counts.</p>
+<p>The cost of a rare event belongs on the rare event. So a ruling takes effect
+at once and the board goes straight back out; objections are collected through
+the following clue while play carries on. A reversal is then a <em>walk-back</em>
+rather than a second ruling: the engine keeps a snapshot before every scored
+clue, so the server restores it and re-runs the same scoring the other way
+round, and a clue that was in progress simply goes back on the board unrevealed
+to be picked again. Where the walk-back cannot express what the room wants
+&mdash; two players were both ruled wrong, or a correct answer was overruled and
+the race that should have followed cannot be run minutes later &mdash; every
+buzzer gets fifteen seconds to vote on who had it, with what the room heard each
+of them say. Most votes wins; a tie throws the clue out. A thrown-out clue pays
+nobody, charges nobody and <em>does not advance the clue counter</em>, which
+matters more than it sounds: the entry clock, the ceiling decay and the overtime
+trigger all run on that counter, so a voided clue that advanced it would bring
+the next player in a clue early &mdash; which is the one thing the room
+certainly did not vote for.</p>
+<p>Every objection is in the match record with its count, both thresholds and
+what it did, so the rate at which a room disagrees with the judge is measurable
+rather than anecdotal. That rate is the number that decides when the judge is
+good enough.</p>
 
 <h3>How to join</h3>
 <p>Open the buzzer link on your phone or a second tab, enter the four-letter room code the host

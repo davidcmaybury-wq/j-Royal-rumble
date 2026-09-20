@@ -18,6 +18,14 @@ const setup = await (await api(`/api/match/${m.gameId}`, {}, m.hostKey)).json();
 check('setup reports available material', setup.available.archive > 40000 && setup.available.original > 200,
   `${setup.available.archive} archive, ${setup.available.original} original`);
 
+// The other refusal an autohost match can hit at the start button: no judge.
+// CI runs with RUMBLE_JUDGE=local, which counts as configured on purpose — the
+// setup page's job is to say so before the lobby fills, not to insist on a key.
+check('setup reports whether a judge is configured, before the lobby fills',
+  typeof setup.judge?.configured === 'boolean', JSON.stringify(setup.judge));
+check('and CI\u2019s deliberate keyless mode reads as configured, not a warning',
+  setup.judge.configured === true, JSON.stringify(setup.judge));
+
 // --- who is hosting ----------------------------------------------------
 //
 // Recorded with the match so saved logs can be grouped by host. It is metadata,
@@ -27,7 +35,8 @@ check('setup reports available material', setup.available.archive > 40000 && set
 // collect(), or a host changes it and nothing happens. Both of these are plain
 // controls rather than adv(), so they show in quick mode too.
 const page = await (await fetch(`${U}/setup.html`)).text();
-for (const id of ['autohost', 'pickSeconds', 'answerSeconds', 'specificRetry']) {
+for (const id of ['autohost', 'pickSeconds', 'answerSeconds', 'specificRetry',
+  'objections', 'awardSeconds', 'ringSupermajority']) {
   check(`the setup page offers ${id}`, page.includes(`id="${id}"`));
   check(`  and collect() reads it back`, page.includes(`g('${id}')`));
   check(`  in quick mode as well as expert`, !new RegExp(`adv\\([^)]*${id}`).test(page));

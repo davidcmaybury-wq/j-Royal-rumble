@@ -80,6 +80,14 @@ export class Autohost {
     this.windowSeq = 0;
     this.retried = new Set();   // clue keys that have already had one "be more specific"
     this.heardText = [];        // { at, kind, token, name, text, verdict, via, ms }
+    // The ruling the room may still object to, and the open award vote if the
+    // reversal turned out to be ambiguous. See the objections section below.
+    this.standing = null;
+    this.rulingSeq = 0;
+    this.award = null;
+    this.awardTimer = null;
+    this.walkback = false;
+    this.pickControl = null;    // who held the board when this clue was picked
   }
 
   // ------------------------------------------------------------ lifecycle
@@ -100,6 +108,9 @@ export class Autohost {
     this.state = 'over';
     this.closeWindow();
     this.clearTimers();
+    // Bare timers are not in this.timers, on purpose, so they need saying so.
+    clearTimeout(this.awardTimer);
+    this.award = null;
     const g = this.m.game;
     const winner = g.live()[0];
     const line = winner ? `Your winner: ${winner.name}!` : 'That is the match.';
@@ -192,6 +203,8 @@ export class Autohost {
     if (!c) return;
     this.state = 'reading';
     this.stumperSpoken = false;
+    // Whoever called this clue gets the board back if the room throws it out.
+    this.pickControl = this.m.control;
     this.line = `Mike is reading ${c.category} for $${money(c.value)}`;
     this.pushState();
     // The category and value are one joined clip from two cached parts, so a
@@ -262,7 +275,8 @@ export class Autohost {
   /** The window closed with nothing said. That is a miss, said plainly. */
   onAnswerTimeout(token) {
     if (this.stopped || !this.m.clue) return;
-    this.record({ kind: 'answer', token, text: '', verdict: 'unclear', via: 'timeout', ms: 0 });
+    this.record({ kind: 'answer', token, text: '', clue: `${this.m.clue.slot}:${this.m.clue.row}`,
+      verdict: 'unclear', via: 'timeout', ms: 0 });
     this.say(MIKE, 'Time.', { then: () => {
       if (this.stopped || !this.m.clue) return;
       this.act.runMarkWrong(token);
@@ -299,7 +313,8 @@ export class Autohost {
         // not silently swallowed.
         r = { verdict: 'unclear', reason: e.message, via: 'local', local: true, ms: 0 };
       }
-      this.record({ kind: 'answer', token, text, verdict: r.verdict, via: r.via, ms: r.ms, reason: r.reason });
+      this.record({ kind: 'answer', token, text, clue: `${clue.slot}:${clue.row}`,
+        verdict: r.verdict, via: r.via, ms: r.ms, reason: r.reason });
       this.log('autohost', { event: 'ruling', name, said: text, verdict: r.verdict, via: r.via, ms: r.ms });
       if (this.stopped || this.m.clue !== clue) return;
       return this.rule(r, token, name, clue);
@@ -326,6 +341,7 @@ export class Autohost {
     }
 
     if (r.verdict === 'correct') {
+      this.stand('right', token, clue);
       return this.act.runResolve({ winnerToken: token });
     }
 
@@ -340,6 +356,7 @@ export class Autohost {
     this.suppressWrongLine = true;
     await this.play(MIKE, line);
     if (this.stopped || this.m.clue !== clue) { this.suppressWrongLine = false; return; }
+    this.stand('wrong', token, clue);
     this.act.runMarkWrong(token);
     this.suppressWrongLine = false;
   }
@@ -380,8 +397,14 @@ export class Autohost {
   }
 
   /** A robot took the buzz and said something. Read it to the room. */
-  onBotSaid({ name, kind, text }) {
+  onBotSaid({ name, kind, text, token }) {
     if (this.stopped || kind === 'pick') return;
+    // Recorded as well as spoken: a robot that was ruled wrong is as much a
+    // candidate for an award vote as a person, and the room saw it answer.
+    if (token && this.m.clue) {
+      this.record({ kind: 'answer', token, text, clue: `${this.m.clue.slot}:${this.m.clue.row}`,
+        verdict: null, via: 'bot', ms: 0 });
+    }
     this.say(MIKE, `${name} says: ${text}`);
   }
 
@@ -391,6 +414,8 @@ export class Autohost {
     // than this one ("I did not catch that" rather than "No"). This is for a
     // console's N, which says nothing on its own.
     if (this.suppressWrongLine) return;
+    // A console's N is a ruling like any other, and the room can object to it.
+    this.stand('wrong', token, this.m.clue);
     const name = this.m.roster.get(token)?.name;
     this.say(MIKE, name ? `No, ${name}.` : 'No.');
   }
@@ -413,6 +438,20 @@ export class Autohost {
   onResolved(entry, { winnerToken, clue }) {
     if (this.stopped) return;
     this.clearTimers();
+    // A console's Correct is a ruling the room can object to. The host's own
+    // correct ruling already stood itself before it called runResolve, so this
+    // only fires for the console — `stand` is a no-op mid-walk-back.
+    if (winnerToken && !this.isStanding(clue)) this.stand('right', winnerToken, clue);
+    // Where this clue's snapshot now sits in the undo stack, and what it did.
+    // Both are what a walk-back needs, and neither is knowable until the rule
+    // has run.
+    if (this.isStanding(clue)) {
+      const st = this.standing;
+      st.depth = this.m.undoStack.length;
+      st.recordAt = (this.m.record?.clues.length ?? 0) - 1;
+      st.endedStumper = !winnerToken;
+      st.missedIds = [...(entry.missedIds || [])];
+    }
     this.state = 'narrating';
     const g = this.m.game;
     const nameOf = (t) => this.m.roster.get(t)?.name || 'somebody';
@@ -473,6 +512,396 @@ export class Autohost {
       }
       this.handover();
     });
+  }
+
+  // ------------------------------------------------------------ objections
+  //
+  // The room polices the host. Any player — in the ring, queued or eliminated
+  // — can press O from the moment a ruling is spoken until the *next* ruling
+  // is spoken. That window is one whole clue cycle, so the board goes straight
+  // back to the players the instant a ruling lands and nobody ever waits on a
+  // vote that will usually never come. Objections are rare by assumption; the
+  // common case must not pay for the rare one.
+  //
+  // Two thresholds, whichever is met first: a simple majority of everybody in
+  // the match, or two-thirds of the ring. Two, because the roster is thirty
+  // and the ring is three — a majority of the room lets the crowd correct a
+  // host that is plainly wrong, and two-thirds of the ring lets the people
+  // with money on the clue correct it without needing twenty-five spectators
+  // to look up from their drinks. The answering player's own O counts.
+  //
+  // Nothing here re-fires a rule. A reversal is a walk-back: `undoStack` holds
+  // a snapshot of the whole engine before every scored clue, so the server
+  // restores it and re-runs the same `resolveClue` the other way round. Where
+  // the walk-back cannot express what the room wants — three players were
+  // ruled wrong, or a *right* was overruled and the race that should have
+  // followed cannot be run minutes later — the room is asked directly, and the
+  // clue is thrown out only if it cannot decide.
+
+  /**
+   * A ruling has been spoken. It is now the one the room may object to, and
+   * whatever was standing before it has run out of time.
+   */
+  stand(kind, token, clue) {
+    // A walk-back's own re-resolve is not a ruling; there is no objecting to
+    // an objection.
+    if (this.walkback) return;
+    if (this.standing && !this.standing.done) this.lapse(this.standing);
+    this.standing = {
+      id: ++this.rulingSeq,
+      kind, token,
+      clue: clue ? { slot: clue.slot, row: clue.row, category: clue.category,
+        value: clue.value, answer: clue.answer } : null,
+      control: this.pickControl,
+      votes: new Set(),
+      open: false,
+      depth: null, recordAt: null, endedStumper: false, missedIds: [],
+      done: false,
+    };
+  }
+
+  /** Is `clue` the one the standing ruling is about? */
+  isStanding(clue) {
+    const st = this.standing;
+    return !!(st && !st.done && st.clue && clue
+      && st.clue.slot === clue.slot && st.clue.row === clue.row);
+  }
+
+  /**
+   * How many objections it would take, right now.
+   *
+   * Robots are left out of both denominators, which the design did not
+   * contemplate and a room with robots in it makes unavoidable: a robot cannot
+   * press O, so counting them is counting votes that can never be cast — in a
+   * field half full of them the all-players threshold would be unreachable by
+   * arithmetic rather than by disagreement.
+   *
+   * The tolerance is not superstition, and it is not floating-point paranoia
+   * either — it is the setup page. Two-thirds of a ring of three is exactly
+   * two, but the page stores the share as a whole percentage because "67" is
+   * something a host can type and 0.6666666666666666 is not. Three times 0.67
+   * is 2.01, and a bare `ceil` would make a ring of three unanimous when the
+   * settled rule says two. So the share is treated as accurate to the half
+   * percent it is stored at, which over a ring of n is half a percent of n —
+   * negligible for a big ring and exactly what rescues a small one.
+   *
+   * What that produces, at the shipped two thirds however it was stored:
+   *
+   *     ring   2  3  4  5  6  100
+   *     needs  2  2  3  4  4   67
+   *
+   * and at three quarters, a ring of three needs all three and a ring of four
+   * needs three — which is the point of the field being a dial rather than a
+   * constant.
+   */
+  objectionCounts() {
+    const g = this.m.game;
+    const people = [...g.players.values()].filter((p) => !this.m.bots.has(p.id));
+    const ring = people.filter((p) => p.state === 'live');
+    const frac = Number(this.m.settings.ringSupermajority) || 2 / 3;
+    const tol = 0.005 * ring.length + 1e-9;
+    return {
+      of: people.length,
+      ring: ring.length,
+      needAll: Math.floor(people.length / 2) + 1,
+      needRing: ring.length ? Math.max(1, Math.ceil(ring.length * frac - tol)) : Infinity,
+      ringVotes: (st) => (st ? [...st.votes].filter((t) => g.players.get(t)?.state === 'live').length : 0),
+    };
+  }
+
+  /** One player pressed O. */
+  onObject(token) {
+    if (this.stopped) return { error: 'the match is over' };
+    if (this.m.settings.objections === false) return { error: 'objections are switched off' };
+    const st = this.standing;
+    if (!st || st.done) return { error: 'there is no ruling to object to' };
+    if (!this.m.game.players.get(token)) return { error: 'you are not in this match' };
+    if (st.votes.has(token)) return { ok: true, votes: st.votes.size, already: true };
+
+    st.votes.add(token);
+    const first = !st.open;
+    st.open = true;
+    if (first) {
+      this.say(MIKE, 'Objection on the last ruling. Press O to join.');
+      this.log('autohost', { event: 'objection-opened', ruling: st.id,
+        by: this.m.roster.get(token)?.name, kind: st.kind });
+    }
+    const c = this.objectionCounts();
+    const met = st.votes.size >= c.needAll || c.ringVotes(st) >= c.needRing;
+    this.pushState();
+    if (met) this.reverse(st);
+    return { ok: true, votes: st.votes.size, met };
+  }
+
+  /** What one player's buzzer should show about the objection. */
+  objectionView(token) {
+    const st = this.standing;
+    if (!st || st.done || !st.open) return null;
+    const c = this.objectionCounts();
+    return { votes: st.votes.size, ring: c.ringVotes(st), of: c.of,
+      needAll: c.needAll, needRing: c.needRing === Infinity ? null : c.needRing,
+      mine: st.votes.has(token),
+      on: st.clue ? `${st.clue.category} for $${money(st.clue.value)}` : null };
+  }
+
+  /** The window closed with too few. Nothing is said; the count is kept. */
+  lapse(st) {
+    st.done = true;
+    if (!st.open) return;
+    const c = this.objectionCounts();
+    this.log('autohost', { event: 'objection-lapsed', ruling: st.id, votes: st.votes.size,
+      needAll: c.needAll, needRing: c.needRing });
+    this.writeObjection(st, { met: false, shape: 'lapsed' });
+    this.pushState();
+  }
+
+  /** Everyone who gave an answer on the objected clue, in the order they did. */
+  answerersOf(st) {
+    if (!st.clue) return [];
+    const key = `${st.clue.slot}:${st.clue.row}`;
+    const seen = new Map();
+    for (const r of this.heardText) {
+      if (r.kind !== 'answer' || r.clue !== key) continue;
+      if (!String(r.text || '').trim()) continue;   // a timeout is not an answer
+      seen.set(r.token, { token: r.token, name: r.name || 'somebody', text: r.text });
+    }
+    return [...seen.values()];
+  }
+
+  /** Is the objected clue still the one on the board, unresolved? */
+  stillUp(st) {
+    const c = this.m.clue;
+    return !!(c && st.clue && c.slot === st.clue.slot && c.row === st.clue.row);
+  }
+
+  /**
+   * Which of the three shapes this reversal is.
+   *
+   * `clean`    the clue never ended — the reopened race is still running, so
+   *            closing it and paying the objected player is the whole job.
+   * `snapshot` the clue ended as a stumper, exactly one person answered on it,
+   *            and nothing has been ruled since: the snapshot says precisely
+   *            what to put back.
+   * everything else is ambiguous and belongs to the room.
+   */
+  shapeOf(st) {
+    if (st.kind === 'wrong' && this.stillUp(st)) return 'clean';
+    if (st.kind === 'wrong' && st.endedStumper && this.answerersOf(st).length === 1
+      && st.depth != null && this.m.undoStack.length === st.depth) return 'snapshot';
+    return 'ambiguous';
+  }
+
+  /** Enough objections arrived. Put it right. */
+  reverse(st) {
+    st.done = true;
+    st.open = false;
+    const shape = this.shapeOf(st);
+    this.log('autohost', { event: 'objection-met', ruling: st.id, votes: st.votes.size, shape });
+
+    if (shape === 'clean' || shape === 'snapshot') {
+      const name = this.m.roster.get(st.token)?.name || 'that';
+      this.say(MIKE, `The room overrules me. ${name}, that is good.`);
+      const ok = this.settle(st, st.token);
+      this.writeObjection(st, { met: true, shape: ok ? 'reversed' : 'late' });
+      if (!ok) this.tooLate();
+      return;
+    }
+
+    // A reversed *right* has exactly one candidate — the player the room just
+    // overruled — so there is nothing to vote on. The rules say a miss reopens
+    // the race, and that race cannot be run now, minutes later, with the
+    // answer already spoken to the room. The clue goes.
+    if (st.kind === 'right') {
+      this.say(MIKE, 'The room overrules me.');
+      const ok = this.settle(st, null);
+      this.writeObjection(st, { met: true, shape: ok ? 'voided' : 'late' });
+      if (!ok) this.tooLate();
+      return;
+    }
+
+    this.openAward(st);
+  }
+
+  /**
+   * Put the objected clue back the way the room says it should have gone.
+   *
+   * `winnerToken` null throws the clue out. Returns false when the walk-back
+   * can no longer reach it, which is the "too late" case: the next clue was
+   * ruled on while this was being decided, so its snapshot sits on top of the
+   * objected one and popping would undo the wrong clue.
+   */
+  settle(st, winnerToken) {
+    this.walkback = true;
+    try {
+      const { slot, row } = st.clue;
+
+      // Still on the board: no snapshot to walk back through. Lift the
+      // lockout and rule it the other way, which keeps the buzz times in the
+      // record — an undo and re-resolve would throw them away.
+      if (this.stillUp(st)) {
+        this.clearTimers();
+        this.closeWindow();
+        if (this.m.race) this.m.race.open = false;
+        if (winnerToken) {
+          this.m.race?.lockedOut.delete(winnerToken);
+          this.act.runResolve({ winnerToken });
+          return true;
+        }
+        this.m.clue = null; this.m.race = null;
+        this.act.voidClue(slot, row);
+        this.handBack(st);
+        return true;
+      }
+
+      // Otherwise the game has moved on. Abandon whatever is in progress —
+      // its card was never revealed, so it simply goes back on the board and
+      // will be picked again — then walk back through the snapshot.
+      this.clearTimers();
+      this.closeWindow();
+      this.m.clue = null; this.m.race = null;
+      if (st.depth == null || this.m.undoStack.length !== st.depth) return false;
+      if (!this.act.runUndo()) return false;
+
+      if (winnerToken) {
+        this.act.reresolve({ slot, row, winnerToken,
+          missedTokens: (st.missedIds || []).filter((t) => t !== winnerToken) });
+      } else {
+        this.act.voidClue(slot, row);
+        this.handBack(st);
+      }
+      return true;
+    } catch (e) {
+      this.log('autohost', { event: 'error', where: 'objection', error: e.message });
+      return false;
+    } finally {
+      this.walkback = false;
+    }
+  }
+
+  /**
+   * A thrown-out clue pays nobody, so nobody won the board with it: it goes
+   * back to whoever called the clue, and the room still hears the answer
+   * rather than being left hanging.
+   */
+  handBack(st) {
+    const back = st.control;
+    this.m.control = back && this.m.game.players.get(back)?.state === 'live' ? back : this.m.control;
+    this.standing = null;
+    const back_to_board = () => { this.pushState(); this.handover(); };
+    if (st.clue?.answer) {
+      this.say(MIKE, 'That clue is thrown out.');
+      this.say(MIKE, `The correct response: ${st.clue.answer}.`, { then: back_to_board });
+    } else {
+      this.say(MIKE, 'That clue is thrown out.', { then: back_to_board });
+    }
+  }
+
+  tooLate() {
+    this.say(MIKE, 'That vote came too late. The ruling stands.');
+    this.pushState();
+  }
+
+  // ---------------------------------------------------------- the award vote
+
+  /**
+   * The room said the host was wrong but not about whom. Ask it.
+   *
+   * Every buzzer gets the players who answered on that clue, with what the
+   * transcript heard each of them say, and "nobody — throw it out". Plurality
+   * wins; a tie or an empty vote throws the clue out, because a room that
+   * cannot choose has not made a case for taking money off anybody. The game
+   * keeps going underneath — the vote is a popup, not a pause.
+   */
+  openAward(st) {
+    const candidates = this.answerersOf(st);
+    if (!candidates.length) {
+      const ok = this.settle(st, null);
+      this.writeObjection(st, { met: true, shape: ok ? 'voided' : 'late' });
+      if (!ok) this.tooLate();
+      return;
+    }
+    const secs = Number(this.m.settings.awardSeconds || 15);
+    this.award = { st, candidates, votes: new Map(), closesAt: Date.now() + secs * 1000 };
+    this.say(MIKE, 'The room overrules me. Who had it? Vote on your buzzer.');
+    this.pushState();
+    // A bare timer, not `after`: `clearTimers()` cancels what the host was
+    // going to do next, and the game is deliberately still running underneath
+    // this vote — the next pick would cancel the count and the popup would sit
+    // on thirty screens forever. Same reason the clip waits are bare.
+    clearTimeout(this.awardTimer);
+    this.awardTimer = setTimeout(() => this.closeAward(), secs * 1000);
+  }
+
+  onAwardVote(token, { to }) {
+    if (this.stopped) return { error: 'the match is over' };
+    const a = this.award;
+    if (!a) return { error: 'there is no vote open' };
+    if (!this.m.game.players.get(token)) return { error: 'you are not in this match' };
+    const pick = to == null ? null : String(to);
+    if (pick !== null && !a.candidates.some((c) => c.token === pick)) return { error: 'not a candidate' };
+    a.votes.set(token, pick);
+    this.pushState();
+    return { ok: true, votes: a.votes.size };
+  }
+
+  awardView() {
+    const a = this.award;
+    if (!a) return null;
+    return { candidates: a.candidates.map((c) => ({ token: c.token, name: c.name, text: c.text })),
+      votes: a.votes.size, closesAt: a.closesAt,
+      on: a.st.clue ? `${a.st.clue.category} for $${money(a.st.clue.value)}` : null };
+  }
+
+  closeAward() {
+    const a = this.award;
+    if (!a || this.stopped) return;
+    this.award = null;
+    const tally = new Map();
+    for (const v of a.votes.values()) tally.set(v, (tally.get(v) || 0) + 1);
+    let best = null, bestN = 0, tied = false;
+    for (const [who, n] of tally) {
+      if (n > bestN) { best = who; bestN = n; tied = false; }
+      else if (n === bestN) tied = true;
+    }
+    // `best` can be null in two different ways — nobody voted, or the room
+    // voted to throw it out — and both mean the same thing here.
+    const to = tied || bestN === 0 ? null : best;
+    this.log('autohost', { event: 'award-closed', ruling: a.st.id, votes: a.votes.size,
+      to: to ? this.m.roster.get(to)?.name : null, tied });
+    const ok = this.settle(a.st, to);
+    this.writeObjection(a.st, { met: true, shape: ok ? (to ? 'awarded' : 'voided') : 'late',
+      award: { to: to ? this.m.roster.get(to)?.name : null, votes: bestN, of: a.votes.size } });
+    if (!ok) return this.tooLate();
+    if (to) this.say(MIKE, `The room gives it to ${this.m.roster.get(to)?.name}.`);
+    this.pushState();
+  }
+
+  /**
+   * What the room decided, in the record.
+   *
+   * It goes two places on purpose: on the clue, so a reader of one match sees
+   * it in context, and in `corrections` beside the undos and delay changes, so
+   * the analysis chat can count how often the room disagrees with the judge —
+   * the number that decides when the judge is good enough — without walking
+   * every clue of every log.
+   */
+  writeObjection(st, { met, shape, award = null }) {
+    const c = this.objectionCounts();
+    const payload = { votes: st.votes.size, of: c.of, ring: c.ringVotes(st),
+      needAll: c.needAll, needRing: c.needRing === Infinity ? null : c.needRing,
+      met, shape, ruling: st.kind, on: this.m.roster.get(st.token)?.name || null,
+      ...(award ? { award } : {}) };
+    const clues = this.m.record?.clues;
+    if (clues?.length) {
+      // A walk-back replaced the clue's row, so the newest one is the objected
+      // clue; a lapse left the original in place where it always was.
+      const row = shape === 'lapsed' && st.recordAt != null && clues[st.recordAt]
+        ? clues[st.recordAt] : clues[clues.length - 1];
+      if (row) row.objection = payload;
+    }
+    this.m.corrections?.push({ at: this.m.elapsed(), clue: this.m.game.cluesRevealed,
+      type: 'objection', category: st.clue?.category, value: st.clue?.value, ...payload });
+    this.m.note('objection', payload);
   }
 
   // ------------------------------------------------------------- speaking
@@ -658,6 +1087,8 @@ export class Autohost {
       spoke: this.spoke.length, fromClock: this.spoke.filter((s) => s.fromClock).length,
       listening: this.window ? { kind: this.window.kind, name: this.m.roster.get(this.window.token)?.name || null } : null,
       transcripts: this.heardText.slice(-8),
+      objection: this.objectionView(null),
+      award: this.awardView(),
       backlog: { ...this.backlog, depth: this.jobs.length } };
   }
 }

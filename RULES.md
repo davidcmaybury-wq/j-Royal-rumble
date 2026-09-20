@@ -351,6 +351,16 @@ bandwidth. One screen in the room can turn on sound.
 
 ## 13. WHEN THE COMPUTER HOSTS
 
+<!-- Past Discord's 2,000-character cap since the host learned to listen, to
+     rule and to be overruled. Post as two messages,
+     breaking before "When you win a buzz" — count before posting; Discord
+     truncates silently.
+     Keep `before "the marker"` on one line, and the marker itself unwrapped:
+     the check in test/guides.mjs looks for that phrase and then matches the
+     quoted text verbatim against the block, so a line break anywhere in either
+     finds nothing and reports the block as unsplit. Both halves of that cost
+     a run here. -->
+
 **ALPHA — this has never been played in a real room.** It works in testing and
 it will have rough edges in front of people. Somebody keeps a console open, and
 anyone at one can rule a clue or end the match.
@@ -382,6 +392,22 @@ nothing but the words it heard &mdash; we never receive or store audio.
 Anything else, or saying no to the microphone, costs you nothing: click your
 clues and answer on the call instead, the way the game has always worked, and
 a player at a console can still rule.
+
+**Object with O if Mike gets it wrong.** Any player can — in the ring, in the
+queue, or already out — from the moment a ruling is spoken until the next one
+is. The ruling is reversed if **a majority of everybody in the match** objects,
+or **two thirds of the players in the ring**, whichever comes first. Your own
+objection to a ruling against you counts like anybody else's.
+
+The board goes straight back out while objections are collected, so nothing
+stops to wait for a vote that usually never comes. When enough arrive, Mike
+walks the clue back and settles it the other way. Where that is ambiguous —
+two players were both ruled wrong, say — every buzzer gets a popup listing who
+answered and what Mike heard them say, and **fifteen seconds** to pick one or
+to throw the clue out. Most votes wins; a tie throws it out. **A thrown-out
+clue pays nobody and charges nobody, and it does not count toward the entry
+clock** — as far as the match is concerned it was never read. The board goes
+back to whoever called it.
 
 ---
 

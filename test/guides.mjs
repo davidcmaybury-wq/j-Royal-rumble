@@ -62,6 +62,21 @@ check('and says we never receive or store the audio, not that none is sent',
 check('and names the browsers that can do it', /Chrome and Edge/.test(g));
 check('and says what to do when they cannot, so a refusal is not a dead end',
   /If you say no/.test(g));
+
+// The objection is the room's only check on a host that cannot be argued with,
+// so a player who does not know the key exists does not have it.
+check('the guide says which key objects', /press O<\/strong>|press O\b/i.test(g));
+check('and that anybody can, not just the ring',
+  /already out/.test(g) && /Anybody can object/i.test(g));
+check('and gives both thresholds, since either can be the close one',
+  /majority of\s*\n?\s*everybody in the match/i.test(g)
+  && /two thirds of the players in the ring/i.test(g));
+check('and says the game does not stop while they come in',
+  /carries on while objections/i.test(g));
+check('and explains the vote that follows an ambiguous one',
+  /fifteen\s*\n?\s*seconds to pick one or throw the clue out/i.test(g));
+check('and that a thrown-out clue costs nobody anything',
+  /thrown-out clue costs nobody anything/i.test(g));
 check('the banner identifies the page, not a bare heading',
   g.includes("markBanner") && /HOW TO PLAY/.test(g));
 
@@ -72,6 +87,18 @@ const adv = await (await fetch(`${U}/rules-101`)).text();
 for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
   check(`rules 101 covers ${m}`, adv.includes(m));
 }
+
+// The computer host's rules are in the same file the room reads before a match,
+// per the house rule that a rule landing in the engine and not in these files
+// is half a rule. `/rules-101` renders that file, so this reads the page rather
+// than the markdown and catches a rule that never made it through.
+check('the rules the room reads say the host listens',
+  /just say your answer/i.test(adv));
+check('and that O objects to a ruling', /Press O to object/i.test(adv));
+check('and name both thresholds',
+  /majority of the whole match/i.test(adv) && /two thirds of the ring/i.test(adv));
+check('and say what a thrown-out clue costs',
+  /nobody paid, nobody charged/i.test(adv));
 
 // The Discord copy is the source for the rules page; both must exist.
 const { readFileSync } = await import('fs');
