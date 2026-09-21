@@ -599,6 +599,17 @@ block with the seconds and a draining bar, and ticks it by hand because
 restart each time. `pagerefs.mjs` pins the order: `turn` is set before
 `ear.supported()` is consulted.
 
+**The category and value are shown, not spoken, and the pick clock is twenty
+seconds.** Both David's calls after the first live room (2026-09-20). The
+joined "Category. For $400." clip before every clue is gone from `onPicked`
+and from the background synthesis; the strip line and the lit card carry it.
+Only an autopick still says "I'll pick one." before the read. He also asked
+for no beat between the end of the read and the buzzers arming — there never
+was one: the 250 ms `SETTLE_MS` absorbs playback spread across clients and is
+not a pause, so leave it. `pickSeconds` went 12 → 20 (the answer window 5 → 7
+the day before): the countdown on the buzzer is what makes a long pick window
+affordable, because the room can see it is not a stall.
+
 **`hostView()` spreads `autohost.status()` and then overrides `heard`** with
 the playback spread, so a status field called `heard` is silently clobbered.
 The transcripts are called `transcripts` for that reason.

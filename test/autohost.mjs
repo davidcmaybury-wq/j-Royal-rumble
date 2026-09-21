@@ -103,12 +103,18 @@ console.log('THE BELL');
   await until(() => players.every((p) => p.shown >= 1), 3000);
   check('and the clue goes up for everybody', players.every((p) => p.shown >= 1));
 
-  await until(() => holder.said.some((m) => m.got > t0 && /For 100/.test(m.text)), 8000);
-  const cat = holder.said.find((m) => m.got > t0 && /For 100/.test(m.text));
-  check('Mike announces the category and value', !!cat && cat.host === 'mike', cat?.text);
-  await until(() => holder.said.filter((m) => m.got > t0).length >= 2, 15000);
-  const clueLine = holder.said.filter((m) => m.got > t0)[1];
-  check('then reads the clue text itself', !!clueLine && clueLine.text.length > 20, clueLine?.text?.slice(0, 50));
+  // The category and value are shown, not spoken — David's call after the
+  // first live room — so the first thing Mike says after a player's pick is
+  // the clue itself, and the strip line on every buzzer carries the rest.
+  await until(() => holder.said.some((m) => m.got > t0), 15000);
+  const clueLine = holder.said.find((m) => m.got > t0);
+  check('Mike does not recite the category and value before a clue',
+    !holder.said.some((m) => m.got > t0 && /For 100\./.test(m.text)),
+    holder.said.filter((m) => m.got > t0).map((m) => m.text.slice(0, 30)).join(' / '));
+  check('the first thing he says is the clue text itself', !!clueLine && clueLine.text.length > 20, clueLine?.text?.slice(0, 50));
+  await until(() => /Mike is reading .* for \$100/.test(holder.V?.host?.line || ''), 3000);
+  check('and the category and value are on the strip instead', /Mike is reading .* for \$100/.test(holder.V?.host?.line || ''),
+    holder.V?.host?.line);
   await until(() => holder.arms.length >= 1, clueLine ? clueLine.durationMs + 4000 : 15000);
   const arm = holder.arms[0];
   const expected = clueLine ? clueLine.got + clueLine.durationMs : null;

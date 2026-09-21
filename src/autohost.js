@@ -31,7 +31,7 @@
 // the clock — `readingTimeMs` — with the text already on every screen. The
 // fallback is a counted event, not a silent one.
 
-import { speak, speakJoined, voiceFor, readingTimeMs, status as ttsStatus, TtsError } from './tts.js';
+import { speak, voiceFor, readingTimeMs, status as ttsStatus, TtsError } from './tts.js';
 import { matchPick } from './pick-match.js';
 
 export const MIKE = 'mike';
@@ -207,13 +207,16 @@ export class Autohost {
     this.pickControl = this.m.control;
     this.line = `Mike is reading ${c.category} for $${money(c.value)}`;
     this.pushState();
-    // The category and value are one joined clip from two cached parts, so a
-    // category is synthesized once per board and a value once ever.
-    const parts = [{ text: `${c.category}.`, voice: voiceFor(MIKE) }, { text: `For ${money(c.value)}.`, voice: voiceFor(MIKE) }];
-    if (this.pickedBy === 'host') parts.unshift({ text: "I'll pick one.", voice: voiceFor(MIKE) });
+    // The category and value are on every screen — this line on the strip,
+    // the card lit on the board — and not spoken. They were, as one joined
+    // clip before every clue, until the first live room (2026-09-20): David
+    // did not want them recited, and a room that can see the board does not
+    // need to hear it. Only an autopick still says anything before the clue,
+    // because a card lighting up that nobody called wants one word of why.
+    const byHost = this.pickedBy === 'host';
     this.pickedBy = null;
     this.chain = this.chain
-      .then(() => this.playJoined(MIKE, parts))
+      .then(() => (byHost ? this.play(MIKE, "I'll pick one.") : undefined))
       .then(() => this.play(MIKE, c.text, { clue: true }))
       .then(() => {
         if (this.stopped || this.m.clue !== c || this.m.race?.open) return;
@@ -961,13 +964,6 @@ export class Autohost {
     return this.emitClip(host, text, clip, why);
   }
 
-  async playJoined(host, parts) {
-    if (this.stopped) return;
-    let clip = null, why = null;
-    try { clip = await speakJoined(parts); } catch (e) { why = e instanceof TtsError ? e.message : `voice: ${e.message}`; }
-    return this.emitClip(host, parts.map((p) => p.text).join(' '), clip, why);
-  }
-
   emitClip(host, text, clip, why) {
     const sid = ++this.seq;
     const at = Date.now();
@@ -1044,12 +1040,11 @@ export class Autohost {
   /** Every clue on the board, and every category title, lowest priority. */
   queueBoard() {
     const g = this.m.game;
-    const mult = g.overtimeMultiplier();
+    // Clue text only: the category and value are shown, not spoken, since
+    // 0.100.5 — see onPicked.
     g.board.forEach((c) => {
-      this.enqueue(2, `${c.title}.`, MIKE);
       c.clues.forEach((x) => {
         if (x.revealed) return;
-        this.enqueue(2, `For ${money([100, 200, 300, 400, 500][x.row - 1] * mult)}.`, MIKE);
         this.enqueue(3, x.text, MIKE);
       });
     });

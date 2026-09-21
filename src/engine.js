@@ -252,10 +252,14 @@ export const DEFAULT_SETTINGS = {
   // treat it like every other setting — see src/autohost.js.
   autohost: false,
   // How long the player holding the board gets to call the next clue before
-  // the host calls one for them. Twelve seconds, by David's call: long enough
-  // to read six categories, short enough that a player who stepped away does
-  // not stall thirty people.
-  pickSeconds: 12,
+  // the host calls one for them. Twelve seconds at first, by David's call —
+  // long enough to read six categories, short enough that a player who
+  // stepped away does not stall thirty people. Twenty since the first live
+  // room (2026-09-20), also his call: this is the one clock the game can
+  // afford to be generous with, and the countdown on the buzzer now tells the
+  // holder exactly where they stand, so a long window no longer reads as a
+  // stall to the rest of the room.
+  pickSeconds: 20,
   // How long the player on the clock has to say their answer. It shipped at
   // five, matching what the show gives and what Matt Schiffler's j-trivia
   // autohost settled on for the same job; the first live room (2026-09-20)

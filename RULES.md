@@ -379,7 +379,8 @@ can. The buzzers arm the moment Mike finishes the read.
 bell that's draw number 1; after that it's whoever last answered correctly, and
 it stays put on a stumper. Say the category and the value &mdash; "presidents
 for four hundred" &mdash; or click the clue on the board in your buzzer window.
-Leave it twelve seconds and Mike picks one for you.
+You get twenty seconds, with a countdown on your buzzer, and then Mike picks one
+for you. The category and value show on screen rather than being read out.
 
 **When you win a buzz, say your answer.** Your microphone opens for five
 seconds and closes the moment you finish a sentence. You do not have to phrase
