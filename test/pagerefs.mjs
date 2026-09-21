@@ -597,5 +597,26 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
     !/querySelector\(\s*'\.entry'\s*\)\s*\)\s*return/.test(code), 'keydown');
 }
 
+// The buzzer's turn cue. The first live room (2026-09-20) missed a live
+// microphone signalled by a nine-pixel dot, and a browser with no speech
+// recognition got no cue at all, because the strip keyed off the mic session.
+// Pinned on the source: the window is recorded before the browser's support
+// is consulted, the strip renders the seconds and the bar off that window,
+// and the bar is ticked by hand, because render() rebuilds the strip on every
+// state push and a CSS animation would start over each time.
+{
+  const buzzer = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
+  const h = buzzer.indexOf("socket.on('listen'");
+  const handler = h < 0 ? '' : buzzer.slice(h, h + 1500);
+  const setAt = handler.indexOf('turn = {'), askAt = handler.indexOf('ear.supported()');
+  check('the buzzer records its turn window before asking whether the browser can listen',
+    h >= 0 && setAt > 0 && askAt > 0 && setAt < askAt, `turn at ${setAt}, supported at ${askAt}`);
+  check('and the turn strip renders the seconds and a draining bar off that window',
+    /class="hostline turn turn-\$\{/.test(buzzer) && /class="secs"/.test(buzzer) && /class="winbar"/.test(buzzer));
+  check('and ticks the bar by hand rather than restarting a CSS animation each render',
+    /function tickTurn\(\)/.test(buzzer) && /setInterval\(tickTurn/.test(buzzer)
+    && !/\.winbar i\{[^}]*animation/.test(buzzer));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

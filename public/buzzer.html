@@ -47,6 +47,29 @@ animation:micpulse 1s ease-in-out infinite}
 @keyframes micpulse{0%,100%{opacity:1}50%{opacity:.35}}
 @media (prefers-reduced-motion:reduce){.hostline .dotmic{animation:none}}
 .hostline .said{color:var(--slate);font-style:italic}
+/* Your window, unmistakable. Still a strip in the flow of the page — never
+   fixed, never over the buzzer — but the size of the moment, with a bar that
+   drains on the server's clock and the seconds in large type. The first live
+   room (2026-09-20) missed a live microphone signalled by a nine-pixel dot.
+   Keyed off the server's window rather than the mic session, so a browser
+   with no speech recognition is still told it is on the clock. */
+.hostline.turn{display:block;padding:14px 14px 12px;font-size:17px;line-height:1.3;color:var(--ink);
+border:2px solid var(--live);background:#0F2A1F;animation:turnpulse 1.2s ease-in-out infinite}
+.hostline.turn.turn-pick{border-color:var(--brass);background:#2A2208;animation:none}
+.hostline.turn.turn-answer .who{color:var(--live)}
+.hostline.turn .turnrow{display:flex;align-items:center;gap:12px}
+.hostline.turn .who{font-size:12px}
+.hostline.turn.turn-pick .who{color:var(--brass)}
+.hostline.turn .secs{font-family:"IBM Plex Mono",monospace;font-size:28px;font-weight:700;min-width:1.4em;
+text-align:right;color:var(--chalk);flex:none}
+.hostline.turn .winbar{height:8px;margin-top:10px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}
+.hostline.turn .winbar i{display:block;height:100%;background:var(--live);border-radius:4px;transition:width .1s linear}
+.hostline.turn.turn-pick .winbar i{background:var(--brass)}
+.hostline.turn.urgent{border-color:var(--alarm);animation:none}
+.hostline.turn.urgent .winbar i{background:var(--alarm)}
+.hostline.turn.urgent .secs{color:#FFC9C9}
+@keyframes turnpulse{0%,100%{box-shadow:0 0 0 0 rgba(80,220,140,0)}50%{box-shadow:0 0 0 6px rgba(80,220,140,.28)}}
+@media (prefers-reduced-motion:reduce){.hostline.turn{animation:none}}
 .soundnag{margin:0 16px 8px;padding:10px 12px;border-radius:10px;background:#3A2D08;border:1px solid var(--brass);
 color:#FFD98A;font-size:13px;cursor:pointer}
 .objline{display:flex;align-items:center;gap:10px;margin:0 16px 8px;padding:8px 12px;
@@ -951,9 +974,35 @@ const voice = attachHostVoice(socket, {
 // dictation feature; only the resulting words ever reach us.
 let session = null, micTrouble = null, heardNow = '';
 
+// Your window on the clock, for the turn strip. Separate from `session` on
+// purpose: the window is the server's and the strip has to show it whether or
+// not this browser can listen. Ticked by hand rather than a CSS animation,
+// because render() rebuilds the strip on every state push and an animation
+// would start over each time.
+let turn = null, turnTick = null;
+function endTurn() { turn = null; clearInterval(turnTick); turnTick = null; }
+function tickTurn() {
+  if (!turn) return;
+  const left = Math.max(0, turn.at + turn.ms - Date.now());
+  const box = root.querySelector('.hostline.turn');
+  if (box) {
+    const bar = box.querySelector('.winbar i');
+    if (bar) bar.style.width = (left / turn.ms * 100).toFixed(1) + '%';
+    const s = box.querySelector('.secs');
+    if (s) s.textContent = Math.ceil(left / 1000);
+    box.classList.toggle('urgent', left <= 3000);
+  }
+  if (!left) { endTurn(); render(); }
+}
+
 socket.on('listen', (w) => {
   if (session) { session.stop(); session = null; }
-  if (w.close || !w.ms) { heardNow = ''; render(); return; }
+  if (w.close || !w.ms) { heardNow = ''; endTurn(); render(); return; }
+  // The cue first, before anything about the microphone: a player whose
+  // browser cannot listen is still the one on the clock.
+  turn = { kind: w.kind, ms: w.ms, at: Date.now() };
+  clearInterval(turnTick); turnTick = setInterval(tickTurn, 100);
+  try { if (navigator.vibrate) navigator.vibrate(w.kind === 'answer' ? [120, 60, 120] : 120); } catch (e) {}
   if (!ear.supported()) {
     micTrouble = 'this browser cannot do speech recognition \u2014 use Chrome, or click a clue on the board';
     render();
@@ -1010,6 +1059,26 @@ function hostStrip() {
       : (V.host && V.host.line) || 'Waiting for the host';
   const said = heardNow ? `<span class="said">&ldquo;${heardNow}&rdquo;</span>` : '';
   const trouble = micTrouble ? `<div class="soundnag">${micTrouble}</div>` : '';
+  // On the clock: the strip becomes the turn cue, with the seconds and a bar
+  // draining on the server's window (tickTurn keeps both moving between
+  // renders). The window is the server's, so this shows even when the
+  // browser cannot listen — that player answers on the call, and still needs
+  // to know now is the moment.
+  const left = turn ? Math.max(0, turn.at + turn.ms - Date.now()) : 0;
+  if (turn && left > 0) {
+    const pick = turn.kind === 'pick';
+    const can = ear.supported();
+    const what = pick
+      ? (full ? 'Your call — say the category and the amount, or click a clue on the board.'
+        : can ? 'Your call — say the category and the amount.'
+          : 'Your call — show the board here and click a clue.')
+      : (can ? 'Say your answer now.' : 'Answer on the call now — this browser cannot listen.');
+    return `${nag}${trouble}<div class="hostline turn turn-${pick ? 'pick' : 'answer'}${left <= 3000 ? ' urgent' : ''}">`
+      + `<div class="turnrow">${listening ? '<span class="dotmic"></span>' : ''}<span class="who">${
+        pick ? 'Your call' : 'Answer'}</span><span class="what">${what}</span>${said}`
+      + `<span class="secs">${Math.ceil(left / 1000)}</span></div>`
+      + `<div class="winbar"><i style="width:${(left / turn.ms * 100).toFixed(1)}%"></i></div></div>`;
+  }
   // Said on every screen in the match, not tucked in a setting somebody else
   // ticked: the people it can go wrong for are the players, and they did not
   // choose it.

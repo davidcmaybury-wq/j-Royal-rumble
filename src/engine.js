@@ -256,12 +256,16 @@ export const DEFAULT_SETTINGS = {
   // to read six categories, short enough that a player who stepped away does
   // not stall thirty people.
   pickSeconds: 12,
-  // How long the player on the clock has to say their answer. Five seconds,
-  // matching what the show gives and what Matt Schiffler's j-trivia autohost
-  // settled on for the same job; the window closes early the moment the
-  // recognizer commits to a sentence, so this is the outer bound rather than
-  // the usual wait.
-  answerSeconds: 5,
+  // How long the player on the clock has to say their answer. It shipped at
+  // five, matching what the show gives and what Matt Schiffler's j-trivia
+  // autohost settled on for the same job; the first live room (2026-09-20)
+  // found five too quick, by David's call, and it is seven now. The show's
+  // five is against a human host who has already looked at you; here the
+  // recognizer has to open and commit inside the same window, and the cue
+  // that it is open was a nine-pixel dot. The window still closes early the
+  // moment the recognizer commits to a sentence, so this is the outer bound
+  // rather than the usual wait.
+  answerSeconds: 7,
   // The room's check on the host. `objections: false` switches it off
   // entirely; the two thresholds are a majority of everybody in the match or
   // this fraction of the ring, whichever is met first. Two thirds exactly, not

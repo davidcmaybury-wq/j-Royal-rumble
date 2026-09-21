@@ -587,6 +587,18 @@ card now links `/host/CODE#key` in a new tab; `test/setup.mjs` pins it on the
 source. And `RUMBLE_TTS=piper` is the switch: `PIPER_BIN` and `PIPER_DATA_DIR`
 alone leave the engine at `silent`, which the HOSTING recipe used to omit.
 
+**The turn cue keys off the server's window, not the mic session.** The first
+live room (2026-09-20) found the answer window too quick and the cue for it
+invisible: a nine-pixel dot on the host strip, and only when `session` existed
+— so a browser with no speech recognition got no cue at all while it was the
+one on the clock. `answerSeconds` is 7 now (David's call; the show's 5 is
+against a host who has already looked at you). The buzzer keeps `turn` from
+the `listen` event separately from `session`, renders the strip as a turn
+block with the seconds and a draining bar, and ticks it by hand because
+`render()` rebuilds the strip on every state push — a CSS animation would
+restart each time. `pagerefs.mjs` pins the order: `turn` is set before
+`ear.supported()` is consulted.
+
 **`hostView()` spreads `autohost.status()` and then overrides `heard`** with
 the playback spread, so a status field called `heard` is silently clobbered.
 The transcripts are called `transcripts` for that reason.
