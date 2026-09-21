@@ -558,6 +558,25 @@ naming the variable.
 and `runMarkWrong` want to say it; `suppressWrongLine` silences the second.
 `test/autohost.mjs` counts the lines rather than trusting it.
 
+**A robot on the clock was never ruled on, and the match sat until the
+reaper.** `onBotSaid` was written in step three, when a console still pressed
+Correct / Wrong, so it read the robot's line and stopped. Steps four and five
+taught the host to rule on people and left robots to a console that no longer
+existed: no answer window opens for a robot (`onLeader` is people only) and
+`onRaceTimeout` needs an empty race. David's first two autohost matches on the
+box locked at the first race a robot won, and the record said so — `clues: 0`,
+`answers: 2` with one `verdict: null`, the judge never called. Fixed 0.100.1:
+`onBotSaid` rules on `kind` (the server's `botCorrect`) after the line, which is
+what `docs/autohost-design.md` had specified all along. Two things worth
+keeping from the chase. **The robots stopping was the tell**: they are
+server-driven, so a room where nothing moves without a person is a stalled
+chain, not a frozen browser — and the journal was clean because nothing threw,
+a promise simply had no successor. And `voice.engine: silent` on `/api/health`
+is a box with no Piper, not a symptom: the host reads from the clock with the
+text on screen and nobody hears a thing, by design. Every autohost suite until
+then played with human sockets; `test/autohost.mjs` now runs a match of three
+robots and nobody else, which is the room that locked.
+
 **`hostView()` spreads `autohost.status()` and then overrides `heard`** with
 the playback spread, so a status field called `heard` is silently clobbered.
 The transcripts are called `transcripts` for that reason.

@@ -337,6 +337,86 @@ console.log('\nWHAT THE RECORD AND THE HEALTH PAGE SAY');
   check('ending the match stops the host', H.phase === 'over');
 }
 
+console.log('\nA ROBOT ON THE CLOCK');
+{
+  // Its own match, and all robots: the four people above never buzz unless
+  // told to, and a robot loose in that room would take the stumper the host
+  // is meant to settle alone. Three elites play this one by themselves — the
+  // draw-1 robot's pick is performed, the read arms the buzzers, a robot wins
+  // the race and says its line — which is exactly where David's first two
+  // autohost matches on the box stopped: `onBotSaid` read the line and
+  // nothing ruled, no window and no timeout pending, until the reaper. So
+  // the assertions are that a robot's answer is ruled on straight off
+  // `botCorrect`, that the ruling is on the record as a robot's, and that the
+  // loop reaches a second clue with no person in the room.
+  const r2 = await (await fetch(`${U}/api/match`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ settings: {
+      autohost: true, pickSeconds: 4, lecternSeconds: 1, delay: 0,
+      entryInterval: 99, startScore: 3000, ceiling: 9000, anonymousNext: false,
+    } }),
+  })).json();
+  const key = { 'content-type': 'application/json', 'x-host-key': r2.hostKey };
+  // No entrance music: nobody enters after the bell here, and the entrance
+  // wait is its own path with its own test.
+  const added = await (await fetch(`${U}/api/match/${r2.gameId}/bots`,
+    { method: 'POST', headers: key, body: JSON.stringify({ count: 3, level: 'elite', themes: false }) })).json();
+  check('three robots and nobody else', (added.roster || []).length === 3 && added.roster.every((p) => p.isBot),
+    JSON.stringify((added.roster || []).map((p) => p.name)));
+
+  const host2 = io(U, { transports: ['websocket'] });
+  await once(host2, 'connect');
+  let R = null;
+  const said = [], rulings = [], lines = [];
+  host2.on('state', (s) => { R = s; });
+  host2.on('bot-said', (e) => { for (const x of e.said || []) if (x.kind !== 'pick') said.push({ ...x, got: Date.now() }); });
+  host2.on('resolved', (e) => rulings.push({ ...e, got: Date.now() }));
+  host2.on('host-speaks', (m) => lines.push({ ...m, got: Date.now() }));
+  await new Promise((r) => host2.emit('host-join', { gameId: r2.gameId, hostKey: r2.hostKey }, (x) => { R = x.state; r(); }));
+  const ack = await new Promise((r) => host2.emit('start-match', {}, r));
+  const live = !!ack && !ack.error && await until(() => R?.phase === 'live', 5000);
+  check('a match of robots starts under the computer host', live, ack?.error || `phase ${R?.phase}`);
+
+  // Whether a given robot attempts a given clue is a roll of the dice, so wait
+  // for the first one that does rather than betting on the first clue.
+  const spoke = await until(() => said.length > 0, 60000);
+  check('a robot wins a race and the host reads its line', spoke,
+    spoke ? `${said[0].name}: ${said[0].text}` : 'no robot spoke in 60s');
+  const first = said[0] || { name: '', token: null, kind: 'right', got: Date.now() };
+  const right = first.kind === 'right';
+  const expect = new RegExp(`^${right ? 'Correct' : 'No'}, ${first.name}`);
+  const ruled = await until(() => lines.some((m) => m.got >= first.got && expect.test(m.text)), 15000);
+  check(`the host rules on it — ${right ? 'right' : 'wrong'} — straight off botCorrect, with no judge`, ruled,
+    ruled ? lines.filter((m) => m.got >= first.got).map((m) => m.text).slice(0, 3).join(' / ')
+      : `nothing after "${first.name} says:" in 15s: ${lines.slice(-2).map((m) => m.text).join(' / ')}`);
+  // The record rides the next state push, which can land a beat after the
+  // spoken line: wait for it rather than reading whatever snapshot is current.
+  const onRecord = () => (R?.autohost?.transcripts || []).find((t) => t.token === first.token && t.kind === 'answer');
+  await until(onRecord, 5000);
+  const rec = onRecord();
+  check('and the ruling is on the record as a robot’s, decided the way it was',
+    !!rec && rec.via === 'bot' && rec.verdict === (right ? 'correct' : 'wrong'), JSON.stringify(rec || null));
+  if (right) {
+    await until(() => R?.control === first.token, 4000);
+    check('a robot that answered takes the board', R?.control === first.token,
+      `${(R?.roster || []).find((x) => x.token === R?.control)?.name} has it`);
+  } else {
+    check('a robot ruled wrong is locked out and the race reopens',
+      (R?.race?.lockedOut || []).includes(first.token) && R?.race?.open === true,
+      JSON.stringify({ lockedOut: R?.race?.lockedOut, open: R?.race?.open }));
+  }
+  // The loop, not just the ruling: a second clue resolved means pick, read,
+  // race and rule all ran again without a person in the room.
+  const again = await until(() => rulings.length >= 2, 90000);
+  check('and the match goes on to a second clue with nobody human in it', again,
+    `${rulings.length} resolved, host state ${R?.autohost?.state}`);
+  check('with every robot ruling counted apart from the people', (R?.autohost?.rulings?.robots ?? 0) >= 1
+    || rulings.length < 1, JSON.stringify(R?.autohost?.rulings || null));
+  host2.emit('end-match');
+  await wait(400);
+  host2.close();
+}
+
 for (const p of players) p.s.close();
 host.close();
 console.log(fails ? `\n${fails} FAILED` : '\nall ok');

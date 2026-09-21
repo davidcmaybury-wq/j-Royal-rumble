@@ -396,16 +396,42 @@ export class Autohost {
     if (this.heardText.length > 400) this.heardText.shift();
   }
 
-  /** A robot took the buzz and said something. Read it to the room. */
+  /**
+   * A robot took the buzz and said something. Read it to the room, then rule.
+   *
+   * A robot on the clock has nothing to hear: the server already knows whether
+   * it is right (`botCorrect`, as `kind`), so this rules on that directly, the
+   * way the design says (docs/autohost-design.md, "Listen"). Until 0.100.1 it
+   * announced the line and stopped — a step-three leftover, when a console
+   * still pressed Correct / Wrong — and with the console gone nothing else
+   * ruled on a robot: no answer window opens for one (`onLeader` is people
+   * only) and `onRaceTimeout` needs an empty race. The match sat with the
+   * robot on the clock until the reaper ended it — David's first two autohost
+   * matches on the box, both locked at the first race a robot won — and the
+   * record showed it plainly as `clues: 0` with the judge never called.
+   */
   onBotSaid({ name, kind, text, token }) {
     if (this.stopped || kind === 'pick') return;
+    const clue = this.m.clue;
+    if (!token || !clue) return;
     // Recorded as well as spoken: a robot that was ruled wrong is as much a
     // candidate for an award vote as a person, and the room saw it answer.
-    if (token && this.m.clue) {
-      this.record({ kind: 'answer', token, text, clue: `${this.m.clue.slot}:${this.m.clue.row}`,
-        verdict: null, via: 'bot', ms: 0 });
-    }
-    this.say(MIKE, `${name} says: ${text}`);
+    const verdict = kind === 'right' ? 'correct' : 'wrong';
+    this.record({ kind: 'answer', token, text, clue: `${clue.slot}:${clue.row}`,
+      verdict, via: 'bot', ms: 0 });
+    this.state = 'ruling';
+    this.line = `${name}: "${text}" — ruling`;
+    this.pushState();
+    this.say(MIKE, `${name} says: ${text}`, { then: () => {
+      // A console can still rule first; then the clue has moved on.
+      if (this.stopped || this.m.clue !== clue) return;
+      if (verdict === 'correct') {
+        this.stand('right', token, clue);
+        return this.act.runResolve({ winnerToken: token });
+      }
+      // runMarkWrong says "No, name" and stands the ruling through onMarkedWrong.
+      this.act.runMarkWrong(token);
+    } });
   }
 
   onMarkedWrong(token) {
@@ -987,6 +1013,9 @@ export class Autohost {
       answers: answers.length,
       exact: by('exact') + by('grace'), model: by('model'), local: by('local'),
       timedOut: by('timeout'),
+      // Ruled off botCorrect, no judge involved: kept apart so `answers` does
+      // not read as people when a room is half robots.
+      robots: by('bot'),
       verdicts: answers.reduce((acc, r) => ({ ...acc, [r.verdict]: (acc[r.verdict] || 0) + 1 }), {}),
       judgeMs: times.length ? { p50: times[Math.floor(times.length / 2)], max: times.at(-1) } : null,
       picks: this.heardText.filter((r) => r.kind === 'pick').length,
@@ -1087,6 +1116,7 @@ export class Autohost {
       spoke: this.spoke.length, fromClock: this.spoke.filter((s) => s.fromClock).length,
       listening: this.window ? { kind: this.window.kind, name: this.m.roster.get(this.window.token)?.name || null } : null,
       transcripts: this.heardText.slice(-8),
+      rulings: this.rulingSummary(),
       objection: this.objectionView(null),
       award: this.awardView(),
       backlog: { ...this.backlog, depth: this.jobs.length } };
