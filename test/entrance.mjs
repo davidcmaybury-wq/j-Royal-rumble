@@ -168,13 +168,39 @@ check('the entrance reaches the host with the theme attached',
       'the endpoint fails open, which is the intended behaviour here');
   } else {
     // jumyqrz1MAY is the real pick that played silently on 2026-09-07; its owner
-    // has embedding turned off. 52PHX4m07aI is a pick from the same night that
+    // had embedding turned off. 52PHX4m07aI is a pick from the same night that
     // did play. Both are kept as fixtures because a synthetic id cannot tell
     // these two answers apart.
-    const blocked = await (await fetch(`${U}/api/theme-check?id=jumyqrz1MAY`)).json();
-    check('a video whose owner blocks embedding is refused, with a reason',
-      blocked.ok === false && /different one/.test(blocked.reason || ''),
-      blocked.reason || JSON.stringify(blocked));
+    //
+    // A stranger's setting is not a fixture, though: on 2026-09-21 oEmbed
+    // started answering 200 for jumyqrz1MAY — its owner allows embedding now —
+    // and this suite blocked a deploy over it. So the embed-blocked mapping is
+    // asserted only while YouTube still says the video is blocked, and says so
+    // plainly when it no longer does; the refusal to store is asserted on an id
+    // that never existed, which cannot drift. If the skip below prints, find a
+    // new blocked video and swap the id, but never fail the build on it.
+    let still = null;
+    try {
+      const probe = await fetch('https://www.youtube.com/oembed?url='
+        + encodeURIComponent('https://www.youtube.com/watch?v=jumyqrz1MAY') + '&format=json',
+        { signal: AbortSignal.timeout(8000) });
+      still = probe.status;
+    } catch { still = null; }
+    if (still === 401 || still === 403) {
+      const blocked = await (await fetch(`${U}/api/theme-check?id=jumyqrz1MAY`)).json();
+      check('a video whose owner blocks embedding is refused, with a reason',
+        blocked.ok === false && /different one/.test(blocked.reason || ''),
+        blocked.reason || JSON.stringify(blocked));
+    } else {
+      check('the embed-blocked mapping (skipped: fixture jumyqrz1MAY is no longer blocked by its owner)', true,
+        `oEmbed answered ${still} — swap in a video that still blocks embedding`);
+    }
+
+    // What oEmbed says about an id that never existed is 400, not 404, and
+    // the check used to let that through as playable.
+    const gone = await (await fetch(`${U}/api/theme-check?id=nosuchvideo1`)).json();
+    check('a video that does not exist is refused, with a reason',
+      gone.ok === false && /no longer exists/.test(gone.reason || ''), JSON.stringify(gone));
 
     const fine = await (await fetch(`${U}/api/theme-check?id=52PHX4m07aI`)).json();
     check('and a video that plays is allowed through', fine.ok === true, JSON.stringify(fine));
@@ -182,7 +208,7 @@ check('the entrance reaches the host with the theme attached',
     // The endpoint is advice; this is the one that guards what gets stored.
     const p0 = players[0];
     const refused = await new Promise((r) =>
-      p0.s.emit('set-theme', { theme: { kind: 'youtube', id: 'jumyqrz1MAY', seconds: 5 } }, r));
+      p0.s.emit('set-theme', { theme: { kind: 'youtube', id: 'nosuchvideo1', seconds: 5 } }, r));
     check('and the socket refuses to store it even if the picker is skipped',
       !!(refused && refused.error), refused && (refused.error || 'it was stored'));
   }

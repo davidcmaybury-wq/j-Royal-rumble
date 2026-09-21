@@ -848,7 +848,16 @@ The host learning that mid-entrance can do nothing about it. So the picker now
 asks `/api/theme-check` before it saves, and the player is told next to the box
 they pasted into; `set-theme` runs the same check as a backstop for a client
 that skipped it. YouTube's oEmbed endpoint answers it: 401/403 for embedding
-disabled, 404 for private or deleted.
+disabled, 404 for private or deleted, and **400 for an id that never existed**
+— which the check let through as playable until 2026-09-21.
+
+**A stranger's setting is not a fixture.** `test/entrance.mjs` asserted the
+embed-blocked mapping against a real 2026-09-07 pick whose owner had embedding
+off; on 2026-09-21 oEmbed began answering 200 for it and the suite blocked a
+deploy of an unrelated change. The mapping is now asserted only while YouTube
+still says the video is blocked, with a loud skip once it is not, and the
+refusal to store is asserted on an id that never existed. Never fail the build
+on what a video's owner decided this week.
 
 **It fails open, deliberately.** A timeout or a network blip returns playable.
 A false rejection takes away a theme that would have worked, which is worse than

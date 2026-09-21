@@ -1257,7 +1257,11 @@ async function ytPlayable(id) {
     const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
     if (r.status === 401 || r.status === 403) {
       out = { ok: false, reason: 'That video\u2019s owner does not allow it to be played on other sites. Pick a different one.' };
-    } else if (r.status === 404) {
+    } else if (r.status === 404 || r.status === 400) {
+      // 404 is private or deleted; 400 is what oEmbed returns for a
+      // well-formed id that never existed (measured 2026-09-21). Both were
+      // going to be silence at the entrance, which is the thing this check
+      // exists to say out loud.
       out = { ok: false, reason: 'That video is private or no longer exists. Pick a different one.' };
     }
   } catch { /* fail open, deliberately — see above */ }
