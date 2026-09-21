@@ -262,6 +262,23 @@ check('settings lock once the match starts', locked.status === 409);
     named2.settings.targetBackfire === 1, String(named2.settings.targetBackfire));
 }
 
+// --- the way to the console -------------------------------------------
+//
+// With the computer hosting, Start sends the starter to a buzzer, and the host
+// key lives only in this page's address — a player page must never carry it.
+// So the setup page has to link the console itself, in a new tab, or there is
+// no way to reach it once the match begins. Pinned on the source, like the
+// refusal in startfail.mjs: the page is a template and the link is built from
+// the same two values the start button uses.
+{
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../public/setup.html', import.meta.url), 'utf8');
+  const link = /<a id="consoleurl" href="\/host\/\$\{code\}#\$\{hostKey\}" target="_blank"/.test(src);
+  check('the setup page links the console with the host key, in a new tab', link);
+  check('and says so beside the computer-host switch',
+    /keep a console open in another tab[^<]*the link is\s+in the room card/.test(src));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 host.close(); ps.forEach((p) => p.s.close());
 process.exit(fails ? 1 : 0);

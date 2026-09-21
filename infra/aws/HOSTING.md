@@ -96,8 +96,20 @@ python3 -m venv /home/ubuntu/piper-venv
     en_US-ryan-medium en_US-joe-medium --data-dir /data/piper
 ```
 
-Then `PIPER_BIN=/home/ubuntu/piper-venv/bin/piper` and
-`PIPER_DATA_DIR=/data/piper` in the env file. Ubuntu 24.04 marks the system
+Then three lines in the env file — the first one is the switch, and without it
+the other two are read by nobody, because the engine defaults to `silent` and
+`/api/health` will keep reporting `voice.engine: silent` with the binary and
+the voices sitting there installed:
+
+```
+RUMBLE_TTS=piper
+PIPER_BIN=/home/ubuntu/piper-venv/bin/piper
+PIPER_DATA_DIR=/data/piper
+```
+
+Restart when nobody is playing (`deploy-remote.sh --wait` only restarts on a
+new commit, so a plain `sudo systemctl restart rumble` after checking
+`matchesInPlay`). Ubuntu 24.04 marks the system
 interpreter externally-managed, which is why this is a venv and not a plain
 `pip install`. Voices live in `/data` so a deploy cannot take them. Measured on
 this box: about 3 s to synthesize a clue, peak 36 MB, no resident process.

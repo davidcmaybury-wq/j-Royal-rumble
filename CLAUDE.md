@@ -577,6 +577,16 @@ text on screen and nobody hears a thing, by design. Every autohost suite until
 then played with human sockets; `test/autohost.mjs` now runs a match of three
 robots and nobody else, which is the room that locked.
 
+**The console is linked from the setup page and nowhere else.** With the
+computer hosting, Start sends the starter to `/j/CODE`, and the host key lives
+only in the setup page's own fragment — a player page must never carry it, so
+the buzzer cannot link back and the control room has no host key to link with.
+The first night the computer hosted there was no way to reach the console once
+the match began, while the page's own copy said to keep one open. The room
+card now links `/host/CODE#key` in a new tab; `test/setup.mjs` pins it on the
+source. And `RUMBLE_TTS=piper` is the switch: `PIPER_BIN` and `PIPER_DATA_DIR`
+alone leave the engine at `silent`, which the HOSTING recipe used to omit.
+
 **`hostView()` spreads `autohost.status()` and then overrides `heard`** with
 the playback spread, so a status field called `heard` is silently clobbered.
 The transcripts are called `transcripts` for that reason.

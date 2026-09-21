@@ -580,11 +580,11 @@ function render(keepEdits) {
            collect() like everything else. -->
       <label class="rec autohost"><input type="checkbox" id="autohost" ${s.autohost ? 'checked' : ''}>
         <span><b>Let the computer host <span class="alpha">ALPHA</span></b><span class="hint2"><b>Not yet
-        played in a real room.</b> Expect rough edges and keep a console open — anyone at one can rule
-        Correct or Wrong, and ending the match there always works. Mike reads the clues and runs the board,
-        Gene calls the ring, and the buzzers arm off the end of each read. You play from a buzzer
-        like everybody else. Everyone needs sound on. Somebody at a console still rules Correct
-        or Wrong for now.${voiceHint(S.voice)}${judgeHint(S.judge)}</span></span></label>
+        played in a real room.</b> Expect rough edges and keep a console open in another tab — the link is
+        in the room card below — because anyone at one can overrule a ruling, and ending the match there
+        always works. Mike reads the clues, runs the board, listens and rules; Gene calls the ring; the
+        buzzers arm off the end of each read. You play from a buzzer like everybody else, and Start
+        takes you to one. Everyone needs sound on.${voiceHint(S.voice)}${judgeHint(S.judge)}</span></span></label>
       <div class="f pickrow" style="margin-top:8px">
         <label for="pickSeconds">Seconds to call a clue</label>
         <input type="number" id="pickSeconds" value="${s.pickSeconds ?? 12}" min="4" max="60" style="width:118px">
@@ -624,6 +624,17 @@ function render(keepEdits) {
         time, instead of ruling them wrong. Off means a partial answer is simply wrong.</span></span></label>
     </div>
     <ul class="links">
+      <!-- The console is linked from here and nowhere else. With the computer
+           hosting, Start sends the starter to a buzzer and this page is the
+           only place that holds the host key — a player page must never carry
+           it, so the buzzer cannot link back. Found the first night the
+           computer hosted: no way to reach the console once the match began. -->
+      <li class="playrow"><div>
+        <b>The console</b> &mdash; opens in a new tab with your host key in the address; keep that to
+        yourself. ${s.autohost ? 'With the computer hosting you play from a buzzer, and this is where anyone can still overrule it or end the match.' : 'A second one for another screen, or for a co-host.'}
+        <div class="wrow">
+          <a id="consoleurl" href="/host/${code}#${hostKey}" target="_blank" rel="noopener"><code>${location.origin}/host/${code}</code></a>
+        </div></div></li>
       <li class="playrow"><div>
         <b>To play</b> &mdash; the code is filled in, they still confirm it.
         <div class="wrow">
