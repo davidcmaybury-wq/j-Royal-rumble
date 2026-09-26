@@ -15,6 +15,7 @@ import { wrongAnswer, status as wrongsStatus } from './wrongs.js';
 import * as tts from './tts.js';
 import * as judge from './judge.js';
 import { Autohost } from './autohost.js';
+import * as notes from './notes.js';
 import * as reports from './reports.js';
 import * as logs from './logstore.js';
 import { mountAvailability, when, discord } from './when-routes.js';
@@ -3042,6 +3043,13 @@ io.on('connection', (socket) => {
 
 http.listen(PORT, () => {
   console.log(`J! Royal Rumble on :${PORT}`);
+  // The room hears about this version once, from the box that runs it: the
+  // note in docs/release-notes.md goes to the Discord room channel the first
+  // time this version boots with the bot configured, and never again. No bot,
+  // no note, one line in the journal — never a boot failure.
+  notes.autoPost(VERSION).then((r) => {
+    if (!r.posted) console.log(`release note ${VERSION}: not posted (${r.why})`);
+  }).catch((e) => console.warn(`release note ${VERSION}: ${e.message}`));
   // Say it loudly rather than failing quietly. Both of these used to default to
   // open, and the only symptom was that nothing ever went wrong — which is how
   // the live site served 52 match logs to the public for months.

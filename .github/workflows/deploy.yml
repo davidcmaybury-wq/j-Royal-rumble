@@ -56,6 +56,9 @@ jobs:
           SEC_URL=http://127.0.0.1:8097 node test/security.mjs
           kill $SEC_PID 2>/dev/null || true
 
+      - name: Release notes parse, fit Discord, and post nothing without a bot
+        run: node test/notes.mjs
+
       - name: Availability, the clock arithmetic and the overlap
         run: |
           # Spawns its own server on 8095 with the local test door open and its

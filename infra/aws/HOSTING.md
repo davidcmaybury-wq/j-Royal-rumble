@@ -80,6 +80,7 @@ sudo systemctl daemon-reload && sudo systemctl restart rumble
 | `RUMBLE_SESSION_SECRET` | signs the `/when` session cookie | a new one per boot, so every deploy signs everybody out of `/when`. A boot note, not a refusal — it protects a list of free evenings, not the match records. |
 | `ANTHROPIC_API_KEY` | robots' wrong answers, **and the computer host's rulings** | the robots fall back to local nonsense, but an autohost match **refuses to start**, naming this variable — there is nobody at a console to rule, so a match with no judge is a match that cannot be played. `RUMBLE_JUDGE=local` is the deliberate way to run without it. Both are reported at `/api/health`. |
 | `RUMBLE_JUDGE` | set to `local` to run the computer host with no key | unset means the key is required. The local judge rules `correct` when the answer is all there in what was said and `unclear` otherwise — it never returns `wrong`, so a failed call cannot cost somebody money, and a right answer worded loosely gets a miss. Playable, and weaker than the real thing. |
+| `RUMBLE_NOTES` | set to `off` to stop the box posting each version's release note to the Discord room at boot | unset means it posts, once per version, when the bot and room channel are configured; what has gone out is `/data/notes-posted.json`. `docs/discord-setup.md` has the catch-up command. |
 
 The Discord application itself — the two channel ids, the redirect URI, what
 the bot posts — is `docs/discord-setup.md`, about five minutes of clicking.

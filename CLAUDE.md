@@ -1011,6 +1011,35 @@ grep-checked for handles and it was not; the repo is public, so the name became
 "one player" before the commit. Check every patch for names, not just the ones
 that say they were checked.
 
+## Release notes reach the room from the box
+
+`docs/release-notes.md` is the source, the way `discord-rules-v2.md` is for
+`/rules-101`: one section per version, newest first, `## x.y.z — title`,
+written for the people who play. `src/notes.js` parses it; at boot the server
+posts the running version's section to the Discord room channel **once** —
+`notes.autoPost(VERSION)` after the listen line — when the bot and
+`RUMBLE_DISCORD_ROOM_CHANNEL` are configured, and records it in
+`/data/notes-posted.json` (next to the app without `/data`, where the next
+deploy forgets it, and the tool says so). No bot means one line in the journal,
+never a boot failure. `RUMBLE_NOTES=off` switches it off.
+
+**A release with no note fails `test/notes.mjs`** — the version in
+`package.json` must have a section — which is deliberate: a version with
+nothing to tell the room is a version nobody wrote up. Write the note with the
+change, not after. Every single-version message and the digest are checked
+against Discord's 2,000-character cap, the same cap `guides.mjs` enforces on
+the rules.
+
+`tools/post-notes.mjs` does the rest by hand: `--dry-run` shows the digest of
+everything never posted, `--catch-up` posts it as one titles-only message
+(thirty people get one post, not ten — one post too many is how a room mutes a
+bot), `--since` trims versions the room heard about by hand, `--version`
+posts one in full, `--mark-posted` records without posting. It needs the
+bot's environment, which on the box is root-only: `sudo bash -c 'set -a;
+. /etc/rumble.env; set +a; node tools/post-notes.mjs --dry-run'`. Nothing
+was ever posted automatically before 0.103.0; the first catch-up covers
+0.97.0 onward, which is where `ship.sh`'s changelog entries stopped.
+
 **The trigger is settled, measured against 89 real eliminations.** Do not
 re-litigate without new data. Wins-since-entry is the axis and **tenure is not**
 — the players who never got going mostly lasted 9–17 clues, so tenure separates

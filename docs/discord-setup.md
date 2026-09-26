@@ -121,3 +121,26 @@ timezones will read.
 
 `allowed_mentions` names exactly the players in the window and nothing else, so
 an `@everyone` that found its way into composed text could not fire.
+
+**To the room, once per version** (since 0.103.0): the note for the version the
+box is running, from `docs/release-notes.md`, the first time that version boots
+with the bot configured — and never again, because what has gone out is
+recorded in `/data/notes-posted.json`. No ping, one message, under Discord's
+2,000-character cap or it is refused before it is sent:
+
+> **J! Royal Rumble 0.102.0 — The last one in gets a breath, and the robots learned from you**
+> Overtime now waits one entry interval after the last arrival …
+> <https://j-royal-rumble.net/history>
+
+Versions the room never heard about go out as one digest, titles only, by hand:
+
+```
+cd /home/ubuntu/app && sudo bash -c 'set -a; . /etc/rumble.env; set +a; node tools/post-notes.mjs --dry-run'
+cd /home/ubuntu/app && sudo bash -c 'set -a; . /etc/rumble.env; set +a; node tools/post-notes.mjs --catch-up'
+```
+
+`--since 0.97.0` trims off versions the room was told about by hand;
+`--mark-posted 0.97.0,0.98.0` records without posting. `RUMBLE_NOTES=off` in
+the env file switches the boot post off entirely. A release whose version has
+no section in the notes file fails `test/notes.mjs`, which is the point: a
+version with nothing to tell the room is a version nobody wrote up.

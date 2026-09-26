@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.102.0",
+  "version": "0.103.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -81,7 +81,9 @@
     "autohost-test": "node test/autohost.mjs",
     "judge-test": "node test/judge.mjs",
     "objection-test": "node test/objection.mjs",
-    "archetypes-test": "node test/archetypes.mjs"
+    "archetypes-test": "node test/archetypes.mjs",
+    "notes-test": "node test/notes.mjs",
+    "post-notes": "node tools/post-notes.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
