@@ -202,6 +202,9 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     ['targeting, which is standard now', 'deal with a bully'],
     ['and that ganging up is the point of it', 'Gang up'],
     ['one foot on the floor, which is on by default', 'One foot on the floor'],
+    // 0.101.0: the edge is a 60 ms band, not a 70% discount. The room reads
+    // this file, so it has to say the rule the engine actually runs.
+    ['and that its edge is a band, not a percentage', 'nearest 60 ms'],
     ['both match shapes by name', 'ARCADE'],
     ['and the other one', 'TOURNAMENT'],
     ['that a player keeps their own time', 'your own'],
@@ -245,6 +248,10 @@ for (const [what, needle] of [
   // handbook has to keep saying why, or the next person to find 70% "generous"
   // will move it back and rediscover the cliff in a live match.
   ['why the comeback boost is not a dial', 'threshold, not a dial'],
+  // And the correction that sits under it since 0.101.0: the percentage was
+  // replaced by a 60 ms band, with the reason recorded rather than the old
+  // argument deleted.
+  ['and that the band replaced it, with the reason on the page', 'the edge is a band, not a percentage'],
   ['and quotes a reproducible figure for it', '11.0%'],
   // The handbook credited P11's VWQW arc to the comeback; the logs give him
   // eight race wins at elimination, so it was revival's queue re-entry. The

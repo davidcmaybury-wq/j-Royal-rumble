@@ -1,4 +1,8 @@
 // Level-the-field study 3: race-structure and knowledge levers.
+//
+// The comeback here is the 70% discount as shipped 0.84.0-0.100.5 (`t *= 0.3`
+// below). The engine bands the press since 0.101.0 (rankedMs, 60 ms floor);
+// this tool's rows are the record of the old edge until it is re-cut.
 // - Photo-finish window: buzzes within W ms of the fastest enter a random draw.
 // - Winner cooldown: the player who took the last race can't buzz the next one.
 // - Trailing pick: the lowest-score live player picks the category (modeled as a

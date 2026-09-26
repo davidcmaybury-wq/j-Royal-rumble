@@ -183,7 +183,32 @@ export const DEFAULT_SETTINGS = {
   // all three clear him. Anything below ~0.55 is dead, and the useful range
   // starts around 0.65. If this is ever retuned, move it against that table
   // rather than by feel — feel is what produced 0.5.
-  comebackBoost: 0.7,
+  //
+  // That table and the 0.5-versus-0.7 argument are the record of
+  // `comebackBoost`, the percentage this replaced in 0.101.0. Kept because the
+  // lesson — the help only counts where it puts a slow press under a fast one
+  // — is what sized the band below, and because a design note that deletes
+  // its overturned answers is less useful than one that shows the correction.
+  //
+  // The edge is a band, not a discount.
+  //
+  // A percentage took 70% off whatever was pressed, so the help grew without
+  // limit as the press got slower: replaying 249 real contested races, a
+  // boosted player took 41% of them without having pressed fastest, and the
+  // worst case beat a rival press by 1.56 SECONDS. That is the thing a room
+  // sees and calls rigged.
+  //
+  // A band rounds the press down to the floor of the 60ms band it lands in, so
+  // the most the edge can ever be worth is one band. Same replay: 12% taken
+  // without pressing fastest, and never by more than 54ms — a photo finish
+  // rather than a theft. Width is the whole dial; 40 gives 7% and 100 gives
+  // 21%, along one straight line.
+  //
+  // Those replay figures are the analysis chat's (comeback-bands, 2026-09-25),
+  // and no tool in this tree reproduces them yet — the study tools still model
+  // the percentage in their own arithmetic and say so in their headers. Quote
+  // them as theirs until a tool here has run them.
+  comebackBand: 60,
   comebackRaces: 40,         // races the edge lasts
   bounties: false,           // queued players pay to put a price on a head
   revival: false,            // one more life, at a fraction of the stake
@@ -1594,16 +1619,30 @@ export class RumbleGame {
    * the log keeps what they actually did — the edge is a ranking rule, not a
    * rewriting of history, and the console shows both.
    */
-  buzzEdge(playerId) {
-    if (!this.s.comeback) return 1;
+  /**
+   * What a press is ranked at, for whoever pressed it.
+   *
+   * Returns the raw time unchanged for anybody not on the way back. For a
+   * player who is, it rounds down to the floor of the band the press lands in,
+   * so a 155ms press ranks at 120 rather than at 46.
+   *
+   * A press quicker than one band is never touched: there is nothing to round
+   * down to, and a fast player should keep the number they earned.
+   */
+  rankedMs(playerId, ms) {
+    if (!this.s.comeback || !Number.isFinite(ms)) return ms;
     const p = this.players.get(playerId);
-    if (!p || p.comebackUntil == null || this.racesRun > p.comebackUntil) return 1;
-    return 1 - (this.s.comebackBoost ?? 0.7);
+    if (!p || p.comebackUntil == null || this.racesRun > p.comebackUntil) return ms;
+    const w = this.s.comebackBand ?? 60;
+    if (w <= 0 || ms < w) return ms;
+    return Math.floor(ms / w) * w;
   }
 
   /** Is this player currently on the way back? */
   onTheFloor(playerId) {
-    return this.buzzEdge(playerId) < 1;
+    if (!this.s.comeback) return false;
+    const p = this.players.get(playerId);
+    return !!p && p.comebackUntil != null && this.racesRun <= p.comebackUntil;
   }
 
   /** What every clue is currently multiplied by: 1, 2, 4, up to overtimeMax. */

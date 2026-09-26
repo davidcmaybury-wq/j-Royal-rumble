@@ -3,6 +3,24 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.101.0 — the comeback edge is a 60 ms band, not a 70% discount
+
+## 0.100.5 — the category and value are shown, not spoken; twenty seconds to call a clue
+
+## 0.100.4 — a stranger's YouTube setting no longer fails the build, and a video that never existed is refused
+
+## 0.100.3 — seven seconds to answer, and a turn cue you cannot miss
+
+## 0.100.2 — the setup page links the console, and the Piper recipe names its switch
+
+## 0.100.1 — a robot on the clock is ruled on; the match no longer sits until the reaper
+
+## 0.100.0 — objections close the design, and the setup-side judge gaps are filled
+
+## 0.99.0 — the computer host listens and rules: steps four and five
+
+## 0.98.1 — the longevity bonus is documented, and the recorder finally sees it
+
 ## 0.96.1 — 0.96.1 — Part IV in David's voice, every figure byte-identical
 
 ## 0.96.0 — 0.96.0 — matches 14 to 20 reach the handbook, in the analysis chat's voice

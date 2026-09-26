@@ -1273,7 +1273,7 @@ function renderDock() {
     return;
   }
   // In Arcade the chip carries the place, not the clock. With the comeback on,
-  // the order is ms x buzzEdge, so a slower press can hold first — a number
+  // the order is the banded press, so a slower press can hold first — a number
   // that contradicts the highlight is worse than no number. The server does not
   // send times at all in that mode, so there is nothing here to leak.
   const chips = buzzes.map((b, i) => '<span class="bz' + (i === 0 ? ' on' : '')

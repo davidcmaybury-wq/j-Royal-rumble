@@ -1,6 +1,6 @@
 // Arcade mode: the room sees the order, each player sees their own clock.
 //
-// With the comeback on, buzz order is ms x buzzEdge, so a player on the way back
+// With the comeback on, buzz order is the banded press, so a player on the way back
 // from a near-elimination can hold first place with a slower press. Publishing
 // the times then contradicts the highlight, which is exactly how it was reported
 // from a live match: "P11 actually was fastest but P12 was highlighted as
@@ -8,7 +8,7 @@
 //
 // So in Arcade the public surfaces carry places and no times at all. A player
 // still gets their own number through myBuzz, because their own timing is the
-// thing they practise against. In Tournament the comeback is off, buzzEdge is
+// thing they practise against. In Tournament the comeback is off, the band is
 // always 1, order is speed, and the times mean what they say — so they stay.
 //
 // This is the same shape of guard as test/watch.mjs: the times must be absent

@@ -86,7 +86,7 @@ function simulate(cfg, seed) {
     const attempters = g.live().filter((pl) => rng() < Math.pow(PROF.get(pl.id).att, ROW_EXP[row - 1]));
     const timed = attempters.map((pl) => {
       let t = PROF.get(pl.id).ms * Math.exp(SIGMA * gauss());
-      t *= g.buzzEdge(pl.id);
+      t = g.rankedMs(pl.id, t);   // banded, not scaled — see engine.rankedMs
       return [pl.id, t];
     }).sort((a, b) => a[1] - b[1]);
     let winnerId = null; const missedIds = [];

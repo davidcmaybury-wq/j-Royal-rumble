@@ -1028,7 +1028,7 @@ speed — so the public surfaces carry **places rather than times**. A player
 still sees their own reaction time on their own buzzer; nobody sees anybody
 else's.
 
-**Tournament** is the comeback off. `buzzEdge` is always 1, the fastest press
+**Tournament** is the comeback off. No press is banded, the fastest press
 wins every race, and the times are published because they mean exactly what they
 look like.
 
@@ -1054,9 +1054,12 @@ open.
 
 A player who would be eliminated having taken **fewer than three clues** is not
 eliminated at all. They stay in the ring on half a starting stake, and for the
-next 40 races their buzz is ranked at half the time they actually pressed. Once
-each, automatic — nothing to declare, nothing to press. On by default;
-`comeback: false` turns it off.
+next 40 races their press is ranked at the bottom of the 60 ms band it lands in
+(`comebackBand`; 155 ms counts as 120), so the edge is worth one band at most and
+a press under 60 ms is left alone. Once each, automatic — nothing to declare,
+nothing to press. On by default; `comeback: false` turns it off. It was a flat
+70% discount until 0.101.0; the measurements below were taken under that rule and
+are kept as its record.
 
 This is the answer to the shark problem, and it is the buzz-timing lever from
 that list seen from the other end: instead of taxing the leader's milliseconds

@@ -494,7 +494,7 @@ class Match {
 
       // Arcade mode shows the order, not the clock.
       //
-      // With the comeback on, the ranking is ms x buzzEdge, so a slower press
+      // With the comeback on, the ranking is the banded press, so a slower press
       // legitimately takes the clue — which read as a scoring bug the first
       // time a room saw it. Sending places rather than times removes the
       // contradiction at the source instead of explaining it afterwards. Each
@@ -694,7 +694,7 @@ class Match {
           // No `edge` field any more. 0.85.1 sent the ranked time beside the
           // real one so the host could see why a slower press held the clock —
           // the answer to "P11 was fastest but P12 was highlighted as first
-          // in". buzzEdge only ever differs from 1 when the comeback is on,
+          // in". The banded time only differs from the press when the comeback is on,
           // which is exactly when this view stops carrying times at all, so it
           // could never fire again. Showing the order beats explaining the
           // arithmetic behind it.
@@ -1547,8 +1547,14 @@ function announceLeader(match) {
 function rankRace(match) {
   if (!match?.race) return;
   const g = match.game;
-  const edge = (b) => b.ms * (g ? g.buzzEdge(b.token) : 1);
-  match.race.buzzes.sort((a, b) => edge(a) - edge(b));
+  const band = (b) => (g ? g.rankedMs(b.token, b.ms) : b.ms);
+  // Band first, then the raw press.
+  //
+  // Two players on the way back can land in the same band — 16% of the real
+  // races with a boosted player in them had two of them at once — and the
+  // tiebreak has to be the thing everybody can see. Whoever actually pressed
+  // quicker takes it.
+  match.race.buzzes.sort((a, b) => band(a) - band(b) || a.ms - b.ms);
 }
 
 // Watch screens that have turned their sound on. A set of socket ids, so a
@@ -2882,22 +2888,28 @@ io.on('connection', (socket) => {
   // other: a room full of people warming up should not be told they came
   // fourth out of nine when only three of those were in the ring.
   const rerank = (race, game) => {
-    // Place by the time the ordering actually used, not the raw press.
+    // Place by the ordering the board actually used, not the raw press.
     //
-    // rankRace sorts on ms x buzzEdge, so in a match with the comeback on a
-    // player on the way back can be ahead of a faster raw time. This used to
-    // rank on the raw number, which agreed with the board only while every edge
-    // was 1 — that is, in every match without the comeback, which is why it went
-    // unnoticed. With Arcade mode showing places instead of times, a place that
+    // rankRace sorts on the banded time with the raw press breaking ties, so a
+    // player on the way back can sit ahead of a quicker raw time. This used to
+    // rank on the raw number, which agreed with the board only while nobody was
+    // boosted — that is, in every match without the comeback, which is why it
+    // went unnoticed. With Arcade showing places instead of times, a place that
     // disagrees with who is on the clock is the whole feature broken.
-    const eff = (b) => b.ms * (game ? game.buzzEdge(b.token) : 1);
+    const eff = (b) => (game ? game.rankedMs(b.token, b.ms) : b.ms);
+    // Compare on the same (band, raw) pair rankRace sorts by, so a tie on the
+    // band does not read as a shared place.
+    const key = (b) => [eff(b), b.ms];
+    const before = (x, y) => (x[0] !== y[0] ? x[0] < y[0] : x[1] < y[1]);
+    const liveKeys = race.buzzes.filter((b) => !b.spectator).map(key);
     const liveEff = race.buzzes.filter((b) => !b.spectator).map(eff);
     for (const b of race.buzzes) {
       b.ranked = b.spectator
         // Warm-up presses are ranked on the raw time against the live field:
         // somebody practising has no edge to apply and is not in the race.
         ? game.rankSpectatorBuzz(b.ms, liveEff)
-        : { place: liveEff.filter((t) => t < eff(b)).length + 1, outOf: liveEff.length };
+        : { place: liveKeys.filter((t) => before(t, key(b))).length + 1,
+            outOf: liveKeys.length };
     }
   };
 

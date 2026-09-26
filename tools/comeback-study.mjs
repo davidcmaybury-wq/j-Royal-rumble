@@ -189,7 +189,12 @@ run('comeback 15 + progressive',      { comeback: true, duration: 15, progressiv
 run('comeback 40/70% + short-swingy', { comeback: true, duration: 40, boost: 0.7,
   settings: { startScore: 1500, ceiling: 5000, entryInterval: autoEntryInterval(6, 15, 17.5) } });
 console.log('--- refinement: gate the comeback to players who never got going');
-run('gated comeback 40, boost 70%  <-- SHIPPED', { comeback: true, duration: 40, boost: 0.7, gated: true });
+// This tool still models the edge as a percentage off the press. The engine
+// stopped doing that in 0.101.0 — rankedMs rounds a returning player's press
+// down to a 60 ms band instead — so this row is the record of the rule as it
+// shipped from 0.84.0 to 0.100.5, not of what the box runs now. Re-cut before
+// quoting it as current; the band is not expressible as a `boost` fraction.
+run('gated comeback 40, boost 70%  <-- SHIPPED 0.84.0-0.100.5 (percentage; banded since 0.101.0)', { comeback: true, duration: 40, boost: 0.7, gated: true });
 // Kept as evidence, not as a candidate. 0.5 shipped for one release and is the
 // row that showed the boost is a threshold rather than a dial: no casual in
 // this field gets under the 95ms elite at 0.5, so the mechanic stops working

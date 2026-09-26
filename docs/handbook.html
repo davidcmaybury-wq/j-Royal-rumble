@@ -117,8 +117,10 @@ every race and the times are public, because there they mean exactly what they l
 match record keeps every real time in both.</p>
 <p><strong>One foot on the floor.</strong> With one exception: if you would go out having taken
 fewer than three clues, you don't go out at all. You stay up on half a starting stake, and for
-the next 40 races your buzz is ranked at 30% of the time you actually pressed. Once each,
-automatic, nothing to declare. The gate is the design — it catches somebody flattened before
+the next 40 races your press is ranked at the bottom of the 60 ms band it lands in
+(<code>comebackBand</code>; 155 ms counts as 120), so the edge is worth one band at most and a
+press under 60 ms is left alone &mdash; it was a flat 70% off until 0.101.0, and the reason it
+changed is in Part IV. Once each, automatic, nothing to declare. The gate is the design — it catches somebody flattened before
 they ever got going, and a player who was in the match and lost it goes out properly. Because
 no elimination is recorded, a bounty on that player doesn't pay and a revival life isn't spent.
 The edge is counted in races rather than clues so a run of stumpers doesn't burn it, and the
@@ -941,6 +943,20 @@ casuals need 54.8%, 60.4% and 64.8%:</p>
 Below about 55% it does nothing and the useful range starts near 65%, so retune it against that
 table rather than by feel — feel is what produced 50%. The lesson generalizes past this setting:
 a parameter that has to cross another player's number to matter has no moderate position.</p>
+<p class="mut"><strong>Superseded in 0.101.0 &mdash; the edge is a band, not a percentage.</strong>
+The table above is right about where the help has to land and wrong about how to get it there:
+a percentage takes 70% off <em>whatever</em> was pressed, so the help grows without limit as the
+press gets slower. The analysis chat replayed 249 real contested races under it and found a
+boosted player taking 41% of them without having pressed fastest, once by 1.56 seconds &mdash;
+the thing a room sees and calls rigged. <code>comebackBand</code> replaces
+<code>comebackBoost</code>: a returning player's press is ranked at the floor of the 60 ms band
+it lands in (155 ms counts as 120; a press under one band is untouched), so the edge is worth one
+band at most. Same replay: 12% taken without pressing fastest, never by more than 54 ms &mdash; a
+photo finish rather than a theft. Two returning players in the same band are split by who
+actually pressed first. Those replay figures are the analysis chat's and no tool in this
+repository has reproduced them yet, so they are quoted here as theirs; the measurements above
+and in <code>comeback-study</code> were taken under the percentage and stand as its record, not
+as figures for the band.</p>
 <p class="mut">Two measurements of the same rule appear in this document and they are not in
 conflict. Figure 26 gives a <em>single</em> casual's match-win probability — 1.9% ungated
 against 7.3% gated. <code>comeback-study</code> reports the <em>three casuals' combined</em>

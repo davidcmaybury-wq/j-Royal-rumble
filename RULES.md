@@ -26,7 +26,7 @@ Thirty players. Three start. One survives.
 
 **Below zero and you're out.** Zero is still alive.
 
-**Arcade or Tournament?** Your buzzer says which. Arcade: go under with fewer than three clues taken and you stay up — half stake, 70% off your buzz for 40 races, once each — and the race shows places, not times.
+**Arcade or Tournament?** Your buzzer says which. Arcade: go under with fewer than three clues taken and you stay up — half stake, your buzz rounded down to the nearest 60 ms for 40 races, once each — and the race shows places, not times.
 
 **Still standing?** +$500 every 10 clues you survive. Being early in the draw is hard work; this pays for it.
 
@@ -125,8 +125,9 @@ way, and the standings at the end are the same in both.
 
 **If you'd go out with fewer than three clues to your name, you don't go out.**
 You stay in the ring on half a starting stake, and for the next 40 races your
-buzz counts at 30% of the time you actually pressed. Once each, and it happens by
-itself — there's nothing to declare and nothing to press.
+press is ranked down to the nearest 60 ms — worth one band at most, never a
+runaway. Once each, and it happens by itself — there's nothing to declare and
+nothing to press.
 
 The gate is the whole point. It's for somebody flattened before they ever got
 going, not for somebody who played the match and lost it: three clues taken and

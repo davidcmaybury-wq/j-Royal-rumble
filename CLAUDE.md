@@ -955,6 +955,27 @@ At 50% none of them get there. Below ~55% it is decorative; the useful range
 starts near 65%. The table is in `engine.js` above the setting — retune against
 it, never by feel.
 
+**The edge is a band now, not a percentage — 0.101.0, from the analysis
+chat's `comeback-bands` patch, David's call to deploy (2026-09-25).**
+`comebackBoost` is gone; `comebackBand: 60` rounds a returning player's press
+down to the floor of its 60 ms band (`rankedMs`; 155 → 120; a press under one
+band is untouched), so the edge is worth one band at most. Their case, from a
+replay of 249 real contested races: the 70% discount let a boosted player take
+41% of races without pressing fastest, once by 1.56 s — "the thing a room sees
+and calls rigged" — against 12% and never more than 54 ms banded. **Those
+figures are theirs; no tool in this tree reproduces them yet**, so quote them
+as theirs. `rankRace` sorts on (band, raw press) and `rerank` places on the
+same pair, so two returning players in one band are split by who actually
+pressed first. The threshold table above stays as the record of the setting it
+replaced. **Four study tools still model the percentage in their own
+arithmetic** — `comeback-study`, `trigger-study`, `level-study`,
+`level-study2-start-boost` — and now say so in their headers and row labels;
+their SHIPPED rows describe 0.84.0–0.100.5, which is the drift this file warns
+about, made explicit rather than fixed, because the band is not expressible as
+a `boost` fraction and re-cutting them is a measurement, not an edit. The
+patch's own `taper-study` script pointed at two files that were not in it and
+was left out.
+
 **The trigger is settled, measured against 89 real eliminations.** Do not
 re-litigate without new data. Wins-since-entry is the axis and **tenure is not**
 — the players who never got going mostly lasted 9–17 clues, so tenure separates

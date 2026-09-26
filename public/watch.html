@@ -383,7 +383,7 @@ function stage() {
   if (S.clue) {
     const b = (S.race && S.race.buzzes) || [];
     // Arcade sends places instead of times: with the comeback on the order is
-    // ms x buzzEdge, so a slower press can hold first and a published number
+    // the banded press, so a slower press can hold first and a published number
     // would contradict the highlight. Players still see their own time on their
     // own buzzer; the room sees the order.
     const chips = b.map((x, i) => '<span class="bz' + (i === 0 ? ' on' : '') + '"><span>'

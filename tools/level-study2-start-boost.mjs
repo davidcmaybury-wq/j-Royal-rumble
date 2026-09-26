@@ -127,7 +127,9 @@ run('photo-finish window 50ms', { window: 50 });
 run('photo-finish window 100ms', { window: 100 });
 run('winner cooldown (sit one race)', { cooldown: true });
 run('trailing player picks category', { trailingPick: true });
-console.log('\nCombined with the shipped comeback (gate<3, 70%/40, OT-scaled):\n');
+// "Shipped" here means 0.84.0-0.100.5: the 70% discount this tool models in its
+// own arithmetic. The engine bands the press since 0.101.0 (rankedMs, 60 ms).
+console.log('\nCombined with the comeback as shipped 0.84.0-0.100.5 (gate<3, 70%/40, OT-scaled; banded since 0.101.0):\n');
 run('comeback alone (reference)', { comeback: true });
 run('comeback + window 50ms', { comeback: true, window: 50 });
 run('comeback + cooldown', { comeback: true, cooldown: true });

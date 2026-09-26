@@ -5,7 +5,7 @@
 // ROW_EXP attempt exponents). NOT comparable to the six-player rows — new field.
 //
 // Engine mechanics are the real 0.89 ones: built-in comeback (gate correct<3,
-// OT-scaled half stake, 70%/40-race edge via g.buzzEdge), stables (join capped
+// OT-scaled half stake, 60ms band via g.rankedMs), stables (join capped
 // at half the live ring, pot immunity between mates, stableFocus loads the
 // mates' share onto outsiders, share mode per settings), targeting with the
 // backfire rule. Staged release is the engine's own: 3 random openers
@@ -104,7 +104,7 @@ function simulate(cfg, seed) {
     const attempters = live.filter((pl) => rng() < Math.pow(PROF.get(pl.id).att, ROW_EXP[row - 1]));
     const timed = attempters.map((pl) => {
       let t = PROF.get(pl.id).ms * Math.exp(SIGMA * gauss());
-      t *= g.buzzEdge(pl.id);            // engine's own comeback edge
+      t = g.rankedMs(pl.id, t);          // engine's own comeback edge, banded
       return [pl.id, t];
     }).sort((a, b) => a[1] - b[1]);
     let winnerId = null; const missedIds = [];

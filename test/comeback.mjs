@@ -33,7 +33,16 @@ console.log('SOMEBODY WHO NEVER GOT GOING');
   const p = g.players.get(b);
   check('they are not eliminated', p.state === 'live', p.state);
   check('they come back on half a stake', p.score === 1500, String(p.score));
-  check('with an edge on the buzzer', g.onTheFloor(b), String(g.buzzEdge(b)));
+  check('with an edge on the buzzer', g.onTheFloor(b), String(g.rankedMs(b, 155)));
+  // 155ms lands in the 120-180 band, so it ranks at 120 — not at 46, which is
+  // what the old 70% discount made of it.
+  check('a press is ranked down to its band, not scaled', g.rankedMs(b, 155) === 120,
+    String(g.rankedMs(b, 155)));
+  check('and a press quicker than one band is left alone', g.rankedMs(b, 47) === 47,
+    String(g.rankedMs(b, 47)));
+  check('the most it can ever be worth is one band',
+    [155, 400, 2333].every((ms) => ms - g.rankedMs(b, ms) < 60),
+    [155, 400, 2333].map((ms) => `${ms}->${g.rankedMs(b, ms)}`).join(' '));
   check('and it is recorded on the clue', true);
 }
 
@@ -131,13 +140,14 @@ console.log('\nTHE EDGE RUNS OUT');
   g.players.get(b).score = 50;   // one clue takes them under, not to exactly zero
   let [s, r] = open(g);
   g.resolveClue(s, r, { winnerId: a, missedIds: [] });
-  check('the edge is on', g.onTheFloor(b), String(g.buzzEdge(b)));
+  check('the edge is on', g.onTheFloor(b), String(g.rankedMs(b, 155)));
   for (let i = 0; i < 4; i++) {
     const [s2, r2] = open(g);
     if (g.finished) break;
     g.resolveClue(s2, r2, { winnerId: a, missedIds: [] });
   }
-  check('and it expires', !g.onTheFloor(b), String(g.buzzEdge(b)));
+  check('and it expires', !g.onTheFloor(b), String(g.rankedMs(b, 155)));
+  check('and the press is ranked as pressed again', g.rankedMs(b, 155) === 155);
 }
 
 console.log('\nWHAT COUNTS AS A RACE');
@@ -154,14 +164,14 @@ console.log('\nWHAT COUNTS AS A RACE');
   g.players.get(b).score = 50;
   const [s, r] = open(g);
   g.resolveClue(s, r, { winnerId: a, missedIds: [] });
-  check('the edge is on', g.onTheFloor(b), String(g.buzzEdge(b)));
+  check('the edge is on', g.onTheFloor(b), String(g.rankedMs(b, 155)));
   for (let i = 0; i < 4 && !g.finished; i++) {
     const [s2, r2] = open(g);
     // Contested and missed: a real race, with nobody converting it.
     g.resolveClue(s2, r2, { winnerId: null, missedIds: [a] });
   }
   check('a contested clue nobody converted still burns the edge',
-    !g.onTheFloor(b), String(g.buzzEdge(b)));
+    !g.onTheFloor(b), String(g.rankedMs(b, 155)));
 }
 {
   const g = game({ comebackRaces: 2, stumperFraction: 0 });
@@ -174,7 +184,7 @@ console.log('\nWHAT COUNTS AS A RACE');
     // Nobody even buzzed. Not a race, so it must not spend the edge.
     g.resolveClue(s2, r2, { winnerId: null, missedIds: [] });
   }
-  check('but a clue nobody buzzed does not', g.onTheFloor(b), String(g.buzzEdge(b)));
+  check('but a clue nobody buzzed does not', g.onTheFloor(b), String(g.rankedMs(b, 155)));
 }
 
 console.log('\nTURNED OFF');
@@ -185,7 +195,7 @@ console.log('\nTURNED OFF');
   const [s, r] = open(g);
   g.resolveClue(s, r, { winnerId: a, missedIds: [] });
   check('nobody is saved', g.players.get(b).state === 'eliminated');
-  check('and nobody has an edge', g.buzzEdge(b) === 1);
+  check('and nobody has an edge', g.rankedMs(b, 155) === 155);
 }
 
 

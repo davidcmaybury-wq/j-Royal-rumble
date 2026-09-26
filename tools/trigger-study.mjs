@@ -1,7 +1,11 @@
 // Trigger study: WHEN should the comeback fire?
 // Sweeps the gate (wins threshold, tenure, hybrid, none) and the overtime
 // behavior (fire flat / don't fire in OT / fire with multiplier-scaled stake).
-// Boost held at the shipped 70% for 40 races. Same calibrated model as before.
+// Boost held at 70% for 40 races — the rule as shipped 0.84.0-0.100.5. Since
+// 0.101.0 the engine bands the press (rankedMs, 60 ms floor) instead of
+// discounting it; this tool still models the percentage, so its rows are the
+// record of the old edge, not a measurement of the current one.
+// Same calibrated model as before.
 import { RumbleGame, makeRng, ROW_VALUES, autoEntryInterval } from '../src/engine.js';
 
 const ROW_EXP = [0.48, 0.67, 0.85, 1.10, 1.40];
