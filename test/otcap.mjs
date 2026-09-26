@@ -104,5 +104,54 @@ check('a raised clue can still be banked in full', banked,
   check('with scaling off it is the flat stake', q5.score === 3000, String(q5.score));
 }
 
+// --- the last one in gets a breath ---------------------------------------
+//
+// Overtime opens when the queue empties, so it used to open on the heels of the
+// final arrival — the one person who has played nothing. One player entered at
+// clue 150 of a real match and overtime opened two clues later.
+{
+  const mk = (extra) => new RumbleGame({
+    players: [...Array(5)].map((_, i) => ({ id: 'e' + i, name: 'E' + i })),
+    rng: makeRng(7), categoryPool: pool,
+    settings: { entryInterval: 6, startScore: 3000, ceiling: 99999, ceilingFloor: 0,
+      ceilingDecayPerClue: 0, overtime: true, overtimeEvery: 6, overtimeMax: 8,
+      longevity: false, categorySweep: false, ...extra },
+  });
+  const drain = (g, upTo) => {
+    let guard = 0;
+    while (g.queued().length && guard++ < upTo && !g.finished) {
+      const o = [];
+      g.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) o.push([si, x.row]); }));
+      g.resolveClue(o[0][0], o[0][1], { winnerId: g.live()[0].id, missedIds: [] });
+    }
+    return g;
+  };
+  const step = (g) => {
+    const o = [];
+    g.board.forEach((c, si) => c.clues.forEach((x) => { if (!x.revealed) o.push([si, x.row]); }));
+    g.resolveClue(o[0][0], o[0][1], { winnerId: g.live()[0].id, missedIds: [] });
+  };
+
+  const g = drain(mk({}), 200);
+  check('the queue emptied', g.queued().length === 0, `${g.live().length} in the ring`);
+  const entered = g.lastEntryAt;
+  check('and overtime is held off at first', g.overtimeFrom == null,
+    `last entry at clue ${entered}, now ${g.cluesRevealed}`);
+  // Walk forward to one full interval past the last arrival.
+  let guard = 0;
+  while (g.overtimeFrom == null && guard++ < 20 && !g.finished) step(g);
+  check('it opens once a full interval has passed',
+    g.overtimeFrom != null && g.overtimeFrom - entered >= 6,
+    `entered ${entered}, overtime at ${g.overtimeFrom}`);
+
+  // With the grace off, it opens the moment the queue is empty.
+  // Overtime is evaluated while a clue resolves, so one more clue is needed
+  // after the queue empties for the check to run at all.
+  const h = drain(mk({ overtimeEntryGrace: false }), 200);
+  step(h);
+  check('with the grace off it opens on the very next clue', h.overtimeFrom != null,
+    `last entry ${h.lastEntryAt}, overtime ${h.overtimeFrom}`);
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

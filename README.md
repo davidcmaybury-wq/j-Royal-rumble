@@ -168,6 +168,16 @@ Overtime opens as soon as **the queue is empty**, whatever the ring size —
 waiting for heads-up meant a robot test ran thirty clues with three players
 trading the same points and it never fired.
 
+**With one breath for the last arrival** (`overtimeEntryGrace`, on by default,
+0.102.0): the final entrant is the one person who has played nothing, and the
+logs say everybody plays below themselves on entry — a 244 ms median press on
+the first live clue against 204 ms in warm-up, taking about ten clues to come
+back down. So overtime holds off until one entry interval has passed since the
+last arrival. The stall path ignores the grace. The analysis chat measured it at
+1,500 matches per field size: back-half win rate 57.8% → 53.5% at six players
+and 63.5% → 57.3% at ten, median length 69 → 80 clues at six, and inside the
+noise above sixteen players, where the interval is short.
+
 But the escalation clock counts only clues where **nobody was eliminated**.
 Letting it run regardless made large fields a lottery: a 30-player match had the
 stakes doubling with fourteen still in the ring and the strongest players' win
@@ -228,6 +238,22 @@ people.
 
 Since the host cannot adjudicate a robot, each bot buzz carries whether it is
 about to be right, shown on the console chip.
+
+**A second set, built from this game's own play (0.102.0).** `POST
+/api/match/:id/bots {"count": 12, "set": "archetypes"}` deals five types
+measured from 42 players with 40+ presses across 46 recorded matches, on two
+axes — median press and how far the slow tail sits above it — rather than the
+broadcast ladder above: rhythm regular (29%, 127 ms, 2.9× tail), gambler (7%,
+101 ms, 6.9×), reactor (43%, 196 ms, 3.6×), metronome (14%, 292 ms, 1.7×) and
+straggler (7%, 330 ms, 5.4×). Each carries its own per-row attempt rate and
+press histogram from `data/archetype-distributions.json`, and **accuracy is
+flat, 81–87% across all five** — the ladder's per-standard accuracy models
+something the data do not contain. The boundaries are a design choice stated as
+thresholds (`median < 150 → tail < 4 ? rhythm : gambler; < 250 → reactor; else
+tail < 2.5 ? metronome : straggler`), not discovered clusters: k-means on these
+axes is unstable. A field is dealt in those proportions and shuffled, so six
+robots look like a six-player night rather than six coin flips. API only for
+now; the setup page still offers the ladder.
 
 ### The model
 

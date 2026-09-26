@@ -196,9 +196,9 @@ already finished. In overtime the bonus scales with the multiplier.
 
 ## 6. OVERTIME
 
-When nobody is left to enter and nobody is going out, the stakes start climbing.
-**Clue values double every six clues with no elimination**, up to eight times
-face value.
+When nobody is left to enter — and the last one in has had one entry interval
+to settle — and nobody is going out, the stakes start climbing. **Clue values
+double every six clues with no elimination**, up to eight times face value.
 
 The clock counts only clues where nobody went out. While the field is thinning
 on its own, the stakes hold — it's a stall-breaker, not a timer. And the

@@ -205,6 +205,8 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     // 0.101.0: the edge is a 60 ms band, not a 70% discount. The room reads
     // this file, so it has to say the rule the engine actually runs.
     ['and that its edge is a band, not a percentage', 'nearest 60 ms'],
+    // 0.102.0: overtime waits one entry interval after the last arrival.
+    ['and that the last one in gets a breath before overtime', 'one entry interval to settle'],
     ['both match shapes by name', 'ARCADE'],
     ['and the other one', 'TOURNAMENT'],
     ['that a player keeps their own time', 'your own'],
@@ -252,6 +254,8 @@ for (const [what, needle] of [
   // replaced by a 60 ms band, with the reason recorded rather than the old
   // argument deleted.
   ['and that the band replaced it, with the reason on the page', 'the edge is a band, not a percentage'],
+  // 0.102.0: the overtime grace, named so a host can find the switch.
+  ['and that overtime waits an entry interval after the last arrival', 'overtimeEntryGrace'],
   ['and quotes a reproducible figure for it', '11.0%'],
   // The handbook credited P11's VWQW arc to the comeback; the logs give him
   // eight race wins at elimination, so it was revival's queue re-entry. The

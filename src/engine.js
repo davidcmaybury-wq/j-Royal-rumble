@@ -226,6 +226,8 @@ export const DEFAULT_SETTINGS = {
   // three players trading the same points because it never fired.
   overtimeAt: null,          // ring size that starts it; null means any
   overtimeEvery: 6,          // clues between each escalation
+  // Hold overtime off until the last arrival has had one entry interval.
+  overtimeEntryGrace: true,
   overtimeMax: 8,
   // The ceiling falls during overtime, and only then.
   //
@@ -666,6 +668,7 @@ export class RumbleGame {
     this.stalledClues = 0;     // clues since anyone was eliminated
     this.overtimeSteps = 0;    // doublings reached; a ratchet, never falls
     this.racesRun = 0;         // contested clues, for timing the comeback edge
+    this.lastEntryAt = null;   // when somebody last walked in, for the grace
 
     this.board = [];
     for (let i = 0; i < BOARD_CATEGORIES; i++) this.board.push(this.drawCategory());
@@ -692,6 +695,7 @@ export class RumbleGame {
       stalledClues: this.stalledClues,
       overtimeSteps: this.overtimeSteps,
       racesRun: this.racesRun,
+      lastEntryAt: this.lastEntryAt,
       stables: [...this.stables.values()].map((st) => ({ ...st })),
       cluesRevealed: this.cluesRevealed,
       fieldClears: this.fieldClears,
@@ -715,6 +719,7 @@ export class RumbleGame {
     this.stalledClues = d.stalledClues ?? 0;
     this.overtimeSteps = d.overtimeSteps ?? 0;
     this.racesRun = d.racesRun ?? 0;
+    this.lastEntryAt = d.lastEntryAt ?? null;
     if (d.stables) this.stables = new Map(d.stables.map((st) => [st.id, { ...st }]));
     this.cluesRevealed = d.cluesRevealed;
     this.fieldClears = d.fieldClears;
@@ -813,7 +818,32 @@ export class RumbleGame {
       // wiped. Eighteen clues without an elimination is normal early on. Forty
       // eight is not.
       const stalled = this.stalledClues >= this.s.overtimeEvery * 8;
-      if ((!this.queued().length || stalled) && ring > 1 && (cap == null || ring <= cap)) {
+
+      // The last player in gets a full entry interval before the stakes climb.
+      //
+      // Overtime opens when the queue empties, which means it opens on the
+      // heels of the final arrival — and that arrival is the one person in the
+      // room who has played nothing. In a real match one player entered at clue
+      // 150 and overtime opened two clues later; they lasted six, never won a
+      // race, and were gone.
+      //
+      // The logs say this is not just unlucky, it is predictable. Aligning
+      // every press in 46 matches on the clue its player entered, the median
+      // press is 244ms on their first live clue against 204ms in warm-up, and
+      // it takes about ten clues to come back down. Everybody plays below
+      // themselves when they walk in. Opening overtime during that window
+      // charges them double for it.
+      //
+      // So: one entry interval of grace, measured from the last arrival. The
+      // stall path ignores it — a match that has gone 48 clues without an
+      // elimination has a worse problem than a cold entrant.
+      const sinceEntry = this.lastEntryAt == null
+        ? Infinity : this.cluesRevealed - this.lastEntryAt;
+      const settling = this.s.overtimeEntryGrace
+        && sinceEntry < (this.s.entryInterval ?? 0);
+
+      if ((!this.queued().length || stalled) && ring > 1 && (cap == null || ring <= cap)
+          && (!settling || stalled)) {
         this.overtimeFrom = this.cluesRevealed;
         entry.overtimeStarted = { multiplier: 1, at: this.cluesRevealed };
       }
@@ -1605,6 +1635,11 @@ export class RumbleGame {
     // measured, including the repair that was rejected for being elite-friendly.
     this.arrivalLand(next, stake - next.bountyPlaced - (next.gifted || 0));
     next.enteredAtClue = this.cluesRevealed;
+    // Only a mid-match arrival earns the grace. The players who are in the ring
+    // at the bell did not walk into anything, and stamping them here held
+    // overtime off for a whole entry interval in every match — invisibly, since
+    // it looks exactly like a match that has not stalled yet.
+    if (this.cluesRevealed > 0) this.lastEntryAt = this.cluesRevealed;
     this.log.push({ type: 'entry', playerId: next.id, draw: next.drawNumber, cause });
     return next;
   }

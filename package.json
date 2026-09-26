@@ -1,6 +1,6 @@
 {
   "name": "j-royal-rumble",
-  "version": "0.101.0",
+  "version": "0.102.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -80,7 +80,8 @@
     "tts-bench": "node tools/tts-bench.mjs",
     "autohost-test": "node test/autohost.mjs",
     "judge-test": "node test/judge.mjs",
-    "objection-test": "node test/objection.mjs"
+    "objection-test": "node test/objection.mjs",
+    "archetypes-test": "node test/archetypes.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

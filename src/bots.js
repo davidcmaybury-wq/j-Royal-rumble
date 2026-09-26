@@ -13,6 +13,79 @@
 
 export const LEVELS = ['rookie', 'normie', 'champ', 'superchamp', 'elite'];
 
+// --- historical archetypes -------------------------------------------------
+//
+// Five robots drawn from 46 recorded matches of this game rather than from
+// broadcast play or another codebase. Two things the old ladder cannot say:
+//
+//  - Speed and consistency are separate. A gambler and a rhythm regular have
+//    almost the same typical press (101ms against 127ms) and completely
+//    different characters: the gambler's ninth-decile press is 6.9x their
+//    median, the regular's 2.9x. One robot cannot be both.
+//  - Accuracy is flat. 81% to 87% across all five, uncorrelated with speed.
+//    The old per-level accuracy ladder models something that is not there.
+//
+// The boundaries are a DESIGN CHOICE, not a discovery. k-means on these two
+// axes is unstable — 140 distinct solutions across 400 seeds at k=5, and only
+// 45-53% pair agreement at any k — because the field is a continuum, not five
+// clumps. So the cuts below are stated thresholds anybody can reproduce:
+//
+//   median < 150ms   -> tail < 4x ? rhythm : gambler
+//   median < 250ms   -> reactor
+//   otherwise        -> tail < 2.5x ? metronome : straggler
+//
+// `share` is how common each was among the 42 measured players, and is what
+// `drawArchetype` samples from, so a random field looks like a real night.
+export const ARCHETYPES = {
+  rhythm:    { median: 127, tail: 2.9, anticipation: 0.57, accuracy: 0.87,
+               early: 0.20, share: 0.29, players: 12,
+               note: 'fast and mostly reliable; the core of a strong field' },
+  gambler:   { median: 101, tail: 6.9, anticipation: 0.60, accuracy: 0.85,
+               early: 0.10, share: 0.07, players: 3,
+               note: 'quickest hands in the room when on the cadence, nowhere when not' },
+  reactor:   { median: 196, tail: 3.6, anticipation: 0.37, accuracy: 0.82,
+               early: 0.21, share: 0.43, players: 18,
+               note: 'the middle of the field; reacts to the light more than the rhythm' },
+  metronome: { median: 292, tail: 1.7, anticipation: 0.07, accuracy: 0.85,
+               early: 0.02, share: 0.14, players: 6,
+               note: 'never anticipates, never sprays, never jumps the lights' },
+  straggler: { median: 330, tail: 5.4, anticipation: 0.13, accuracy: 0.81,
+               early: 0.10, share: 0.07, players: 3,
+               note: 'slow and scattered; late grabs on clues nobody else wanted' },
+};
+
+export const ARCHETYPE_LEVELS = Object.keys(ARCHETYPES);
+
+/** Pick an archetype at the rate it actually turned up in recorded play. */
+export function drawArchetype(rng) {
+  let r = rng();
+  for (const [name, a] of Object.entries(ARCHETYPES)) {
+    r -= a.share;
+    if (r <= 0) return name;
+  }
+  return 'reactor';
+}
+
+/**
+ * A field of robots in the proportions a real night had.
+ *
+ * Sampling independently would routinely deal five metronomes; this deals the
+ * expected count of each and shuffles, so a six-robot field looks like a six-
+ * player field rather than like six coin flips.
+ */
+export function archetypeField(n, rng) {
+  const out = [];
+  for (const [name, a] of Object.entries(ARCHETYPES)) {
+    for (let i = 0; i < Math.floor(n * a.share); i++) out.push(name);
+  }
+  while (out.length < n) out.push(drawArchetype(rng));
+  for (let i = out.length - 1; i > 0; i--) {         // Fisher-Yates, not sort()
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out.slice(0, n);
+}
+
 // Attempts per 61-clue game, from the original. Converted to a per-clue
 // probability, because a Rumble runs any number of clues and a player is only
 // in the ring for part of it.
@@ -251,6 +324,37 @@ function pick(odds, rng) {
 // So we sample the histogram directly: pick a bucket by weight, then a point
 // within it.
 let EMPIRICAL = null;
+
+// The archetype set keeps its own store. Sharing one would mean a mixed field
+// silently sampling a rookie's histogram for a metronome, which is exactly the
+// kind of quiet wrong answer this project keeps producing.
+let ARCH_EMPIRICAL = null;
+export function loadArchetypes(json) {
+  ARCH_EMPIRICAL = {};
+  for (const [name, v] of Object.entries(json.levels || {})) {
+    const entries = Object.entries(v.buckets || {})
+      .map(([lo, n]) => [Number(lo), n])
+      .sort((a, b) => a[0] - b[0]);
+    const total = entries.reduce((a, [, n]) => a + n, 0);
+    if (!total) continue;
+    ARCH_EMPIRICAL[name] = { entries, total, width: json.bucketWidth || 25,
+      median: v.median, meta: v };
+  }
+  return ARCH_EMPIRICAL;
+}
+export const hasArchetypes = () => !!ARCH_EMPIRICAL;
+
+function sampleArchetype(name, rng) {
+  const d = ARCH_EMPIRICAL[name] || ARCH_EMPIRICAL.reactor;
+  let roll = rng() * d.total;
+  for (const [lo, n] of d.entries) {
+    roll -= n;
+    // The top bucket is everything from 4,000ms up, so give it a real tail
+    // rather than parking every straggler on the boundary.
+    if (roll <= 0) return lo >= 4000 ? 4000 + rng() * 2000 : lo + rng() * d.width;
+  }
+  return d.median;
+}
 export function loadDistributions(json) {
   EMPIRICAL = {};
   const levels = { ...json.levels };
@@ -318,6 +422,38 @@ export function drawLevel(rng, returning = false) {
 }
 
 export function makeBot(rng, opts = {}) {
+  // --- the historical archetypes ------------------------------------------
+  //
+  // A different animal from the level ladder: the press time comes straight
+  // from the recorded histogram for that archetype, and accuracy does NOT vary
+  // by standard, because measured accuracy does not — 81% to 87% across all
+  // five, uncorrelated with speed.
+  if (opts.set === 'archetypes' || (opts.level && ARCHETYPES[opts.level])) {
+    const name = ARCHETYPES[opts.level] ? opts.level : drawArchetype(rng);
+    const a = ARCHETYPES[name];
+    const meta = ARCH_EMPIRICAL && ARCH_EMPIRICAL[name]
+      ? ARCH_EMPIRICAL[name].meta : null;
+    const byRow = meta && meta.attemptByRow
+      ? [1, 2, 3, 4, 5].map((r) => meta.attemptByRow[String(r)] ?? null)
+      : null;
+    return {
+      isBot: true,
+      set: 'archetypes',
+      level: name,
+      archetype: name,
+      buzzSkill: name,
+      // Their own measured per-row rate where we have it. No power curve: the
+      // real decay from the top row to the bottom is already in these numbers.
+      attemptByRow: byRow,
+      attemptRate: byRow ? byRow[0] : 0.7,
+      baseAccuracy: a.accuracy,
+      accuracy: [1, 2, 3, 4, 5].map(() => a.accuracy),
+      buzz: { mean: a.median, sd: a.median * (a.tail - 1) * 0.6 },
+      profile: 'archetypes',
+      empirical: !!(ARCH_EMPIRICAL && ARCH_EMPIRICAL[name]),
+    };
+  }
+
   const profile = opts.profile ? (PROFILES[opts.profile] || BUZZ_PROFILE) : BUZZ_PROFILE;
   const level = opts.level || drawLevel(rng, opts.returning);
   const skill = opts.buzzSkill || pick(BUZZ_SKILL_ODDS[level], rng);
@@ -377,13 +513,19 @@ export function planClue(bot, row, rng, lockoutMs = 250, readJitter = 0, offset 
   // The power form, not a multiplier: a weak player's aggression collapses on
   // the hard rows while a strong player's barely moves.
   const exps = bot.doubleRound ? ROW_EXPONENT_DJ : ROW_EXPONENT_J;
-  const rate = Math.pow(bot.attemptRate, exps[row - 1]);
+  // An archetype carries its own measured rate for each row, so the power
+  // curve — which was fitted to broadcast play — is not applied on top of it.
+  const rate = bot.attemptByRow && bot.attemptByRow[row - 1] != null
+    ? bot.attemptByRow[row - 1]
+    : Math.pow(bot.attemptRate, exps[row - 1]);
   const attempt = rng() < Math.min(0.97, rate);
   if (!attempt) return { attempt: false };
 
-  const base = bot.empirical
-    ? sampleEmpirical(bot.level, rng)
-    : bot.buzz.mean + gaussian(rng) * bot.buzz.sd;
+  const base = bot.set === 'archetypes' && bot.empirical
+    ? sampleArchetype(bot.level, rng)
+    : bot.empirical
+      ? sampleEmpirical(bot.level, rng)
+      : bot.buzz.mean + gaussian(rng) * bot.buzz.sd;
   const raw = base + readJitter + offset;
   const correct = rng() < bot.accuracy[row - 1];
 
@@ -406,9 +548,18 @@ export function planClue(bot, row, rng, lockoutMs = 250, readJitter = 0, offset 
 }
 
 export function describe(bot) {
-  const timing = bot.empirical
+  // An archetype has no buzzSkill ladder and no EMPIRICAL entry — it carries
+  // its own recorded shape — so it gets its own line rather than reaching into
+  // a table it was never in. Looking it up there is what broke the setup page.
+  if (bot.set === 'archetypes') {
+    const a = ARCHETYPES[bot.level] || {};
+    return `${bot.level} · median ${a.median}ms · `
+      + `${Math.round((a.tail || 0) * 10) / 10}x tail · `
+      + `${Math.round((a.anticipation || 0) * 100)}% on rhythm · from recorded play`;
+  }
+  const timing = bot.empirical && EMPIRICAL && EMPIRICAL[bot.level]
     ? `median ${EMPIRICAL[bot.level].median}ms, from recorded play`
-    : `~${bot.buzz.mean}ms`;
+    : `~${Math.round(bot.buzz.mean)}ms`;
   return `${bot.level} · ${bot.buzzSkill} hands · `
     + `${Math.round(bot.attemptRate * 100)}% attempt · ${timing}`;
 }

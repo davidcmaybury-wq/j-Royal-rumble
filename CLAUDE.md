@@ -976,6 +976,41 @@ a `boost` fraction and re-cutting them is a measurement, not an edit. The
 patch's own `taper-study` script pointed at two files that were not in it and
 was left out.
 
+**Overtime waits one entry interval after the last arrival — 0.102.0,
+`overtimeEntryGrace`, on by default, from the analysis chat's 2026-09-26
+package (`patches.zip`).** The final entrant is the one person who has played
+nothing, and the logs say everybody plays below themselves on entry: 244 ms
+median on the first live clue against 204 ms in warm-up, about ten clues to
+recover, worse for the fastest hands (41 ms → 154 ms, thirteen clues). Opening
+overtime on their heels charged them double. `lastEntryAt` rides the snapshot;
+the stall path ignores the grace. Their measurement, 1,500 matches a field
+size: back-half 57.8% → 53.5% at six, 63.5% → 57.3% at ten, median length 69 →
+80 clues at six, noise above sixteen. `test/otcap.mjs` pins both settings.
+
+**The robot model has a second set, `archetypes`, built from this game's own
+recorded play** — same package. Five types on two measured axes (median press
+and p90-over-median tail) from 42 players with 40+ presses across 46 matches:
+rhythm regular, gambler, reactor, metronome, straggler, with a per-row attempt
+rate and histogram each in `data/archetype-distributions.json`.
+**Accuracy is flat, 81–87%, uncorrelated with speed** — the level ladder's
+per-standard accuracy models something that is not in the data. **The five
+boundaries are a design choice, not clusters**: k-means on the two axes gave
+140 distinct solutions over 400 seeds and 45–53% pair stability at every k, so
+the cuts are stated thresholds anybody can re-run. `POST /api/match/:id/bots
+{"count": n, "set": "archetypes"}`; `archetypeField` deals the expected count
+of each and Fisher-Yates shuffles. The set keeps its own histogram store so a
+mixed field never samples a rookie's buckets for a metronome. Not on the setup
+page yet — API only. Two open items from their side: the `early` flag reads
+0.0% across 5,191 clue-level presses while standings carry early counts in the
+dozens, so early mass cannot be recalibrated until the logger is traced; and
+`buzz-distributions.json` stops at 500 ms while 13.8% of real presses are
+slower, which is the highest-value change available and needs no code.
+
+**The delivery carried a handle in two code comments.** The package said it was
+grep-checked for handles and it was not; the repo is public, so the name became
+"one player" before the commit. Check every patch for names, not just the ones
+that say they were checked.
+
 **The trigger is settled, measured against 89 real eliminations.** Do not
 re-litigate without new data. Wins-since-entry is the axis and **tenure is not**
 — the players who never got going mostly lasted 9–17 clues, so tenure separates

@@ -142,8 +142,15 @@ board is replaced entirely, and two fresh players enter instead of one. It's rar
 
 <h3>6 · Overtime</h3>
 <p>Overtime opens when the queue empties — or, if the match stalls badly enough, even before
-that (a stall on the order of 48 clues will trigger it with players still queued). Then the
-stakes start climbing:</p>
+that (a stall on the order of 48 clues will trigger it with players still queued). Since
+0.102.0 it waits one entry interval after the last arrival first (<code>overtimeEntryGrace</code>,
+on by default): the final entrant is the one person in the room who has played nothing, and
+the logs say everybody plays below themselves on entry — a 244 ms median press on the first
+live clue against 204 ms in warm-up, about ten clues to come back down — so opening overtime
+on their heels charged them double for it. The stall path ignores the grace. The analysis chat
+measured it at 1,500 matches per field size: back-half win rate 57.8% to 53.5% at six players
+and 63.5% to 57.3% at ten, median length 69 to 80 clues at six, and inside the noise above
+sixteen players, where the interval is short. Then the stakes start climbing:</p>
 <ul>
 <li><strong>Clue values double every six clues,</strong> up to eight times face value. The board
 shows the raised values, and each escalation is announced.</li>
@@ -449,6 +456,21 @@ kindest rule for early draws, who have the most match left to use a second life 
 
 <!-- ============================================================ PART III -->
 <div class="part"><p class="kicker">Part III</p><h2>Robots, and what real players taught them</h2></div>
+<p class="mut"><strong>Since 0.102.0 there is a second robot set, built from this game's own recorded
+play rather than from broadcast.</strong> The <em>archetypes</em> set deals five types measured from
+42 players with 40 or more presses across 46 matches, on two axes that the standards ladder below
+cannot separate — the typical press, and how far the slow tail sits above it: rhythm regular (29%
+of players, 127 ms median, 2.9&times; tail), gambler (7%, 101 ms, 6.9&times;), reactor (43%,
+196 ms, 3.6&times;), metronome (14%, 292 ms, 1.7&times;) and straggler (7%, 330 ms, 5.4&times;).
+Each carries its own per-row attempt rate and press histogram. Two findings travel with it.
+Accuracy is flat &mdash; 81% to 87% across all five, uncorrelated with speed &mdash; so the
+ladder's accuracy-by-standard models something the data do not contain. And the five boundaries
+are a design choice, not discovered clusters: k-means on the two axes gave 140 distinct solutions
+across 400 seeds and 45&ndash;53% pair stability at every k, because the field is a continuum, so
+the cuts are stated thresholds anybody can re-run. Gambler and straggler each rest on three
+players; their 7% shares could plausibly be 4% or 12%. The analysis chat's measurement and
+method are in its <code>buzzer-archetypes-packet</code>; the set is reachable through the robots
+API and not yet from the setup page.</p>
 <p>The tuning above needed thousands of matches, which needed believable players. The robot
 model is ported from Matt Schiffler's real-data generator and validated against J!ometry box
 scores — 3,339 real player-games — plus 2,784 more in the local archive.</p>

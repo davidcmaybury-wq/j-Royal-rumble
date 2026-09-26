@@ -18,8 +18,9 @@ import { Autohost } from './autohost.js';
 import * as reports from './reports.js';
 import * as logs from './logstore.js';
 import { mountAvailability, when, discord } from './when-routes.js';
-import { makeBot, botName, planClue, describe as describeBot, LEVELS,
-         loadDistributions, drawReadJitter, referenceHumanMedian,
+import { makeBot, botName, planClue, describe as describeBot, LEVELS, ARCHETYPE_LEVELS,
+         loadDistributions, loadArchetypes, archetypeField, drawReadJitter,
+         referenceHumanMedian,
          nightlyForm } from './bots.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -56,6 +57,14 @@ const MACHINE = process.env.FLY_MACHINE_ID
 // Real buzz histograms, recorded from play of the original model.
 try {
   loadDistributions(JSON.parse(readFileSync(join(__dir, '../data/buzz-distributions.json'), 'utf8')));
+  try {
+    loadArchetypes(JSON.parse(readFileSync(
+      join(__dir, '../data/archetype-distributions.json'), 'utf8')));
+  } catch (e) {
+    // Optional: without it the archetype set falls back to its summary figures
+    // rather than the recorded histograms, which is worse but not broken.
+    console.warn('archetype distributions not loaded:', e.message);
+  }
 } catch (e) {
   console.log('no buzz distributions found; robots will use parametric profiles');
 }
@@ -1038,7 +1047,11 @@ app.post('/api/match/:id/bots', (req, res) => {
   if (!m) return res.status(403).json({ error: 'bad host key' });
   if (m.phase !== 'lobby') return res.status(409).json({ error: 'match already started' });
   const count = Math.max(1, Math.min(30, Number(req.body?.count) || 1));
-  const level = LEVELS.includes(req.body?.level) ? req.body.level : null;
+  // Two sets. "archetypes" is the historical one: five types measured from 46
+  // recorded matches of this game, dealt at the rate they really turned up.
+  const set = req.body?.set === 'archetypes' ? 'archetypes' : 'levels';
+  const valid = set === 'archetypes' ? ARCHETYPE_LEVELS : LEVELS;
+  const level = valid.includes(req.body?.level) ? req.body.level : null;
   // Default to the televised distribution: 3,339 real player-games beats a
   // sample of two people until this game has accumulated its own.
   const profile = ['measured', 'broadcast', 'observed'].includes(req.body?.profile)
@@ -1076,12 +1089,17 @@ app.post('/api/match/:id/bots', (req, res) => {
   // and the YouTube ones are not, that is the answer in one match rather than
   // an argument about whether the sound was on.
   const rng = m.rng || makeRng(Date.now() & 0x7fffffff);
+  // Deal the whole field at once so the mix is right. Picking each robot
+  // independently deals five metronomes more often than a real night would.
+  const field = set === 'archetypes' && !level ? archetypeField(count, rng) : null;
   const taken = new Set([...m.roster.values()].map((p) => p.name));
   const added = [];
   for (let i = 0; i < count; i++) {
     if (m.roster.size >= 30) break;
     const token = 'bot:' + randomUUID();
-    const brain = makeBot(rng, { ...(level ? { level } : {}), profile });
+    const brain = set === 'archetypes'
+      ? makeBot(rng, { set: 'archetypes', level: level || field[i] })
+      : makeBot(rng, { ...(level ? { level } : {}), profile });
     const name = botName(m.bots.size + i, taken);
     taken.add(name);
     m.bots.set(token, brain);
@@ -1104,10 +1122,16 @@ app.patch('/api/match/:id/bots/:token', (req, res) => {
   const token = decodeURIComponent(req.params.token);
   const brain = m.bots.get(token);
   if (!brain) return res.status(404).json({ error: 'no such robot' });
-  const level = LEVELS.includes(req.body?.level) ? req.body.level : null;
+  // Two sets. "archetypes" is the historical one: five types measured from 46
+  // recorded matches of this game, dealt at the rate they really turned up.
+  const set = req.body?.set === 'archetypes' ? 'archetypes' : 'levels';
+  const valid = set === 'archetypes' ? ARCHETYPE_LEVELS : LEVELS;
+  const level = valid.includes(req.body?.level) ? req.body.level : null;
   if (!level) return res.status(400).json({ error: 'unknown standard' });
   const rng = m.rng || makeRng(Date.now() & 0x7fffffff);
-  m.bots.set(token, makeBot(rng, { level, profile: brain.profile || 'observed' }));
+  m.bots.set(token, set === 'archetypes'
+    ? makeBot(rng, { set: 'archetypes', level })
+    : makeBot(rng, { level, profile: brain.profile || 'observed' }));
   res.json(m.setupView());
 });
 

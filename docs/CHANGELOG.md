@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.102.0 — overtime waits an entry interval after the last arrival, and the robots gain an archetypes set
+
 ## 0.101.0 — the comeback edge is a 60 ms band, not a 70% discount
 
 ## 0.100.5 — the category and value are shown, not spoken; twenty seconds to call a clue
