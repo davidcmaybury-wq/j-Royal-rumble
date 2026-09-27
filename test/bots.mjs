@@ -309,23 +309,47 @@ check('with statistics that look real', champ && champ.att > 0 && champ.correct 
   const dist = JSON.parse(fs.readFileSync(new URL('../data/buzz-distributions.json', import.meta.url)));
   loadDistributions(dist);
   const rng2 = makeRng(31);
-  const want = { rookie: 173, normie: 112, champ: 62, superchamp: 58 };
+  // The medians come from the file itself, so a rebuild from a new log bundle
+  // does not fail here for having measured something new. What is pinned is
+  // that the sampler reproduces what the file says, and the tier signature
+  // the recalibration found: anticipation is what separates the tiers.
+  const TIERS = ['elite', 'superchamp', 'champ', 'normie', 'rookie'];
+  const want = Object.fromEntries(TIERS.map((l) => [l, dist.levels[l].median]));
   const medianOf = (lvl, offset = 0) => {
     const b = makeBot(rng2, { level: lvl });
     const raw = Array.from({ length: 12000 },
       () => planClue({ ...b, attemptRate: 1 }, 3, rng2, 250, 0, offset))
       .filter((d) => d.attempt).map((d) => (d.early ? d.earlyAt : d.ms)).sort((a, c) => a - c);
+    // Early presses land negative; the under-150 share is of presses that were
+    // presses, the way the logs count it.
+    const pressed = raw.filter((t) => t >= 0);
     return { med: raw[Math.floor(raw.length / 2)],
-             iqr: raw[Math.floor(raw.length * 0.75)] - raw[Math.floor(raw.length * 0.25)] };
+             iqr: raw[Math.floor(raw.length * 0.75)] - raw[Math.floor(raw.length * 0.25)],
+             under150: pressed.filter((t) => t < 150).length / pressed.length,
+             over500: pressed.filter((t) => t > 500).length / pressed.length };
   };
+  const got = {};
   for (const [lvl, median] of Object.entries(want)) {
-    const { med } = medianOf(lvl);
-    check(lvl + ' reproduces its recorded median', Math.abs(med - median) < 15,
-      Math.round(med) + 'ms against ' + median + 'ms recorded');
+    got[lvl] = medianOf(lvl);
+    check(lvl + ' reproduces its recorded median', Math.abs(got[lvl].med - median) < 15,
+      Math.round(got[lvl].med) + 'ms against ' + median + 'ms recorded');
   }
-  const r = medianOf('rookie'), sc = medianOf('superchamp');
-  check('a rookie is far less consistent than a superchamp', r.iqr > sc.iqr * 3,
-    'middle 50% spans ' + Math.round(r.iqr) + 'ms against ' + Math.round(sc.iqr) + 'ms');
+  check('the tiers are ordered by speed', TIERS.every((l, i) => i === 0 || got[TIERS[i - 1]].med < got[l].med),
+    TIERS.map((l) => Math.round(got[l].med)).join(' < '));
+  check('the file says who built it and from how many presses',
+    dist.source && dist.source.presses > 4000 && dist.source.matches > 20,
+    JSON.stringify(dist.source));
+  // The recalibration's finding: an elite player plays the host's cadence and
+  // a rookie reacts to a sound. Recorded 59% against 17% under 150ms.
+  check('an elite buzzes on rhythm far more often than a rookie', got.elite.under150 > got.rookie.under150 * 2.5,
+    Math.round(got.elite.under150 * 100) + '% against ' + Math.round(got.rookie.under150 * 100) + '% under 150ms');
+  // One press in sixteen is slower than 500ms in real play; the old file could
+  // not make one past 900.
+  check('the slow tail exists', got.rookie.over500 > 0.2,
+    Math.round(got.rookie.over500 * 100) + '% of rookie presses over 500ms');
+  const beyond = Array.from({ length: 6000 }, () => planClue({ ...makeBot(rng2, { level: 'rookie' }), attemptRate: 1 }, 3, rng2, 250, 0, 0))
+    .filter((d) => d.attempt && !d.early && d.ms > 1000).length;
+  check('and reaches past a second, which the old recordings could not', beyond > 60, beyond + ' of 6000 over 1,000ms');
 
   const j = Array.from({ length: 4000 }, () => drawReadJitter(rng2, 45));
   const jm = j.reduce((a, x) => a + x, 0) / j.length;
@@ -333,7 +357,7 @@ check('with statistics that look real', champ && champ.att > 0 && champ.correct 
 
   const shifted = medianOf('champ', 120);
   check('a field offset moves the whole distribution',
-    Math.abs(shifted.med - (62 + 120)) < 25,
+    Math.abs(shifted.med - (want.champ + 120)) < 25,
     'median ' + Math.round(shifted.med) + 'ms with a +120ms offset');
 }
 

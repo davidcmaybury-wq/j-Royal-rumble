@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.104.0 — the robots buzz on this game's own clock, and every press that is not a buzz is recorded
+
 ## 0.103.0 — release notes reach the Discord room from the box, once per version
 
 ## 0.102.0 — overtime waits an entry interval after the last arrival, and the robots gain an archetypes set

@@ -11,6 +11,22 @@ here, and refuses a section Discord would cut off.
 Written for the people who play, not for whoever ships. Say what changed for
 them and why, in a few lines. No handles, no P-labels, American English.
 
+## 0.104.0 — The robots buzz like you do now
+
+The robots' press times used to come from recordings of another game, on a
+clock where the quickest human medianed 43 ms — so two of the five standards
+buzzed like the single fastest player ever recorded here, and none of them
+could ever be slow. Their timing is now built from 33 of our own matches and
+4,509 real presses: the same speeds, the same rhythm players and reactors, and
+the same slow tail, one press in seven over half a second. What separates the
+standards is anticipation, not consistency — an elite player presses on the
+host's cadence 59% of the time, a rookie 17%.
+
+Every press that is not a buzz is recorded now too — a jump of the lights, a
+press during the lockout, a second press after buzzing — with how early it
+was. None of them ever reach the race; they are there so the next rebuild can
+measure early presses instead of borrowing them.
+
 ## 0.103.0 — You will hear about changes here from now on
 
 Each new version posts a short note like this one to this channel, once, when

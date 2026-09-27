@@ -389,7 +389,10 @@ export function loadDistributions(json) {
       .map(([lo, n]) => [Number(lo), n])
       .sort((a, b) => a[0] - b[0]);
     const total = entries.reduce((s, [, n]) => s + n, 0);
-    EMPIRICAL[level] = { entries, total, median: v.median, width: json.bucketWidth || 25 };
+    // The top bucket is open-ended, wherever the file put it: 500 in the
+    // original recordings, 4,000 in the ones built from this game's play.
+    const top = entries.length ? entries[entries.length - 1][0] : 500;
+    EMPIRICAL[level] = { entries, total, median: v.median, width: json.bucketWidth || 25, top };
   }
   return EMPIRICAL;
 }
@@ -402,9 +405,11 @@ function sampleEmpirical(level, rng) {
     roll -= n;
     if (roll <= 0) {
       // The bottom and top buckets are open-ended; give them a plausible tail
-      // rather than pretending everything landed on the boundary.
+      // rather than pretending everything landed on the boundary. The top one
+      // used to be hard-coded at 500 — which, once the file ran to 4,000, would
+      // have folded one press in sixteen into a 500-900ms band.
       if (lo <= -999) return -260 - rng() * 220;
-      if (lo >= 500) return 500 + rng() * 400;
+      if (lo >= d.top) return lo + rng() * (d.top >= 4000 ? 2000 : 400);
       return lo + rng() * d.width;
     }
   }

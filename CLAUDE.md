@@ -1011,6 +1011,56 @@ grep-checked for handles and it was not; the repo is public, so the name became
 "one player" before the commit. Check every patch for names, not just the ones
 that say they were checked.
 
+## The robots buzz on this game's own clock now
+
+**`data/buzz-distributions.json` is built from our recorded matches — 0.104.0,
+`tools/build-buzz-distributions.mjs`, from the analysis chat's
+`fairness/bot-model-recalibration.md`.** The robots sampled another game's
+recordings for their press times: 2,493 buzzes against a clock on which the
+human medianed 43 ms. Two of the five tiers therefore buzzed at the median of
+the single quickest player ever recorded here, and no bucket ran past 500 ms
+although one real press in seven is slower than that — one in sixteen slower
+than anything the model could make. The rebuild: 33 matches, 64 players, 4,509
+live presses (the box's logs plus the analysis folder's earlier `matches/`),
+five equal tiers by each player's own median — elite 117 ms, superchamp 144,
+champ 183, normie 216, rookie 308 — 25 ms buckets to an open 4,000. The note's
+own figures (46 matches, 5,191 presses, 116/144/190/252/319) come from a bundle
+this repo does not hold and are quoted as theirs. The old file is
+`buzz-distributions-schiffler.json`, kept as the record; the file says what it
+was built from. **Re-run the builder when a new log bundle lands** — the
+command is in its header — and `test/bots.mjs` reads the medians from the file
+rather than pinning them, so a rebuild fails only if the sampler stops
+reproducing what the file says.
+
+**Three things move with it, and one did not.** `BOT_DEFAULT_OFFSET` is 0, not
+190: it existed to drag 50 ms robots onto our clock, and applied to robots
+already on it would make every one 190 ms slower than the people it was built
+from. `sampleEmpirical`'s open top bucket is wherever the file puts it, not
+hard-coded at 500, or the tail would fold into a 500–900 band. And what
+separates the tiers is anticipation, not consistency — elite presses under
+150 ms 59% of the time, rookies 17%; the old test asserted a rookie's middle
+50% was three times a superchamp's, which the real data do not support, and
+asserts the anticipation gap instead. **The row exponents did not move**: fitting
+`attemptRate^e` to the measured 76/67/60/54/46 gives 0.48/0.71/0.91/1.09/1.38
+against the shipped 0.48/0.67/0.85/1.10/1.40, inside the noise, so the
+broadcast figures stand.
+
+**Early presses are the one thing the logs could not time, and now they can.**
+A press before the lights was refused before it reached the race — correctly —
+so the `early` flag read false on every logged press and the standings carried
+only a count. The rebuilt file lays each tier's measured early *rate* over the
+old recordings' early timing *shape* and says so. The analysis chat's
+`presses` patch (same day) is the fix: every press that is not a buzz — early,
+locked, duplicate — is recorded per player in the standings with `at` relative
+to activation (negative before the lights), `sinceShown`, `sinceEarly` for
+volleys and `penaltyLeft`, capped at twenty per clue so a leaned-on key cannot
+flood a log; the client holds presses made during the read and converts them
+the instant activation is known (`public/rumble.js`); robots' planned early
+presses are kept in the same shape; buzz records carry `sinceShown` and
+`armSinceShown`. Nothing in that list can reach the race. `test/timeline.mjs`
+drives the real `rumble.js` on a fake clock; `test/presses.mjs` runs it over
+sockets. **The next rebuild can measure early timing instead of borrowing it.**
+
 ## Release notes reach the room from the box
 
 `docs/release-notes.md` is the source, the way `discord-rules-v2.md` is for

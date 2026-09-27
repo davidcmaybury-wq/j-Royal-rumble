@@ -91,28 +91,111 @@ export function armAt(serverInstant, lockout = 250) {
   const waitMs = serverInstant + personalLag - serverNow();
   const target = performance.now() + waitMs;
   armedAt = target;
+  // Activation is known now, so the presses made during the reading can finally
+  // be placed relative to it. Any made in the gap come out negative.
+  flushPending();
   return Math.max(0, waitMs);
 }
 
-export function disarm() { armedAt = null; sent = false; }
+export function disarm() {
+  // Anything still waiting belongs to a clue that never armed — a stumper the
+  // host skipped, say. Send it flagged rather than drop it: a volley on a clue
+  // that never opened is still a strategy.
+  if (pending.length) flushPending(true);
+  armedAt = null; sent = false; lastEarlyAbs = null;
+}
 
 export function isArmed() { return armedAt != null && performance.now() >= armedAt; }
 
 // Returns 'sent' | 'early' | 'locked' | 'duplicate'
+// Every press that is not a buzz, and when it happened.
+//
+// None of these may reach the race — an early press has no reaction time, and
+// sending one as a buzz would put a zero at the front of it. But they are the
+// whole difference between two players whose buzzes look alike: somebody 20ms
+// early was timing the host and missed by a hair; somebody 800ms early was
+// mashing. Both used to arrive as one bare tick of a counter, which made the
+// buzzing strategies invisible to every study that tried to measure them.
+//
+// `at` is relative to the arm: negative means before the lights, and it is
+// null when the clue had not armed at all, since there is nothing to be early
+// relative to. `sinceEarly` says how long after jumping they pressed again,
+// which is what separates one mistimed press from a volley.
+//
+// Everything is reported relative to ACTIVATION.
+//
+// That is the one measure that matters: how far before or after the lights a
+// press landed. A player jumping and then pressing every 60ms reads as
+//
+//     -25.1 (early)   40, 100, 160, 220 (locked out)   280 (valid)
+//
+// The client keeps each press as an ABSOLUTE time on its own clock and converts
+// to relative-to-activation before reporting. It has to: a press made while
+// the clue is still being read happens before the activation message has even
+// arrived, so at that moment there is nothing to be relative TO. Those presses
+// wait in `pending` and are converted the instant activation is known.
+//
+// Every figure is an interval on this one device's performance.now(), so no two
+// machines ever have to agree on the time. That is the property that matters
+// for remote play, per Matt Schiffler's notes on how his solo mode does it.
+const r1 = (v) => (v == null ? null : Math.round(v * 10) / 10);
+let pending = [];            // presses made before activation was known
+let lastEarlyAbs = null;     // absolute time of the last jump, for sinceEarly
+let clueShownAt = null;      // absolute time the clue text appeared
+
+function report(p) {
+  socket.emit('early-buzz', {
+    kind: p.kind,
+    at: armedAt == null ? null : r1(p.abs - armedAt),
+    sinceShown: clueShownAt == null ? null : r1(p.abs - clueShownAt),
+    armSinceShown: armedAt == null || clueShownAt == null ? null : r1(armedAt - clueShownAt),
+    sinceEarly: p.sinceEarly,
+    penaltyLeft: p.penaltyLeft ?? null,
+    // True only if the clue was abandoned before it ever armed, so these
+    // presses have no activation to be relative to and `at` is null.
+    neverArmed: !!p.neverArmed,
+  });
+}
+
+function logPress(kind, now, extra = {}) {
+  const p = { kind, abs: now,
+    sinceEarly: lastEarlyAbs == null ? null : r1(now - lastEarlyAbs), ...extra };
+  if (armedAt == null) pending.push(p);   // wait for activation to be known
+  else report(p);
+}
+
+/** Convert and send every press that was waiting on activation. */
+function flushPending(neverArmed = false) {
+  const waiting = pending;
+  pending = [];
+  for (const p of waiting) report(neverArmed ? { ...p, neverArmed: true } : p);
+}
+
+/** Start the clue's timeline. Call the moment the clue text is on screen. */
+export function clueShown() { clueShownAt = performance.now(); lastEarlyAbs = null; }
+
 export function attemptBuzz() {
   const now = performance.now();
-  if (sent) return 'duplicate';
-  if (now < earlyUntil) return 'locked';       // still serving the penalty
+  if (sent) {
+    logPress('duplicate', now);
+    return 'duplicate';
+  }
+  if (now < earlyUntil) {
+    // Pressed again while serving the penalty. Nothing happens on screen and
+    // nothing reaches the race, but it is the clearest sign of a volley.
+    logPress('locked', now, { penaltyLeft: Math.round((earlyUntil - now) * 10) / 10 });
+    return 'locked';
+  }
   if (armedAt == null || now < armedAt) {
-    // Jumping the lights is a penalty, not an entry. This must NOT go to the
-    // server as a buzz — an early press has no meaningful reaction time, and
-    // sending one would put a zero at the front of the race.
     earlyUntil = now + lockoutMs;
-    socket.emit('early-buzz');                 // recorded for stats only
+    logPress('early', now);
+    lastEarlyAbs = now;
     return 'early';
   }
   sent = true;
-  socket.emit('buzz', { ms: Math.round((now - armedAt) * 10) / 10, status: 'good' });
+  socket.emit('buzz', { ms: Math.round((now - armedAt) * 10) / 10, status: 'good',
+    sinceShown: clueShownAt == null ? null : r1(now - clueShownAt),
+    armSinceShown: clueShownAt == null ? null : r1(armedAt - clueShownAt) });
   return 'sent';
 }
 

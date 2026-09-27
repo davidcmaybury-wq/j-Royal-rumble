@@ -333,10 +333,22 @@ points of accuracy and 3.7 attempts game to game. Robots now draw a form for
 each match, so they are not perfectly predictable.
 
 **Recorded buzz histograms.** `data/buzz-distributions.json` holds real timing
-data from play of his model — 2,493 buzzes. Sampling those directly reproduces
-the shape a gaussian cannot: strongly right-skewed with a tail of whiffs, and a
-consistency gap between standards (a superchamp's middle 50% spans 60ms, a
-rookie's spans 406).
+data, sampled directly, which reproduces the shape a gaussian cannot: strongly
+right-skewed with a long tail. Since 0.104.0 it is built from **this game's own
+matches** by `tools/build-buzz-distributions.mjs` — 33 matches, 64 players,
+4,509 live presses, five equal tiers by each player's own median (elite 117 ms,
+superchamp 144, champ 183, normie 216, rookie 308), 25 ms buckets running to
+4,000 ms so that the one press in seven slower than 500 ms exists in the model.
+It used to hold 2,493 buzzes from play of the original model, against another
+game's clock: two of its five tiers buzzed at the median of the single quickest
+human ever recorded here, and nothing past 900 ms could happen. That file is
+kept as `buzz-distributions-schiffler.json`, the record of what the robots
+were. What separates the tiers is anticipation, not consistency: an elite
+player presses under 150 ms 59% of the time, a rookie 17%. Early presses are
+the one thing the logs could not time — they were refused before they reached
+the race — so each tier's early rate is measured here and its timing shape is
+borrowed from the old recordings, and the file says so; from 0.104.0 the record
+carries how early, so the next rebuild can measure that too.
 
 ### Buzzer scales### Buzzer scales
 

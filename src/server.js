@@ -235,11 +235,14 @@ const BOT_CALIBRATION_BUZZES = 16;
 // Testing phase: record and save every match, whatever the host ticked.
 const RECORD_EVERYTHING = process.env.RUMBLE_RECORD_ALL !== '0';
 
-// What to assume until then. The robots were recorded against a human whose
-// median buzz was 43ms; players of this game buzz at 200-450ms across every
-// match recorded so far. Starting from zero meant starting at the harder end of
-// that range, which is exactly the wrong way round for an unknown field.
-const BOT_DEFAULT_OFFSET = 190;
+// What to assume until then. This was 190 while the robots sampled another
+// game's recordings, made against a human whose median buzz was 43ms — players
+// of this game buzz at 200-450ms, so the robots had to be dragged onto our
+// clock before anybody had pressed. Since 0.104.0 the distributions are built
+// from this game's own presses (tools/build-buzz-distributions.mjs), on this
+// lag compensation, so zero is the calibrated answer and 190 would have made
+// every robot 190ms slower than the people it was built from.
+const BOT_DEFAULT_OFFSET = 0;
 
 const matches = new Map();   // gameId -> Match
 
@@ -918,6 +921,10 @@ class Match {
         // Practice presses, kept apart so a queued or eliminated player can
         // still see what they did without it counting for anything.
         warmAtt: st.warmAtt || 0, warmEarly: st.warmEarly || 0,
+        // Every press that was not a buzz, with its timing. `at` is ms relative
+        // to the arm (negative is early); see logPress in rumble.js.
+        presses: st.presses || [],
+        warmPresses: st.warmPresses || [],
         avg: times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length * 10) / 10 : null,
         best: times.length ? Math.min(...times) : null,
       };
@@ -2040,6 +2047,13 @@ function runBotsFor(match) {
       const at = armAt + plan.earlyAt;
       match.botTimers.push(setTimeout(() => {
         const st = match.stat(p.id); st.early++; st.att++;
+        // The robot knows exactly how early it was — it planned the press. Keep
+        // it, in the same shape a person's early press is kept, so a study can
+        // compare robots against people on the thing that tells them apart.
+        st.presses = st.presses || [];
+        st.presses.push({ kind: 'early', at: Math.round(plan.earlyAt * 10) / 10,
+          sinceEarly: null, penaltyLeft: null,
+          clue: match.game?.cluesRevealed ?? null });
         schedulePush(match, 'host');
       }, Math.max(0, at - Date.now())));
     }
@@ -2233,8 +2247,12 @@ function runResolve(match, { winnerToken }, { pushAll, clearBotTimers }, report)
       category: clueMeta.category, source: match.game.board[slot]?.source,
       note: clueMeta.note || null, row: clueMeta.row, value: clueMeta.value,
       faceValue: clueMeta.face ?? clueMeta.value,
+      // A whitelist, so a new field on the live record does NOT reach the log
+      // unless it is named here. The clue timeline was nearly lost this way:
+      // captured, carried, and then dropped on the way to disk.
       buzzes: buzzes.map((b) => ({ name: b.name, ms: b.ms, spectator: b.spectator,
-        early: !!b.early, latency: match.roster.get(b.token)?.latency ?? null })),
+        early: !!b.early, latency: match.roster.get(b.token)?.latency ?? null,
+        sinceShown: b.sinceShown ?? null, armSinceShown: b.armSinceShown ?? null })),
       winner: winnerToken ? match.roster.get(winnerToken)?.name : null,
       missed: missed.map((t) => match.roster.get(t)?.name),
       stumper: !winnerToken,
@@ -2890,23 +2908,48 @@ io.on('connection', (socket) => {
     pushAll();
   });
 
-  socket.on('early-buzz', () => {
+  socket.on('early-buzz', (info = {}) => {
     if (!match || !token) return;
     const st = match.stat(token);
+    // Record the press itself, not just that it happened. Kept in its own list
+    // so nothing here can ever be ranked in a race. See logPress in rumble.js.
+    const kind = ['early', 'locked', 'duplicate'].includes(info?.kind) ? info.kind : 'early';
+    const num = (v) => (Number.isFinite(v) ? Math.round(v * 10) / 10 : null);
+    // `at` is ms relative to activation: negative before the lights, positive
+    // after. It is the one field every study should read. The client computes
+    // it from absolute times on its own clock, holding presses made during the
+    // reading until activation is known — see report() in rumble.js.
+    const rec = { kind, at: num(info?.at), sinceShown: num(info?.sinceShown),
+      armSinceShown: num(info?.armSinceShown), sinceEarly: num(info?.sinceEarly),
+      penaltyLeft: num(info?.penaltyLeft), neverArmed: !!info?.neverArmed,
+      clue: match.game?.cluesRevealed ?? null };
     // Warm-up presses stay out of the live record, jumping the lights
     // included. This was checked on the buzz path and not here, so somebody
     // practising in the queue racked up live attempts: one player finished a
     // real match credited with 28 attempts across a tenure of one clue.
     const p = match.game?.players.get(token);
     const live = p && p.state === 'live' && match.race && match.clue;
+    const store = (list) => {
+      // A held key sends dozens a second. The shape of a volley is in its
+      // first few presses, and a log should not grow without limit because
+      // somebody leaned on the space bar.
+      st[list] = st[list] || [];
+      const onThisClue = st[list].filter((r) => r.clue === rec.clue).length;
+      if (onThisClue < 20) st[list].push(rec);
+    };
     if (!live) {
-      st.warmEarly = (st.warmEarly || 0) + 1;
-      st.warmAtt = (st.warmAtt || 0) + 1;
+      store('warmPresses');
+      if (kind === 'early') {
+        st.warmEarly = (st.warmEarly || 0) + 1;
+        st.warmAtt = (st.warmAtt || 0) + 1;
+      }
       return;
     }
-    // Counted as an attempt as well as an early one, so `early` can never
-    // exceed `att` — which is what made the table look broken.
-    st.early++; st.att++;
+    store('presses');
+    // Only a real jump of the lights is an attempt. A press during the penalty
+    // or after already buzzing is recorded, but it is not a fresh try at the
+    // clue, and counting it would have inflated `att` the way warm-up once did.
+    if (kind === 'early') { st.early++; st.att++; }
   });
 
   // Spectators are ranked against the LIVE field only, never against each
@@ -2938,7 +2981,7 @@ io.on('connection', (socket) => {
     }
   };
 
-  socket.on('buzz', ({ ms, status }) => {
+  socket.on('buzz', ({ ms, status, sinceShown, armSinceShown }) => {
     touch();
     if (!match || !token || !match.race) return;
     const g = match.game;
@@ -2951,9 +2994,13 @@ io.on('connection', (socket) => {
     // the read rather than reacting to the lights, so a perfectly judged buzz
     // legitimately lands at 0.0 — that's the best possible result, not a fault.
     if (status === 'early' || typeof ms !== 'number' || !isFinite(ms) || ms < 0) return;
+    const fin = (v) => (typeof v === 'number' && isFinite(v) ? Math.round(v * 10) / 10 : null);
     const rec = {
       token, name: match.roster.get(token)?.name || 'Player',
       ms: Math.round(ms * 10) / 10, early: false, spectator,
+      // The clue's own timeline on this buzzer: when the text appeared is zero.
+      // `ms` is still what the race is ranked on; these are for study only.
+      sinceShown: fin(sinceShown), armSinceShown: fin(armSinceShown),
     };
     // Warm-up presses are practice: they must not touch the live record.
     //

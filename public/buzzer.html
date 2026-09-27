@@ -468,7 +468,7 @@ letter-spacing:.08em;background:#5A3A0C;color:#F3D9A4;border:1px solid #8A5E15;f
 
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
-import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz,
+import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBuzz, clueShown,
          lockoutRemaining, startLatencyReports, syncClock,
          getLag, setLag, fmt, ord, serverNow } from '/rumble.js';
 import { attachHostVoice } from '/host-voice.js';
@@ -1429,7 +1429,12 @@ socket.on('rumble-starting', (d) => {
   say('The Rumble is beginning');
 });
 
-socket.on('clue-shown', () => { armed = false; early = false; disarm(); render(); });
+socket.on('clue-shown', () => {
+  armed = false; early = false; disarm();
+  // Start this clue's timeline the moment its text is on this screen.
+  clueShown();
+  render();
+});
 socket.on('activate-buzzers', ({ at, lockout }) => {
   const waitMs = armAt(at, lockout);
   armed = false; early = false; render();
