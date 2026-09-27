@@ -76,9 +76,19 @@ RUMBLE_PUBLIC_URL=https://j-royal-rumble.net
 RUMBLE_SESSION_SECRET=<32 random characters>
 ```
 
-`RUMBLE_PUBLIC_URL` matters behind CloudFront: the redirect URI has to match
-what is registered above, and the request's own idea of its host is whatever the
-proxy forwarded. `RUMBLE_SESSION_SECRET` signs the session cookie — leave it
+`RUMBLE_PUBLIC_URL` is the **origin only** — `https://j-royal-rumble.net`, no
+path, no trailing slash. The server appends `/auth/discord/callback` itself, so
+pasting the callback in here sends Discord `…/callback/auth/discord/callback`
+and it answers "Invalid OAuth2 redirect_uri" (which is how this sentence got
+written). It matters behind CloudFront: the redirect URI has to match what is
+registered above, and the request's own idea of its host is whatever the proxy
+forwarded. To see what the box actually sends, from anywhere:
+
+```
+curl -s -D - -o /dev/null https://j-royal-rumble.net/auth/discord | grep -i '^location'
+```
+
+The `redirect_uri` in that URL is the string Discord compares. `RUMBLE_SESSION_SECRET` signs the session cookie — leave it
 unset and one is generated per boot, which works and signs everybody out of
 `/when` on every deploy.
 
