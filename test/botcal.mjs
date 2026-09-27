@@ -41,10 +41,14 @@ check('no calibration before anyone has buzzed', st.botOffsetFrozen === false,
 // can be eliminated before the calibration ever fires — which is exactly what
 // happened in one recorded match, where the player went out at clue 12 having
 // buzzed seven times and lost every race to robots that had never been levelled
-// to him.
-check('but the robots start on a sensible default rather than raw speed',
-  st.botOffset >= 150 && st.botOffset <= 250,
-  `${st.botOffset}ms, against human medians of 198-422ms across recorded matches`);
+// to him. That default was 190ms while the robots sampled another game's
+// recordings and had to be dragged onto our clock; since 0.104.0 the
+// distributions are built from this game's own presses, so the sensible start
+// is no offset at all — 190 on top would make every robot 190ms slower than
+// the people it was built from.
+check('but the robots start on this game’s own clock, with no offset to drag them onto it',
+  st.botOffset === 0,
+  `${st.botOffset}ms, against distributions built from 4,509 real presses`);
 
 const playClue = async (humanMs) => {
   const open = [];
@@ -69,7 +73,7 @@ check('it calibrates once there are enough buzzes', st.botOffsetFrozen === true,
   `offset ${st.botOffset}ms`);
 const frozen = st.botOffset;
 check('and the offset lands near the human buzzing 600ms', frozen > 350 && frozen < 750,
-  `${frozen}ms, against a reference human at 43ms`);
+  `${frozen}ms, against the reference human median in the distributions file`);
 
 // Now buzz much faster for a long stretch. The offset must not follow.
 for (let i = 0; i < 12; i++) await playClue(120);
