@@ -320,10 +320,13 @@ check('with statistics that look real', champ && champ.att > 0 && champ.correct 
     const raw = Array.from({ length: 12000 },
       () => planClue({ ...b, attemptRate: 1 }, 3, rng2, 250, 0, offset))
       .filter((d) => d.attempt).map((d) => (d.early ? d.earlyAt : d.ms)).sort((a, c) => a - c);
-    // Early presses land negative; the under-150 share is of presses that were
-    // presses, the way the logs count it.
+    // Early presses land negative. The file's medians are of presses — the
+    // number a person would recognize — so the median compared below is of
+    // presses too; with a fifth of the mass early, a median over everything
+    // sits at the 38th percentile of presses and reads 35ms fast.
     const pressed = raw.filter((t) => t >= 0);
-    return { med: raw[Math.floor(raw.length / 2)],
+    return { med: pressed[Math.floor(pressed.length / 2)],
+             medAll: raw[Math.floor(raw.length / 2)],
              iqr: raw[Math.floor(raw.length * 0.75)] - raw[Math.floor(raw.length * 0.25)],
              under150: pressed.filter((t) => t < 150).length / pressed.length,
              over500: pressed.filter((t) => t > 500).length / pressed.length };
@@ -355,10 +358,14 @@ check('with statistics that look real', champ && champ.att > 0 && champ.correct 
   const jm = j.reduce((a, x) => a + x, 0) / j.length;
   check('read jitter is centred on zero', Math.abs(jm) < 6, jm.toFixed(1) + 'ms');
 
+  // Measured as a shift of everything, early presses included: an offset
+  // moves every draw by the same amount, so the median over all of them moves
+  // by exactly that, while the median of presses does not — a fifth of the
+  // early ones cross zero and become slow presses.
   const shifted = medianOf('champ', 120);
   check('a field offset moves the whole distribution',
-    Math.abs(shifted.med - (want.champ + 120)) < 25,
-    'median ' + Math.round(shifted.med) + 'ms with a +120ms offset');
+    Math.abs((shifted.medAll - got.champ.medAll) - 120) < 25,
+    'moved ' + Math.round(shifted.medAll - got.champ.medAll) + 'ms with a +120ms offset');
 }
 
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);

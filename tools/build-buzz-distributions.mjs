@@ -122,7 +122,8 @@ levels.human = { players: everyone.length, attempts: allTimes.length, median: hs
 const out = {
   note: 'Buzz timing histograms from this game’s own recorded matches, built by tools/build-buzz-distributions.mjs. '
     + 'Bucket keys are the lower bound in ms, 25 ms wide, running to an open bucket at 4000. Tiers are five equal groups of '
-    + `players with ${MIN}+ live presses, by each player’s own median, fastest first. \`human\` is everybody pooled and is `
+    + `players with ${MIN}+ live presses, by each player’s own median, fastest first. \`median\`, \`under150\` and \`attempts\` `
+    + 'describe presses that were presses, early ones excluded. `human` is everybody pooled and is '
     + 'the reference the field-matching offset reads. Negative buckets are early presses: the rate is measured here '
     + '(standings early over attempts); the timing shape is borrowed from the previous recordings, because a press before '
     + 'the lights is not written on a clue with a time.',
