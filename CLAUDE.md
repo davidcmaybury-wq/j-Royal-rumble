@@ -1330,8 +1330,29 @@ let the two be cross-referenced, which is the thing the P-labels prevent.
 
 ## Live data
 
-Thirteen human matches recorded, the last two (GMRF and SLDV, Aug 22) the first
-on 0.95.x. Pace has settled well under the model's 17.5s per clue — 19.3s on the
+**Two matches on 0.104.0 (ZTQX and KFHS, 2026-09-27, David hosting) were the
+first live outings for the overtime grace, the banded comeback and the presses
+logger, and the record shows each doing what it says.** ZTQX: last arrival at
+clue 48, interval 12, queue empty from then on, overtime at clue 60 — the grace
+held exactly one interval. KFHS: nine humans, a ring of seven that went 48 clues
+with nobody eliminated, so the stall-breaker opened overtime at clue 48 with
+two still queued — that path ignores the queue and the grace on purpose, and
+David's read from the floor was that the two late arrivals "got good play
+because their entry totals scaled correctly": ian in at clue 55 at ×2 with
+6,000, Vee at 66 at ×4 with 10,500, which is 12,000 clipped to the roof as it
+stood when overtime opened (the 0.90.0 arrival rule). Pace 16.3 and 18.0 s a
+clue. The estimator missed both ways — 53 predicted against 85 for ZTQX, 92
+against 79 for KFHS. **First real early-press timing**: 146 jumps of the
+lights across the two nights, median −36 and −56 ms, p10 about −160 to −180,
+p90 −8; the rebuilt distributions borrow an early shape from the old
+recordings that sits at −260 to −480 ms, so **the next rebuild should replace
+the borrowed shape with measured `at` once a few more nights are in** — the
+builder still assumes it, and its header says where. "duplicate" presses (after
+a buzz already landed) outnumber early ones six to one; people hammer the
+button, and none of it reaches the race.
+
+Thirteen human matches recorded before that, the last two (GMRF and SLDV, Aug
+22) the first on 0.95.x. Pace has settled well under the model's 17.5s per clue — 19.3s on the
 first night, 12.9–16.6 once rooms learned the game, 18.7–18.9 in the Aug 22 pair.
 Human buzz median ~150ms, with 49% under it.
 
