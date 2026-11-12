@@ -123,6 +123,10 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     check(`the handbook covers ${m}`, hb.includes(m));
   }
   check('and is current on the ceiling', /10,500/.test(hb));
+  // 0.105.0: three things the handbook has to say now that they are true.
+  check('the handbook records that the host\'s clock is built and how it reads', hb.includes("The host's clock, built"));
+  check('and that the estimator waits for the overtime entry grace', hb.includes('the grace is one interval added straight on'));
+  check('and that the metronome is the house robot, not a kind of player', hb.includes('the metronome was the robots'));
   const pdf = await fetch(`${U}/handbook.pdf`);
   check('the printable copy is still there', pdf.ok, String(pdf.status));
 }
@@ -207,6 +211,10 @@ for (const m of ['TOP ROPE', 'BOUNTIES', 'STABLES', 'REVIVAL']) {
     ['and that its edge is a band, not a percentage', 'nearest 60 ms'],
     // 0.102.0: overtime waits one entry interval after the last arrival.
     ['and that the last one in gets a breath before overtime', 'one entry interval to settle'],
+    // 0.105.0: every mechanic is a big button on the buzzer, not a keyboard
+    // shortcut. The copy used to tell phone players to expect them off.
+    ['that the mechanics have buttons on the buzzer', 'its own big button on your buzzer'],
+    ['and that taking aim is a button too', 'Tap **Take aim**'],
     ['both match shapes by name', 'ARCADE'],
     ['and the other one', 'TOURNAMENT'],
     ['that a player keeps their own time', 'your own'],

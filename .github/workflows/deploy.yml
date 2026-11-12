@@ -26,6 +26,10 @@ jobs:
         run: node test/harness.js
       - name: Length estimates and setup warnings
         run: node test/estimate.mjs
+      - name: A recorded handle cannot be shadowed by a change of case
+        run: node test/handles.mjs
+      - name: The host's clock is the whole room's shift, not one player's
+        run: node test/hostclock.mjs
       - name: Pages bind only to elements that exist
         run: node test/pagerefs.mjs
       - name: Rulings and spoken picks, with no server and no key

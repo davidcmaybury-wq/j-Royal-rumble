@@ -29,6 +29,11 @@ await new Promise((r) => host.emit('start-match', {}, r));
 await wait(500);
 
 const made = await new Promise((r) => ps[0].s.emit('make-stable', { name: 'The Firm' }, r));
+// Every gate on the buzzer — the button, the J and B keys — reads this flag.
+// It was missing from the payload until 0.105.0, so with stables on no player
+// was ever offered one, while this suite (which emits directly) passed.
+check('a player is told stables are on, which is what shows them the button',
+  ps[0].view.mechanics && ps[0].view.mechanics.stables === true, JSON.stringify(ps[0].view.mechanics));
 check('a player can found a stable', made.ok === true, made.name);
 const joined = await new Promise((r) => ps[1].s.emit('join-stable', { id: made.id }, r));
 check('another can join it', joined.ok === true, joined.name);

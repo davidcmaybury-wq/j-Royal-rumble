@@ -92,7 +92,7 @@ for t in wrestlers mechanics2 latecomer lag watch logdetail warmup timeout \
          tokens botcal otvalue mechanics-ui overtime logstore retoss \
          entry-countdown pagerefs bots setup-bots setup e2e delay record \
          buzzer avatar mechanics-live perf escapes comeback; do node test/$t.mjs; done
-for t in mechanics estimate boxparse boxfetch; do node test/$t.mjs; done
+for t in mechanics estimate boxparse boxfetch handles hostclock; do node test/$t.mjs; done
 node test/harness.js          # preset sanity: length, back-half, skill
 ```
 
@@ -999,7 +999,15 @@ boundaries are a design choice, not clusters**: k-means on the two axes gave
 the cuts are stated thresholds anybody can re-run. `POST /api/match/:id/bots
 {"count": n, "set": "archetypes"}`; `archetypeField` deals the expected count
 of each and Fisher-Yates shuffles. The set keeps its own histogram store so a
-mixed field never samples a rookie's buckets for a metronome. Not on the setup
+mixed field never samples a rookie's buckets for a metronome.
+
+**The metronome is a robot, on purpose.** The analysis chat found (2026-10-05)
+that all six "metronome" players were house robots — the measurement had not
+excluded `isBot` — so people fall into four types (rhythm 30 / gambler 10 /
+reactor 52 / straggler 8). David decided 2026-11-12 to keep dealing it at 14%
+as the house robot's own personality. It carries `robot: true` in
+`ARCHETYPES` and the data file; never quote its share as a fact about
+players. Not on the setup
 page yet — API only. Two open items from their side: the `early` flag reads
 0.0% across 5,191 clue-level presses while standings carry early counts in the
 dozens, so early mass cannot be recalibrated until the logger is traced; and
@@ -1297,8 +1305,32 @@ discoverability item now has a control group of one, and the thing that moved it
 was a person demonstrating the mechanic at the table — not a UI change, which is
 worth knowing before building one.
 
+**Correction, 0.105.0: the stables zero was a bug.** `playerView().mechanics`
+never carried `stables`, and every buzzer gate — the button, J, B — reads
+`M.stables`, so no player was ever offered a stable. `stables-live.mjs`
+emitted `make-stable` directly and never noticed. Found by looking at the
+buzzer in a browser while building the large buttons. `pagerefs.mjs` now
+checks every `M.x` the buzzer reads is a key the server sends, and the
+stables suite asserts the flag. Targeting and bounties were on screen; their
+zeros stand. **A socket suite that drives an action by message proves the
+action, not that anyone can reach it.**
+
+**The mechanics are big buttons now — 0.105.0.** After the top rope was used
+only once somebody demonstrated it, every mechanic on the buzzer became a
+56px action with a one-line description (`.act` in `buzzer.html`), stables
+included — they used to sit below the lag box. The ids are unchanged, so the
+keys still work; `pagerefs.mjs` fails if one slides back to a `.mbtn` chip.
+Whether it moves the usage numbers is the next measurement.
+
+**A recorded handle cannot be shadowed by case — 0.105.0.** `Brian` turned up
+beside the regular `brian` (2026-10-12). The join path now refuses a new name
+that matches a recorded human handle case-insensitively but not exactly
+(`logs.handleClashes`), and lets the exact spelling through, because that is
+the person coming back. Only checked when the name is changing, so nobody is
+locked out of their own seat on reconnect.
+
 **Softening the double-dip at high overtime multipliers** was raised and left
-open: at ×8 a missed clue costs the value twice, which can eliminate a player
+open — and David said 2026-11-12 that it is fine as it is: at ×8 a missed clue costs the value twice, which can eliminate a player
 from 8,000 points in one press.
 
 ## The analysis chat's folder is a required read
@@ -1384,6 +1416,15 @@ the floor binds, four improve. It changes nothing for the two most recent
 matches, whose entry phases were long enough that the proportional term already
 dominated.
 
+**The estimator adds one entry interval for the overtime grace — 0.105.0.**
+It never knew about `overtimeEntryGrace`, and the seven human matches on 0.104.0
+under-ran it by 28.6 clues on average; the term brings that to 21.4, six of
+seven closer. The simulator puts the grace at +8 clues for six to twelve
+players, tapering to +3 at thirty, so the full interval slightly over-calls big
+fields. What remains is latecomers. `test/estimate.mjs`'s simulated references
+moved by the measured grace delta, and its Aug 22 fixtures say
+`overtimeEntryGrace: false` because they predate it.
+
 **The estimator is no longer 2-for-2** — that line stood here for eleven matches
 after it stopped being true. It is 7 of 11 on the older set, and both Aug 22
 matches ran roughly double: 52 predicted against 101 actual, 32 against 56. The
@@ -1419,5 +1460,18 @@ other host at an identical delay setting — **+45ms, +90ms and +170ms** — whi
 a calibration offset, not a skill change. So absolute times are comparable within
 a match, or across matches with the same host, and not otherwise. The set is
 small, which is the reason the `host` field exists going forward rather than a
-reason to discount it. The proposed fix is on the page: point the robots'
-calibrate-and-freeze machinery at the host. Not built.
+reason to discount it.
+
+**The host's clock is built — 0.105.0, `src/hostclock.js`.** Every finished
+match records `hostClock`: for each returning player with 10+ contested presses
+here and in an earlier match, their median here minus the median of their
+earlier per-match medians; the offset is the median of those differences, and
+it needs three such players or it records `reason` instead of a number. It is
+**measured at the end, not frozen at sixteen buzzes** like the robots — nothing
+acts on it live, and entry slowness would bias an early freeze slow. The
+history comes from `logstore.pressHistory()`, the same boot scan as the handle
+guard, deduplicated by `startedAt` so a partial and final log count once.
+Shown as "Host clock" on the logs page. Run back over every log: 25 matches
+qualify, the regular host 12 of 13 within ±33 ms, a second host +39/−21/+11 —
+so ±30 ms is the noise, and Figure 17's big shift was one pair of hosts, as
+Figure 18 already said.

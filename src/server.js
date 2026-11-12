@@ -19,6 +19,7 @@ import { Autohost } from './autohost.js';
 import * as notes from './notes.js';
 import * as reports from './reports.js';
 import * as logs from './logstore.js';
+import { hostOffset } from './hostclock.js';
 import { mountAvailability, when, discord } from './when-routes.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS, ARCHETYPE_LEVELS,
          loadDistributions, loadArchetypes, archetypeField, drawReadJitter,
@@ -858,6 +859,11 @@ class Match {
     this.record.fieldOverTime = this.history.map((h) => ({
       clue: h.clue, inRing: Object.keys(h.scores).length, ceiling: h.ceiling }));
     this.record.standings = this.standings();
+    // Measured once, here, over the whole match — src/hostclock.js says why
+    // not at sixteen buzzes the way the robots are. Never allowed to stop a
+    // record being written.
+    try { this.record.hostClock = hostOffset(this.record, logs.pressHistory()); }
+    catch (e) { this.record.hostClock = { offsetMs: null, reason: 'failed: ' + e.message }; }
     this.record.history = this.history;
     this.record.corrections = this.corrections;
     this.record.fastest = this.fastest;
@@ -957,6 +963,16 @@ class Match {
       mechanics: {
         topRope: !!this.settings.topRope, targeting: !!this.settings.targeting,
         bounties: !!this.settings.bounties, revival: !!this.settings.revival,
+        // Missing until 0.105.0. The buzzer has gated its stable button and
+        // the J and B keys on `mechanics.stables` since stables shipped, and
+        // this payload never carried it — so no player ever saw a way to join
+        // one, and "zero stable uses in thirty-odd matches" was never a
+        // discoverability finding. `stables` alone (the list) is null when
+        // the setting is off, but the flag is what every gate reads.
+        stables: !!this.settings.stables,
+        // The share of the pot an aimed miss pays, so the aim picker can say
+        // what it costs in this match rather than the old fixed whole pot.
+        backfire: this.settings.targetBackfire ?? 0,
       },
       ring: g.live().map((x) => ({ token: x.id, name: x.name, draw: x.drawNumber,
         score: x.score, bounty: this.settings.bounties ? g.bountyTotal(x.id) : 0 })),
@@ -2439,6 +2455,18 @@ io.on('connection', (socket) => {
         return ack?.({ error: `Somebody is already playing as ${wanted}. `
           + 'Pick a different name — the host calls people by name, so two of '
           + 'you would be one person on the board.', nameTaken: true });
+      }
+      // And nobody becomes a recorded player by a slip of the shift key. Only
+      // checked when the name is changing, so a player already in the room
+      // under a name is never locked out of their own seat on reconnect.
+      const mine = m.roster.get(token);
+      const changing = !mine || String(mine.name || '').trim() !== wanted;
+      const lookalikes = changing ? logs.handleClashes(wanted) : [];
+      if (lookalikes.length) {
+        return ack?.({ error: `${lookalikes.join(' and ')} already ${lookalikes.length > 1 ? 'have' : 'has'} `
+          + `a record here, and ${wanted} differs only in capitals. If that is you, `
+          + `type it exactly as ${lookalikes[0]}; if not, pick a different name so the `
+          + 'two of you stay two people in the standings.', nameTaken: true });
       }
     }
 

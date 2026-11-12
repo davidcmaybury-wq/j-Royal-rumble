@@ -4,6 +4,7 @@
  "players": 42,
  "bucketWidth": 25,
  "rule": "median<150: tail<4 rhythm else gambler; median<250 reactor; else tail<2.5 metronome else straggler",
+ "metronomeNote": "The six \"metronome\" players were house robots (isBot: true), not people: the analysis behind this file did not exclude robots (corrected 2026-10-05). Kept on purpose as the house-robot personality (2026-11-12); its share is not a fact about players. Without it the people split rhythm 30 / gambler 10 / reactor 52 / straggler 8.",
  "levels": {
   "rhythm": {
    "players": 12,
@@ -336,7 +337,8 @@
     "1025": 2,
     "1075": 1,
     "1100": 1
-   }
+   },
+   "robot": true
   },
   "straggler": {
    "players": 3,

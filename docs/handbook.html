@@ -471,6 +471,13 @@ the cuts are stated thresholds anybody can re-run. Gambler and straggler each re
 players; their 7% shares could plausibly be 4% or 12%. The analysis chat's measurement and
 method are in its <code>buzzer-archetypes-packet</code>; the set is reachable through the robots
 API and not yet from the setup page.</p>
+<p class="mut"><strong>Correction (analysis chat, 2026-10-05): the metronome was the robots.</strong>
+The measurement had not excluded robots, and all six metronome players were house robots &mdash;
+the one group with a specification, which is why k-means found it every single run. People fall
+into four types, rhythm 30%, gambler 10%, reactor 52%, straggler 8%. The set still deals the
+metronome at 14%, on purpose, as the house robot's own personality: steady, never anticipating,
+never jumping the lights. It's labeled a robot in the code and the data now, and its share
+describes nobody.</p>
 <p>The tuning above needed thousands of matches, which needed believable players. The robot
 model is ported from Matt Schiffler's real-data generator and validated against J!ometry box
 scores — 3,339 real player-games — plus 2,784 more in the local archive.</p>
@@ -651,6 +658,21 @@ against the same host.</p>
 <svg viewBox="0 0 740 232" role="img" style="width:100%;height:auto;display:block"><line x1="110.0" y1="30" x2="110.0" y2="208" stroke="var(--grid)" stroke-width="1"/><text x="110.0" y="220.0" dy="0.32em" text-anchor="middle" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:normal;fill:var(--muted);font-variant-numeric:tabular-nums">0ms</text><line x1="306.7" y1="30" x2="306.7" y2="208" stroke="var(--grid)" stroke-width="1"/><text x="306.7" y="220.0" dy="0.32em" text-anchor="middle" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:normal;fill:var(--muted);font-variant-numeric:tabular-nums">100ms</text><line x1="503.3" y1="30" x2="503.3" y2="208" stroke="var(--grid)" stroke-width="1"/><text x="503.3" y="220.0" dy="0.32em" text-anchor="middle" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:normal;fill:var(--muted);font-variant-numeric:tabular-nums">200ms</text><line x1="700.0" y1="30" x2="700.0" y2="208" stroke="var(--grid)" stroke-width="1"/><text x="700.0" y="220.0" dy="0.32em" text-anchor="middle" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:normal;fill:var(--muted);font-variant-numeric:tabular-nums">300ms</text><text x="102.0" y="52.0" dy="0.32em" text-anchor="end" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:12.5px;font-weight:normal;fill:var(--ink)">P12</text><line x1="363.7" y1="52.0" x2="385.3" y2="52.0" stroke="var(--de)" stroke-width="2"/><circle cx="363.7" cy="52.0" r="6" fill="var(--de)" stroke="var(--surface)" stroke-width="2"><title>P12 — Host C (SLDV): 129ms</title></circle><circle cx="385.3" cy="52.0" r="6" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"><title>P12 — Host A (GMRF): 140ms</title></circle><text x="397.3" y="52.0" dy="0.32em" text-anchor="start" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11.5px;font-weight:normal;fill:var(--ink2);font-variant-numeric:tabular-nums">140ms</text><text x="351.7" y="52.0" dy="0.32em" text-anchor="end" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11.5px;font-weight:normal;fill:var(--ink2);font-variant-numeric:tabular-nums">129ms</text><text x="102.0" y="96.0" dy="0.32em" text-anchor="end" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:12.5px;font-weight:normal;fill:var(--ink)">P13</text><line x1="637.1" y1="96.0" x2="639.0" y2="96.0" stroke="var(--de)" stroke-width="2"/><circle cx="637.1" cy="96.0" r="6" fill="var(--de)" stroke="var(--surface)" stroke-width="2"><title>P13 — Host C (SLDV): 268ms</title></circle><circle cx="639.0" cy="96.0" r="6" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"><title>P13 — Host A (GMRF): 269ms</title></circle><text x="651.0" y="96.0" dy="0.32em" text-anchor="start" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11.5px;font-weight:normal;fill:var(--ink2);font-variant-numeric:tabular-nums">269ms</text><text x="625.1" y="96.0" dy="0.32em" text-anchor="end" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11.5px;font-weight:normal;fill:var(--ink2);font-variant-numeric:tabular-nums">268ms</text><text x="102.0" y="140.0" dy="0.32em" text-anchor="end" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:12.5px;font-weight:normal;fill:var(--ink)">P14</text><line x1="462.0" y1="140.0" x2="440.4" y2="140.0" stroke="var(--de)" stroke-width="2"/><circle cx="462.0" cy="140.0" r="6" fill="var(--de)" stroke="var(--surface)" stroke-width="2"><title>P14 — Host C (SLDV): 179ms</title></circle><circle cx="440.4" cy="140.0" r="6" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"><title>P14 — Host A (GMRF): 168ms</title></circle><text x="474.0" y="140.0" dy="0.32em" text-anchor="start" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11.5px;font-weight:normal;fill:var(--ink2);font-variant-numeric:tabular-nums">179ms</text><text x="428.4" y="140.0" dy="0.32em" text-anchor="end" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11.5px;font-weight:normal;fill:var(--ink2);font-variant-numeric:tabular-nums">168ms</text><text x="102.0" y="184.0" dy="0.32em" text-anchor="end" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:12.5px;font-weight:normal;fill:var(--ink)">P9</text><line x1="572.2" y1="184.0" x2="424.7" y2="184.0" stroke="var(--de)" stroke-width="2"/><circle cx="572.2" cy="184.0" r="6" fill="var(--de)" stroke="var(--surface)" stroke-width="2"><title>P9 — Host C (SLDV): 235ms</title></circle><circle cx="424.7" cy="184.0" r="6" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"><title>P9 — Host A (GMRF): 160ms</title></circle><text x="584.2" y="184.0" dy="0.32em" text-anchor="start" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11.5px;font-weight:normal;fill:var(--ink2);font-variant-numeric:tabular-nums">235ms</text><text x="412.7" y="184.0" dy="0.32em" text-anchor="end" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11.5px;font-weight:normal;fill:var(--ink2);font-variant-numeric:tabular-nums">160ms</text><rect x="110" y="7" width="10" height="10" rx="2" fill="var(--de)"/><text x="125.0" y="12.0" dy="0.32em" text-anchor="start" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:12px;font-weight:normal;fill:var(--ink2)">Host C (SLDV)</text><rect x="272.4" y="7" width="10" height="10" rx="2" fill="var(--s1)"/><text x="287.4" y="12.0" dy="0.32em" text-anchor="start" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:12px;font-weight:normal;fill:var(--ink2)">Host A (GMRF)</text></svg>
 <p class="fc">Three of the four shared players sit within &plusmn;11ms across the two hosts — no uniform shift, unlike the +45/+90/+170ms measured between Host A and Host B at identical delay settings (Figure 17). P9 moves +75ms alone, and a host offset that moves one player is not a host offset. So the calibration finding is real but not universal: it appeared between one pair of hosts and not another. Caveat: match 13 was the night&rsquo;s first, so its early buzzes lean cold even with the warm-up exclusion.</p>
 </figure>
+
+<p><strong>The host's clock, built (0.105.0).</strong> Figure 17 suggested pointing the robots'
+calibrate-and-freeze machinery at the host. It's built with one change. The robots freeze after
+sixteen buzzes because they have to act on the number mid-match; nothing acts on the host's
+number live, and the opening buzzes are the worst sample there is, because everybody presses
+below themselves on entry. So every finished match now records <code>hostClock</code>: for each
+returning player with ten or more contested presses, their median here minus their median across
+earlier matches, and the host's offset is the median of those differences. One player's bad night
+moves one difference; a host moves them all. It needs three returning players or it records the
+reason instead of a number.</p>
+<p>Run back over every log on file, 25 matches qualify. Under the regular host, 12 of 13 sit
+within &plusmn;33&nbsp;ms of zero; a second host's three read +39, &minus;21 and +11, with no
+consistent sign. That agrees with Figure 18, not Figure 17: the big shift was real between one
+pair of hosts and isn't the norm. About &plusmn;30&nbsp;ms is the instrument's own noise, so read
+anything inside that as zero. The figure is on the logs page beside each match.</p>
 
 <h3>The shark problem</h3>
 <p>Before the individual findings, the map. Every configuration this project has ever measured
@@ -1433,6 +1455,16 @@ one. Targeting was available in M21 and nobody aimed. Stables, targeting and bou
 now gone twenty-two matches without a single use between them. That is not a balance
 problem. Nobody can find them.</p>
 
+<p class="mut"><strong>Correction (0.105.0): for stables, it was worse than that &mdash; there was
+nothing to find.</strong> The buzzer showed its Join a stable button, and honored the J and B keys,
+only when the server said stables were on, and the server never said so: the flag was missing from
+the payload every player receives, from the day stables shipped. Every match with stables enabled
+offered no player any way to join one. The suites passed throughout because they form stables by
+sending the message directly rather than by looking for a button. So the stables row of the
+discoverability finding measured a bug, not a room; targeting and bounties were genuinely on
+screen, and their zeros stand. Found while making every mechanic a large button, which is what
+put the missing one in front of a pair of eyes.</p>
+
 <p class="small">Sources: match logs for the twenty-two recorded human matches, the
 0.96.1 anticipation instrumentation, and the eleven revival-off tails. Figures supplied
 pre-anonymized; P-labels and host letters as delivered.</p>
@@ -1497,6 +1529,18 @@ came in at 16.4 and 17.2 seconds a clue, the closest any rooms have run to the 1
 assumption.</p>
 
 <p>When the model is right, the predictions get boring. Boring is the goal.</p>
+
+<p><strong>Then it got un-boring, in the other direction (0.105.0).</strong> The first seven
+human matches on 0.104.0 all ran long but one &mdash; 61 predicted against 95, 47 against 68,
+53 against 85 &mdash; while pace stayed on the model. The cause was ours: 0.102.0 made overtime
+wait one entry interval after the last arrival, and the estimator was never told. The drain the
+tail models doesn't start until overtime does, so the grace is one interval added straight on.
+Over those seven matches the mean miss goes from 28.6 clues to 21.4, six of seven closer. The
+simulator agrees on the size, at 2,000 matches a row: +8 clues from six to twelve players,
+tapering to +3 at thirty, where short intervals stop mattering. The one match it moves the wrong
+way opened overtime through the stall path, which ignores the grace by design. Most of what's
+left is latecomers &mdash; one room was drawn with five and played with nine &mdash; and no
+setting can predict who turns up after the bell.</p>
 
 <h4>Every fast number in the room is two numbers</h4>
 

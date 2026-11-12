@@ -618,5 +618,34 @@ for (const page of ['console.html', 'setup.html', 'buzzer.html', 'admin.html', '
     && !/\.winbar i\{[^}]*animation/.test(buzzer));
 }
 
+// The advanced mechanics on the buzzer. Stables, targeting and bounties went
+// unused for thirty-odd matches as 12px pills; the top rope was used only after
+// somebody showed the room. So every mechanic is a large action that explains
+// itself, and this pins that none slides back into a chip.
+{
+  const buzzer = readFileSync(new URL('../public/buzzer.html', import.meta.url), 'utf8');
+  for (const id of ['m-rope', 'm-target', 'm-stable', 'm-betray', 'm-bounty']) {
+    check(`the ${id} mechanic renders as a large action button, not a chip`,
+      new RegExp(`act\\('${id}'`).test(buzzer) && !new RegExp(`class="mbtn[^"]*" id="${id}"`).test(buzzer));
+  }
+  const min = (buzzer.match(/\.act\{[^}]*min-height:(\d+)px/) || [])[1];
+  check('and each is at least a thumb high', Number(min) >= 48, `${min}px`);
+  check('and carries a line saying what it does', /\.act \.ad\{/.test(buzzer) && /<span class="ad">/.test(buzzer));
+  const mech = buzzer.slice(buzzer.indexOf('function renderMech'), buzzer.indexOf('function renderMech') + 6000);
+  // Every flag the buzzer gates a mechanic on has to be in the payload. The
+  // stables flag never was: the button rendered for nobody, from the day
+  // stables shipped until 0.105.0, and the socket suites passed throughout
+  // because they emit 'make-stable' directly instead of looking for a button.
+  const server = readFileSync(new URL('../src/server.js', import.meta.url), 'utf8');
+  const payload = (server.match(/mechanics: \{([\s\S]*?)\n\s*\},/) || [])[1] || '';
+  const sent = new Set([...payload.matchAll(/(\w+):/g)].map((x) => x[1]));
+  const read = [...new Set([...buzzer.matchAll(/\bM\.(\w+)/g)].map((x) => x[1]))];
+  const missing = read.filter((k) => !sent.has(k));
+  check('every mechanic flag the buzzer reads is one the server sends', read.length > 0 && !missing.length,
+    missing.length ? 'missing: ' + missing.join(', ') : read.join(', '));
+  check('and the stable buttons are bound inside the panel that draws them, so a repaint keeps them alive',
+    /q\('m-stable'\)\)\s*q\('m-stable'\)\.onclick/.test(mech) && /q\('m-betray'\)\)\s*q\('m-betray'\)\.onclick/.test(mech));
+}
+
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);
 process.exit(fails ? 1 : 0);

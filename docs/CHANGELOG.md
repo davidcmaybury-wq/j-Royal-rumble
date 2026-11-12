@@ -3,6 +3,8 @@
 Newest first. `npm run ship` adds an entry automatically, so this stays current
 without anybody remembering to update it.
 
+## 0.105.0 — every move gets a real button, the stables button exists, the host's clock is measured, and a recorded handle cannot be shadowed by case
+
 ## 0.104.0 — the robots buzz on this game's own clock, and every press that is not a buzz is recorded
 
 ## 0.103.0 — release notes reach the Discord room from the box, once per version

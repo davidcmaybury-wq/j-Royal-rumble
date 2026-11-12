@@ -554,7 +554,27 @@ export function expectedClues(playerCount, interval, settings = {}) {
   const rev = settings.revival
     ? 1 + (settings.revivalLimit ?? 1) * (settings.revivalFraction ?? 0.5) * 0.96
     : 1;
-  return Math.round(base * rev);
+  // Overtime waits one entry interval after the last arrival (0.102.0), and
+  // the drain the tail models does not really start until overtime does. So
+  // the grace is one interval added straight on — it is a fixed delay, not a
+  // proportion of anything.
+  //
+  // Checked against the seven human matches recorded on 0.104.0, every one of
+  // which under-ran its estimate but one: mean absolute error 28.6 -> 21.4
+  // clues, six of seven closer. The one it moves the wrong way (KFHS, 92 -> 103
+  // against 79) opened overtime through the stall path, which ignores the
+  // grace by design. The simulator agrees on the size: 2,000 matches a row put
+  // the grace at +8 clues from six to twelve players (interval 10), tapering
+  // to +5 at twenty and +3 at thirty as short intervals stop mattering. The
+  // full interval slightly over-calls big fields, which nobody plays yet, and
+  // the rooms we do play under-run by more than that. What is left of the miss is latecomers — ZLXW was drawn
+  // with five and played with nine — which no setting can predict.
+  //
+  // Undefined means on, because that is the engine default; the pre-0.102
+  // fixtures in test/estimate.mjs say false explicitly.
+  const grace = settings.overtime !== false && settings.overtimeEntryGrace !== false
+    ? interval : 0;
+  return Math.round(base * rev) + grace;
 }
 
 // A ceiling that decays from its opening value down to the floor across the

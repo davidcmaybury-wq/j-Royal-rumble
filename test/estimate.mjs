@@ -9,7 +9,10 @@ const S = (over = {}) => ({ targetMinutes: 60, secondsPerClue: 17.5, entryInterv
 check('under three players there is nothing to estimate', estimate(2, S()) === null);
 
 // Against the simulator's measured medians for the published presets.
-const sim = { 16: 52, 20: 54, 30: 65 };
+// These were 52 / 54 / 65 before the overtime entry grace (0.102.0). Measured
+// 2026-11-12 at 2,000 matches a row, the grace adds 7, 5 and 3 clues at these
+// field sizes (and 8 at six to twelve), so each reference moves by that much.
+const sim = { 16: 54, 20: 56, 30: 66 };
 for (const [n, mins] of Object.entries(sim)) {
   const e = estimate(+n, S());
   const off = Math.abs(e.mins - mins) / mins;
@@ -164,7 +167,10 @@ for (const n of [4, 5, 6, 8, 10]) {
   // The specific thing that broke: revival has to lengthen the prediction, and
   // it has to do so on both sides. A delegation that dropped the settings
   // argument would still pass the equality check above.
-  const flat = { revival: false }, rev = { revival: true, revivalLimit: 1, revivalFraction: 0.75 };
+  // The Aug 22 fixtures predate the overtime entry grace (0.102.0), so they
+  // say so: these are what those hosts were shown, on that engine.
+  const flat = { revival: false, overtimeEntryGrace: false },
+    rev = { revival: true, revivalLimit: 1, revivalFraction: 0.75, overtimeEntryGrace: false };
   check('revival lengthens the predicted match',
     expectedClues(5, 15, rev) > expectedClues(5, 15, flat),
     `${expectedClues(5, 15, flat)} -> ${expectedClues(5, 15, rev)} clues`);
@@ -178,6 +184,18 @@ for (const n of [4, 5, 6, 8, 10]) {
     expectedClues(5, 15, rev) === 89, `${expectedClues(5, 15, rev)} vs 101 actual`);
   check('match 13 (5 players, interval 5, revival 0.75) predicts 55',
     expectedClues(5, 5, rev) === 55, `${expectedClues(5, 5, rev)} vs 56 actual`);
+
+  // Overtime waits one entry interval after the last arrival, so the estimate
+  // waits with it. TPPZ (seven drawn, interval 8) predicted 61 and ran 95 on
+  // 0.104.0 without this term.
+  const now = { revival: false };
+  check('the overtime entry grace adds one entry interval to the estimate',
+    expectedClues(7, 8, now) - expectedClues(7, 8, { ...now, overtimeEntryGrace: false }) === 8,
+    `${expectedClues(7, 8, { ...now, overtimeEntryGrace: false })} -> ${expectedClues(7, 8, now)}`);
+  check('and adds nothing when overtime is off, because there is nothing to wait for',
+    expectedClues(7, 8, { ...now, overtime: false }) === expectedClues(7, 8, { ...now, overtime: false, overtimeEntryGrace: false }));
+  check('TPPZ (7 players, interval 8) now predicts 69',
+    expectedClues(7, 8, now) === 69, `${expectedClues(7, 8, now)} vs 95 actual`);
 }
 
 console.log(`\n${fails ? fails + ' FAILURES' : 'all checks passed'}`);

@@ -64,6 +64,9 @@ check('it downloads whole', Array.isArray(body.clues) && body.clues.length === 4
   `${(body.clues || []).length} clues`);
 check('with the buzz detail intact', body.clues.some((c) => c.buzzes.length));
 check('and says when it was saved', !!body.savedAt);
+check('and carries the host\'s clock, measured or with the reason it could not be',
+  body.hostClock && (typeof body.hostClock.offsetMs === 'number' || typeof body.hostClock.reason === 'string'),
+  JSON.stringify(body.hostClock && (body.hostClock.offsetMs ?? body.hostClock.reason)));
 
 // Path traversal must not work.
 const bad = await fetch(`${U}/api/logs/${encodeURIComponent('../package.json')}?key=${LOGKEY}`);

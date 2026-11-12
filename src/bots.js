@@ -36,6 +36,16 @@ export const LEVELS = ['rookie', 'normie', 'champ', 'superchamp', 'elite'];
 //
 // `share` is how common each was among the 42 measured players, and is what
 // `drawArchetype` samples from, so a random field looks like a real night.
+//
+// THE METRONOME IS A ROBOT, ON PURPOSE. The analysis that produced these five
+// did not exclude robots, and every one of the six "metronome" players carries
+// `isBot: true` — it was the only cluster with a specification, which is why
+// k-means found it every run (corrected by the analysis chat, 2026-10-05). The
+// people fall into four types: rhythm 30%, gambler 10%, reactor 52%, straggler
+// 8% once the robots are out. David's call (2026-11-12) was to keep dealing it
+// anyway, as the house robot's own personality: steady, never anticipating,
+// never jumping the lights. So it stays at 14% and says what it is — `robot:
+// true` — and nothing should quote its share as a fact about players.
 export const ARCHETYPES = {
   rhythm:    { median: 127, tail: 2.9, anticipation: 0.57, accuracy: 0.87,
                early: 0.20, share: 0.29, players: 12,
@@ -47,8 +57,8 @@ export const ARCHETYPES = {
                early: 0.21, share: 0.43, players: 18,
                note: 'the middle of the field; reacts to the light more than the rhythm' },
   metronome: { median: 292, tail: 1.7, anticipation: 0.07, accuracy: 0.85,
-               early: 0.02, share: 0.14, players: 6,
-               note: 'never anticipates, never sprays, never jumps the lights' },
+               early: 0.02, share: 0.14, players: 0, robots: 6, robot: true,
+               note: 'the house robot: never anticipates, never sprays, never jumps the lights' },
   straggler: { median: 330, tail: 5.4, anticipation: 0.13, accuracy: 0.81,
                early: 0.10, share: 0.07, players: 3,
                note: 'slow and scattered; late grabs on clues nobody else wanted' },

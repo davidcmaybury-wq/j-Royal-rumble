@@ -11,6 +11,24 @@ here, and refuses a section Discord would cut off.
 Written for the people who play, not for whoever ships. Say what changed for
 them and why, in a few lines. No handles, no P-labels, American English.
 
+## 0.105.0 — Every move gets a real button
+
+Top rope, taking aim, stables and bounties used to be little pills under the
+buzzer, and most of them had never been used. Each one the host switches on is
+now a big button that says in one line what it does, on a phone as much as a
+laptop. The keys still work.
+
+Stables in particular: the button to join one was never actually shown, in any
+match, because of a bug — so if a host told you stables were on and you
+couldn't find them, that's why. They're really there now.
+
+A new name that differs from a recorded player's only in capitals is turned
+away at the door now, so two people can't end up one shift key apart in the
+standings. If it's your own name, type it the way you always have.
+
+The match-length estimate now counts the breath the last arrival gets before
+overtime. It had been running ten minutes or more short in most rooms.
+
 ## 0.104.0 — The robots buzz like you do now
 
 The robots' press times used to come from recordings of another game, on a

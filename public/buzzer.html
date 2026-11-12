@@ -242,6 +242,28 @@ animation:breathe 1.6s ease-in-out infinite}
 .mbtn.on{border-color:var(--brass);color:var(--brass);background:#3A2E0C}
 .mbtn .k{opacity:.55;margin-left:5px;font-size:10.5px}
 .mbtn:disabled{opacity:.3;cursor:default}
+/* The advanced mechanics, as actions rather than chips. Stables, targeting and
+   bounties went unused for thirty-odd matches as 12px pills under the buzzer,
+   and the only mechanic ever used was the one somebody demonstrated at the
+   table. So each is a full-width button that says what it does in one line —
+   the demonstration, written down. Big enough for a thumb (56px), never as big
+   as the buzzer. */
+.acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;
+width:100%;max-width:520px;margin:4px auto 2px}
+.act{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:56px;
+padding:10px 14px;border:1.5px solid var(--brass);border-radius:12px;background:#221C0B;
+color:var(--chalk);text-align:left;cursor:pointer}
+.act:hover{background:#3A2E0C}
+.act .an{font-size:16px;font-weight:600;letter-spacing:.01em;display:flex;width:100%;
+align-items:baseline;gap:8px}
+.act .an .k{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;
+font-weight:400;padding:1px 6px;border:1px solid var(--line);border-radius:4px;color:var(--slate)}
+.act .ad{font-size:12px;line-height:1.3;color:var(--slate)}
+.act.on{background:#3A2E0C;box-shadow:0 0 0 2px var(--brass) inset}
+.act.on .an{color:var(--brass)}
+.act.cooling{border-style:dashed;opacity:.6}
+.act:disabled{opacity:.4;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%}
 .lastarm{font-size:10.5px;color:var(--brass);font-family:"IBM Plex Mono",monospace;
 display:block;width:100%;margin-top:2px;text-align:center}
 .bonus{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);z-index:80;
@@ -1569,10 +1591,6 @@ renderJoin();
   if (fb2) fb2.onclick = () => setFull(!full);
   const mb = document.getElementById('musicbtn');
   if (mb) mb.onclick = openMusic;
-  const sb = document.getElementById('m-stable');
-  if (sb) sb.onclick = stableSheet;
-  const bb = document.getElementById('m-betray');
-  if (bb) bb.onclick = () => betraySheet(you);
   const ob = document.getElementById('objbtn');
   if (ob) ob.onclick = () => object();
   // The vote opens and closes on the server's clock, not on a click, so the
@@ -1660,35 +1678,52 @@ function renderMech(st, you) {
   const m = document.getElementById('mech');
   if (!m) return;
   const M = V.mechanics || {};
-  const parts = [];
+  const acts = [], chips = [];
+  // One big button per mechanic the host switched on: what it is, the key,
+  // and a line saying what it does. The ids are the keyboard handlers' too.
+  const act = (id, cls, name, key, desc, disabled = false) =>
+    `<button class="act${cls}" id="${id}" ${disabled ? 'disabled' : ''}>
+      <span class="an">${name}<span class="k">${key}</span></span>
+      <span class="ad">${desc}</span></button>`;
   if (M.topRope && st === 'live') {
     // Cooling down after a climb. Say how long rather than just greying out —
     // a dead button with no reason reads as a bug.
     const wait = you.topRopeWait || 0;
     const blocked = V.clueUp || (wait > 0 && !you.topRope);
-    parts.push(`<button class="mbtn${you.topRope ? ' on' : ''}${wait > 0 && !you.topRope ? ' cooling' : ''}"
-      id="m-rope" ${blocked ? 'disabled' : ''}>
-      ${you.topRope ? 'ON THE TOP ROPE'
-        : wait > 0 ? `Ropes ready in ${wait}`
-        : 'Go to the top rope'}<span class="k">R</span></button>`);
+    acts.push(act('m-rope', you.topRope ? ' on' : wait > 0 ? ' cooling' : '',
+      you.topRope ? 'On the top rope' : wait > 0 ? `Ropes ready in ${wait}` : 'Top rope', 'R',
+      you.topRope ? 'Next clue counts double for you, win or lose. Tap to climb down free.'
+        : wait > 0 ? `${wait} more clue${wait === 1 ? '' : 's'} before you can climb again.`
+        : 'Double or nothing on the next clue — twice the win, twice the loss.',
+      blocked));
   }
   if (M.targeting && st === 'live') {
     const t = (V.ring || []).find((x) => x.token === you.target);
-    parts.push(`<button class="mbtn${you.target ? ' lockon' : ''}" id="m-target">
-      ${t ? 'Aiming at ' + t.name : 'Take aim'}<span class="k">T</span></button>`);
+    acts.push(act('m-target', t ? ' on' : '', t ? `Aiming at ${t.name}` : 'Take aim', 'T',
+      t ? 'Win a clue and the whole pot comes out of them alone. Tap to change.'
+        : 'Pick a player. Win a clue and only they pay the pot.'));
+  }
+  if (M.stables && st === 'live') {
+    acts.push(you.stable
+      ? act('m-betray', ' on', stableName(you.stable), 'B',
+        'Your side pays nothing when one of you wins. Tap to betray it.', V.clueUp)
+      : act('m-stable', '', 'Join a stable', 'J',
+        'Team up. Your side never pays your pots, and splits them evenly.', V.clueUp));
   }
   if (M.bounties && st === 'queued' && (you.bountyCap - you.bountyPlaced) > 0) {
-    parts.push(`<button class="mbtn" id="m-bounty">Place a bounty
-      <span class="k">${(you.bountyCap - you.bountyPlaced).toLocaleString()} left</span></button>`);
+    acts.push(act('m-bounty', '', 'Place a bounty', 'B',
+      `Stake up to ${(you.bountyCap - you.bountyPlaced).toLocaleString()} on somebody. `
+        + 'Whoever knocks them out collects it.'));
   }
   if (M.bounties && you.bounty > 0) {
-    parts.push(`<span class="mbtn lockon" style="cursor:default">
+    chips.push(`<span class="mbtn lockon" style="cursor:default">
       ${you.bounty.toLocaleString()} on your head</span>`);
   }
   if (you.revivals > 0) {
-    parts.push(`<span class="mbtn" style="cursor:default">Second life</span>`);
+    chips.push(`<span class="mbtn" style="cursor:default">Second life</span>`);
   }
-  m.innerHTML = parts.join('') + `
+  m.innerHTML = (acts.length ? `<div class="acts">${acts.join('')}</div>` : '')
+    + (chips.length ? `<div class="chips">${chips.join('')}</div>` : '') + `
     <div class="lagbox">
       <span class="lt">Lag compensation</span>
       <button class="lg" id="lag-">&minus;</button>
@@ -1698,11 +1733,6 @@ function renderMech(st, you) {
       <span class="lh">${lagHint()}</span>
       <span class="lastarm" id="lastarm"></span>
     </div>
-    ${M.stables && st === 'live' ? (you.stable
-      ? `<button class="mbtn on" id="m-betray" ${V.clueUp ? 'disabled' : ''}>
-           ${stableName(you.stable)}<span class="k">B</span></button>`
-      : `<button class="mbtn" id="m-stable" ${V.clueUp ? 'disabled' : ''}>
-           Join a stable<span class="k">J</span></button>`) : ''}
     <button class="fullbtn" id="musicbtn">
       ${themeLabel()}<span class="fh">entrance music</span></button>
     ${CAN_FULL ? `<button class="fullbtn${full ? ' on' : ''}" id="fullbtn">
@@ -1720,6 +1750,10 @@ function renderMech(st, you) {
   };
   if (q('m-target')) q('m-target').onclick = () => pickTarget(you);
   if (q('m-bounty')) q('m-bounty').onclick = () => pickBounty(you);
+  // Bound here, not only in render(): the lag buttons repaint this panel on
+  // their own, and a stable button rebuilt without its handler is dead.
+  if (q('m-stable')) q('m-stable').onclick = stableSheet;
+  if (q('m-betray')) q('m-betray').onclick = () => betraySheet(you);
   const lv = q('lagv');
   const applyLag = (v) => { setLag(v); renderMech(st, you); };
   if (q('lag-')) q('lag-').onclick = () => applyLag(getLag() - 10);
@@ -1732,12 +1766,20 @@ function renderMech(st, you) {
 
 // Numbered so it can be driven from the keyboard as well as tapped — the
 // people on laptops will be faster with numbers.
+// What a miss costs in this match. It was a fixed "the whole pot yourself"
+// long after 0.94.0 made it a dial that Arcade sets to nothing — telling the
+// room the one thing that makes ganging up on a leader look unaffordable.
+function backfireLine() {
+  const b = Number((V.mechanics || {}).backfire) || 0;
+  if (b <= 0) return 'Miss and they take it, and it costs you nothing extra.';
+  if (b >= 1) return 'Miss and they take it, and you pay them the whole pot.';
+  return `Miss and they take it, and you pay them ${b === 0.5 ? 'half' : Math.round(b * 100) + '% of'} the pot.`;
+}
 function pickTarget(you) {
   const ring = (V.ring || []).filter((x) => x.token !== you.token);
   const el = document.createElement('div'); el.className = 'picker';
   el.innerHTML = `<div class="pbox"><h3>Take aim</h3>
-    <div class="sub2">Win a clue and the whole pot comes out of them alone. Lose it to them and
-    you pay the whole pot yourself.</div>
+    <div class="sub2">Win a clue and the whole pot comes out of them alone. ${backfireLine()}</div>
     ${ring.map((p, i) => `<button class="prow${you.target === p.token ? ' cur' : ''}" data-t="${p.token}">
       <span class="n">${i + 1}</span><span>${p.name}</span>
       <span class="sc2">${p.score.toLocaleString()}</span></button>`).join('')}

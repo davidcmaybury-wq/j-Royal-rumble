@@ -18,6 +18,7 @@
 
 import { mkdirSync, writeFileSync, readdirSync, readFileSync, statSync, existsSync } from 'fs';
 import { join } from 'path';
+import { pressMedians, MIN_PRESSES } from './hostclock.js';
 
 const DIR = process.env.RUMBLE_LOG_DIR
   || (existsSync('/data') ? '/data/logs' : join(process.cwd(), 'logs'));
@@ -80,6 +81,7 @@ export function save(code, record, { partial = false } = {}) {
       savedAt: new Date().toISOString(),
       partial,
     }));
+    if (handles) addRecord(record, partial);
     return name;
   } catch (e) {
     lastError = e.message;
@@ -109,6 +111,9 @@ export function list() {
             players: (j.roster || []).length,
             winner: (j.standings || []).find((p) => p.winner)?.name ?? null,
             partial: !!j.partial,
+            // How much slower (+) or quicker the room pressed under this host
+            // than the same people elsewhere; null when it could not measure.
+            hostClock: j.hostClock?.offsetMs ?? null,
           };
         } catch (e) { /* a half-written file should not break the listing */ }
         return { file: f, bytes: s.size, at: s.mtime.toISOString(), ...summary };
@@ -127,4 +132,82 @@ export function read(file) {
   } catch (e) {
     return null;
   }
+}
+
+// ---- recorded handles ------------------------------------------------
+//
+// Every analysis tool keys a player by the exact handle string, so `Brian`
+// and `brian` are two people in every CSV and scoreboard — and on 2026-10-12
+// they genuinely were: a newcomer turned up as `Brian` beside an August
+// regular called `brian`. Nothing merged, but the two now sit one shift-key
+// apart in the record forever. So a new name that matches a recorded one
+// except for case is refused at the door, and the player is told which one.
+//
+// An exact match is let through: that is the same person coming back, which
+// is the whole point of a handle. Robots are left out — their names are the
+// server's, not anybody's identity. Partial logs count too: a match that
+// died mid-way still put the name in the record.
+let handles = null;
+// And, from the same scan, each match's press medians for the host's clock
+// (src/hostclock.js). Keyed by start time so a partial and a final log of one
+// match count once, the final one winning.
+let presses = null;
+
+function addRecord(record, partial = !!record?.partial) {
+  for (const p of record?.standings || []) {
+    if (p.isBot) continue;
+    const n = String(p.name || '').trim();
+    if (n) handles.add(n);
+  }
+  if (!record?.startedAt) return;
+  const prev = presses.get(record.startedAt);
+  if (prev && !prev.partial && partial) return;
+  presses.set(record.startedAt, { partial, medians: pressMedians(record) });
+}
+
+function scan() {
+  if (handles) return;
+  handles = new Set();
+  presses = new Map();
+  if (!ensure()) return;
+  try {
+    for (const f of readdirSync(DIR).filter((f) => f.endsWith('.json'))) {
+      try { addRecord(JSON.parse(readFileSync(join(DIR, f), 'utf8'))); }
+      catch (e) { /* a half-written file should not break the door */ }
+    }
+  } catch (e) { lastError = e.message; }
+}
+
+export function recordedHandles() {
+  scan();
+  return handles;
+}
+
+/**
+ * Every recorded player's per-match press medians, in the shape
+ * hostclock.hostOffset() takes: name -> [{ startedAt, median }].
+ */
+export function pressHistory() {
+  scan();
+  const per = new Map();
+  for (const [startedAt, { medians }] of presses) {
+    for (const [name, { median, presses: n }] of medians) {
+      if (n < MIN_PRESSES) continue;
+      if (!per.has(name)) per.set(name, []);
+      per.get(name).push({ startedAt, median });
+    }
+  }
+  return per;
+}
+
+/**
+ * Recorded handles this name would be confused with: the same letters in a
+ * different case. Empty when the name is new or is exactly a recorded one.
+ */
+export function handleClashes(name, known = recordedHandles()) {
+  const n = String(name || '').trim();
+  if (!n) return [];
+  if (known.has(n)) return [];
+  const low = n.toLowerCase();
+  return [...known].filter((h) => h.toLowerCase() === low).sort();
 }
