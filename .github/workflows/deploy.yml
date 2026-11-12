@@ -30,6 +30,8 @@ jobs:
         run: node test/pagerefs.mjs
       - name: Rulings and spoken picks, with no server and no key
         run: node test/judge.mjs
+      - name: No clue in the library reaches the screen with an escape
+        run: node test/library-text.mjs
       - name: Box score parser
         run: node test/boxparse.mjs
       - name: Box score collector, end to end

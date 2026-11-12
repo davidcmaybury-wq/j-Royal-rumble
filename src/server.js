@@ -5,6 +5,7 @@ import { Server } from 'socket.io';
 import { randomUUID, randomBytes } from 'crypto';
 import { readFileSync, readdirSync, writeFileSync } from 'fs';
 import { gunzipSync } from 'zlib';
+import { cleanLibrary } from './library-text.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RumbleGame, makeRng, autoEntryInterval, expectedClues, DEFAULT_SETTINGS } from './engine.js';
@@ -73,33 +74,8 @@ try {
 const LIBRARY = gunzipSync(readFileSync(join(__dir, '../data/library.ndjson.gz')))
   .toString('utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
 
-// Categories imported before the title fix carry their escapes. Cleaning them
-// at load costs a few milliseconds once and saves a library rebuild.
-// Categories imported before the escape fix carry their escapes — and some
-// carry them twice, having been through two converters. Cleaning at load costs
-// a second at boot and saves rebuilding a 47,000-category library.
-const unescapeText = (t) => {
-  if (typeof t !== 'string') return t;
-  let out = t;
-  for (let i = 0; i < 4; i++) {
-    const next = out.replace(/\\(["'\\])/g, '$1');
-    if (next === out) break;
-    out = next;
-  }
-  return out.replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
-    .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
-};
-let fixedCats = 0, fixedClues = 0;
-for (const c of LIBRARY) {
-  const t = unescapeText(c.title), n = unescapeText(c.note);
-  if (t !== c.title || n !== c.note) fixedCats++;
-  c.title = t; c.note = n;
-  for (const x of c.clues) {
-    const tx = unescapeText(x.text), an = unescapeText(x.answer);
-    if (tx !== x.text || an !== x.answer) fixedClues++;
-    x.text = tx; x.answer = an;
-  }
-}
+// Escapes and stray backslashes, cleaned once at boot: src/library-text.js.
+const { cats: fixedCats, clues: fixedClues } = cleanLibrary(LIBRARY);
 if (fixedCats || fixedClues) {
   console.log(`repaired escapes: ${fixedCats} categories, ${fixedClues} clues`);
 }
