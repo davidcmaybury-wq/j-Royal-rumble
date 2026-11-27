@@ -652,6 +652,26 @@ unmeasured) — and what the background board synthesis did under a live match.
 Both are in the match record (`autohost-summary`, `synth`, `clip-wait` events)
 and on the host view as `autohost`.
 
+## Call sync — each player's light when they hear the host
+
+`public/callsync.js`, 0.106.0, Matt Schiffler's design from j-trivia rebuilt
+from his notes; `docs/call-sync.md` has the whole thing and which constants
+were his and which were filled in here. The console streams its mic's
+loudness pattern (`sync-frames`, relayed volatile) and stamps every key press
+and click with its own page clock (`host-at`, sent in the capture phase so it
+reaches the server before the action). A buzzer that has matched the call to
+that pattern knows L (player clock = host clock + L) and arms at `hostAt + L`,
+holding `state`, `clue-shown` and the board until then. Unsynced buzzers arm
+exactly as before. Human-hosted matches only.
+
+**A stamp over two seconds old is never used** (`freshHostAt`): it belongs to
+some earlier press, and a wrong timing is worse than the unsynced one. **The
+buzzer's delivery queue flushes in order** when something due now arrives —
+never let an activation overtake the clue it arms. **The matcher is pure** and
+runs under node in `test/callsync.mjs`; keep audio and sockets out of it. The
+fair-buzzing wait (`noteDecide`) only marks the leader "deciding" on the
+console; it does not stop the host ruling.
+
 ## Editing a workflow
 
 Steps run under `bash -e`, so any command failing kills the step with no

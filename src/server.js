@@ -20,6 +20,7 @@ import * as notes from './notes.js';
 import * as reports from './reports.js';
 import * as logs from './logstore.js';
 import { hostOffset } from './hostclock.js';
+import { buzzWaitMs } from '../public/callsync.js';
 import { mountAvailability, when, discord } from './when-routes.js';
 import { makeBot, botName, planClue, describe as describeBot, LEVELS, ARCHETYPE_LEVELS,
          loadDistributions, loadArchetypes, archetypeField, drawReadJitter,
@@ -452,6 +453,8 @@ class Match {
       // The stables, so every board can tint its rows and show the badges.
       stables: this.settings.stables ? this.stableList() : null,
       phase: this.phase, gameId: this.id, version: VERSION, watching: true,
+      // For the board inside a synced buzzer, held to when that player hears it.
+      hostAt: this.hostAt ?? null,
       clues: g.cluesRevealed,
       ceiling: g.ceiling,
       control: this.control,
@@ -550,6 +553,9 @@ class Match {
       roster: [...this.roster.values()].map((p) => ({
         token: p.token, name: p.name, connected: p.connected,
         hasAvatar: !!p.avatar, latency: p.latency ?? null,
+        // Call sync, as the player's page reports it: DELAY N ms, NOT SYNCED
+        // or PAUSED in their box on the console.
+        sync: p.sync ? { status: p.sync.status, delay: p.sync.delay } : null,
         // Whether this player brought their own entrance music, so the console
         // can skip the horn rather than playing two sounds over each other. A
         // flag and not the theme itself: the console only needs to know that
@@ -644,6 +650,8 @@ class Match {
       isBot: !!this.roster.get(p.id)?.isBot,
       level: this.bots.get(p.id)?.level || null,
       latency: this.roster.get(p.id)?.latency ?? null,
+      sync: this.roster.get(p.id)?.sync ? { status: this.roster.get(p.id).sync.status,
+        delay: this.roster.get(p.id).sync.delay } : null,
       capped: p.score >= g.ceiling,
       topRope: !!p.topRope,
       target: p.target || null,
@@ -673,6 +681,9 @@ class Match {
     return {
       open: this.race.open,
       lockedOut: [...this.race.lockedOut],
+      // Fair buzzing: how long the leader must still wait for players who hear
+      // the host later and have not buzzed yet. Zero once decided.
+      decideIn: this.race.decideAt ? Math.max(0, Math.round(this.race.decideAt - Date.now())) : 0,
       buzzes: this.race.buzzes
         .filter((b) => !b.spectator)
         // The console loses the times in Arcade too. It is the surface most
@@ -916,7 +927,11 @@ class Match {
   // Sent to a player. Never carries the correct response.
   playerView(token) {
     const g = this.game;
-    const base = { phase: this.phase, gameId: this.id, you: null, ceiling: g?.ceiling ?? null };
+    // hostAt: the host's clock at the last thing the host did. A synced buzzer
+    // holds this state until hostAt + its own L, so the board changes as the
+    // player hears the host say so rather than a second before (callsync.js).
+    const base = { phase: this.phase, gameId: this.id, you: null, ceiling: g?.ceiling ?? null,
+      hostAt: this.hostAt ?? null };
     if (!g) {
       const p = this.roster.get(token);
       return { ...base, you: { name: p?.name, state: 'lobby' } };
@@ -1557,7 +1572,8 @@ function announceLeader(match) {
         { said: [{ token: lead.token, name: lead.name, ...line }] });
     }
     match.autohost?.onBotSaid({ name: lead.name, token: lead.token, ...line });
-  }, (match.settings?.lockout || 250) + 450);
+  }, Math.max((match.settings?.lockout || 250) + 450,
+    match.race?.decideAt ? match.race.decideAt - Date.now() : 0));
 }
 
 /**
@@ -1579,6 +1595,44 @@ function rankRace(match) {
   // tiebreak has to be the thing everybody can see. Whoever actually pressed
   // quicker takes it.
   match.race.buzzes.sort((a, b) => band(a) - band(b) || a.ms - b.ms);
+}
+
+/**
+ * Fair buzzing: when can the race's leader be called?
+ *
+ * Buzzes are ranked on each player's reaction time from their own light, and
+ * with call sync a player who hears the host 800 ms later gets their light
+ * 800 ms later. Ranking on reaction time is only fair if the console waits for
+ * them, so every live person yet to buzz is allowed 3.5 × their worst round
+ * trip plus their extra (how much later than the game's message their light
+ * comes on — the host's delay setting if they are not synced). The rule is
+ * Matt Schiffler's from j-trivia; `buzzWaitMs` in public/callsync.js.
+ *
+ * Shown on the console as the leader "deciding"; the host can still rule when
+ * they like, as before. Robots are not waited for: they buzz on the server.
+ */
+function noteDecide(match, rec) {
+  const race = match.race;
+  if (!race || race.pressRecv == null || !match.game) return;
+  const buzzed = new Set(race.buzzes.map((b) => b.token));
+  const waiting = [];
+  for (const p of match.game.players.values()) {
+    if (p.state !== 'live' || buzzed.has(p.id) || race.lockedOut.has(p.id)) continue;
+    const r = match.roster.get(p.id);
+    if (!r || r.isBot || !r.connected) continue;
+    // The buzzer reports half its round trip (rumble.js); the worst of the
+    // last eight reports, doubled, is the worst round trip.
+    const recent = (match.latency.get(p.id) || []).slice(-8).map((x) => x.ms * 2);
+    const synced = r.sync && r.sync.extra != null && /^(synced|paused)/.test(r.sync.status);
+    waiting.push({ rttWorst: recent.length ? Math.max(...recent) : 300,
+      extra: synced ? r.sync.extra : (match.settings.delay || 0) + (r.sync?.lag || 0) });
+  }
+  rec.decideAt = Date.now() + buzzWaitMs({ waiting, B: rec.ms, R: Date.now() - race.pressRecv });
+  const lead = race.buzzes.filter((b) => !b.spectator)[0];
+  // Everybody has buzzed: decided at once.
+  race.decideAt = waiting.length ? (lead?.decideAt ?? rec.decideAt) : Date.now();
+  const left = race.decideAt - Date.now();
+  if (left > 0) setTimeout(() => { if (match.race === race) schedulePush(match, 'host'); }, left + 5);
 }
 
 // Watch screens that have turned their sound on. A set of socket ids, so a
@@ -1962,6 +2016,12 @@ function clueAt(match, slot, row) {
     category: cat.title, note: cat.note, text: clue.text, answer: clue.answer };
 }
 
+// The host's latest key press or click on the host's own clock, if it is
+// recent enough to be the one that caused what is being sent.
+function freshHostAt(match) {
+  return match.hostAt != null && Date.now() - match.hostAtRecv < 2000 ? match.hostAt : null;
+}
+
 function runPick(match, { slot, row }) {
   const g = match.game;
   const cat = g.board[slot];
@@ -1984,7 +2044,7 @@ function runPick(match, { slot, row }) {
   wrongAnswer(match.clue, siblings).then((w) => { match.wrongAnswer = w; });
 
   schedulePush(match, 'host');
-  io.to(`${match.id}:players`).emit('clue-shown', { value: match.clue.value });
+  io.to(`${match.id}:players`).emit('clue-shown', { value: match.clue.value, hostAt: freshHostAt(match) });
   schedulePush(match, 'players');
   match.autohost?.onPicked();
   return true;
@@ -2001,8 +2061,14 @@ function runPick(match, { slot, row }) {
 function armTimeoutFor(match) {
   clearTimeout(match.raceTimer);
   if (!match.settings.autoStumper) return;
+  // A synced player whose call runs later than the delay setting gets their
+  // light later, and the lectern has to cover them too, or the clue dies with
+  // seconds of their window left.
+  const syncedLate = match.race?.hostAt == null ? 0 : Math.max(0, ...[...match.roster.values()]
+    .filter((p) => !p.isBot && p.connected && p.sync?.extra != null && /^(synced|paused)/.test(p.sync.status))
+    .map((p) => p.sync.extra - match.settings.delay));
   const grace = (match.settings.lecternSeconds ?? 5) * 1000
-    + match.settings.delay + 400;
+    + match.settings.delay + 400 + Math.min(3500, syncedLate);
   match.raceTimer = setTimeout(() => {
     if (!match || !match.race || !match.race.open || !match.clue) return;
     if (match.race.buzzes.some((b) => !b.spectator)) return;   // somebody is on the clock
@@ -2163,12 +2229,21 @@ function runActivate(match, { pushAll, runBots, armTimeout }) {
   const at = Date.now() + match.settings.delay;
   match.race.open = true;
   match.race.activatedAt = at;
+  // The host's key press on the host's own clock (call sync, public/callsync.js).
+  // A synced player's light comes on at hostAt + their own L — the moment they
+  // hear the host finish — instead of at `at`. The console sends the press
+  // time as the key goes down, ahead of `activate` on the same socket, so a
+  // stamp more than two seconds old belongs to some earlier press and is not
+  // used: an unsynced timing beats a wrong one.
+  const hostAt = match.hostAt != null && Date.now() - match.hostAtRecv < 2000 ? match.hostAt : null;
+  match.race.hostAt = hostAt;
+  match.race.pressRecv = Date.now();
   // Sent before anything else and deliberately tiny. This is the one message
   // in the whole app where a few milliseconds are worth protecting.
   // NOT volatile: volatile packets are dropped rather than queued, which is
   // precisely wrong for the one signal that must reach everybody.
-  io.to(`${match.id}:players`).emit('activate-lights', { at });
-  io.to(`${match.id}:players`).emit('activate-buzzers', { at, lockout: match.settings.lockout });
+  io.to(`${match.id}:players`).emit('activate-lights', { at, hostAt });
+  io.to(`${match.id}:players`).emit('activate-buzzers', { at, hostAt, lockout: match.settings.lockout });
   runBots();
   armTimeout();
   pushAll();
@@ -2395,7 +2470,7 @@ function runMarkWrong(match, t, { pushAll, runBots, armTimeout }) {
     wrongAnswer(match.clue, sibs).then((w) => { match.wrongAnswer = w || said; });
   }
   io.to(`${match.id}:players`).emit('activate-buzzers',
-    { at: match.race.activatedAt, lockout: match.settings.lockout });
+    { at: match.race.activatedAt, hostAt: match.race.hostAt ?? null, lockout: match.settings.lockout });
   io.to(`${match.id}:host`).emit('retoss', { lockedOut: [...match.race.lockedOut] });
   runBots();
   armTimeout();
@@ -3027,6 +3102,7 @@ io.on('connection', (socket) => {
     }
     match.race.buzzes.push(rec);
     rankRace(match);
+    if (!spectator) noteDecide(match, rec);
 
     // The fastest buzz of the match has to have been a real one — otherwise it
     // can be won by somebody who was not in the ring.
@@ -3074,6 +3150,47 @@ io.on('connection', (socket) => {
     if (dataUrl.length > 60000) return;          // ~45KB of image, generous for 128px
     p.avatar = dataUrl;
     io.to(`${match.id}:host`).emit('avatar', { token, dataUrl });
+    pushHost();
+  });
+
+  // ---- call sync (public/callsync.js, docs/call-sync.md) ----
+  //
+  // The server only relays. The host's page sends its microphone's loudness
+  // pattern ten times a second and every player's page works out its own
+  // delay from it; nothing here does any audio.
+
+  // The host's key press or click, on the host's own clock, sent as the key
+  // goes down and ahead of whatever the key does. Stamps the next activation.
+  socket.on('host-at', hostOnly(({ at } = {}) => {
+    if (typeof at !== 'number' || !isFinite(at)) return;
+    match.hostAt = at; match.hostAtRecv = Date.now();
+  }));
+
+  // ~8.5 KB a second, to every player. Volatile: a pattern message that cannot
+  // be delivered now is worthless a second from now, and must never queue up
+  // behind a reconnect ahead of the activation that matters.
+  socket.on('sync-frames', hostOnly((msg) => {
+    if (!msg || typeof msg.frames !== 'string' || msg.frames.length > 4000) return;
+    if (match.settings.autohost) return;
+    const { t0, sentAt, rtt, frames } = msg;
+    if (![t0, sentAt].every((v) => typeof v === 'number' && isFinite(v))) return;
+    io.to(`${match.id}:players`).volatile.emit('sync-frames', { t0, sentAt, rtt: Number(rtt) || 0, frames });
+  }));
+
+  // What a player's page reports about its own sync: shown in their box on
+  // the console, and used for the fair-buzzing wait.
+  socket.on('sync-status', (d = {}) => {
+    if (!match || !token) return;
+    const p = match.roster.get(token);
+    if (!p || typeof d.status !== 'string') return;
+    const num = (v) => (typeof v === 'number' && isFinite(v) ? Math.round(v) : null);
+    const next = { status: d.status.slice(0, 20), delay: num(d.delay), extra: num(d.extra),
+      lag: num(d.lag) || 0, at: Date.now() };
+    const was = p.sync;
+    p.sync = next;
+    if (!was || was.status !== next.status) {
+      match.note('sync', { name: p.name, status: next.status, delay: next.delay });
+    }
     pushHost();
   });
 

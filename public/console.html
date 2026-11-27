@@ -13,6 +13,16 @@
 .soundwarn{position:fixed;left:50%;transform:translateX(-50%);top:44px;z-index:45;
 background:#2A1A08;border:1px solid #6A4A12;border-radius:5px;padding:7px 14px;
 color:#F0C862;font-size:12.5px;max-width:70vw;text-align:center}
+/* Call sync (public/callsync.js): the host's own mic, and each player's delay. */
+.micwarn{top:84px}
+.micwarn button{margin-left:10px;padding:2px 9px;border:1px solid #6A4A12;border-radius:4px;color:#F0C862}
+.tb.syncon{color:var(--brass);border-color:var(--brass)}
+.tb.syncbad{color:var(--alarm);border-color:var(--alarm)}
+.mk.sync{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:#5E8A6A}
+.mk.sync.paused{color:var(--brass)}
+.mk.sync.nosync{color:var(--alarm)}
+.syncnote{font-size:13px;color:var(--brass);max-width:560px}
+.bz .dec{font-size:10px;color:var(--brass);margin-left:4px}
 
 /* Board control is followed from across the room, so it lights the whole row
    rather than a 7px dot. It was too subtle to read at a glance. */
@@ -398,6 +408,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
       <span class="dot" id="conn" title="server connection"></span>
       <button class="tb" id="admin" title="Opens on your unshared screen">Pop out answers &#8599;</button>
       <button class="tb" id="mute">Sound on</button>
+      <button class="tb" id="syncmic" title="Call sync: your mic's pattern lets each player's buzzer light come on when they hear you, on any call platform. Wear wired headphones.">Sync</button>
       <button class="tb" id="undo" disabled title="Take back the last scored clue">Undo clue</button>
       <button class="tb" id="endm">End match</button>
       <span class="delayctl">
@@ -412,6 +423,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
   </header>
   <div class="main">
     <div id="soundwarn" class="soundwarn" style="display:none"></div>
+    <div id="micwarn" class="soundwarn micwarn" style="display:none"></div>
     <section class="stage" id="stage" aria-label="Board"></section>
       <div class="lectern" id="lectern" aria-hidden="true"></div>
     <aside class="rail">
@@ -433,6 +445,7 @@ color:var(--chalk);padding:7px 9px;font:400 13px "IBM Plex Mono",monospace;min-w
 <script src="/socket.io/socket.io.js"></script>
 <script type="module">
 import { socket, gameId, hostKey, fmt, syncClock, ord, serverNow } from '/rumble.js';
+import { HostSync, pageNow } from '/callsync.js';
 import { scoreChart } from '/chart.js';
 import { markSmall, markFull, brainAvatar } from '/brand.js';
 import { gem } from '/gems.js';
@@ -648,6 +661,72 @@ socket.on('resolved', (e) => {
   if (e.totalWipe) say('Total wipe — highest score survives', 'elim');
 });
 
+// ---- call sync -------------------------------------------------------
+//
+// The host's half of public/callsync.js. The mic's loudness pattern goes to
+// every player through the server, and every key press and click is stamped
+// on this page's clock and sent ahead of whatever it does, so a synced player
+// sees it — and gets their light — when they hear it. With the computer
+// hosting there is no voice on a call, so none of this runs.
+const hostSync = new HostSync({
+  send: (m) => socket.emit('sync-frames', m),
+  onStatus: () => paintSync(),
+});
+let syncWanted = true;            // the host can switch it off for the match
+const computerHosting = () => !!(S && S.settings && S.settings.autohost);
+function stampHost() {
+  if (!S || computerHosting()) return;
+  socket.emit('host-at', { at: pageNow() });
+  // Audio needs a gesture, so the first press or click opens the mic.
+  if (syncWanted && hostSync.state === 'off') hostSync.start();
+}
+// Capture phase, so the stamp is on the wire before the key's own handler emits.
+addEventListener('keydown', stampHost, true);
+addEventListener('pointerdown', stampHost, true);
+on('syncmic', 'onclick', () => {
+  if (hostSync.state === 'off') { syncWanted = true; hostSync.start(); }
+  else { syncWanted = false; hostSync.stop(); }
+});
+function paintSync() {
+  const b = $('syncmic');
+  if (b) {
+    b.style.display = computerHosting() ? 'none' : '';
+    b.textContent = hostSync.state === 'off' ? 'Sync off' : hostSync.state === 'on' ? 'Sync on' : 'Sync: mic?';
+    b.className = 'tb' + (hostSync.state === 'on' ? ' syncon' : hostSync.state === 'off' ? '' : ' syncbad');
+  }
+  const w = $('micwarn');
+  if (!w) return;
+  const bad = !computerHosting() && (hostSync.state === 'error' || hostSync.state === 'silent');
+  w.style.display = bad ? '' : 'none';
+  if (bad) {
+    w.innerHTML = (hostSync.error || 'Your microphone is not being heard.')
+      + ' Players\u2019 buzzers cannot sync to you.<button id="mictry">Try again</button>';
+    $('mictry').onclick = () => { hostSync.stop(); syncWanted = true; hostSync.start(); };
+  }
+}
+// The server only relays; the host's round trip rides in the pattern so each
+// player can add back half of it when they show their delay.
+setInterval(() => {
+  const t0 = performance.now();
+  socket.timeout(5000).emit('ping-probe', null, (err) => { if (!err) hostSync.setRtt(performance.now() - t0); });
+}, 5000);
+function syncTag(p) {
+  if (computerHosting() || !p.connected) return '';
+  const s = p.sync || {};
+  if (s.status === 'synced') return ' <span class="mk sync" title="call delay, measured from your voice">DELAY ' + (s.delay ?? '?') + ' ms</span>';
+  if (/^paused/.test(s.status || '')) return ' <span class="mk sync paused" title="using the last delay measured">PAUSED</span>';
+  return ' <span class="mk sync nosync" title="this buzzer lights on arrival, before they hear you">NOT SYNCED</span>';
+}
+function lobbySyncNote(roster) {
+  if (computerHosting()) return '';
+  const people = roster.filter((p) => !p.isBot && p.connected);
+  if (!people.length) return '';
+  const waiting = people.filter((p) => !(p.sync && /^(synced|paused)/.test(p.sync.status))).length;
+  return '<div class="syncnote">' + (waiting
+    ? 'Talk for a few seconds so buzzers can sync to your voice. ' + waiting + ' not synced yet.'
+    : 'Every buzzer is synced to your voice.') + '</div>';
+}
+
 function apply(next) {
   if (!next) return;
   const wasOpen = !!(prev && prev.race && prev.race.open);
@@ -655,7 +734,7 @@ function apply(next) {
   const isOpen = !!(S.race && S.race.open);
   if (isOpen && !wasOpen) startLectern();
   if (!S.clue) stopLectern();
-  detectEvents(); render();
+  detectEvents(); render(); paintSync();
 }
 
 // Entry and elimination are derived from state transitions rather than pushed
@@ -910,6 +989,7 @@ function render() {
       + (p.revivals ? ' <span class="mk rev" title="second life">&#8635;</span>' : '')
       + (p.latency != null ? ' <span class="mk lat' + (p.latency > 120 ? ' slow' : '')
           + '" title="one-way latency">' + Math.round(p.latency) + '</span>' : '')
+      + (p.isBot ? '' : syncTag(p))
       + '</span><span class="sc num">' + fmt(p.score) + '</span>';
     d.onclick = () => openCorrect(p);
     d.onkeydown = (e) => { if (e.key === 'Enter') openCorrect(p); };
@@ -1205,6 +1285,7 @@ function renderLobby() {
           + p.name + (p.isBot ? '<em class="lvl">' + (p.level || '') + '</em>' : '')
           + '</span>').join('')
       : '<span class="idle">Waiting for players&hellip;</span>') + '</div>'
+    + lobbySyncNote(roster)
     + '<button class="go" id="start"' + (roster.length < 3 ? ' disabled' : '') + '>Start with '
       + roster.length + ' player' + (roster.length === 1 ? '' : 's') + '</button>'
     + '<div class="idle" style="font-size:12px">' + (roster.length < 3
@@ -1279,6 +1360,7 @@ function renderDock() {
   const chips = buzzes.map((b, i) => '<span class="bz' + (i === 0 ? ' on' : '')
     + (b.bot ? ' isbot' : '') + '"><span>' + b.name
     + (b.early ? ' <span class="e">EARLY</span>' : '')
+    + (i === 0 && race.decideIn > 0 ? ' <span class="dec" title="Waiting for players who hear you later and have not buzzed">deciding</span>' : '')
     + (b.bot ? ' <span class="bhint ' + (b.botCorrect ? 'yes' : 'no') + '">'
         + (b.botCorrect ? 'will be right' : 'will be wrong') + '</span>' : '')
     + '</span><span class="t num">'
