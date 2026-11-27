@@ -48,6 +48,13 @@ match teaches. `docs/autohost-from-jtrivia.md` records every one of them, and
 each is commented where it lives in `src/judge.js`, `src/pick-match.js`,
 `public/listen.js` and `src/tts.js`.
 
+The call-audio delay sync (`public/callsync.js`) is Matt Schiffler's design
+from j-trivia: matching the host's voice pattern against the call each player
+hears, to give every player their own delay and their light at the moment they
+hear the host. It was rebuilt here from his written notes on j-trivia v722, not
+copied; `docs/call-sync.md` says which numbers came from those notes and which
+were filled in here.
+
 ## Fonts
 
 | Font | Use | Licence |

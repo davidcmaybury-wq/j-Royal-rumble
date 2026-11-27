@@ -482,6 +482,14 @@ white-space:nowrap;border-bottom:1px solid var(--line);z-index:2}
 .rfoot{padding:11px 16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--slate);text-align:center}
 .alphatag{margin-left:auto;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;
 letter-spacing:.08em;background:#5A3A0C;color:#F3D9A4;border:1px solid #8A5E15;flex:none}
+/* Call sync (public/callsync.js): the footer line and the sheet that starts it. */
+.syncfoot{display:block;width:100%;margin-top:10px;padding:7px 10px;border:1px dashed var(--line);
+border-radius:var(--r);background:none;color:var(--slate);font-size:12px;cursor:pointer;text-align:center}
+.syncfoot.ok{border-style:solid;border-color:#2F5A3E;color:#7FBF8F;cursor:default}
+.syncfoot.warn{border-color:var(--brass);color:var(--brass)}
+.synccheck{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--chalk);margin-top:12px}
+.schip .fh{display:block;font-size:11px;color:var(--slate);margin-top:3px}
+.syncsheet .sbox{max-width:460px}
 </style>
 </head>
 <body>
@@ -494,6 +502,7 @@ import { socket, setGameId, gameId, myToken, saveToken, armAt, disarm, attemptBu
          lockoutRemaining, startLatencyReports, syncClock,
          getLag, setLag, fmt, ord, serverNow } from '/rumble.js';
 import { attachHostVoice } from '/host-voice.js';
+import { PlayerSync, footerText, pageNow, CS } from '/callsync.js';
 import * as ear from '/listen.js';
 import { scoreChart } from '/chart.js';
 // The line-art weapons are gone: everyone sees wrestlers now, including the
@@ -865,7 +874,7 @@ socket.on('bot-said', (d) => {
   sayTimer = setTimeout(() => box.classList.remove('on'), 4200);
 });
 
-socket.on('watch-state', (s2) => { detectRing(s2); W = s2; paintBoard(); });
+socket.on('watch-state', (s2) => deliver(s2 && s2.hostAt, () => { detectRing(s2); W = s2; paintBoard(); }));
 
 // Once we know who we are, honour a full-mode preference from a previous
 // session — the label alone was not enough to actually get the board.
@@ -1366,6 +1375,8 @@ function doJoin(name) {
     }
     if (r && r.token) saveToken(r.token);
     joined = true; joinErr = '';
+    // The console shows this player's sync from the first moment they are in.
+    socket.emit('sync-status', { ...sync.info(), lag: getLag() });
     sfx.unlock();
     // Their own confirmation that they are in the room.
     // Deliberately no sound here. Arriving at your own join is not an event
@@ -1385,6 +1396,134 @@ function doJoin(name) {
   });
 }
 
+// ---------------- call sync ----------------
+//
+// The player's half of public/callsync.js. The page captures the call as this
+// player hears it — the computer's own sound through a screen share with
+// headphones, or the mic hearing the speakers — and matches it against the
+// host's voice to find this player's own delay. A synced buzzer then lights,
+// and shows each change to the board, when the player hears the host get
+// there. Nothing about it runs when the computer hosts: there is no call.
+let syncInfo = null;
+const sync = new PlayerSync({
+  onStatus: (i) => {
+    syncInfo = i;
+    socket.emit('sync-status', { ...i, lag: getLag() });
+    paintSyncFoot();
+  },
+});
+socket.on('sync-frames', (m) => sync.hostFrames(m));
+const syncApplies = () => !!(V && !V.autohost && V.phase !== 'over');
+
+// Messages the host caused are held until this player hears the host cause
+// them. Kept in arrival order: something due now flushes whatever is waiting
+// ahead of it, so a clue can never go up after its own buzzers armed.
+const later = [];
+let laterTimer = null;
+function deliver(hostAt, fn) {
+  const due = sync.localTime(hostAt);
+  if (due == null || due <= pageNow()) { flushLater(); fn(); return; }
+  const last = later.length ? later[later.length - 1].due : -Infinity;
+  later.push({ due: Math.max(due, last), fn });
+  if (!laterTimer) runLater();
+}
+function runLater() {
+  laterTimer = null;
+  while (later.length && later[0].due <= pageNow() + 1) later.shift().fn();
+  if (later.length) laterTimer = setTimeout(runLater, Math.max(0, later[0].due - pageNow()));
+}
+function flushLater() {
+  clearTimeout(laterTimer); laterTimer = null;
+  while (later.length) later.shift().fn();
+}
+
+function syncFootHtml() {
+  if (!syncApplies()) return '';
+  const i = syncInfo || sync.info();
+  const cls = i.status === 'synced' ? ' ok' : /^paused|listening/.test(i.status) ? ' warn' : '';
+  return `<button class="syncfoot${cls}" id="syncfoot">${footerText(i)}</button>`;
+}
+function paintSyncFoot() {
+  const el = document.getElementById('syncfoot');
+  if (!el) return;
+  const i = syncInfo || sync.info();
+  el.className = 'syncfoot' + (i.status === 'synced' ? ' ok' : /^paused|listening/.test(i.status) ? ' warn' : '');
+  el.textContent = footerText(i);
+}
+function syncFootClick() {
+  const i = syncInfo || sync.info();
+  if (i.status === 'synced') return;
+  // Resuming the same capture is one click; anything else needs the choice.
+  if (i.status === 'paused-stopped' && i.kind) return startSync(i.kind);
+  syncSheet();
+}
+async function startSync(kind, errEl) {
+  try { await sync.start(kind); document.querySelectorAll('.sheet.syncsheet').forEach((n) => n.remove()); }
+  catch (e) {
+    const msg = e.code === 'no-audio'
+      ? 'No sound was shared. Share again and turn on “Share system audio” (or the call\u2019s tab with “Share tab audio”).'
+      : e.code === 'unsupported' ? 'This browser cannot do that. Try Chrome or Edge on a computer, or Speakers.'
+      : 'The browser did not allow it.';
+    if (errEl) errEl.textContent = msg; else say(msg);
+  }
+}
+function syncSheet() {
+  document.querySelectorAll('.sheet.syncsheet').forEach((n) => n.remove());
+  const i = syncInfo || sync.info();
+  const hp = PlayerSync.headphonesSupported();
+  const el = document.createElement('div');
+  el.className = 'sheet syncsheet';
+  const unheard = i.status === 'paused-unheard' && i.kind === 'speakers';
+  el.innerHTML = `<div class="sbox">
+    <h3>Sync your buzzer to the call</h3>
+    <p class="snote">${unheard || i.cantHear
+      ? 'Your microphone cannot hear the host. Headphones share the call\u2019s sound directly, which works much better.'
+      : 'You hear the host a little late over the call, and by a different amount from everybody else. '
+        + 'Let this page listen to the call and your buzzer will light when <b>you</b> hear the host finish.'}</p>
+    <div class="sgrid">
+      <button class="schip" id="syhp"${hp ? '' : ' disabled'}>${unheard ? 'Switch to Headphones' : 'Headphones'}
+        <span class="fh">${hp ? 'Recommended. Share your screen with “Share system audio” on (or the call\u2019s tab). Asked on every visit.'
+          : 'Needs Chrome or Edge on a computer.'}</span></button>
+      <button class="schip" id="sysp">Speakers
+        <span class="fh">The mic hears the call from your speakers. Stops working if you put headphones on.</span></button>
+    </div>
+    <label class="synccheck"><input type="checkbox" id="sybt"${sync.bluetooth ? ' checked' : ''}>
+      I\u2019m on Bluetooth headphones (adds ${CS.BLUETOOTH_MS} ms)</label>
+    <div class="err" id="syerr"></div>
+    <div class="sbtns"><button id="syskip">Skip</button></div>
+  </div>`;
+  document.body.appendChild(el);
+  const err = el.querySelector('#syerr');
+  el.querySelector('#syhp').onclick = () => startSync('headphones', err);
+  el.querySelector('#sysp').onclick = () => startSync('speakers', err);
+  el.querySelector('#sybt').onchange = (e) => sync.setBluetooth(e.target.checked);
+  el.querySelector('#syskip').onclick = () => {
+    const b = el.querySelector('.sbtns');
+    b.innerHTML = '<button id="syback">Back</button><button id="sysure" class="prim">Skip anyway</button>';
+    err.textContent = 'Your buzzer light will come on early for you. Skip anyway?';
+    b.querySelector('#syback').onclick = () => { el.remove(); syncSheet(); };
+    b.querySelector('#sysure').onclick = () => { sync.skip(); el.remove(); };
+  };
+}
+// Offered once in each new game while unsynced.
+function maybeOfferSync() {
+  if (!syncApplies()) return;
+  if (sync.usable() || (syncInfo && syncInfo.status !== 'not-synced')) return;
+  const key = 'callsync:offered:' + gameId();
+  try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch (e) { return; }
+  if (document.querySelector('.sheet')) return;
+  syncSheet();
+}
+// Speakers comes back by itself if it locked before and the mic is already allowed.
+PlayerSync.rememberedSpeakers().then((ok) => { if (ok) sync.start('speakers').catch(() => {}); });
+// Audio starts suspended until the page is touched.
+addEventListener('pointerdown', () => { const c = sync.cap && sync.cap.ctx; if (c && c.state === 'suspended') c.resume(); }, true);
+addEventListener('keydown', () => { const c = sync.cap && sync.cap.ctx; if (c && c.state === 'suspended') c.resume(); }, true);
+setInterval(() => {
+  const t0 = performance.now();
+  socket.timeout(5000).emit('ping-probe', null, (err) => { if (!err) sync.setRtt(performance.now() - t0); });
+}, 5000);
+
 // ---------------- socket ----------------
 socket.on('connect', () => {
   syncClock();
@@ -1395,12 +1534,12 @@ socket.on('connect', () => {
 renderJoin();
 });
 socket.on('disconnect', () => { armed = false; disarm(); render(); });
-socket.on('state', (v) => {
+socket.on('state', (v) => deliver(v && v.hostAt, () => {
   prev = V; V = v;
   // The server assigns on arrival; reflect it without claiming it as a choice.
   if (v.you && v.you.tokenArt) paintToken();
-  if (joined) { cues(); render(); }
-});
+  if (joined) { cues(); render(); maybeOfferSync(); }
+}));
 
 socket.on('rumble-starting', () => sfx.unlock());
 
@@ -1451,14 +1590,21 @@ socket.on('rumble-starting', (d) => {
   say('The Rumble is beginning');
 });
 
-socket.on('clue-shown', () => {
+socket.on('clue-shown', ({ hostAt } = {}) => deliver(hostAt, () => {
   armed = false; early = false; disarm();
   // Start this clue's timeline the moment its text is on this screen.
   clueShown();
   render();
-});
-socket.on('activate-buzzers', ({ at, lockout }) => {
-  const waitMs = armAt(at, lockout);
+}));
+socket.on('activate-buzzers', ({ at, hostAt, lockout }) => deliver(null, () => {
+  // Synced: the light comes on at the host's key press plus this player's own
+  // call delay, which is when they hear the host finish. armAt still adds the
+  // personal nudge on top. Unsynced: the host's delay setting, as before.
+  const local = sync.localTime(hostAt);
+  const instant = local == null ? at : serverNow() + (local - pageNow());
+  const waitMs = armAt(instant, lockout);
+  // Matching is a moment of real work: keep it off the page while the light is due.
+  if (local != null) sync.holdFor(local + getLag());
   armed = false; early = false; render();
   clearTimeout(armTimer);
   armTimer = setTimeout(() => {
@@ -1466,7 +1612,7 @@ socket.on('activate-buzzers', ({ at, lockout }) => {
   }, waitMs);
   // Say so up front too, rather than only after the wait.
   if (getLag() !== 0) noteArm(waitMs);
-});
+}));
 
 // ---------------- buzz ----------------
 function press() {
@@ -1578,6 +1724,7 @@ renderJoin();
     <section class="pad">
       <button class="buzz" id="buzz"><span class="big mq" id="bzbig">WAIT</span><span id="bzsub"></span></button>
       <div class="fb" id="fb"></div>
+      ${syncFootHtml()}
       <div class="mech" id="mech"></div>
     </section>
   </div>${boardHtml()}`;
@@ -1593,6 +1740,8 @@ renderJoin();
   if (mb) mb.onclick = openMusic;
   const ob = document.getElementById('objbtn');
   if (ob) ob.onclick = () => object();
+  const sf = document.getElementById('syncfoot');
+  if (sf) sf.onclick = syncFootClick;
   // The vote opens and closes on the server's clock, not on a click, so the
   // popup is opened from whatever the state says rather than from an event —
   // which also means a player who reloads mid-vote gets it back.

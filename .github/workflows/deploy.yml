@@ -30,6 +30,8 @@ jobs:
         run: node test/handles.mjs
       - name: The host's clock is the whole room's shift, not one player's
         run: node test/hostclock.mjs
+      - name: Call sync finds each player's own delay from the host's voice
+        run: node test/callsync.mjs
       - name: Pages bind only to elements that exist
         run: node test/pagerefs.mjs
       - name: Rulings and spoken picks, with no server and no key
@@ -103,6 +105,7 @@ jobs:
           node test/mechanics-live.mjs
           node test/perf.mjs
           node test/delay.mjs
+          node test/callsync-live.mjs
           node test/escapes.mjs
           node test/stables-live.mjs
           node test/reports.mjs

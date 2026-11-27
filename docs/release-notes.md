@@ -11,6 +11,24 @@ here, and refuses a section Discord would cut off.
 Written for the people who play, not for whoever ships. Say what changed for
 them and why, in a few lines. No handles, no P-labels, American English.
 
+## 0.106.0 — Your buzzer hears the host when you do
+
+Everybody hears the host a little late over the call, and by a different
+amount: a tenth of a second for one person, a second or more for another. The
+game's own messages beat the call's sound, so lights came on before some of
+you heard the clue finish, and the one delay setting suited at most one person
+in the room.
+
+Now your buzzer can listen to the call and work out your own delay from the
+host's voice. Pick Headphones (Chrome or Edge on a computer, share your screen
+with system audio on) or Speakers when it asks. Once it says Synced, your light
+comes on, and the board changes, when you hear the host get there. Races are
+still decided on your reaction from your own light, and the host waits for
+anybody who hears later before calling it.
+
+On Bluetooth earbuds, tick the box: they add their own delay after the sound
+is captured. This is Matt Schiffler's idea from j-trivia, rebuilt here.
+
 ## 0.105.0 — Every move gets a real button
 
 Top rope, taking aim, stables and bounties used to be little pills under the
