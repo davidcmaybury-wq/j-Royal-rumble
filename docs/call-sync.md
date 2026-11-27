@@ -55,6 +55,10 @@ has buzzed it is decided at once. The console marks the leader **deciding**
 until then; the host can still rule whenever they like, as before. Robots are
 not waited for, since they buzz on the server.
 
+The auto-stumper's lectern is extended by the latest synced player's extra
+beyond the Delay setting (capped at 3.5 s), so a clue does not die with most of
+a late-hearing player's window unused.
+
 j-trivia also turns every player's light off a fixed time after their own light
 came on. The Rumble keeps the race open until the host rules, so there is no
 equivalent to port.

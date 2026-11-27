@@ -2061,8 +2061,14 @@ function runPick(match, { slot, row }) {
 function armTimeoutFor(match) {
   clearTimeout(match.raceTimer);
   if (!match.settings.autoStumper) return;
+  // A synced player whose call runs later than the delay setting gets their
+  // light later, and the lectern has to cover them too, or the clue dies with
+  // seconds of their window left.
+  const syncedLate = match.race?.hostAt == null ? 0 : Math.max(0, ...[...match.roster.values()]
+    .filter((p) => !p.isBot && p.connected && p.sync?.extra != null && /^(synced|paused)/.test(p.sync.status))
+    .map((p) => p.sync.extra - match.settings.delay));
   const grace = (match.settings.lecternSeconds ?? 5) * 1000
-    + match.settings.delay + 400;
+    + match.settings.delay + 400 + Math.min(3500, syncedLate);
   match.raceTimer = setTimeout(() => {
     if (!match || !match.race || !match.race.open || !match.clue) return;
     if (match.race.buzzes.some((b) => !b.spectator)) return;   // somebody is on the clock
